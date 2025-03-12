@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'np.likhupikemun'
-version = '0.0.2-SNAPSHOT'
+version = '0.0.3-SNAPSHOT'
 
 java {
 	toolchain {
@@ -43,6 +43,8 @@ dependencies {
 	implementation 'org.liquibase:liquibase-core'
 	implementation 'org.springframework.data:spring-data-rest-hal-explorer'
 	implementation 'org.springframework.session:spring-session-jdbc'
+	implementation 'org.hibernate.validator:hibernate-validator:8.0.2.Final'
+	implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
