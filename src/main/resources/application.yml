@@ -9,3 +9,8 @@ spring:
     liquibase:
         enabled: true
         change-log: classpath:db/changelog/db.changelog-master.xml
+
+app:
+  admin:
+    email: ${ADMIN_EMAIL:admin@likhupike.gov.np}
+    password: ${ADMIN_PASSWORD:Admin@123}
