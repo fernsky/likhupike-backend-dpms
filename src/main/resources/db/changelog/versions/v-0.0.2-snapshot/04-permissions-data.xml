@@ -1,0 +1,78 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="04-permission-create-user">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'CREATE_USER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="CREATE_USER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-permission-approve-user">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'APPROVE_USER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="APPROVE_USER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-permission-edit-user">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'EDIT_USER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="EDIT_USER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-permission-delete-user">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'DELETE_USER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="DELETE_USER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-permission-view-user">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'VIEW_USER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="VIEW_USER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-permission-reset-password">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'RESET_USER_PASSWORD'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="RESET_USER_PASSWORD"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

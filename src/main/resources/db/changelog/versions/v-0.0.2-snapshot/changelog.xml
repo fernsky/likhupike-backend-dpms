@@ -1,0 +1,11 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <include file="01-users.xml" relativeToChangelogFile="true"/>
+    <include file="02-permissions.xml" relativeToChangelogFile="true"/>
+    <include file="03-user-permissions.xml" relativeToChangelogFile="true"/>
+    <include file="04-permissions-data.xml" relativeToChangelogFile="true"/>
+</databaseChangeLog>
