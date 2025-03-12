@@ -1,0 +1,16 @@
+{
+    "properties": [
+        {
+            "name": "app.admin.email",
+            "type": "java.lang.String",
+            "description": "Admin email address",
+            "defaultValue": "admin@likhupike.gov.np"
+        },
+        {
+            "name": "app.admin.password",
+            "type": "java.lang.String",
+            "description": "Admin password",
+            "defaultValue": "Admin@123"
+        }
+    ]
+}
