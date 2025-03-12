@@ -29,6 +29,7 @@ class AdminInitializationService(
         }
     }
 
+    @Transactional
     private fun createAdminUser() {
         val createUserDto = CreateUserDto(
             email = adminConfig.email,
@@ -37,9 +38,8 @@ class AdminInitializationService(
             isWardLevelUser = false
         )
         
-        userService.createUser(createUserDto).apply {
-            isApproved = true
-        }
+        val user = userService.createUser(createUserDto)
+        userService.approveUser(user.id!!, user.id!!) // Self-approve admin
     }
 
     private fun getAllPermissions(): Map<PermissionType, Boolean> =

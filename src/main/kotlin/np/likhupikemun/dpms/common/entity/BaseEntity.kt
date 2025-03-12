@@ -14,11 +14,11 @@ import java.util.*
 abstract class BaseEntity {
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    var createdAt: Instant? = null
+    var createdAt: Instant = Instant.now()
 
     @LastModifiedDate
     @Column(nullable = false)
-    var updatedAt: Instant? = null
+    var updatedAt: Instant = Instant.now()
 
     @CreatedBy
     @Column(updatable = false)
