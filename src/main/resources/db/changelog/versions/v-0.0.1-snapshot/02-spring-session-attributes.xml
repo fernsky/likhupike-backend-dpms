@@ -1,0 +1,51 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="02-session-attributes-table">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="spring_session"/>
+                <not>
+                    <tableExists tableName="spring_session_attributes"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Create spring session attributes table</comment>
+        <createTable tableName="spring_session_attributes">
+            <column name="session_primary_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attribute_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attribute_bytes" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="trilochan" id="02-session-attributes-pk">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <primaryKeyExists tableName="spring_session_attributes" primaryKeyName="spring_session_attributes_pk"/>
+            </not>
+        </preConditions>
+        <comment>Add primary key constraint to spring session attributes table</comment>
+        <addPrimaryKey columnNames="session_primary_id, attribute_name" constraintName="spring_session_attributes_pk" tableName="spring_session_attributes"/>
+    </changeSet>
+
+    <changeSet author="trilochan" id="02-session-attributes-fk">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="spring_session_attributes_fk"/>
+            </not>
+        </preConditions>
+        <comment>Add foreign key constraint to spring session attributes table</comment>
+        <addForeignKeyConstraint baseColumnNames="session_primary_id" baseTableName="spring_session_attributes"
+            constraintName="spring_session_attributes_fk" referencedColumnNames="primary_id" referencedTableName="spring_session"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>
