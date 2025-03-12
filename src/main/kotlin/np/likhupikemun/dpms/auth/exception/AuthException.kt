@@ -8,7 +8,7 @@ sealed class AuthException(
     errorCode: AuthErrorCode,
     message: String? = null,
     metadata: Map<String, Any> = emptyMap(),
-    status: HttpStatus = HttpStatus.BAD_REQUEST
+    status: HttpStatus
 ) : DpmsException(errorCode, message, status, metadata) {
 
     enum class AuthErrorCode : ErrorCode {
@@ -52,37 +52,44 @@ sealed class AuthException(
 
     class UserNotFoundException(id: String) : AuthException(
         AuthErrorCode.USER_NOT_FOUND,
-        metadata = mapOf("id" to id)
+        metadata = mapOf("id" to id),
+        status = HttpStatus.NOT_FOUND
     )
 
     class UserAlreadyExistsException(email: String) : AuthException(
         AuthErrorCode.USER_ALREADY_EXISTS,
-        metadata = mapOf("email" to email)
+        metadata = mapOf("email" to email),
+        status = HttpStatus.CONFLICT
     )
 
     class UserAlreadyDeletedException(id: String) : AuthException(
         AuthErrorCode.USER_ALREADY_DELETED,
-        metadata = mapOf("id" to id)
+        metadata = mapOf("id" to id),
+        status = HttpStatus.CONFLICT
     )
 
     class UserAlreadyApprovedException(id: String) : AuthException(
         AuthErrorCode.USER_ALREADY_APPROVED,
-        metadata = mapOf("id" to id)
+        metadata = mapOf("id" to id),
+        status = HttpStatus.CONFLICT
     )
 
     class InvalidUserStateException(message: String) : AuthException(
         AuthErrorCode.INVALID_USER_STATE,
-        message
+        message = message,
+        status = HttpStatus.BAD_REQUEST
     )
 
     class PermissionNotFoundException(type: String) : AuthException(
         AuthErrorCode.PERMISSION_NOT_FOUND,
-        metadata = mapOf("type" to type)
+        metadata = mapOf("type" to type),
+        status = HttpStatus.NOT_FOUND
     )
 
     class MissingPermissionsException(types: Set<String>) : AuthException(
         AuthErrorCode.MISSING_PERMISSIONS,
-        metadata = mapOf("types" to types)
+        metadata = mapOf("types" to types),
+        status = HttpStatus.FORBIDDEN
     )
 
     class UnauthenticatedException : AuthException(

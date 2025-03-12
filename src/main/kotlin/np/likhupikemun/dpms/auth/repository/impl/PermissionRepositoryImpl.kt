@@ -2,7 +2,7 @@ package np.likhupikemun.dpms.auth.repository.impl
 
 import jakarta.persistence.EntityManager
 import np.likhupikemun.dpms.auth.domain.entity.Permission
-import np.likhupikemun.dpms.auth.domain.enum.PermissionType
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 import np.likhupikemun.dpms.auth.repository.PermissionRepositoryCustom
 
 class PermissionRepositoryImpl(

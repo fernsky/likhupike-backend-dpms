@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.JoinType
 import np.likhupikemun.dpms.auth.domain.entity.User
 import np.likhupikemun.dpms.auth.domain.entity.UserPermission
+import np.likhupikemun.dpms.auth.domain.entity.Permission
 import np.likhupikemun.dpms.auth.repository.UserRepositoryCustom
 import java.util.*
 

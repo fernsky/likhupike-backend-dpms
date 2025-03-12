@@ -1,8 +1,8 @@
 package np.likhupikemun.dpms.auth.domain.entity
 
 import jakarta.persistence.*
-import np.likhupikemun.dpms.common.entity.BaseEntity
-import np.likhupikemun.dpms.auth.domain.enum.PermissionType
+import np.likhupikemun.dpms.common.entity.UuidBaseEntity
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDate
@@ -17,7 +17,7 @@ import java.util.*
     ],
 )
 class User :
-    BaseEntity(),
+    UuidBaseEntity(),
     UserDetails {
     @Column(nullable = false, unique = true)
     var email: String? = null

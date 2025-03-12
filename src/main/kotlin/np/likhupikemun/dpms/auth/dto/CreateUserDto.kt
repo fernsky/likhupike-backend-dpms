@@ -1,7 +1,7 @@
 package np.likhupikemun.dpms.auth.dto
 
 import jakarta.validation.constraints.*
-import np.likhupikemun.dpms.auth.domain.enum.PermissionType
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 
 data class CreateUserDto(
     @field:NotBlank(message = "Email is required")

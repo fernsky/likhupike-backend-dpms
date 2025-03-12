@@ -1,7 +1,7 @@
 package np.likhupikemun.dpms.auth.dto
 
 import jakarta.validation.constraints.NotEmpty
-import np.likhupikemun.dpms.auth.domain.enum.PermissionType
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 
 data class UserPermissionsDto(
     @field:NotEmpty(message = "At least one permission must be specified")

@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.domain.enum
+package np.likhupikemun.dpms.auth.domain.enums
 
 enum class PermissionType {
     // User Management

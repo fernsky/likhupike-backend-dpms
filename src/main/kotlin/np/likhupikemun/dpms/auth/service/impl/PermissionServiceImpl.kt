@@ -2,6 +2,9 @@ package np.likhupikemun.dpms.auth.service.impl
 
 import np.likhupikemun.dpms.auth.service.PermissionService
 import np.likhupikemun.dpms.auth.repository.PermissionRepository
+import np.likhupikemun.dpms.auth.domain.entity.Permission
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
+import np.likhupikemun.dpms.auth.exception.AuthException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

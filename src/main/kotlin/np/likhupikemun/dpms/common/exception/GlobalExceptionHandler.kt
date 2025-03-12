@@ -3,6 +3,7 @@ package np.likhupikemun.dpms.common.exception
 import jakarta.validation.ConstraintViolationException
 import np.likhupikemun.dpms.common.dto.ApiResponse
 import np.likhupikemun.dpms.common.dto.ErrorDetails
+import np.likhupikemun.dpms.auth.exception.AuthException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
