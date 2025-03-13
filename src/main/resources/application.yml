@@ -14,3 +14,8 @@ app:
   admin:
     email: ${ADMIN_EMAIL:admin@likhupike.gov.np}
     password: ${ADMIN_PASSWORD:Admin@123}
+
+jwt:
+  secret-key: ${JWT_SECRET:464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EF11E36FD39} # Change in production
+  expiration: 24 # hours
+  refresh-expiration: 168 # 7 days in hours

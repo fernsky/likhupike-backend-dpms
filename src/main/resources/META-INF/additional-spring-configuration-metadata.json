@@ -11,6 +11,24 @@
             "type": "java.lang.String",
             "description": "Admin password",
             "defaultValue": "Admin@123"
+        },
+        {
+            "name": "jwt.secret-key",
+            "type": "java.lang.String",
+            "description": "JWT secret key",
+            "defaultValue": "464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EF11E36FD39"
+        },
+        {
+            "name": "jwt.expiration",
+            "type": "java.lang.Integer",
+            "description": "JWT expiration time in hours",
+            "defaultValue": 24
+        },
+        {
+            "name": "jwt.refresh-expiration",
+            "type": "java.lang.Integer",
+            "description": "JWT refresh expiration time in hours",
+            "defaultValue": 168
         }
     ]
 }
