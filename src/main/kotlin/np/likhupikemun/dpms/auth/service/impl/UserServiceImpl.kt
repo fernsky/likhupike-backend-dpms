@@ -1,5 +1,7 @@
 package np.likhupikemun.dpms.auth.service.impl
 
+import jakarta.persistence.EntityManager
+import np.likhupikemun.dpms.auth.repository.specification.UserSpecifications
 import np.likhupikemun.dpms.auth.service.UserService
 import np.likhupikemun.dpms.auth.repository.UserRepository
 import np.likhupikemun.dpms.auth.service.PermissionService
@@ -12,14 +14,15 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
-
+import javax.persistence.criteria.Predicate
 
 @Service
 @Transactional
 class UserServiceImpl(
     private val userRepository: UserRepository,
     private val permissionService: PermissionService,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val entityManager: EntityManager
 ) : UserService {
     override fun createUser(createUserDto: CreateUserDto): User {
         if (userRepository.existsByEmail(createUserDto.email)) {
@@ -106,6 +109,44 @@ class UserServiceImpl(
             isDeleted = true
             this.deletedBy = deletedBy
             deletedAt = LocalDateTime.now()
+        }
+
+        return userRepository.save(user)
+    }
+
+    override fun searchUsers(criteria: UserSearchCriteria): Page<UserProjection> {
+        val specification = UserSpecifications.fromCriteria(criteria)
+        return userRepository.findAllWithProjection(
+            spec = specification,
+            pageable = criteria.toPageable(),
+            columns = criteria.getValidColumns()
+        )
+    }
+
+    override fun updateUser(userId: UUID, request: UpdateUserRequest): User {
+        val user = userRepository.findById(userId)
+            .orElseThrow { AuthException.UserNotFoundException(userId.toString()) }
+
+        if (user.isDeleted) {
+            throw AuthException.UserAlreadyDeletedException(userId.toString())
+        }
+
+        request.email?.let { email ->
+            if (email != user.email && userRepository.existsByEmail(email)) {
+                throw AuthException.UserAlreadyExistsException(email)
+            }
+            user.email = email
+        }
+
+        request.isWardLevelUser?.let { isWardLevel ->
+            user.isWardLevelUser = isWardLevel
+        }
+
+        request.wardNumber?.let { wardNum ->
+            if (user.isWardLevelUser && wardNum == null) {
+                throw AuthException.InvalidUserStateException("Ward number is required for ward level users")
+            }
+            user.wardNumber = wardNum
         }
 
         return userRepository.save(user)
