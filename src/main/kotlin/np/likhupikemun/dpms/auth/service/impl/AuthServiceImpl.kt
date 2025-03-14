@@ -68,29 +68,32 @@ class AuthServiceImpl(
     }
 
     override fun login(request: LoginRequest): AuthResponse {
-        // First find the user
-        val user = userService.findByEmail(request.email)
-            ?: throw AuthException.UserNotFoundException(request.email)
-
-        // Check approval status before attempting authentication
-        if (!user.isApproved) {
-            throw AuthException.UserNotApprovedException()
-        }
-
-        // Only attempt authentication if user exists and is approved
         try {
+            // Try authentication first
             authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(request.email, request.password)
             )
+
+            // If authentication succeeds, then get the user
+            val user = userService.findByEmail(request.email)
+                ?: throw AuthException.UserNotFoundException(request.email)
+
+            if (!user.isApproved) {
+                throw AuthException.UserNotApprovedException()
+            }
+
+            val tokenPair = jwtService.generateTokenPair(user)
+            logger.info("User logged in successfully: {}", request.email)
+
+            return createAuthResponseFromUser(user, tokenPair)
+
         } catch (e: Exception) {
             logger.error("Authentication failed for user: ${request.email}", e)
-            throw AuthException.InvalidCredentialsException()
+            when (e) {
+                is AuthException -> throw e
+                else -> throw AuthException.InvalidCredentialsException()
+            }
         }
-
-        val tokenPair = jwtService.generateTokenPair(user)
-        logger.info("User logged in successfully: {}", request.email)
-
-        return createAuthResponseFromUser(user, tokenPair)
     }
 
     override fun refreshToken(refreshToken: String): AuthResponse {
