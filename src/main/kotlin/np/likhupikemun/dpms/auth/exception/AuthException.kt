@@ -47,6 +47,30 @@ sealed class AuthException(
         INSUFFICIENT_PERMISSIONS {
             override val code = "AUTH_009"
             override val defaultMessage = "Insufficient permissions"
+        },
+        INVALID_CREDENTIALS {
+            override val code = "AUTH_010"
+            override val defaultMessage = "Invalid credentials provided"
+        },
+        USER_NOT_APPROVED {
+            override val code = "AUTH_011"
+            override val defaultMessage = "User account is not approved"
+        },
+        INVALID_TOKEN {
+            override val code = "AUTH_012"
+            override val defaultMessage = "Invalid or expired token"
+        },
+        INVALID_PASSWORD {
+            override val code = "AUTH_013"
+            override val defaultMessage = "Invalid password provided"
+        },
+        JWT_VALIDATION_FAILED {
+            override val code = "AUTH_014"
+            override val defaultMessage = "JWT token validation failed"
+        },
+        PASSWORD_RESET_TOKEN_INVALID {
+            override val code = "AUTH_015"
+            override val defaultMessage = "Password reset token is invalid or expired"
         }
     }
 
@@ -105,5 +129,42 @@ sealed class AuthException(
         message = message,
         metadata = requiredPermissions?.let { mapOf("requiredPermissions" to it) } ?: emptyMap(),
         status = HttpStatus.FORBIDDEN
+    )
+
+    class InvalidCredentialsException : AuthException(
+        AuthErrorCode.INVALID_CREDENTIALS,
+        status = HttpStatus.UNAUTHORIZED
+    )
+
+    class UserNotApprovedException : AuthException(
+        AuthErrorCode.USER_NOT_APPROVED,
+        status = HttpStatus.FORBIDDEN
+    )
+
+    class InvalidTokenException : AuthException(
+        AuthErrorCode.INVALID_TOKEN,
+        status = HttpStatus.UNAUTHORIZED
+    )
+
+    class InvalidPasswordException(message: String? = null) : AuthException(
+        AuthErrorCode.INVALID_PASSWORD,
+        message = message,
+        status = HttpStatus.BAD_REQUEST
+    )
+
+    class JwtAuthenticationException(
+        message: String? = null,
+        details: Map<String, Any> = emptyMap()
+    ) : AuthException(
+        AuthErrorCode.JWT_VALIDATION_FAILED,
+        message = message,
+        metadata = details,
+        status = HttpStatus.UNAUTHORIZED
+    )
+
+    class InvalidPasswordResetTokenException(message: String? = null) : AuthException(
+        AuthErrorCode.PASSWORD_RESET_TOKEN_INVALID,
+        message = message,
+        status = HttpStatus.BAD_REQUEST
     )
 }

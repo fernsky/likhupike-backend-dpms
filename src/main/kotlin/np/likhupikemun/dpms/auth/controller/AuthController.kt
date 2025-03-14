@@ -19,15 +19,15 @@ class AuthController(
 
     @PostMapping("/register", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun register(
-        @Valid @RequestBody request: LoginRequest
-    ): ResponseEntity<ApiResponse<AuthResponse>> {
+        @Valid @RequestBody request: RegisterRequest
+    ): ResponseEntity<ApiResponse<RegisterResponse>> {
         logger.debug("Processing registration request for email: {}", request.email)
         val response = authService.register(request)
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(ApiResponse.success(
                 data = response,
-                message = "User registered successfully"
+                message = "Registration successful. Waiting for admin approval."
             ))
     }
 

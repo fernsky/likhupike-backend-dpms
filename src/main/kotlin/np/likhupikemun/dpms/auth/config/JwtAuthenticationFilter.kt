@@ -3,9 +3,8 @@ package np.likhupikemun.dpms.auth.config
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import np.gov.mofaga.imis.shared.exception.AuthenticationException
-import np.gov.mofaga.imis.shared.exception.JwtAuthenticationException
-import np.gov.mofaga.imis.shared.security.jwt.JwtService
+import np.likhupikemun.dpms.auth.exception.AuthException
+import np.likhupikemun.dpms.auth.security.JwtService
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -36,7 +35,7 @@ class JwtAuthenticationFilter(
                 processJwtAuthentication(jwt, request)
             } catch (e: Exception) {
                 logger.error("JWT Authentication failed", e)
-                throw JwtAuthenticationException(
+                throw AuthException.JwtAuthenticationException(
                     details =
                         mapOf(
                             "token" to jwt,
@@ -44,7 +43,7 @@ class JwtAuthenticationFilter(
                         ),
                 )
             }
-        } catch (e: AuthenticationException) {
+        } catch (e: AuthException.UnauthenticatedException) {
             SecurityContextHolder.clearContext()
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.message)
             return
@@ -71,7 +70,7 @@ class JwtAuthenticationFilter(
                 authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
                 SecurityContextHolder.getContext().authentication = authToken
             } else {
-                throw JwtAuthenticationException("Invalid JWT token")
+                throw AuthException.JwtAuthenticationException("Invalid JWT token")
             }
         }
     }

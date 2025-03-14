@@ -8,13 +8,11 @@ import np.likhupikemun.dpms.auth.domain.entity.User
 import np.likhupikemun.dpms.auth.security.JwtService
 import np.likhupikemun.dpms.auth.security.TokenPair
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 @Service
 class JwtServiceImpl(
@@ -23,23 +21,20 @@ class JwtServiceImpl(
     @Value("\${jwt.expiration}")
     private val jwtExpiration: Long,
     @Value("\${jwt.refresh-expiration}")
-    private val refreshExpiration: Long,
-    private val redisTemplate: RedisTemplate<String, String>
+    private val refreshExpiration: Long
 ) : JwtService {
 
-    companion object {
-        private const val BLACKLIST_PREFIX = "token:blacklist:"
-    }
-
     private val key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey))
+    private val blacklistedTokens = Collections.synchronizedSet(HashSet<String>())
 
-    override fun extractUsername(token: String): String? = extractClaim(token) { it.subject }
+    override fun extractUsername(token: String): String? = 
+        extractClaim(token) { it.subject }
 
     override fun extractEmail(token: String): String = 
         extractUsername(token) ?: throw IllegalStateException("Token has no subject claim")
 
     override fun generateToken(userDetails: UserDetails): String = 
-        generateToken(mapOf(), userDetails)
+        generateToken(mapOf(), userDetails, jwtExpiration)
 
     override fun generateToken(user: User): String =
         generateToken(
@@ -70,19 +65,18 @@ class JwtServiceImpl(
             .claims(extraClaims)
             .subject(userDetails.username)
             .issuedAt(Date.from(Instant.now()))
-            .expiration(Date.from(Instant.now().plus(expiration, ChronoUnit.HOURS)))
+            .expiration(Date.from(Instant.now().plus(Duration.ofHours(expiration))))
             .signWith(key)
             .compact()
 
     override fun isTokenValid(token: String, userDetails: UserDetails): Boolean {
         val username = extractUsername(token)
-        return username == userDetails.username && !isTokenExpired(token)
+        return username == userDetails.username && !isTokenExpired(token) && !isTokenBlacklisted(token)
     }
 
     override fun validateToken(token: String): Boolean =
         try {
-            val isBlacklisted = redisTemplate.hasKey("$BLACKLIST_PREFIX$token")
-            !isBlacklisted && !isTokenExpired(token)
+            !isTokenExpired(token) && !isTokenBlacklisted(token)
         } catch (e: Exception) {
             false
         }
@@ -100,22 +94,21 @@ class JwtServiceImpl(
     }
 
     override fun invalidateToken(token: String) {
-        val claims = extractAllClaims(token) ?: return
-        val expirationTime = claims.expiration.time
-        val currentTime = System.currentTimeMillis()
-        val timeToLive = (expirationTime - currentTime).coerceAtLeast(0)
-
-        redisTemplate.opsForValue()
-            .set(
-                "$BLACKLIST_PREFIX$token",
-                "invalidated",
-                timeToLive,
-                TimeUnit.MILLISECONDS
-            )
+        blacklistedTokens.add(token)
+        // Clean up expired tokens from blacklist
+        val now = Date()
+        blacklistedTokens.removeIf { tok ->
+            extractExpiration(tok)?.before(now) ?: true
+        }
     }
+
+    override fun getExpirationDuration(): Duration = Duration.ofHours(jwtExpiration)
 
     private fun isTokenExpired(token: String): Boolean = 
         extractExpiration(token)?.before(Date()) ?: true
+
+    private fun isTokenBlacklisted(token: String): Boolean =
+        blacklistedTokens.contains(token)
 
     private fun extractExpiration(token: String): Date? = 
         extractClaim(token) { it.expiration }

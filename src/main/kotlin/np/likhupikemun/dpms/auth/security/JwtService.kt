@@ -2,6 +2,7 @@ package np.likhupikemun.dpms.auth.security
 
 import np.likhupikemun.dpms.auth.domain.entity.User
 import org.springframework.security.core.userdetails.UserDetails
+import java.time.Duration
 
 interface JwtService {
     fun extractUsername(token: String): String?
@@ -15,4 +16,5 @@ interface JwtService {
     fun getTokenExpirationTime(): Long
     fun generateTokenPair(user: User): TokenPair
     fun invalidateToken(token: String)
+    fun getExpirationDuration(): Duration
 }

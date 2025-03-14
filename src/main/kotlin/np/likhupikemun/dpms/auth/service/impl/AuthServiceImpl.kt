@@ -1,21 +1,21 @@
 package np.likhupikemun.dpms.auth.service.impl
 
+import np.likhupikemun.dpms.auth.domain.entity.User
 import np.likhupikemun.dpms.auth.service.AuthService
 import np.likhupikemun.dpms.auth.service.UserService
 import np.likhupikemun.dpms.auth.dto.*
 import np.likhupikemun.dpms.auth.exception.AuthException
 import np.likhupikemun.dpms.auth.security.JwtService
+import np.likhupikemun.dpms.auth.security.TokenPair
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Duration
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import org.slf4j.LoggerFactory
 import java.util.UUID
-import jakarta.annotation.PostConstruct
+import java.util.concurrent.ConcurrentHashMap
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 
 @Service
 @Transactional
@@ -26,69 +26,71 @@ class AuthServiceImpl(
     private val authenticationManager: AuthenticationManager
 ) : AuthService {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private lateinit var resetTokenCache: Cache<String, String>
+    
+    // Simple in-memory store for reset tokens with 15-minute expiry
+    private val resetTokens = ConcurrentHashMap<String, Pair<String, Long>>()
+    private val RESET_TOKEN_VALIDITY = 15 * 60 * 1000L // 15 minutes in milliseconds
 
-    @PostConstruct
-    fun init() {
-        resetTokenCache = Caffeine.newBuilder()
-            .expireAfterWrite(Duration.ofMinutes(15))
-            .maximumSize(1000)
-            .build()
-    }
-
-    override fun register(request: LoginRequest): AuthResponse {
-        val user = userService.createUser(
-            CreateUserDto(
-                email = request.email,
-                password = request.password,
-                isWardLevelUser = false
-            )
-        )
-
-        val tokenPair = jwtService.generateTokenPair(user)
-        logger.info("User registered successfully: {}", request.email)
+    private fun createAuthResponseFromUser(user: User, tokenPair: TokenPair): AuthResponse {
+        val permissions = user.getAuthorities()
+            .mapNotNull { authority -> 
+                runCatching { 
+                    PermissionType.valueOf(authority.authority.removePrefix("PERMISSION_"))
+                }.getOrNull()
+            }
+            .toSet()
 
         return AuthResponse(
             token = tokenPair.accessToken,
             refreshToken = tokenPair.refreshToken,
             userId = user.id!!.toString(),
             email = user.email!!,
-            permissions = user.getAuthorities().map { it.authority }.toSet(),
+            permissions = permissions,
             expiresIn = jwtService.getExpirationDuration().toSeconds(),
             isWardLevelUser = user.isWardLevelUser,
             wardNumber = user.wardNumber
         )
     }
 
+    override fun register(request: RegisterRequest): RegisterResponse {
+        val user = userService.createUser(
+            CreateUserDto(
+                email = request.email,
+                password = request.password,
+                isWardLevelUser = request.isWardLevelUser,
+                wardNumber = request.wardNumber
+            )
+        )
+
+        logger.info("User registered successfully and waiting for approval: {}", request.email)
+
+        return RegisterResponse(email = user.email!!)
+    }
+
     override fun login(request: LoginRequest): AuthResponse {
+        // First find the user
+        val user = userService.findByEmail(request.email)
+            ?: throw AuthException.UserNotFoundException(request.email)
+
+        // Check approval status before attempting authentication
+        if (!user.isApproved) {
+            throw AuthException.UserNotApprovedException()
+        }
+
+        // Only attempt authentication if user exists and is approved
         try {
             authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(request.email, request.password)
             )
         } catch (e: Exception) {
+            logger.error("Authentication failed for user: ${request.email}", e)
             throw AuthException.InvalidCredentialsException()
-        }
-
-        val user = userService.findByEmail(request.email)
-            ?: throw AuthException.UserNotFoundException(request.email)
-
-        if (!user.isApproved) {
-            throw AuthException.UserNotApprovedException()
         }
 
         val tokenPair = jwtService.generateTokenPair(user)
         logger.info("User logged in successfully: {}", request.email)
 
-        return AuthResponse(
-            token = tokenPair.accessToken,
-            refreshToken = tokenPair.refreshToken,
-            userId = user.id!!.toString(),
-            email = user.email!!,
-            permissions = user.getAuthorities().map { it.authority }.toSet(),
-            expiresIn = jwtService.getExpirationDuration().toSeconds(),
-            isWardLevelUser = user.isWardLevelUser,
-            wardNumber = user.wardNumber
-        )
+        return createAuthResponseFromUser(user, tokenPair)
     }
 
     override fun refreshToken(refreshToken: String): AuthResponse {
@@ -105,16 +107,7 @@ class AuthServiceImpl(
         val tokenPair = jwtService.generateTokenPair(user)
         logger.info("Token refreshed for user: {}", email)
 
-        return AuthResponse(
-            token = tokenPair.accessToken,
-            refreshToken = tokenPair.refreshToken,
-            userId = user.id!!.toString(),
-            email = user.email!!,
-            permissions = user.getAuthorities().map { it.authority }.toSet(),
-            expiresIn = jwtService.getExpirationDuration().toSeconds(),
-            isWardLevelUser = user.isWardLevelUser,
-            wardNumber = user.wardNumber
-        )
+        return createAuthResponseFromUser(user, tokenPair)
     }
 
     override fun logout(token: String) {
@@ -128,15 +121,20 @@ class AuthServiceImpl(
             throw AuthException.InvalidPasswordException("Passwords do not match")
         }
 
-        val email = resetTokenCache.getIfPresent(request.token)
-            ?: throw AuthException.InvalidPasswordResetTokenException()
+        val tokenInfo = resetTokens[request.token] ?: 
+            throw AuthException.InvalidPasswordResetTokenException()
 
-        val user = userService.findByEmail(email)
-            ?: throw AuthException.UserNotFoundException(email)
+        if (System.currentTimeMillis() > tokenInfo.second) {
+            resetTokens.remove(request.token)
+            throw AuthException.InvalidPasswordResetTokenException("Token has expired")
+        }
+
+        val user = userService.findByEmail(tokenInfo.first)
+            ?: throw AuthException.UserNotFoundException(tokenInfo.first)
 
         userService.resetPassword(user.id!!, request.newPassword)
-        resetTokenCache.invalidate(request.token)
-        logger.info("Password reset successful for user: {}", email)
+        resetTokens.remove(request.token)
+        logger.info("Password reset successful for user: {}", tokenInfo.first)
     }
 
     override fun requestPasswordReset(request: RequestPasswordResetRequest) {
@@ -144,22 +142,13 @@ class AuthServiceImpl(
             ?: throw AuthException.UserNotFoundException(request.email)
 
         val token = UUID.randomUUID().toString()
-        resetTokenCache.put(token, user.email!!)
-        logger.info("Password reset requested for user: {}", request.email)
+        val expiryTime = System.currentTimeMillis() + RESET_TOKEN_VALIDITY
+        resetTokens[token] = user.email!! to expiryTime
+        
+        // Cleanup expired tokens
+        resetTokens.entries.removeIf { it.value.second < System.currentTimeMillis() }
 
-        // Here you would typically send an email with the reset token
-        // For now, we'll just log it
+        logger.info("Password reset requested for user: {}", request.email)
         logger.info("Reset token for {}: {}", request.email, token)
     }
-
-    private fun createAuthResponse(user: User, tokenPair: TokenPair) = AuthResponse(
-        token = tokenPair.accessToken,
-        refreshToken = tokenPair.refreshToken,
-        userId = user.id!!.toString(),
-        email = user.email!!,
-        permissions = user.getAuthorities().map { it.authority }.toSet(),
-        expiresIn = jwtService.getExpirationDuration().toSeconds(),
-        isWardLevelUser = user.isWardLevelUser,
-        wardNumber = user.wardNumber
-    )
 }
