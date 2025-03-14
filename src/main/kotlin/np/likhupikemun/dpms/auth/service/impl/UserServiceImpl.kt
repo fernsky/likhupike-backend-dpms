@@ -6,15 +6,14 @@ import np.likhupikemun.dpms.auth.service.UserService
 import np.likhupikemun.dpms.auth.repository.UserRepository
 import np.likhupikemun.dpms.auth.service.PermissionService
 import np.likhupikemun.dpms.auth.exception.AuthException
-import np.likhupikemun.dpms.auth.dto.CreateUserDto
-import np.likhupikemun.dpms.auth.dto.UserPermissionsDto
 import np.likhupikemun.dpms.auth.domain.entity.User
+import np.likhupikemun.dpms.auth.dto.*
+import org.springframework.data.domain.Page
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
-import javax.persistence.criteria.Predicate
 
 @Service
 @Transactional
@@ -131,18 +130,18 @@ class UserServiceImpl(
             throw AuthException.UserAlreadyDeletedException(userId.toString())
         }
 
-        request.email?.let { email ->
+        request.email?.let { email: String ->
             if (email != user.email && userRepository.existsByEmail(email)) {
                 throw AuthException.UserAlreadyExistsException(email)
             }
             user.email = email
         }
 
-        request.isWardLevelUser?.let { isWardLevel ->
+        request.isWardLevelUser?.let { isWardLevel: Boolean ->
             user.isWardLevelUser = isWardLevel
         }
 
-        request.wardNumber?.let { wardNum ->
+        request.wardNumber?.let { wardNum: Int ->
             if (user.isWardLevelUser && wardNum == null) {
                 throw AuthException.InvalidUserStateException("Ward number is required for ward level users")
             }

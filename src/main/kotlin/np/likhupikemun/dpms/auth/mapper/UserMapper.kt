@@ -3,6 +3,8 @@ package np.likhupikemun.dpms.auth.mapper
 import np.likhupikemun.dpms.auth.domain.entity.User
 import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 import np.likhupikemun.dpms.auth.dto.UserResponse
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 object UserMapper {
     fun toResponse(user: User): UserResponse =
@@ -22,8 +24,8 @@ object UserMapper {
             isApproved = user.isApproved,
             approvedBy = user.approvedBy,
             approvedAt = user.approvedAt,
-            createdAt = user.createdAt!!,
-            updatedAt = user.updatedAt,
+            createdAt = LocalDateTime.ofInstant(user.createdAt!!, ZoneId.systemDefault()),
+            updatedAt = user.updatedAt?.let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) },
         )
 
     fun toResponseList(users: List<User>): List<UserResponse> = users.map(::toResponse)

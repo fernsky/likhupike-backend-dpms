@@ -45,7 +45,7 @@ object UserSpecifications {
         Specification<User> { root, query, _ ->
             criteria.permissions?.let { permissions ->
                 if (permissions.isNotEmpty()) {
-                    query.distinct(true)
+                    query?.distinct(true)
                     val permissionsJoin =
                         root
                             .join<User, UserPermission>("permissions", JoinType.LEFT)

@@ -4,6 +4,9 @@ import jakarta.validation.Valid
 import np.likhupikemun.dpms.auth.service.UserService
 import np.likhupikemun.dpms.common.dto.ApiResponse
 import np.likhupikemun.dpms.auth.mapper.UserMapper
+import np.likhupikemun.dpms.auth.domain.entity.User
+import np.likhupikemun.dpms.auth.dto.*
+import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
@@ -32,7 +35,7 @@ class UserController(
     @PreAuthorize("hasPermission('VIEW_USER')")
     fun searchUsers(
         @Valid criteria: UserSearchCriteria
-    ): ResponseEntity<ApiResponse<List<UserProjection>>> {
+    ): ResponseEntity<ApiResponse<Page<UserProjection>>> {  // Changed List to Page
         val users = userService.searchUsers(criteria)
         return ResponseEntity.ok(
             ApiResponse.success(

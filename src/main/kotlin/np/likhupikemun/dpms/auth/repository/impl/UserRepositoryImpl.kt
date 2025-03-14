@@ -76,23 +76,29 @@ class UserRepositoryImpl(
         }
 
         // Apply specifications
-        query.where(spec.toPredicate(root, query, cb))
+        spec.toPredicate(root, query, cb)?.let { query.where(it) }
 
         // Apply sorting
-        query.orderBy(
-            pageable.sort.map { order ->
-                if (order.isAscending) cb.asc(root.get<Any>(order.property))
-                else cb.desc(root.get<Any>(order.property))
+        if (pageable.sort.isSorted) {
+            val orders = mutableListOf<jakarta.persistence.criteria.Order>()
+            pageable.sort.forEach { order ->
+                val path = root.get<Any>(order.property)
+                orders.add(
+                    if (order.isAscending) cb.asc(path)
+                    else cb.desc(path)
+                )
             }
-        )
+            query.orderBy(orders)
+        }
 
-        // Execute query with pagination
-        val totalQuery = cb.createQuery(Long::class.java)
-        totalQuery.select(cb.count(totalQuery.from(User::class.java)))
-        totalQuery.where(spec.toPredicate(totalQuery.from(User::class.java), totalQuery, cb))
-        
-        val total = entityManager.createQuery(totalQuery).singleResult
+        // Execute count query
+        val countQuery = cb.createQuery(Long::class.java)
+        val countRoot = countQuery.from(User::class.java)
+        countQuery.select(cb.count(countRoot))
+        spec.toPredicate(countRoot, countQuery, cb)?.let { countQuery.where(it) }
+        val total = entityManager.createQuery(countQuery).singleResult
 
+        // Execute main query with pagination
         val results = entityManager.createQuery(query)
             .setFirstResult(pageable.pageNumber * pageable.pageSize)
             .setMaxResults(pageable.pageSize)

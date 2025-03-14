@@ -11,4 +11,5 @@ interface UserRepository :
     UserRepositoryCustom {
     
     fun existsByEmail(email: String): Boolean
+    fun findByEmail(email: String): Optional<User>  // Add this method
 }

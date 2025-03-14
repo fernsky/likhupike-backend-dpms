@@ -1,6 +1,7 @@
 package np.likhupikemun.dpms.auth.dto
 
 import jakarta.validation.constraints.Email
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
