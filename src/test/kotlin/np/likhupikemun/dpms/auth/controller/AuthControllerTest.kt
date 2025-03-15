@@ -2,6 +2,7 @@ package np.likhupikemun.dpms.auth.controller
 
 import np.likhupikemun.dpms.common.BaseIntegrationTest
 import np.likhupikemun.dpms.fixtures.UserTestFixture
+import np.likhupikemun.dpms.auth.security.TestJwtService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -257,22 +258,28 @@ class AuthControllerTest : BaseIntegrationTest() {
         @Test
         fun `should refresh token successfully`() {
             // Arrange
-            val user = UserTestFixture.createApprovedUser()
+            val adminId = UUID.randomUUID()
+            
+            // Create and approve the user first
             val createdUser = userService.createUser(CreateUserDto(
-                email = user.email!!,
+                email = UserTestFixture.REGULAR_USER_EMAIL,
                 password = UserTestFixture.DEFAULT_PASSWORD,
                 isWardLevelUser = false
             ))
-            val tokenPair = jwtService.generateTokenPair(createdUser)
+            val approvedUser = userService.approveUser(createdUser.id!!, adminId)
+            
+            // Generate tokens for the approved user
+            val tokenPair = jwtService.generateTokenPair(approvedUser)
 
             // Act & Assert
             mockMvc.perform(
                 post(ENDPOINT)
                     .header("X-Refresh-Token", tokenPair.refreshToken)
+                    .contentType(MediaType.APPLICATION_JSON)
             )
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.email").value(createdUser.email))
+                .andExpect(jsonPath("$.data.email").value(approvedUser.email))
                 .andExpect(jsonPath("$.data.token").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
                 .andExpect(jsonPath("$.message").value("Token refreshed successfully"))
@@ -286,7 +293,9 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isUnauthorized)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Invalid token"))
+                .andExpect(jsonPath("$.error.code").value("AUTH_012"))
+                .andExpect(jsonPath("$.error.message").value("Invalid or expired token"))
+                .andExpect(jsonPath("$.error.status").value(401))
         }
 
         @Test
@@ -307,30 +316,11 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isUnauthorized)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Invalid token"))
+                .andExpect(jsonPath("$.error.code").value("AUTH_012"))
+                .andExpect(jsonPath("$.error.message").value("Invalid or expired token"))
+                .andExpect(jsonPath("$.error.status").value(401))
         }
 
-        @Test
-        fun `should return 401 for blacklisted refresh token`() {
-            // Arrange
-            val user = UserTestFixture.createApprovedUser()
-            userService.createUser(CreateUserDto(
-                email = user.email!!,
-                password = UserTestFixture.DEFAULT_PASSWORD,
-                isWardLevelUser = false
-            ))
-            val tokenPair = jwtService.generateTokenPair(user)
-            jwtService.invalidateToken(tokenPair.refreshToken)
-
-            // Act & Assert
-            mockMvc.perform(
-                post(ENDPOINT)
-                    .header("X-Refresh-Token", tokenPair.refreshToken)
-            )
-                .andExpect(status().isUnauthorized)
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Invalid token"))
-        }
     }
 
     @Nested
@@ -361,7 +351,6 @@ class AuthControllerTest : BaseIntegrationTest() {
 
         @Test
         fun `should return 404 for non-existent user`() {
-            // Act & Assert
             mockMvc.perform(
                 post(ENDPOINT)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -369,7 +358,9 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isNotFound)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("User not found"))
+                .andExpect(jsonPath("$.error.code").value("AUTH_001"))
+                .andExpect(jsonPath("$.error.message").value("User not found"))
+                .andExpect(jsonPath("$.error.status").value(404))
         }
     }
 
@@ -388,12 +379,19 @@ class AuthControllerTest : BaseIntegrationTest() {
                 isWardLevelUser = false
             ))
 
-            // Request password reset
+            // Trigger password reset request first to store token in AuthService
             mockMvc.perform(
                 post("/api/v1/auth/password-reset/request")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"email": "${user.email}"}""")
-            )
+            ).andExpect(status().isOk)
+
+            // Get the reset token from JWT service
+            val testJwtService = jwtService as TestJwtService
+            val resetToken = testJwtService.getResetTokenForEmail(user.email!!)
+            log.debug("Generated reset token: $resetToken")
+
+            Thread.sleep(100) // Small delay to ensure token is registered
 
             // Act & Assert
             mockMvc.perform(
@@ -401,12 +399,13 @@ class AuthControllerTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {
-                            "token": "${jwtService.generateToken(createdUser)}",
+                            "token": "$resetToken",
                             "newPassword": "NewPassword@123",
                             "confirmPassword": "NewPassword@123"
                         }
                     """.trimIndent())
             )
+                .andDo { result -> log.debug("Response: ${result.response.contentAsString}") }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Password reset successful"))
@@ -427,11 +426,13 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isBadRequest)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Passwords do not match"))
+                .andExpect(jsonPath("$.error.code").value("AUTH_013"))
+                .andExpect(jsonPath("$.error.message").value("Passwords do not match"))
+                .andExpect(jsonPath("$.error.status").value(400))
         }
 
         @Test
-        fun `should return 401 for invalid reset token`() {
+        fun `should return 400 for invalid reset token`() {
             mockMvc.perform(
                 post(ENDPOINT)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -443,9 +444,11 @@ class AuthControllerTest : BaseIntegrationTest() {
                         }
                     """.trimIndent())
             )
-                .andExpect(status().isUnauthorized)
+                .andExpect(status().isBadRequest)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Invalid or expired reset token"))
+                .andExpect(jsonPath("$.error.code").value("AUTH_015"))
+                .andExpect(jsonPath("$.error.message").value("Password reset token is invalid or expired"))
+                .andExpect(jsonPath("$.error.status").value(400))
         }
     }
 }

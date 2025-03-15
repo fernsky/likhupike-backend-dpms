@@ -1,6 +1,8 @@
 package np.likhupikemun.dpms.config
 
 import np.likhupikemun.dpms.auth.security.CustomAuthenticationEntryPoint
+import np.likhupikemun.dpms.auth.security.JwtService
+import np.likhupikemun.dpms.auth.security.TestJwtService
 import np.likhupikemun.dpms.common.config.RouteRegistry
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean

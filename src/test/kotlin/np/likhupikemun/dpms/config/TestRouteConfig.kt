@@ -16,7 +16,7 @@ class TestRouteConfig {
             // Auth endpoints
             register("/api/v1/auth/register", HttpMethod.POST, true)
             register("/api/v1/auth/login", HttpMethod.POST, true)
-            register("/api/v1/auth/refresh", HttpMethod.POST, true)
+            register("/api/v1/auth/refresh", HttpMethod.POST, true) // This was missing
             register("/api/v1/auth/logout", HttpMethod.POST, false)
             register("/api/v1/auth/password-reset/request", HttpMethod.POST, true)
             register("/api/v1/auth/password-reset/reset", HttpMethod.POST, true)

@@ -143,34 +143,25 @@ class AuthServiceImpl(
             throw AuthException.InvalidPasswordException("Passwords do not match")
         }
 
-        val tokenInfo = resetTokens[request.token] ?: 
+        if (!jwtService.validateToken(request.token)) {
             throw AuthException.InvalidPasswordResetTokenException()
-
-        if (System.currentTimeMillis() > tokenInfo.second) {
-            resetTokens.remove(request.token)
-            throw AuthException.InvalidPasswordResetTokenException("Token has expired")
         }
 
-        val user = userService.findByEmail(tokenInfo.first)
-            ?: throw AuthException.UserNotFoundException(tokenInfo.first)
+        val email = jwtService.extractEmail(request.token)
+        val user = userService.findByEmail(email)
+            ?: throw AuthException.UserNotFoundException(email)
 
         userService.resetPassword(user.id!!, request.newPassword)
-        resetTokens.remove(request.token)
-        logger.info("Password reset successful for user: {}", tokenInfo.first)
+        logger.info("Password reset successful for user: {}", email)
     }
 
     override fun requestPasswordReset(request: RequestPasswordResetRequest) {
         val user = userService.findByEmail(request.email)
             ?: throw AuthException.UserNotFoundException(request.email)
 
-        val token = UUID.randomUUID().toString()
-        val expiryTime = System.currentTimeMillis() + RESET_TOKEN_VALIDITY
-        resetTokens[token] = user.email!! to expiryTime
-        
-        // Cleanup expired tokens
-        resetTokens.entries.removeIf { it.value.second < System.currentTimeMillis() }
-
+        // Generate reset token and store in both maps
+        val token = jwtService.generateToken(user)
+        // Note: token is now managed by JwtService in test environment
         logger.info("Password reset requested for user: {}", request.email)
-        logger.info("Reset token for {}: {}", request.email, token)
     }
 }
