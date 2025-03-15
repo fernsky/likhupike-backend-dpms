@@ -11,11 +11,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import java.util.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 @RestController
 @RequestMapping("/api/v1/users")
 class UserController(
-    private val userService: UserService
+    private val userService: UserService,
+    private val log: Logger = LoggerFactory.getLogger(UserController::class.java)
 ) {
     @PostMapping
     @PreAuthorize("hasPermission('CREATE_USER')")
@@ -32,10 +35,11 @@ class UserController(
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasPermission('VIEW_USER')")
+    @PreAuthorize("hasPermission(null, 'VIEW_USER')")  // Updated to match PermissionEvaluator signature
     fun searchUsers(
         @Valid criteria: UserSearchCriteria
-    ): ResponseEntity<ApiResponse<Page<UserProjection>>> {  // Changed List to Page
+    ): ResponseEntity<ApiResponse<Page<UserProjection>>> {
+        log.debug("Searching users with criteria: {}", criteria)
         val users = userService.searchUsers(criteria)
         return ResponseEntity.ok(
             ApiResponse.success(

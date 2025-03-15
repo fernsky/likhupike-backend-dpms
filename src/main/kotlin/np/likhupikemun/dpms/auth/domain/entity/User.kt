@@ -53,7 +53,9 @@ class User :
     private var permissions: MutableSet<UserPermission> = mutableSetOf()
 
     // UserDetails implementation
-    override fun getAuthorities() = permissions.map { SimpleGrantedAuthority(it.permission.type.getAuthority()) }
+    override fun getAuthorities() = permissions
+        .map { SimpleGrantedAuthority("PERMISSION_${it.permission.type}") }
+        .toSet()
 
     override fun getPassword() = password
 

@@ -20,10 +20,9 @@ class TestJwtService : JwtService {
         createAndStoreTestToken(userDetails.username)
 
     override fun generateToken(user: User): String {
-        // When generating a token for password reset, store it in both maps to ensure validation works
         val token = createAndStoreTestToken(user.email!!)
         resetTokens[token] = Pair(user.email!!, System.currentTimeMillis() + 15 * 60 * 1000)
-        validTokens[token] = user.email!!  // Also store in validTokens
+        validTokens[token] = user.email!!
         return token
     }
 
@@ -56,6 +55,11 @@ class TestJwtService : JwtService {
     override fun generateTokenPair(user: User): TokenPair {
         val accessToken = createAndStoreTestToken(user.email!!)
         val refreshToken = createAndStoreTestToken(user.email!!)
+        
+        // Store user's permissions in validTokens map
+        validTokens[accessToken] = user.email!!
+        validTokens[refreshToken] = user.email!!
+
         return TokenPair(accessToken, refreshToken, 3600L)
     }
 

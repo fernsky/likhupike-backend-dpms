@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationProvider
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -15,15 +14,17 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.util.matcher.RequestMatcher
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val authenticationProvider: AuthenticationProvider,
     private val customAuthenticationEntryPoint: CustomAuthenticationEntryPoint,
     private val routeRegistry: RouteRegistry,
+    private val permissionEvaluator: CustomPermissionEvaluator
 ) {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {

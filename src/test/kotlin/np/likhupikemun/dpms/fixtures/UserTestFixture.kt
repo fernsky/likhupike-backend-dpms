@@ -73,9 +73,13 @@ object UserTestFixture {
         )
     )
 
-    fun createApprovedUser() = createUser(
+    fun createApprovedUser(
+        email: String = REGULAR_USER_EMAIL,
+        permissions: Set<PermissionType> = setOf(PermissionType.VIEW_USER)
+    ) = createUser(
+        email = email,
         isApproved = true,
-        permissions = setOf(PermissionType.VIEW_USER)
+        permissions = permissions
     )
 
     fun createWardUser() = createUser(
