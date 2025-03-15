@@ -17,4 +17,5 @@ interface JwtService {
     fun generateTokenPair(user: User): TokenPair
     fun invalidateToken(token: String)
     fun getExpirationDuration(): Duration
+    fun generateExpiredToken(user: User): String
 }

@@ -133,7 +133,7 @@ sealed class AuthException(
 
     class InvalidCredentialsException : AuthException(
         AuthErrorCode.INVALID_CREDENTIALS,
-        status = HttpStatus.UNAUTHORIZED
+        status = HttpStatus.NOT_FOUND
     )
 
     class UserNotApprovedException : AuthException(

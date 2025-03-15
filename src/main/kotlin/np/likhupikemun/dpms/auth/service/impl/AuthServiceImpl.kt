@@ -11,6 +11,8 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.authentication.InternalAuthenticationServiceException
 import org.springframework.transaction.annotation.Transactional
 import org.slf4j.LoggerFactory
 import java.util.UUID
@@ -69,29 +71,44 @@ class AuthServiceImpl(
 
     override fun login(request: LoginRequest): AuthResponse {
         try {
-            // Try authentication first
-            authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken(request.email, request.password)
-            )
-
-            // If authentication succeeds, then get the user
+            // Get user details before authentication attempt
             val user = userService.findByEmail(request.email)
-                ?: throw AuthException.UserNotFoundException(request.email)
+                ?: throw AuthException.InvalidCredentialsException()
 
+            // Check approval status
             if (!user.isApproved) {
                 throw AuthException.UserNotApprovedException()
             }
 
+            // Attempt authentication
+            val auth = authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(request.email, request.password)
+            )
+
+            if (!auth.isAuthenticated) {
+                throw AuthException.InvalidCredentialsException()
+            }
+
             val tokenPair = jwtService.generateTokenPair(user)
-            logger.info("User logged in successfully: {}", request.email)
+            logger.debug("User logged in successfully: {}", request.email)
 
             return createAuthResponseFromUser(user, tokenPair)
 
         } catch (e: Exception) {
-            logger.error("Authentication failed for user: ${request.email}", e)
             when (e) {
                 is AuthException -> throw e
-                else -> throw AuthException.InvalidCredentialsException()
+                is BadCredentialsException -> {
+                    logger.error("Authentication failed - bad credentials for user: {}", request.email)
+                    throw AuthException.InvalidCredentialsException()
+                }
+                is InternalAuthenticationServiceException -> {
+                    logger.error("Authentication failed - user not found: {}", request.email)
+                    throw AuthException.InvalidCredentialsException()
+                }
+                else -> {
+                    logger.error("Unexpected authentication error for user: {}", request.email, e)
+                    throw AuthException.InvalidCredentialsException()
+                }
             }
         }
     }

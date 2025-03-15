@@ -2,6 +2,7 @@ package np.likhupikemun.dpms.auth.dto
 
 import jakarta.validation.constraints.*
 import np.likhupikemun.dpms.auth.domain.enums.PermissionType
+import java.util.UUID
 
 data class CreateUserDto(
     @field:NotBlank(message = "Email is required")
@@ -23,7 +24,10 @@ data class CreateUserDto(
 
     @field:Min(value = 1, message = "Ward number must be greater than 0")
     @field:Max(value = 33, message = "Ward number cannot be greater than 33")
-    val wardNumber: Int? = null
+    val wardNumber: Int? = null,
+
+    val isApproved: Boolean = false,
+    val approvedBy: UUID? = null
 ) {
     @AssertTrue(message = "Ward number is required for ward level users")
     fun isWardNumberValid(): Boolean = !isWardLevelUser || wardNumber != null

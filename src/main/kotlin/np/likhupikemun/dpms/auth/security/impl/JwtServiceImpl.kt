@@ -56,6 +56,16 @@ class JwtServiceImpl(
             refreshExpiration
         )
 
+    override fun generateExpiredToken(user: User): String =
+        generateToken(
+            mapOf(
+                "email" to (user.email ?: ""),
+                "type" to "refresh"
+            ),
+            user,
+            -1L  // Negative expiration means token is already expired
+        )
+
     override fun generateToken(
         extraClaims: Map<String, Any>,
         userDetails: UserDetails,
