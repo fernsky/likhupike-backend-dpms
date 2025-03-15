@@ -21,7 +21,7 @@ class UserController(
     private val log: Logger = LoggerFactory.getLogger(UserController::class.java)
 ) {
     @PostMapping
-    @PreAuthorize("hasPermission('CREATE_USER')")
+    @PreAuthorize("hasPermission(null, 'CREATE_USER')")
     fun createUser(
         @Valid @RequestBody request: CreateUserDto
     ): ResponseEntity<ApiResponse<UserResponse>> {
@@ -35,22 +35,22 @@ class UserController(
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasPermission(null, 'VIEW_USER')")  // Updated to match PermissionEvaluator signature
+    @PreAuthorize("hasPermission(null, 'VIEW_USER')")
     fun searchUsers(
         @Valid criteria: UserSearchCriteria
-    ): ResponseEntity<ApiResponse<Page<UserProjection>>> {
+    ): ResponseEntity<ApiResponse<List<UserProjection>>> {
         log.debug("Searching users with criteria: {}", criteria)
         val users = userService.searchUsers(criteria)
         return ResponseEntity.ok(
-            ApiResponse.success(
-                data = users,
+            ApiResponse.withPage(
+                page = users,
                 message = "Users retrieved successfully"
             )
         )
     }
 
     @PostMapping("/{userId}/approve")
-    @PreAuthorize("hasPermission('APPROVE_USER')")
+    @PreAuthorize("hasPermission(null, 'APPROVE_USER')")
     fun approveUser(
         @PathVariable userId: UUID,
         @RequestAttribute("currentUserId") currentUserId: UUID
@@ -65,7 +65,7 @@ class UserController(
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasPermission('DELETE_USER')")
+    @PreAuthorize("hasPermission(null, 'DELETE_USER')")
     fun deleteUser(
         @PathVariable userId: UUID,
         @RequestAttribute("currentUser") currentUser: String
@@ -80,7 +80,7 @@ class UserController(
     }
 
     @PutMapping("/{userId}/permissions")
-    @PreAuthorize("hasPermission('EDIT_USER')")
+    @PreAuthorize("hasPermission(null, 'EDIT_USER')")
     fun updatePermissions(
         @PathVariable userId: UUID,
         @Valid @RequestBody permissions: UserPermissionsDto
@@ -95,7 +95,7 @@ class UserController(
     }
 
     @PostMapping("/{userId}/reset-password")
-    @PreAuthorize("hasPermission('RESET_USER_PASSWORD')")
+    @PreAuthorize("hasPermission(null, 'RESET_USER_PASSWORD')")
     fun resetPassword(
         @PathVariable userId: UUID,
         @Valid @RequestBody request: ResetPasswordRequest

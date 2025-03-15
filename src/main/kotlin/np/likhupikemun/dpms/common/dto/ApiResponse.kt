@@ -8,14 +8,14 @@ data class ApiResponse<T>(
     val success: Boolean,
     val data: T? = null,
     val message: String? = null,
-    val meta: PaginationMeta? = null,
+    val meta: PageMeta? = null,
     val error: ErrorDetails? = null,
 ) {
     companion object {
         fun <T> success(
             data: T? = null,
             message: String? = null,
-            meta: PaginationMeta? = null,
+            meta: PageMeta? = null,
         ) = ApiResponse(
             success = true,
             data = data,
@@ -23,11 +23,20 @@ data class ApiResponse<T>(
             meta = meta,
         )
 
-        fun <T> error(error: ErrorDetails) =
-            ApiResponse<T>(
-                success = false,
-                error = error,
-            )
+        fun <T> error(error: ErrorDetails) = ApiResponse<T>(
+            success = false,
+            error = error,
+        )
+
+        fun <T> withPage(
+            page: Page<T>,
+            message: String? = null
+        ) = ApiResponse(
+            success = true,
+            data = page.content,
+            message = message,
+            meta = PageMeta.from(page)
+        )
     }
 }
 
@@ -38,44 +47,24 @@ data class ErrorDetails(
     val status: Int,
 )
 
-data class PaginationMeta(
-    val page: Int,
-    val size: Int,
-    val totalElements: Long,
-    val totalPages: Int,
-    val isFirst: Boolean,
-    val isLast: Boolean,
+data class PageMeta(
+    val page: Int,            // Current page number (0-based)
+    val size: Int,            // Page size
+    val totalElements: Long,  // Total number of elements
+    val totalPages: Int,      // Total number of pages
+    val isFirst: Boolean,     // If this is the first page
+    val isLast: Boolean      // If this is the last page
 ) {
     companion object {
-        fun from(page: Page<*>) =
-            PaginationMeta(
-                page = page.number,
-                size = page.size,
-                totalElements = page.totalElements,
-                totalPages = page.totalPages,
-                isFirst = page.isFirst,
-                isLast = page.isLast,
-            )
+        fun <T> from(page: Page<T>) = PageMeta(
+            page = page.number,
+            size = page.size,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+            isFirst = page.isFirst,
+            isLast = page.isLast
+        )
     }
 }
 
-fun <T> Page<T>.toApiResponse(message: String? = null) =
-    ApiResponse.success(
-        data = content,
-        message = message,
-        meta = PaginationMeta.from(this),
-    )
-
-fun errorResponse(
-    code: String,
-    message: String,
-    details: Map<String, Any>? = null,
-    status: Int,
-) = ApiResponse.error<Nothing>(
-    ErrorDetails(
-        code = code,
-        message = message,
-        details = details,
-        status = status,
-    ),
-)
+fun <T> Page<T>.toApiResponse(message: String? = null) = ApiResponse.withPage(this, message)
