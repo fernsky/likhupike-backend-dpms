@@ -135,17 +135,19 @@ class UserPermissionControllerTest : BaseUserControllerTest() {
             """.trimIndent()))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.error.code").value("AUTH_006"))
+            .andExpect(jsonPath("$.error.code").value("INVALID_FORMAT"))
     }
 
     @Test
     fun `should approve user successfully`() {
+        // Create target user
         val targetUser = userService.createUser(CreateUserDto(
             email = "target@test.com",
             password = UserTestFixture.DEFAULT_PASSWORD,
             isWardLevelUser = false
         ))
 
+        // Act & Assert
         mockMvc.perform(post("/api/v1/users/${targetUser.id}/approve")
             .header("Authorization", getAuthHeaderForUser(adminUser.email))
             .contentType(MediaType.APPLICATION_JSON))

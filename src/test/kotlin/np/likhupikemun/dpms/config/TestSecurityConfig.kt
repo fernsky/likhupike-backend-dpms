@@ -1,14 +1,11 @@
 package np.likhupikemun.dpms.config
 
-import np.likhupikemun.dpms.auth.security.CustomAuthenticationEntryPoint
-import np.likhupikemun.dpms.auth.security.JwtService
-import np.likhupikemun.dpms.auth.security.TestJwtService
+import np.likhupikemun.dpms.auth.security.*
 import np.likhupikemun.dpms.common.config.RouteRegistry
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -17,8 +14,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler
 
 @TestConfiguration
 @EnableWebSecurity
@@ -66,5 +61,6 @@ class TestSecurityConfig {
     fun jwtService(): JwtService = TestJwtService()
 
     @Bean
-    fun permissionEvaluator(): CustomPermissionEvaluator = CustomPermissionEvaluator()
+    @Primary
+    fun permissionEvaluator() = CustomPermissionEvaluator()
 }

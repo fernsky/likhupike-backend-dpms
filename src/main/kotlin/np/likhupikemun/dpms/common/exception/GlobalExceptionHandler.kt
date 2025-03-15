@@ -12,6 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import org.springframework.http.converter.HttpMessageNotReadableException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -115,6 +117,37 @@ class GlobalExceptionHandler {
                     )
                 )
             )
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleHttpMessageNotReadable(ex: HttpMessageNotReadableException): ResponseEntity<ApiResponse<Nothing>> {
+        val message = when {
+            ex.cause is InvalidFormatException -> {
+                val cause = ex.cause as InvalidFormatException
+                when {
+                    cause.targetType.isEnum -> {
+                        val enumClass = cause.targetType
+                        val validValues = (enumClass.enumConstants as Array<Enum<*>>).joinToString(", ") { it.name }
+                        "Invalid value '${cause.value}'. Allowed values are: [$validValues]"
+                    }
+                    else -> "Invalid format: ${cause.originalMessage}"
+                }
+            }
+            else -> "Invalid request format"
+        }
+
+        return ResponseEntity
+            .badRequest()
+            .body(
+                ApiResponse.error(
+                    ErrorDetails(
+                        code = "INVALID_FORMAT",
+                        message = "Invalid request format",
+                        details = mapOf("error" to message),
+                        status = HttpStatus.BAD_REQUEST.value()
+                    )
+                )
+            )
+    }
 
     @ExceptionHandler(Exception::class)
     fun handleAllExceptions(ex: Exception): ResponseEntity<ApiResponse<Nothing>> =

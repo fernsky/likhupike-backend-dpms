@@ -6,6 +6,7 @@ import np.likhupikemun.dpms.common.dto.ApiResponse
 import np.likhupikemun.dpms.auth.mapper.UserMapper
 import np.likhupikemun.dpms.auth.domain.entity.User
 import np.likhupikemun.dpms.auth.dto.*
+import np.likhupikemun.dpms.auth.resolver.CurrentUserId
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -53,7 +54,7 @@ class UserController(
     @PreAuthorize("hasPermission(null, 'APPROVE_USER')")
     fun approveUser(
         @PathVariable userId: UUID,
-        @RequestAttribute("currentUserId") currentUserId: UUID
+        @CurrentUserId currentUserId: UUID
     ): ResponseEntity<ApiResponse<UserResponse>> {
         val approvedUser = userService.approveUser(userId, currentUserId)
         return ResponseEntity.ok(
