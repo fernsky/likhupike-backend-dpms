@@ -83,8 +83,10 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isBadRequest)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.errors[0].field").value("email"))
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.error.message").value("Validation failed"))
+                .andExpect(jsonPath("$.error.details.email").value("Please provide a valid email address"))
+                .andExpect(jsonPath("$.error.status").value(400))
         }
 
         @Test
@@ -103,8 +105,32 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isBadRequest)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.errors[0].field").value("wardNumber"))
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.error.message").value("Validation failed"))
+                .andExpect(jsonPath("$.error.details.wardNumberValid").value("Ward number is required for ward level users"))
+                .andExpect(jsonPath("$.error.status").value(400))
+        }
+
+        @Test
+        fun `should return 400 when passwords don't match`() {
+            // Arrange
+            val request = UserTestFixture.createRegisterRequest(
+                password = "Test@123",
+                confirmPassword = "DifferentTest@123"
+            )
+
+            // Act & Assert
+            mockMvc.perform(
+                post(ENDPOINT)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(request.toJson())
+            )
+                .andExpect(status().isBadRequest)
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.error.message").value("Validation failed"))
+                .andExpect(jsonPath("$.error.details.passwordValid").value("Passwords do not match"))
+                .andExpect(jsonPath("$.error.status").value(400))
         }
     }
 
@@ -117,24 +143,22 @@ class AuthControllerTest : BaseIntegrationTest() {
         fun `should login approved user successfully`() {
             // Arrange
             val userId = UUID.randomUUID()
-            val user = UserTestFixture.createUser(
-                id = userId,
+            val adminId = UUID.randomUUID() // ID for admin who approves
+            
+            // Create unapproved user first
+            val createdUser = userService.createUser(CreateUserDto(
                 email = UserTestFixture.REGULAR_USER_EMAIL,
                 password = UserTestFixture.DEFAULT_PASSWORD,
-                isApproved = true  // Make sure user is approved
-            )
-            
-            val createdUser = userService.createUser(CreateUserDto(
-                email = user.email!!,
-                password = UserTestFixture.DEFAULT_PASSWORD,
-                isWardLevelUser = false,
-                isApproved = true,  // Explicitly set approval
-                approvedBy = userId // Set approver
+                isWardLevelUser = false
             ))
             log.debug("Created test user: $createdUser")
 
+            // Approve the user using the service
+            val approvedUser = userService.approveUser(createdUser.id!!, adminId)
+            log.debug("Approved user: $approvedUser")
+
             val request = UserTestFixture.createLoginRequest(
-                email = user.email!!,
+                email = approvedUser.email!!,
                 password = UserTestFixture.DEFAULT_PASSWORD
             )
             log.debug("Login request: $request")
@@ -157,7 +181,7 @@ class AuthControllerTest : BaseIntegrationTest() {
         }
 
         @Test
-        fun `should return 401 when user is not approved`() {
+        fun `should return 403 when user is not approved`() {
             // Arrange
             val user = UserTestFixture.createUser(isApproved = false)
             userService.createUser(CreateUserDto(
@@ -176,9 +200,9 @@ class AuthControllerTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(request.toJson())
             )
-                .andExpect(status().isUnauthorized)
+                .andExpect(status().isForbidden)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("User not approved"))
+                .andExpect(jsonPath("$.error.message").value("User not approved"))
         }
 
         @Test
@@ -203,11 +227,11 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isUnauthorized)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Invalid credentials"))
+                .andExpect(jsonPath("$.error.message").value("Invalid credentials"))
         }
 
         @Test
-        fun `should return 404 for non-existent user`() {
+        fun `should return 401 for non-existent user`() {
             // Arrange
             val request = UserTestFixture.createLoginRequest(
                 email = "nonexistent@test.com"
@@ -219,9 +243,9 @@ class AuthControllerTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(request.toJson())
             )
-                .andExpect(status().isNotFound)
+                .andExpect(status().isUnauthorized)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("User not found"))
+                .andExpect(jsonPath("$.error.message").value("Invalid credentials"))
         }
     }
 
@@ -234,12 +258,12 @@ class AuthControllerTest : BaseIntegrationTest() {
         fun `should refresh token successfully`() {
             // Arrange
             val user = UserTestFixture.createApprovedUser()
-            userService.createUser(CreateUserDto(
+            val createdUser = userService.createUser(CreateUserDto(
                 email = user.email!!,
                 password = UserTestFixture.DEFAULT_PASSWORD,
                 isWardLevelUser = false
             ))
-            val tokenPair = jwtService.generateTokenPair(user)
+            val tokenPair = jwtService.generateTokenPair(createdUser)
 
             // Act & Assert
             mockMvc.perform(
@@ -248,7 +272,7 @@ class AuthControllerTest : BaseIntegrationTest() {
             )
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.email").value(user.email))
+                .andExpect(jsonPath("$.data.email").value(createdUser.email))
                 .andExpect(jsonPath("$.data.token").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
                 .andExpect(jsonPath("$.message").value("Token refreshed successfully"))

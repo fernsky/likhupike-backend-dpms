@@ -17,11 +17,13 @@ object UserTestFixture {
     fun createRegisterRequest(
         email: String = REGULAR_USER_EMAIL,
         password: String = DEFAULT_PASSWORD,
+        confirmPassword: String = DEFAULT_PASSWORD, // Added confirm password param
         isWardLevelUser: Boolean = false,
         wardNumber: Int? = null
     ) = RegisterRequest(
         email = email,
         password = password,
+        confirmPassword = confirmPassword,
         isWardLevelUser = isWardLevelUser,
         wardNumber = wardNumber
     )

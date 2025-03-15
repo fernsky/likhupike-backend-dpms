@@ -55,4 +55,8 @@ class TestSecurityConfig {
     @Primary
     fun authenticationManager(passwordEncoder: PasswordEncoder): AuthenticationManager =
         TestAuthenticationManager(passwordEncoder)
+
+    @Bean
+    @Primary
+    fun jwtService(): JwtService = TestJwtService()
 }

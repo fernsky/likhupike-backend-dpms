@@ -65,7 +65,7 @@ class User :
 
     override fun isCredentialsNonExpired() = true
 
-    override fun isEnabled() = isApproved && !isDeleted
+    override fun isEnabled() = !isDeleted
 
     // Password management
     fun setPassword(newPassword: String) {

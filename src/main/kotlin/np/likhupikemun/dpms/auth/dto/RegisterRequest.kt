@@ -15,6 +15,9 @@ data class RegisterRequest(
     )
     val password: String,
 
+    @field:NotBlank(message = "Confirm password is required")
+    val confirmPassword: String,
+
     @field:NotNull(message = "Ward level user flag must be specified")
     val isWardLevelUser: Boolean = false,
 
@@ -22,6 +25,9 @@ data class RegisterRequest(
     @field:Max(value = 33, message = "Ward number cannot be greater than 33")
     val wardNumber: Int? = null
 ) {
+    @AssertTrue(message = "Passwords do not match")
+    fun isPasswordValid(): Boolean = password == confirmPassword
+
     @AssertTrue(message = "Ward number is required for ward level users")
     fun isWardNumberValid(): Boolean = !isWardLevelUser || wardNumber != null
 }

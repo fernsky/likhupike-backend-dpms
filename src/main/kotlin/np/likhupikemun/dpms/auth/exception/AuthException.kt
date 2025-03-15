@@ -50,11 +50,11 @@ sealed class AuthException(
         },
         INVALID_CREDENTIALS {
             override val code = "AUTH_010"
-            override val defaultMessage = "Invalid credentials provided"
+            override val defaultMessage = "Invalid credentials"
         },
         USER_NOT_APPROVED {
             override val code = "AUTH_011"
-            override val defaultMessage = "User account is not approved"
+            override val defaultMessage = "User not approved"
         },
         INVALID_TOKEN {
             override val code = "AUTH_012"
@@ -133,7 +133,7 @@ sealed class AuthException(
 
     class InvalidCredentialsException : AuthException(
         AuthErrorCode.INVALID_CREDENTIALS,
-        status = HttpStatus.NOT_FOUND
+        status = HttpStatus.UNAUTHORIZED
     )
 
     class UserNotApprovedException : AuthException(

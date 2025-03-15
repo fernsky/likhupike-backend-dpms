@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.InternalAuthenticationServiceException
+import org.springframework.security.authentication.DisabledException
 import org.springframework.transaction.annotation.Transactional
 import org.slf4j.LoggerFactory
 import java.util.UUID
@@ -70,43 +71,44 @@ class AuthServiceImpl(
     }
 
     override fun login(request: LoginRequest): AuthResponse {
+        // First find user but don't expose its existence
+        val user = userService.findByEmail(request.email)
+            ?: throw AuthException.InvalidCredentialsException()
+
         try {
-            // Get user details before authentication attempt
-            val user = userService.findByEmail(request.email)
-                ?: throw AuthException.InvalidCredentialsException()
-
-            // Check approval status
-            if (!user.isApproved) {
-                throw AuthException.UserNotApprovedException()
-            }
-
-            // Attempt authentication
+            // Attempt password validation first without revealing user status
             val auth = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(request.email, request.password)
             )
 
+            // If credentials are valid, then check approval status
             if (!auth.isAuthenticated) {
                 throw AuthException.InvalidCredentialsException()
             }
 
+            // Only check approval after successful password validation
+            if (!user.isApproved) {
+                throw AuthException.UserNotApprovedException()
+            }
+
             val tokenPair = jwtService.generateTokenPair(user)
             logger.debug("User logged in successfully: {}", request.email)
-
             return createAuthResponseFromUser(user, tokenPair)
 
         } catch (e: Exception) {
             when (e) {
-                is AuthException -> throw e
-                is BadCredentialsException -> {
-                    logger.error("Authentication failed - bad credentials for user: {}", request.email)
-                    throw AuthException.InvalidCredentialsException()
-                }
+                is BadCredentialsException,
                 is InternalAuthenticationServiceException -> {
-                    logger.error("Authentication failed - user not found: {}", request.email)
+                    logger.debug("Invalid credentials for user")
                     throw AuthException.InvalidCredentialsException()
                 }
+                is DisabledException -> {
+                    logger.debug("User not approved")
+                    throw AuthException.UserNotApprovedException()
+                }
+                is AuthException -> throw e
                 else -> {
-                    logger.error("Unexpected authentication error for user: {}", request.email, e)
+                    logger.error("Authentication error", e)
                     throw AuthException.InvalidCredentialsException()
                 }
             }
