@@ -1,0 +1,7 @@
+services:
+  app:
+    image: isresearch/likhupike-dpms-api:${TAG:-latest}
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://localhost:5432/dpms}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-dpms}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-dpmsSecurePass123!}
