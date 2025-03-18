@@ -14,4 +14,5 @@ interface UserService {
     fun deleteUser(userId: UUID, deletedBy: String): User
     fun searchUsers(criteria: UserSearchCriteria): Page<UserProjection>
     fun updateUser(userId: UUID, request: UpdateUserRequest): User
+    fun getUserById(userId: UUID): User
 }

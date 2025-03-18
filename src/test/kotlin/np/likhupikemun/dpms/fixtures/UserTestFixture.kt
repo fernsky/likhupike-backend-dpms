@@ -6,6 +6,7 @@ import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 import np.likhupikemun.dpms.auth.dto.CreateUserDto
 import np.likhupikemun.dpms.auth.dto.LoginRequest
 import np.likhupikemun.dpms.auth.dto.RegisterRequest
+import np.likhupikemun.dpms.auth.dto.ResetUserPasswordRequest
 import java.util.*
 
 object UserTestFixture {
@@ -88,5 +89,13 @@ object UserTestFixture {
         isWardLevelUser = true,
         wardNumber = 1,
         permissions = setOf(PermissionType.VIEW_USER)
+    )
+
+    fun createResetPasswordRequest(
+        newPassword: String = "NewTest@123",
+        confirmPassword: String = "NewTest@123"
+    ) = ResetUserPasswordRequest(
+        newPassword = newPassword,
+        confirmPassword = confirmPassword
     )
 }

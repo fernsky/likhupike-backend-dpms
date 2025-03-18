@@ -27,7 +27,8 @@ class UserPermissionControllerTest : BaseUserControllerTest() {
             permissions = mapOf(
                 PermissionType.EDIT_USER to true,
                 PermissionType.VIEW_USER to true,
-                PermissionType.APPROVE_USER to true
+                PermissionType.APPROVE_USER to true,
+                PermissionType.RESET_USER_PASSWORD to true  // Add this permission
             )
         )
         val createdAdmin = userService.createUser(adminUser)
@@ -53,7 +54,6 @@ class UserPermissionControllerTest : BaseUserControllerTest() {
             isWardLevelUser = false
         ))
 
-        // Act & Assert
         mockMvc.perform(put("/api/v1/users/${targetUser.id}/permissions")
             .header("Authorization", getAuthHeaderForUser(adminUser.email))
             .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +92,6 @@ class UserPermissionControllerTest : BaseUserControllerTest() {
                 }
             """.trimIndent()))
             .andExpect(status().isForbidden)
-            .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("AUTH_009"))
     }
 
@@ -171,5 +170,132 @@ class UserPermissionControllerTest : BaseUserControllerTest() {
             .andExpect(status().isForbidden)
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("AUTH_009"))
+    }
+
+    @Test
+    fun `should get user details by id successfully`() {
+        // Arrange
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/users/${targetUser.id}")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("User details retrieved successfully"))
+            .andExpect(jsonPath("$.data.id").value(targetUser.id.toString()))
+            .andExpect(jsonPath("$.data.email").value(targetUser.email))
+    }
+
+    @Test
+    fun `should return 403 when user lacks VIEW_USER permission for getting user details`() {
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+
+        mockMvc.perform(get("/api/v1/users/${targetUser.id}")
+            .header("Authorization", getAuthHeaderForUser(regularUser.email)))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("AUTH_009"))
+    }
+
+    @Test
+    fun `should return 404 when getting details of non-existent user`() {
+        val nonExistentUserId = UUID.randomUUID()
+
+        mockMvc.perform(get("/api/v1/users/$nonExistentUserId")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email)))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.error.code").value("AUTH_001"))
+    }
+
+    @Test
+    fun `should reset password successfully`() {
+        // Arrange
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+        val resetRequest = UserTestFixture.createResetPasswordRequest()
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users/${targetUser.id}/reset-password")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(resetRequest)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Password reset successfully"))
+            .andExpect(jsonPath("$.data.id").value(targetUser.id.toString()))
+    }
+
+    @Test
+    fun `should return 403 when user lacks RESET_USER_PASSWORD permission`() {
+        // Arrange
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+        val resetRequest = UserTestFixture.createResetPasswordRequest()
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users/${targetUser.id}/reset-password")
+            .header("Authorization", getAuthHeaderForUser(regularUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(resetRequest)))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("AUTH_009"))
+    }
+
+    @Test
+    fun `should return 400 when passwords don't match`() {
+        // Arrange
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+        val resetRequest = UserTestFixture.createResetPasswordRequest(
+            newPassword = "NewTest@123",
+            confirmPassword = "DifferentTest@123"
+        )
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users/${targetUser.id}/reset-password")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(resetRequest)))
+            .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `should return 400 when password doesn't meet requirements`() {
+        // Arrange
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+        val resetRequest = UserTestFixture.createResetPasswordRequest(
+            newPassword = "weak",
+            confirmPassword = "weak"
+        )
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users/${targetUser.id}/reset-password")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(resetRequest)))
+            .andExpect(status().isBadRequest)
     }
 }

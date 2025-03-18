@@ -99,13 +99,28 @@ class UserController(
     @PreAuthorize("hasPermission(null, 'RESET_USER_PASSWORD')")
     fun resetPassword(
         @PathVariable userId: UUID,
-        @Valid @RequestBody request: ResetPasswordRequest
+        @Valid @RequestBody request: ResetUserPasswordRequest
     ): ResponseEntity<ApiResponse<User>> {
         val user = userService.resetPassword(userId, request.newPassword)
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = user,
                 message = "Password reset successfully"
+            )
+        )
+    }
+
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasPermission(null, 'VIEW_USER')")
+    fun getUserById(
+        @PathVariable userId: UUID
+    ): ResponseEntity<ApiResponse<UserResponse>> {
+        log.debug("Getting user details for ID: {}", userId)
+        val user = userService.getUserById(userId)
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                data = UserMapper.toResponse(user),
+                message = "User details retrieved successfully"
             )
         )
     }

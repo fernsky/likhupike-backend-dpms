@@ -150,4 +150,10 @@ class UserServiceImpl(
 
         return userRepository.save(user)
     }
+
+    @Transactional(readOnly = true)
+    override fun getUserById(userId: UUID): User {
+        return userRepository.findByIdWithPermissions(userId)
+            .orElseThrow { AuthException.UserNotFoundException(userId.toString()) }
+    }
 }
