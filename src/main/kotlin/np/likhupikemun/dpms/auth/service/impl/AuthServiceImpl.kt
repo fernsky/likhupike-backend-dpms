@@ -139,8 +139,9 @@ class AuthServiceImpl(
     }
 
     override fun resetPassword(request: ResetPasswordRequest) {
-        if (!request.isValid()) {
-            throw AuthException.InvalidPasswordException("Passwords do not match")
+        // Check if passwords match first
+        if (request.newPassword != request.confirmPassword) {
+            throw AuthException.PasswordsDoNotMatchException()
         }
 
         if (!jwtService.validateToken(request.token)) {

@@ -413,20 +413,18 @@ class AuthControllerTest : BaseIntegrationTest() {
 
         @Test
         fun `should return 400 when passwords don't match`() {
-            mockMvc.perform(
-                post(ENDPOINT)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "token": "any-token",
-                            "newPassword": "Password1@",
-                            "confirmPassword": "DifferentPassword1@"
-                        }
-                    """.trimIndent())
-            )
+            mockMvc.perform(post(ENDPOINT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "token": "any-token",
+                        "newPassword": "Password1@",
+                        "confirmPassword": "DifferentPassword1@"
+                    }
+                """.trimIndent()))
                 .andExpect(status().isBadRequest)
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error.code").value("AUTH_013"))
+                .andExpect(jsonPath("$.error.code").value("AUTH_016"))
                 .andExpect(jsonPath("$.error.message").value("Passwords do not match"))
                 .andExpect(jsonPath("$.error.status").value(400))
         }

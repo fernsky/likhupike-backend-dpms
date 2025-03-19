@@ -10,7 +10,7 @@ import org.springframework.data.jpa.domain.Specification
 object UserSpecifications {
     fun fromCriteria(criteria: UserSearchCriteria): Specification<User> =
         Specification
-            .where(withWardNumberRange(criteria))
+            .where(withWardNumber(criteria))
             .and(withSearchTerm(criteria))
             .and(withPermissions(criteria))
             .and(withApprovalStatus(criteria))
@@ -19,18 +19,11 @@ object UserSpecifications {
             .and(withEmail(criteria))
             .and(notDeleted())
 
-    private fun withWardNumberRange(criteria: UserSearchCriteria) =
+    private fun withWardNumber(criteria: UserSearchCriteria) =
         Specification<User> { root, _, cb ->
-            val predicates = mutableListOf<jakarta.persistence.criteria.Predicate>()
-
-            criteria.wardNumberFrom?.let {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("wardNumber"), it))
+            criteria.wardNumber?.let { wardNumber ->
+                cb.equal(root.get<Int>("wardNumber"), wardNumber)
             }
-            criteria.wardNumberTo?.let {
-                predicates.add(cb.lessThanOrEqualTo(root.get("wardNumber"), it))
-            }
-
-            if (predicates.isEmpty()) null else cb.and(*predicates.toTypedArray())
         }
 
     private fun withSearchTerm(criteria: UserSearchCriteria) =
@@ -43,7 +36,7 @@ object UserSpecifications {
 
     private fun withPermissions(criteria: UserSearchCriteria) =
         Specification<User> { root, query, _ ->
-            criteria.permissions?.let { permissions ->
+            criteria.permissions?.let { permissions -> 
                 if (permissions.isNotEmpty()) {
                     query?.distinct(true)
                     val permissionsJoin =

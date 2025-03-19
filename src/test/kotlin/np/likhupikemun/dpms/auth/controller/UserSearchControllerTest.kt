@@ -90,8 +90,7 @@ class UserSearchControllerTest : BaseUserControllerTest() {
 
         mockMvc.perform(get(ENDPOINT)
             .header("Authorization", getAuthHeaderForUser(adminUser.email))
-            .param("wardNumberFrom", "2")  // Add wardNumberFrom parameter
-            .param("wardNumberTo", "2")    // Add wardNumberTo parameter
+            .param("wardNumber", "2")    // Changed to single wardNumber parameter
             .param("page", "0")
             .param("size", "10")
             .contentType(MediaType.APPLICATION_JSON))

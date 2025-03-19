@@ -13,8 +13,7 @@ data class UserSearchCriteria(
     val searchTerm: String? = null,
     val isApproved: Boolean? = null,
     val isWardLevelUser: Boolean? = null,
-    val wardNumberFrom: Int? = null,
-    val wardNumberTo: Int? = null,
+    val wardNumber: Int? = null,  // Replaced wardNumberFrom/To with single wardNumber
     val createdAfter: LocalDate? = null,
     val createdBefore: LocalDate? = null,
     val permissions: Set<PermissionType>? = null,

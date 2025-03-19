@@ -18,6 +18,4 @@ data class ResetPasswordRequest(
 
     @field:NotBlank(message = "Password confirmation is required")
     val confirmPassword: String
-) {
-    fun isValid(): Boolean = newPassword == confirmPassword
-}
+)
