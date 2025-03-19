@@ -1,5 +1,6 @@
 package np.likhupikemun.dpms.common.exception
 
+import np.likhupikemun.dpms.common.service.I18nMessageService
 import jakarta.validation.ConstraintViolationException
 import np.likhupikemun.dpms.common.dto.ApiResponse
 import np.likhupikemun.dpms.common.dto.ErrorDetails
@@ -16,7 +17,9 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import org.springframework.http.converter.HttpMessageNotReadableException
 
 @RestControllerAdvice
-class GlobalExceptionHandler {
+class GlobalExceptionHandler(
+    private val i18nMessageService: I18nMessageService
+) {
     
     @ExceptionHandler(DpmsException::class)
     fun handleDpmsException(ex: DpmsException): ResponseEntity<ApiResponse<Nothing>> =
@@ -26,7 +29,7 @@ class GlobalExceptionHandler {
                 ApiResponse.error(
                     ErrorDetails(
                         code = ex.errorCode.code,
-                        message = ex.message ?: ex.errorCode.defaultMessage,
+                        message = i18nMessageService.getErrorMessage(ex.errorCode.code, ex.message ?: ex.errorCode.defaultMessage),
                         details = ex.metadata,
                         status = ex.status.value()
                     )
