@@ -25,7 +25,7 @@ class MessageSourceConfig : WebMvcConfigurer {
     fun localeResolver(): LocaleResolver {
         val resolver = AcceptHeaderLocaleResolver()
         // Create supported locales list
-        val supportedLocales = listOf(Locale.ENGLISH, Locale("np"))
+        val supportedLocales = listOf(Locale.ENGLISH, Locale("ne"))
         // Set default locale
         resolver.setDefaultLocale(Locale.ENGLISH)
         // Set supported locales
