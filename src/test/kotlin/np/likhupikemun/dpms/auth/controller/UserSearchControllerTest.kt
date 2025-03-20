@@ -44,16 +44,15 @@ class UserSearchControllerTest : BaseUserControllerTest() {
 
         mockMvc.perform(get(ENDPOINT)
             .header("Authorization", getAuthHeaderForUser(adminUser.email))
-            .param("page", "0")
+            .param("page", "1")  // Changed from 0 to 1
             .param("size", "10")
             .contentType(MediaType.APPLICATION_JSON))
             .andDo { result -> log.debug("Response: ${result.response.contentAsString}") }
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data").isArray)
-            // Expect 1 admin + 5 test users = 6 total users
             .andExpect(jsonPath("$.meta.totalElements").value(6))
-            .andExpect(jsonPath("$.meta.page").value(0))
+            .andExpect(jsonPath("$.meta.page").value(1))  // Expecting page 1 instead of 0
     }
 
     @Test
@@ -133,7 +132,7 @@ class UserSearchControllerTest : BaseUserControllerTest() {
     }
 
     private fun cleanupTestData() {
-        val criteria = UserSearchCriteria(page = 0, size = 100)
+        val criteria = UserSearchCriteria(page = 1, size = 100)  // Changed from 0 to 1
         userService.searchUsers(criteria).content.forEach { projection ->
             try {
                 // Get ID safely using string interpolation of nullable property

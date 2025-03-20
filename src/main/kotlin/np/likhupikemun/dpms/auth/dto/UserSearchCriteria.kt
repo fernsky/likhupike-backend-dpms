@@ -18,14 +18,14 @@ data class UserSearchCriteria(
     val createdBefore: LocalDate? = null,
     val permissions: Set<PermissionType>? = null,
     val columns: Set<String>? = null,
-    val page: Int = 0,
+    val page: Int = 1,  // Changed default from 0 to 1
     val size: Int = 10,
     val sortBy: String = "createdAt",
     val sortDirection: Sort.Direction = Sort.Direction.DESC,
 ) {
     fun toPageable(): Pageable =
         PageRequest.of(
-            page,
+            (page - 1).coerceAtLeast(0), // Convert 1-based to 0-based index
             size,
             Sort.by(sortDirection, sortBy),
         )

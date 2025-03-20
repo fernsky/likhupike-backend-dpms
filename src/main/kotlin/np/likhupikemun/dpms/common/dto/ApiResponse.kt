@@ -48,7 +48,7 @@ data class ErrorDetails(
 )
 
 data class PageMeta(
-    val page: Int,            // Current page number (0-based)
+    val page: Int,            // Current page number (1-based)
     val size: Int,            // Page size
     val totalElements: Long,  // Total number of elements
     val totalPages: Int,      // Total number of pages
@@ -57,7 +57,7 @@ data class PageMeta(
 ) {
     companion object {
         fun <T> from(page: Page<T>) = PageMeta(
-            page = page.number,
+            page = page.number + 1, // Convert 0-based to 1-based
             size = page.size,
             totalElements = page.totalElements,
             totalPages = page.totalPages,
