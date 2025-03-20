@@ -24,13 +24,21 @@ class UserController(
     @PostMapping
     @PreAuthorize("hasPermission(null, 'CREATE_USER')")
     fun createUser(
-        @Valid @RequestBody request: CreateUserDto
+        @Valid @RequestBody request: CreateUserDto,
+        @CurrentUserId currentUserId: UUID
     ): ResponseEntity<ApiResponse<UserResponse>> {
+        log.debug("Creating and auto-approving user with data: $request by user: $currentUserId")
+        
+        // Create the user first
         val createdUser = userService.createUser(request)
+        
+        // Automatically approve the created user
+        val approvedUser = userService.approveUser(createdUser.id!!, currentUserId)
+        
         return ResponseEntity.ok(
             ApiResponse.success(
-                data = UserMapper.toResponse(createdUser),
-                message = "User created successfully"
+                data = UserMapper.toResponse(approvedUser),
+                message = "User created and approved successfully"
             )
         )
     }
