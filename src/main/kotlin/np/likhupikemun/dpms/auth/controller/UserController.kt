@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import np.likhupikemun.dpms.common.service.I18nMessageService
 
 @RestController
 @RequestMapping("/api/v1/users")
 class UserController(
     private val userService: UserService,
+    private val i18nMessageService: I18nMessageService,
     private val log: Logger = LoggerFactory.getLogger(UserController::class.java)
 ) {
     @PostMapping
@@ -38,7 +40,7 @@ class UserController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = UserMapper.toResponse(approvedUser),
-                message = "User created and approved successfully"
+                message = i18nMessageService.getMessage("user.create.success")
             )
         )
     }
@@ -53,7 +55,7 @@ class UserController(
         return ResponseEntity.ok(
             ApiResponse.withPage(
                 page = users,
-                message = "Users retrieved successfully"
+                message = i18nMessageService.getMessage("user.search.success")
             )
         )
     }
@@ -68,7 +70,7 @@ class UserController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = UserMapper.toResponse(approvedUser),
-                message = "User approved successfully"
+                message = i18nMessageService.getMessage("user.approve.success")
             )
         )
     }
@@ -83,7 +85,7 @@ class UserController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = deletedUser,
-                message = "User deleted successfully"
+                message = i18nMessageService.getMessage("user.delete.success")
             )
         )
     }
@@ -98,7 +100,7 @@ class UserController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = updatedUser,
-                message = "User permissions updated successfully"
+                message = i18nMessageService.getMessage("user.permissions.update.success")
             )
         )
     }
@@ -113,7 +115,7 @@ class UserController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = user,
-                message = "Password reset successfully"
+                message = i18nMessageService.getMessage("user.password.reset.success")
             )
         )
     }
@@ -128,7 +130,7 @@ class UserController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = UserMapper.toResponse(user),
-                message = "User details retrieved successfully"
+                message = i18nMessageService.getMessage("user.get.success")
             )
         )
     }
