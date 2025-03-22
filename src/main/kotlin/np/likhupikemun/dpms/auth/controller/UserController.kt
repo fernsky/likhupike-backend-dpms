@@ -134,4 +134,20 @@ class UserController(
             )
         )
     }
+
+    @PutMapping("/{userId}")
+    @PreAuthorize("hasPermission(null, 'EDIT_USER')")
+    fun updateUser(
+        @PathVariable userId: UUID,
+        @Valid @RequestBody request: UpdateUserRequest
+    ): ResponseEntity<ApiResponse<UserResponse>> {
+        log.debug("Updating user {} with data: {}", userId, request)
+        val updatedUser = userService.updateUser(userId, request)
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                data = UserMapper.toResponse(updatedUser),
+                message = i18nMessageService.getMessage("user.update.success")
+            )
+        )
+    }
 }

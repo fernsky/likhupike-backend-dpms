@@ -298,4 +298,91 @@ class UserPermissionControllerTest : BaseUserControllerTest() {
             .content(objectMapper.writeValueAsString(resetRequest)))
             .andExpect(status().isBadRequest)
     }
+
+    @Test
+    fun `should update user successfully`() {
+        // Create target user
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+
+        // Act & Assert
+        mockMvc.perform(put("/api/v1/users/${targetUser.id}")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {
+                    "email": "updated@test.com",
+                    "isWardLevelUser": true,
+                    "wardNumber": 5
+                }
+            """.trimIndent()))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.email").value("updated@test.com"))
+            .andExpect(jsonPath("$.data.isWardLevelUser").value(true))
+            .andExpect(jsonPath("$.data.wardNumber").value(5))
+            .andExpect(jsonPath("$.message").value("User updated successfully"))
+    }
+
+    @Test
+    fun `should return 403 when user lacks EDIT_USER permission for update`() {
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+
+        mockMvc.perform(put("/api/v1/users/${targetUser.id}")
+            .header("Authorization", getAuthHeaderForUser(regularUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {
+                    "email": "updated@test.com"
+                }
+            """.trimIndent()))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("AUTH_009"))
+    }
+
+    @Test
+    fun `should return 400 when updating ward level user without ward number`() {
+        val targetUser = userService.createUser(CreateUserDto(
+            email = "target@test.com",
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+
+        mockMvc.perform(put("/api/v1/users/${targetUser.id}")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {
+                    "isWardLevelUser": true
+                }
+            """.trimIndent()))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("AUTH_005"))
+    }
+
+    @Test
+    fun `should return 404 when updating non-existent user`() {
+        val nonExistentUserId = UUID.randomUUID()
+
+        mockMvc.perform(put("/api/v1/users/$nonExistentUserId")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {
+                    "email": "updated@test.com"
+                }
+            """.trimIndent()))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("AUTH_001"))
+    }
 }
