@@ -22,4 +22,22 @@ data class UserPermissionsDto(
         getPermissionsToRevoke().forEach { updatedPermissions.remove(it) }
         return updatedPermissions
     }
+
+    // Get permissions to modify based on their new values
+    fun getPermissionsToModify(existingPermissions: Set<PermissionType>): Set<PermissionType> {
+        val permissionsToModify = mutableSetOf<PermissionType>()
+        
+        permissions.forEach { (permission, shouldHave) ->
+            val hasPermission = permission in existingPermissions
+            // Only add to modification set if there's a change needed
+            if (shouldHave != hasPermission) {
+                permissionsToModify.add(permission)
+            }
+        }
+        
+        return permissionsToModify
+    }
+
+    fun shouldHavePermission(permission: PermissionType): Boolean =
+        permissions[permission] ?: false
 }

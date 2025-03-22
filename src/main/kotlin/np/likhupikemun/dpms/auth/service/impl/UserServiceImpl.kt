@@ -54,11 +54,27 @@ class UserServiceImpl(
             throw AuthException.UserAlreadyDeletedException(userId.toString())
         }
 
-        val permissionsToGrant = permissionService.findByTypes(permissions.getPermissionsToGrant())
-        val permissionsToRevoke = permissionService.findByTypes(permissions.getPermissionsToRevoke())
+        // Get current permissions
+        val existingPermissions = user.getAuthorities()
+            .mapNotNull { 
+                runCatching { 
+                    PermissionType.valueOf(it.authority.removePrefix("PERMISSION_"))
+                }.getOrNull()
+            }
+            .toSet()
 
-        permissionsToGrant.forEach { user.addPermission(it) }
-        permissionsToRevoke.forEach { user.removePermission(it) }
+        // Get permissions that need to be modified
+        val permissionsToModify = permissions.getPermissionsToModify(existingPermissions)
+
+        // Apply changes only for permissions that need modification
+        permissionsToModify.forEach { permissionType ->
+            val permission = permissionService.findByType(permissionType)
+            if (permissions.shouldHavePermission(permissionType)) {
+                user.addPermission(permission)
+            } else {
+                user.removePermission(permission)
+            }
+        }
 
         return userRepository.save(user)
     }

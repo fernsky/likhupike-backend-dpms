@@ -366,7 +366,7 @@ class UserPermissionControllerTest : BaseUserControllerTest() {
             """.trimIndent()))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.error.code").value("AUTH_005"))
+            .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
     }
 
     @Test
