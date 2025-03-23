@@ -1,6 +1,7 @@
 package np.likhupikemun.dpms.auth.service.impl
 
 import jakarta.persistence.EntityManager
+import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 import np.likhupikemun.dpms.auth.repository.specification.UserSpecifications
 import np.likhupikemun.dpms.auth.service.UserService
 import np.likhupikemun.dpms.auth.repository.UserRepository
@@ -70,12 +71,14 @@ class UserServiceImpl(
         permissionsToModify.forEach { permissionType ->
             val permission = permissionService.findByType(permissionType)
             if (permissions.shouldHavePermission(permissionType)) {
+                // Will handle removing old permission internally
                 user.addPermission(permission)
             } else {
                 user.removePermission(permission)
             }
         }
 
+        entityManager.flush()
         return userRepository.save(user)
     }
 

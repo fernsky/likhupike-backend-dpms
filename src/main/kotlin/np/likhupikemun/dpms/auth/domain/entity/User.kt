@@ -76,9 +76,9 @@ class User :
 
     // Permission management
     fun addPermission(permission: Permission) {
-        if (!hasPermission(permission.type)) {
-            permissions.add(UserPermission(this, permission))
-        }
+        // Remove existing permission first to avoid duplicate
+        removePermission(permission)
+        permissions.add(UserPermission(this, permission))
     }
 
     fun removePermission(permission: Permission) {
@@ -87,6 +87,9 @@ class User :
 
     fun hasPermission(permissionType: PermissionType): Boolean =
         permissions.any { it.permission.type == permissionType }
+
+    fun getPermissions(): Set<Permission> =
+        permissions.map { it.permission }.toSet()
 
     fun clearPermissions() {
         permissions.clear()
