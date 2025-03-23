@@ -82,4 +82,27 @@ class EmailServiceImpl(
             htmlContent = template
         )
     }
+
+    override fun sendPasswordResetOtp(to: String, otp: String) {
+        val template = EmailTemplate.PASSWORD_RESET_OTP.template
+            .replace("%otp%", otp)
+        
+        sendEmail(
+            to = to,
+            subject = EmailTemplate.PASSWORD_RESET_OTP.subject,
+            htmlContent = template
+        )
+    }
+
+    override fun sendPasswordResetConfirmation(to: String) {
+        val loginLink = "$frontendUrl/login"
+        val template = EmailTemplate.PASSWORD_RESET_SUCCESS.template
+            .replace("%loginLink%", loginLink)
+        
+        sendEmail(
+            to = to,
+            subject = EmailTemplate.PASSWORD_RESET_SUCCESS.subject,
+            htmlContent = template
+        )
+    }
 }

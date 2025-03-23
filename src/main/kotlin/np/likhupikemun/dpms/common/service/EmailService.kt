@@ -6,4 +6,6 @@ interface EmailService {
     fun sendWelcomeEmail(to: String)
     fun sendAccountApprovedEmail(to: String)
     fun sendAccountCreatedEmail(to: String, resetToken: String)
+    fun sendPasswordResetOtp(to: String, otp: String)
+    fun sendPasswordResetConfirmation(to: String)
 }

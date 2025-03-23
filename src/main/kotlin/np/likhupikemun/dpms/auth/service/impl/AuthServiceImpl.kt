@@ -20,6 +20,9 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import np.likhupikemun.dpms.auth.domain.enums.PermissionType
 import np.likhupikemun.dpms.common.service.EmailService
+import np.likhupikemun.dpms.auth.repository.PasswordResetOtpRepository
+import np.likhupikemun.dpms.auth.domain.entity.PasswordResetOtp
+import java.time.LocalDateTime
 
 @Service
 @Transactional
@@ -28,7 +31,8 @@ class AuthServiceImpl(
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
     private val authenticationManager: AuthenticationManager,
-    private val emailService: EmailService  // Add email service
+    private val emailService: EmailService,  // Add email service
+    private val otpRepository: PasswordResetOtpRepository
 ) : AuthService {
     private val logger = LoggerFactory.getLogger(javaClass)
     
@@ -147,52 +151,75 @@ class AuthServiceImpl(
         logger.info("User logged out: {}", email)
     }
 
-    override fun resetPassword(request: ResetPasswordRequest) {
-        // Check if passwords match first
-        if (request.newPassword != request.confirmPassword) {
-            throw AuthException.PasswordsDoNotMatchException()
-        }
-
-        if (!jwtService.validateToken(request.token)) {
-            throw AuthException.InvalidPasswordResetTokenException()
-        }
-
-        val email = jwtService.extractEmail(request.token)
-        val user = userService.findByEmail(email)
-            ?: throw AuthException.UserNotFoundException(email)
-
-        userService.resetPassword(user.id!!, request.newPassword)
-        logger.info("Password reset successful for user: {}", email)
-
-        try {
-            // Send confirmation email
-            emailService.sendEmail(
-                to = email,
-                subject = "Password Reset Successful",
-                htmlContent = """
-                    <p>Your password has been successfully reset.</p>
-                    <p>If you did not perform this action, please contact support immediately.</p>
-                """.trimIndent()
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to send password reset confirmation email to: {}", email, e)
-            // Don't throw here since password reset was successful
-        }
-    }
+    private fun generateOtp(): String =
+        (100000..999999).random().toString()
 
     override fun requestPasswordReset(request: RequestPasswordResetRequest) {
         val user = userService.findByEmail(request.email)
             ?: throw AuthException.UserNotFoundException(request.email)
 
-        // Generate reset token
-        val token = jwtService.generateToken(user)
+        // Generate new OTP
+        val otp = generateOtp()
+        
+        // Save OTP to database
+        val passwordResetOtp = PasswordResetOtp().apply {
+            email = request.email
+            this.otp = otp
+            expiresAt = LocalDateTime.now().plusMinutes(15)
+        }
+        otpRepository.save(passwordResetOtp)
         
         try {
-            emailService.sendPasswordResetEmail(request.email, token)
-            logger.info("Password reset email sent to user: {}", request.email)
+            emailService.sendPasswordResetOtp(request.email, otp)
+            logger.info("Password reset OTP sent to user: {}", request.email)
         } catch (e: Exception) {
-            logger.error("Failed to send password reset email to: {}", request.email, e)
-            throw RuntimeException("Failed to send password reset email", e)
+            logger.error("Failed to send password reset OTP to: {}", request.email, e)
+            throw RuntimeException("Failed to send password reset OTP", e)
+        }
+    }
+
+    override fun resetPassword(request: ResetPasswordRequest) {
+        // Check if passwords match
+        if (request.newPassword != request.confirmPassword) {
+            throw AuthException.PasswordsDoNotMatchException()
+        }
+
+        // Validate OTP
+        val otpEntity = otpRepository.findByEmailAndOtpAndIsUsedFalseAndExpiresAtAfter(
+            email = request.email,
+            otp = request.otp,
+            currentTime = LocalDateTime.now()
+        ) ?: throw AuthException.InvalidPasswordResetTokenException("Invalid or expired OTP")
+
+        // Check attempts
+        if (otpEntity.attempts >= 3) {
+            throw AuthException.InvalidPasswordResetTokenException("Too many invalid attempts")
+        }
+
+        // Increment attempts
+        otpEntity.attempts += 1
+
+        if (!otpEntity.isValid()) {
+            otpRepository.save(otpEntity)
+            throw AuthException.InvalidPasswordResetTokenException("Invalid or expired OTP")
+        }
+
+        val user = userService.findByEmail(request.email)
+            ?: throw AuthException.UserNotFoundException(request.email)
+
+        // Mark OTP as used
+        otpEntity.isUsed = true
+        otpRepository.save(otpEntity)
+
+        // Reset password
+        userService.resetPassword(user.id!!, request.newPassword)
+        logger.info("Password reset successful for user: {}", request.email)
+
+        try {
+            emailService.sendPasswordResetConfirmation(request.email)
+        } catch (e: Exception) {
+            logger.error("Failed to send password reset confirmation email to: {}", request.email, e)
+            // Don't throw since password reset was successful
         }
     }
 }
