@@ -1,19 +1,41 @@
 spring:
-    application:
-        name: dpms
-    datasource:
-        driver-class-name: org.postgresql.Driver
-        url: ${SPRING_DATASOURCE_URL}
-        username: ${SPRING_DATASOURCE_USERNAME}
-        password: ${SPRING_DATASOURCE_PASSWORD}
-    liquibase:
-        enabled: true
-        change-log: classpath:db/changelog/db.changelog-master.xml
+  application:
+    name: dpms
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  mail:
+    host: ${MAIL_HOST:smtp.example.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:user@example.com}
+    password: ${MAIL_PASSWORD:dummypassword123}
+    from: ${MAIL_FROM:mail@example.com} # Add this line
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+          timeout: 5000
+          connectiontimeout: 5000
+          writetimeout: 5000
+        debug: ${MAIL_DEBUG:true}
 
 app:
   admin:
     email: ${ADMIN_EMAIL:admin@likhupike.gov.np}
     password: ${ADMIN_PASSWORD:Admin@123}
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
 
 jwt:
   secret-key: ${JWT_SECRET:464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EF11E36FD39} # Change in production

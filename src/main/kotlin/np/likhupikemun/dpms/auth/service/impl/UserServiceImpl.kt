@@ -8,13 +8,16 @@ import np.likhupikemun.dpms.auth.repository.UserRepository
 import np.likhupikemun.dpms.auth.service.PermissionService
 import np.likhupikemun.dpms.auth.exception.AuthException
 import np.likhupikemun.dpms.auth.domain.entity.User
+import np.likhupikemun.dpms.auth.security.JwtService
 import np.likhupikemun.dpms.auth.dto.*
+import np.likhupikemun.dpms.common.service.EmailService
 import org.springframework.data.domain.Page
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
+import org.slf4j.LoggerFactory
 
 @Service
 @Transactional
@@ -22,8 +25,13 @@ class UserServiceImpl(
     private val userRepository: UserRepository,
     private val permissionService: PermissionService,
     private val passwordEncoder: PasswordEncoder,
-    private val entityManager: EntityManager
+    private val entityManager: EntityManager,
+    private val emailService: EmailService,
+    private val jwtService: JwtService,
 ) : UserService {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+
     override fun createUser(createUserDto: CreateUserDto): User {
         if (userRepository.existsByEmail(createUserDto.email)) {
             throw AuthException.UserAlreadyExistsException(createUserDto.email)
@@ -40,7 +48,19 @@ class UserServiceImpl(
         val permissions = permissionService.findByTypes(createUserDto.permissions.filterValues { it }.keys)
         permissions.forEach { user.addPermission(it) }
 
-        return userRepository.save(user)
+        val createdUser = userRepository.save(user)
+
+        try {
+            // Generate reset token for the new user
+            val resetToken = jwtService.generateToken(createdUser)
+            // Send account created email with reset token
+            emailService.sendAccountCreatedEmail(createdUser.email!!, resetToken)
+        } catch (e: Exception) {
+            logger.error("Failed to send account created email to: {}", createdUser.email, e)
+            // Don't throw since user creation was successful
+        }
+
+        return createdUser
     }
 
     @Transactional(readOnly = true)
@@ -112,7 +132,17 @@ class UserServiceImpl(
             approvedAt = LocalDateTime.now()
         }
 
-        return userRepository.save(user)
+        val approvedUser = userRepository.save(user)
+
+        try {
+            // Send account approved email using template
+            emailService.sendAccountApprovedEmail(approvedUser.email!!)
+        } catch (e: Exception) {
+            // Log but don't throw since approval was successful
+            logger.error("Failed to send approval email to: {}", approvedUser.email, e)
+        }
+
+        return approvedUser
     }
 
     override fun deleteUser(userId: UUID, deletedBy: String): User {

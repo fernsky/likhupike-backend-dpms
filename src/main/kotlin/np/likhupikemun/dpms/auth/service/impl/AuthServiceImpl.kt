@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import np.likhupikemun.dpms.auth.domain.enums.PermissionType
+import np.likhupikemun.dpms.common.service.EmailService
 
 @Service
 @Transactional
@@ -26,7 +27,8 @@ class AuthServiceImpl(
     private val userService: UserService,
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
-    private val authenticationManager: AuthenticationManager
+    private val authenticationManager: AuthenticationManager,
+    private val emailService: EmailService  // Add email service
 ) : AuthService {
     private val logger = LoggerFactory.getLogger(javaClass)
     
@@ -65,7 +67,14 @@ class AuthServiceImpl(
             )
         )
 
-        logger.info("User registered successfully and waiting for approval: {}", request.email)
+        try {
+            // Send welcome email using template
+            emailService.sendWelcomeEmail(user.email!!)
+            logger.info("Welcome email sent to: {}", user.email)
+        } catch (e: Exception) {
+            logger.error("Failed to send welcome email to: {}", user.email, e)
+            // Don't throw since registration was successful
+        }
 
         return RegisterResponse(email = user.email!!)
     }
@@ -154,15 +163,36 @@ class AuthServiceImpl(
 
         userService.resetPassword(user.id!!, request.newPassword)
         logger.info("Password reset successful for user: {}", email)
+
+        try {
+            // Send confirmation email
+            emailService.sendEmail(
+                to = email,
+                subject = "Password Reset Successful",
+                htmlContent = """
+                    <p>Your password has been successfully reset.</p>
+                    <p>If you did not perform this action, please contact support immediately.</p>
+                """.trimIndent()
+            )
+        } catch (e: Exception) {
+            logger.error("Failed to send password reset confirmation email to: {}", email, e)
+            // Don't throw here since password reset was successful
+        }
     }
 
     override fun requestPasswordReset(request: RequestPasswordResetRequest) {
         val user = userService.findByEmail(request.email)
             ?: throw AuthException.UserNotFoundException(request.email)
 
-        // Generate reset token and store in both maps
+        // Generate reset token
         val token = jwtService.generateToken(user)
-        // Note: token is now managed by JwtService in test environment
-        logger.info("Password reset requested for user: {}", request.email)
+        
+        try {
+            emailService.sendPasswordResetEmail(request.email, token)
+            logger.info("Password reset email sent to user: {}", request.email)
+        } catch (e: Exception) {
+            logger.error("Failed to send password reset email to: {}", request.email, e)
+            throw RuntimeException("Failed to send password reset email", e)
+        }
     }
 }
