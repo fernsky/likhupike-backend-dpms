@@ -222,4 +222,34 @@ class AuthServiceImpl(
             // Don't throw since password reset was successful
         }
     }
+
+    override fun changePassword(currentUserId: UUID, request: ChangePasswordRequest) {
+        if (!request.isValid()) {
+            throw AuthException.PasswordsDoNotMatchException()
+        }
+
+        val user = userService.getUserById(currentUserId)
+
+        // Verify current password
+        if (!passwordEncoder.matches(request.currentPassword, user.password)) {
+            throw AuthException.InvalidPasswordException("Current password is incorrect")
+        }
+
+        // Ensure new password is different from current
+        if (passwordEncoder.matches(request.newPassword, user.password)) {
+            throw AuthException.InvalidPasswordException("New password must be different from current password")
+        }
+
+        // Update password
+        userService.resetPassword(currentUserId, request.newPassword)
+        
+        try {
+            emailService.sendPasswordResetConfirmation(user.email!!)
+        } catch (e: Exception) {
+            logger.error("Failed to send password change confirmation email to: {}", user.email, e)
+            // Don't throw since password change was successful
+        }
+
+        logger.info("Password changed successfully for user: {}", currentUserId)
+    }
 }

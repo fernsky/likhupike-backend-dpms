@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/v1/auth", produces = [MediaType.APPLICATION_JSON_VALUE])
 class AuthController(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val i18nMessageService: I18nMessageService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -27,7 +28,7 @@ class AuthController(
             .status(HttpStatus.CREATED)
             .body(ApiResponse.success(
                 data = response,
-                message = "Registration successful. Waiting for admin approval."
+                message = i18nMessageService.getMessage("auth.register.success")
             ))
     }
 
@@ -40,7 +41,7 @@ class AuthController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = response,
-                message = "Login successful"
+                message = i18nMessageService.getMessage("auth.login.success")
             )
         )
     }
@@ -54,7 +55,7 @@ class AuthController(
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = response,
-                message = "Token refreshed successfully"
+                message = i18nMessageService.getMessage("auth.token.refresh.success")
             )
         )
     }
@@ -68,7 +69,7 @@ class AuthController(
         authService.logout(cleanToken)
         return ResponseEntity.ok(
             ApiResponse.success(
-                message = "Logged out successfully"
+                message = i18nMessageService.getMessage("auth.logout.success")
             )
         )
     }
@@ -81,7 +82,7 @@ class AuthController(
         authService.requestPasswordReset(request)
         return ResponseEntity.ok(
             ApiResponse.success(
-                message = "Password reset email sent"
+                message = i18nMessageService.getMessage("auth.password.reset.request.success")
             )
         )
     }
@@ -94,7 +95,21 @@ class AuthController(
         authService.resetPassword(request)
         return ResponseEntity.ok(
             ApiResponse.success(
-                message = "Password reset successful"
+                message = i18nMessageService.getMessage("auth.password.reset.success")
+            )
+        )
+    }
+
+    @PostMapping("/change-password")
+    fun changePassword(
+        @CurrentUserId currentUserId: UUID,
+        @Valid @RequestBody request: ChangePasswordRequest
+    ): ResponseEntity<ApiResponse<Nothing>> {
+        logger.debug("Processing change password request for user: {}", currentUserId)
+        authService.changePassword(currentUserId, request)
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                message = i18nMessageService.getMessage("auth.password.change.success")
             )
         )
     }
