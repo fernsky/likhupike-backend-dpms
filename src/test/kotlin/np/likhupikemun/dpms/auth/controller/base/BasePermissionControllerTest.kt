@@ -19,24 +19,28 @@ abstract class BasePermissionControllerTest : BaseUserControllerTest() {
 
     @BeforeEach
     fun setupBase() {
-        // First setup mocks before any user creation
-        setupMocks()
-        // Then setup users
-        setupUsers()
-    }
-
-    private fun setupMocks() {
-        // Reset mock first
+        // First reset mocks completely
         reset(emailService)
         
-        // Setup all email service method mocks
+        // Setup mock behavior for all email methods
+        setupEmailMocks()
+        
+        // Then setup users
+        setupUsers()
+        
+        // Clear recorded interactions after setup
+        clearInvocations(emailService)
+    }
+
+    private fun setupEmailMocks() {
+        // Mock all possible email service method calls
+        doNothing().whenever(emailService).sendPasswordResetConfirmation(any())
+        doNothing().whenever(emailService).sendAccountCreatedEmail(any(), any())
+        doNothing().whenever(emailService).sendAccountApprovedEmail(any())
+        doNothing().whenever(emailService).sendWelcomeEmail(any())
         doNothing().whenever(emailService).sendEmail(any(), any(), any())
         doNothing().whenever(emailService).sendPasswordResetEmail(any(), any())
-        doNothing().whenever(emailService).sendWelcomeEmail(any())
-        doNothing().whenever(emailService).sendAccountApprovedEmail(any())
-        doNothing().whenever(emailService).sendAccountCreatedEmail(any(), any())
         doNothing().whenever(emailService).sendPasswordResetOtp(any(), any())
-        doNothing().whenever(emailService).sendPasswordResetConfirmation(any())
     }
 
     private fun setupUsers() {

@@ -16,7 +16,7 @@ class AuthTokenTest : BaseAuthControllerTest() {
 
     @Test
     fun `should refresh token successfully`() {
-        // Arrange
+        // Arrange - Create and approve a user first
         val adminId = UUID.randomUUID()
         val createdUser = userService.createUser(CreateUserDto(
             email = UserTestFixture.REGULAR_USER_EMAIL,
@@ -73,12 +73,20 @@ class AuthTokenTest : BaseAuthControllerTest() {
 
     @Test
     fun `should logout successfully`() {
-        val user = UserTestFixture.createApprovedUser()
-        val token = jwtService.generateToken(user)
+        // Arrange - Create and approve a user first
+        val adminId = UUID.randomUUID()
+        val createdUser = userService.createUser(CreateUserDto(
+            email = UserTestFixture.REGULAR_USER_EMAIL,
+            password = UserTestFixture.DEFAULT_PASSWORD,
+            isWardLevelUser = false
+        ))
+        val approvedUser = userService.approveUser(createdUser.id!!, adminId)
+        val token = jwtService.generateToken(approvedUser)
 
         mockMvc.perform(
             post(LOGOUT_ENDPOINT)
                 .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))

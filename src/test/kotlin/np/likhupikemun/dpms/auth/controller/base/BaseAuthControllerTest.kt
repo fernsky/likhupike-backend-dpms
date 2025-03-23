@@ -27,11 +27,21 @@ abstract class BaseAuthControllerTest : BaseIntegrationTest() {
     protected lateinit var otpRepository: PasswordResetOtpRepository
 
     @BeforeEach
-    fun setupMocks() {
-        // Reset mocks
-        reset(emailService, otpRepository)
-        
+    open fun setupAuthBase() {
+        // Clear all previous interactions and reset mocks
+        clearAllMocks()
         // Setup email service mocks
+        setupEmailMocks()
+    }
+
+    protected fun clearAllMocks() {
+        reset(emailService)
+        reset(otpRepository)
+        clearInvocations(emailService)
+        clearInvocations(otpRepository)
+    }
+
+    protected fun setupEmailMocks() {
         doNothing().whenever(emailService).sendEmail(any(), any(), any())
         doNothing().whenever(emailService).sendPasswordResetEmail(any(), any())
         doNothing().whenever(emailService).sendWelcomeEmail(any())
