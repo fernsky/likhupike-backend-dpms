@@ -68,13 +68,17 @@ sealed class AuthException(
             override val code = "AUTH_014"
             override val defaultMessage = "JWT token validation failed"
         },
-        PASSWORD_RESET_TOKEN_INVALID {
+        PASSWORD_RESET_OTP_INVALID {
             override val code = "AUTH_015"
-            override val defaultMessage = "Password reset token is invalid or expired"
+            override val defaultMessage = "Invalid or expired OTP"
         },
         PASSWORDS_DO_NOT_MATCH {
             override val code = "AUTH_016"
             override val defaultMessage = "Passwords do not match"
+        },
+        TOO_MANY_ATTEMPTS {
+            override val code = "AUTH_017"
+            override val defaultMessage = "Too many invalid attempts"
         }
     }
 
@@ -167,13 +171,18 @@ sealed class AuthException(
     )
 
     class InvalidPasswordResetTokenException(message: String? = null) : AuthException(
-        AuthErrorCode.PASSWORD_RESET_TOKEN_INVALID,
+        AuthErrorCode.PASSWORD_RESET_OTP_INVALID,
         message = message,
         status = HttpStatus.BAD_REQUEST
     )
 
     class PasswordsDoNotMatchException : AuthException(
         AuthErrorCode.PASSWORDS_DO_NOT_MATCH,
+        status = HttpStatus.BAD_REQUEST
+    )
+
+    class TooManyAttemptsException : AuthException(
+        AuthErrorCode.TOO_MANY_ATTEMPTS,
         status = HttpStatus.BAD_REQUEST
     )
 }

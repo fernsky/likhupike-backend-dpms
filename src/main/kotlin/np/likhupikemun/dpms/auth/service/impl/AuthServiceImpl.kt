@@ -191,9 +191,9 @@ class AuthServiceImpl(
             currentTime = LocalDateTime.now()
         ) ?: throw AuthException.InvalidPasswordResetTokenException("Invalid or expired OTP")
 
-        // Check attempts
+        // Check attempts - throw specific exception
         if (otpEntity.attempts >= 3) {
-            throw AuthException.InvalidPasswordResetTokenException("Too many invalid attempts")
+            throw AuthException.TooManyAttemptsException()
         }
 
         // Increment attempts

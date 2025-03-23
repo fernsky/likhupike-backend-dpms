@@ -12,14 +12,27 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.whenever
+import org.mockito.kotlin.any
+import np.likhupikemun.dpms.common.service.EmailService
+import org.springframework.boot.test.mock.mockito.MockBean
 
 class UserSearchControllerTest : BaseUserControllerTest() {
+    @MockBean
+    private lateinit var emailService: EmailService
+
     private val ENDPOINT = "/api/v1/users/search"
     private lateinit var adminUser: CreateUserDto
     private val adminId = UUID.randomUUID()
 
     @BeforeEach
     fun setup() {
+        // Mock email service methods before creating users
+        doNothing().whenever(emailService).sendAccountCreatedEmail(any(), any())
+        doNothing().whenever(emailService).sendAccountApprovedEmail(any())
+        doNothing().whenever(emailService).sendWelcomeEmail(any())
+        
         // Clean up existing data
         cleanupTestData()
         
