@@ -66,41 +66,43 @@ class UserRepositoryImpl(
         columns: Set<String>
     ): Page<UserProjection> {
         val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(User::class.java)
-        val root = query.from(User::class.java)
-
-        // Add joins if permissions are requested
-        if ("permissions" in columns) {
-            root.fetch<User, UserPermission>("permissions", JoinType.LEFT)
-                .fetch<UserPermission, Permission>("permission", JoinType.LEFT)
-        }
-
-        // Apply specifications
-        spec.toPredicate(root, query, cb)?.let { query.where(it) }
-
-        // Apply sorting
-        if (pageable.sort.isSorted) {
-            val orders = mutableListOf<jakarta.persistence.criteria.Order>()
-            pageable.sort.forEach { order ->
-                val path = root.get<Any>(order.property)
-                orders.add(
-                    if (order.isAscending) cb.asc(path)
-                    else cb.desc(path)
-                )
-            }
-            query.orderBy(orders)
-        }
-
-        // Execute count query
+        
+        // Execute count query first
         val countQuery = cb.createQuery(Long::class.java)
         val countRoot = countQuery.from(User::class.java)
         countQuery.select(cb.count(countRoot))
         spec.toPredicate(countRoot, countQuery, cb)?.let { countQuery.where(it) }
         val total = entityManager.createQuery(countQuery).singleResult
 
+        // If no results or invalid page, return empty page
+        if (total == 0L || pageable.offset >= total) {
+            return PageImpl(emptyList(), pageable, total)
+        }
+
         // Execute main query with pagination
+        val query = cb.createQuery(User::class.java)
+        val root = query.from(User::class.java)
+
+        if ("permissions" in columns) {
+            root.fetch<User, UserPermission>("permissions", JoinType.LEFT)
+                .fetch<UserPermission, Permission>("permission", JoinType.LEFT)
+        }
+
+        spec.toPredicate(root, query, cb)?.let { query.where(it) }
+
+        if (pageable.sort.isSorted) {
+            val orders = mutableListOf<jakarta.persistence.criteria.Order>()
+            pageable.sort.forEach { order ->
+                val path = root.get<Any>(order.property)
+                orders.add(
+                    if (order.isAscending) cb.asc(path) else cb.desc(path)
+                )
+            }
+            query.orderBy(*orders.toTypedArray()) // Convert list to vararg array
+        }
+
         val results = entityManager.createQuery(query)
-            .setFirstResult(pageable.pageNumber * pageable.pageSize)
+            .setFirstResult(pageable.offset.toInt())
             .setMaxResults(pageable.pageSize)
             .resultList
             .map { user -> UserProjectionImpl(user as User, columns) }

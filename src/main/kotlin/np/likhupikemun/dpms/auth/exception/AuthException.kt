@@ -79,6 +79,10 @@ sealed class AuthException(
         TOO_MANY_ATTEMPTS {
             override val code = "AUTH_017"
             override val defaultMessage = "Too many invalid attempts"
+        },
+        PAGE_DOES_NOT_EXIST {
+            override val code = "AUTH_018"
+            override val defaultMessage = "Page does not exist"
         }
     }
 
@@ -183,6 +187,12 @@ sealed class AuthException(
 
     class TooManyAttemptsException : AuthException(
         AuthErrorCode.TOO_MANY_ATTEMPTS,
+        status = HttpStatus.BAD_REQUEST
+    )
+
+    class PageDoesNotExistException(message: String) : AuthException(
+        AuthErrorCode.PAGE_DOES_NOT_EXIST,
+        message = message,
         status = HttpStatus.BAD_REQUEST
     )
 }

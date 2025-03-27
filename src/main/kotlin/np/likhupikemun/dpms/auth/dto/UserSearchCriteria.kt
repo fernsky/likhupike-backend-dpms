@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import java.time.LocalDate
+import jakarta.validation.constraints.AssertTrue
 
 data class UserSearchCriteria(
     @field:Email(message = "Please provide a valid email address")
@@ -18,14 +19,14 @@ data class UserSearchCriteria(
     val createdBefore: LocalDate? = null,
     val permissions: Set<PermissionType>? = null,
     val columns: Set<String>? = null,
-    val page: Int = 1,  // Changed default from 0 to 1
+    val page: Int = 1, 
     val size: Int = 10,
     val sortBy: String = "createdAt",
     val sortDirection: Sort.Direction = Sort.Direction.DESC,
 ) {
     fun toPageable(): Pageable =
         PageRequest.of(
-            (page - 1).coerceAtLeast(0), // Convert 1-based to 0-based index
+            (page - 1).coerceAtLeast(0), // Convert 1-based to 0-based
             size,
             Sort.by(sortDirection, sortBy),
         )
@@ -47,4 +48,6 @@ data class UserSearchCriteria(
     }
 
     fun getValidColumns(): Set<String> = columns?.filter { it in ALLOWED_COLUMNS }?.toSet() ?: ALLOWED_COLUMNS
+    @AssertTrue(message = "Page number must be greater than 0")
+    fun isPageNumberValid(): Boolean = page > 0
 }

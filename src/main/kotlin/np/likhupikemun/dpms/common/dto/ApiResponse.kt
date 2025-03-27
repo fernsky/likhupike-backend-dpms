@@ -48,18 +48,18 @@ data class ErrorDetails(
 )
 
 data class PageMeta(
-    val page: Int,            // Current page number (1-based)
-    val size: Int,            // Page size
-    val totalElements: Long,  // Total number of elements
-    val totalPages: Int,      // Total number of pages
-    val isFirst: Boolean,     // If this is the first page
-    val isLast: Boolean      // If this is the last page
+    val page: Int,          
+    val size: Int,           
+    val totalElements: Long,  
+    val totalPages: Int,      
+    val isFirst: Boolean,    
+    val isLast: Boolean      
 ) {
     companion object {
         fun <T> from(page: Page<T>) = PageMeta(
             page = page.number + 1, // Convert 0-based to 1-based
             size = page.size,
-            totalElements = page.totalElements,
+            totalElements = page.totalElements, // Use total elements count
             totalPages = page.totalPages,
             isFirst = page.isFirst,
             isLast = page.isLast
