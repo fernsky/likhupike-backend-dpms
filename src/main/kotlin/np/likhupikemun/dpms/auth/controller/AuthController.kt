@@ -1,5 +1,13 @@
 package np.likhupikemun.dpms.auth.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
+import np.likhupikemun.dpms.common.annotation.Public
 import np.likhupikemun.dpms.auth.service.AuthService
 import np.likhupikemun.dpms.auth.dto.*
 import np.likhupikemun.dpms.common.dto.ApiResponse
@@ -13,7 +21,10 @@ import np.likhupikemun.dpms.common.service.I18nMessageService
 import np.likhupikemun.dpms.auth.resolver.CurrentUserId
 import java.util.*
 
-
+@Tag(
+    name = "Authentication",
+    description = "Endpoints for user authentication and account management"
+)
 @RestController
 @RequestMapping("/api/v1/auth", produces = [MediaType.APPLICATION_JSON_VALUE])
 class AuthController(
@@ -22,6 +33,18 @@ class AuthController(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    @Operation(
+        summary = "Register new user",
+        description = "Register a new user account. The account will require admin approval before it can be used."
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "201", description = "User registered successfully"),
+        ApiResponse(responseCode = "400", description = "Invalid input"),
+        ApiResponse(responseCode = "409", description = "User already exists", content = [
+            Content(schema = Schema(implementation = ApiResponse::class))
+        ])
+    ])
+    @Public
     @PostMapping("/register", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun register(
         @Valid @RequestBody request: RegisterRequest
@@ -36,6 +59,17 @@ class AuthController(
             ))
     }
 
+    @Operation(
+        summary = "Authenticate user",
+        description = "Authenticate user credentials and receive access token"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Authentication successful"),
+        ApiResponse(responseCode = "400", description = "Invalid credentials"),
+        ApiResponse(responseCode = "403", description = "Account not approved"),
+        ApiResponse(responseCode = "429", description = "Too many attempts")
+    ])
+    @Public
     @PostMapping("/login", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun login(
         @Valid @RequestBody request: LoginRequest
@@ -50,6 +84,15 @@ class AuthController(
         )
     }
 
+    @Operation(
+        summary = "Refresh authentication token",
+        description = "Get new access token using refresh token"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
+        ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+    ])
+    @Public
     @PostMapping("/refresh")
     fun refreshToken(
         @RequestHeader("X-Refresh-Token") refreshToken: String
@@ -64,6 +107,14 @@ class AuthController(
         )
     }
 
+    @Operation(
+        summary = "Logout user",
+        description = "Invalidate current authentication token"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Logged out successfully"),
+        ApiResponse(responseCode = "401", description = "Invalid token")
+    ])
     @PostMapping("/logout")
     fun logout(
         @RequestHeader("Authorization") token: String
@@ -78,6 +129,16 @@ class AuthController(
         )
     }
 
+    @Operation(
+        summary = "Request password reset",
+        description = "Request a password reset OTP that will be sent via email"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Password reset OTP sent"),
+        ApiResponse(responseCode = "404", description = "User not found"),
+        ApiResponse(responseCode = "429", description = "Too many reset attempts")
+    ])
+    @Public
     @PostMapping("/password-reset/request")
     fun requestPasswordReset(
         @Valid @RequestBody request: RequestPasswordResetRequest
@@ -91,6 +152,17 @@ class AuthController(
         )
     }
 
+    @Operation(
+        summary = "Reset password using OTP",
+        description = "Reset password using the OTP received via email"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Password reset successful"),
+        ApiResponse(responseCode = "400", description = "Invalid OTP or password requirements not met"),
+        ApiResponse(responseCode = "404", description = "User not found"),
+        ApiResponse(responseCode = "429", description = "Too many attempts")
+    ])
+    @Public
     @PostMapping("/password-reset/reset")
     fun resetPassword(
         @Valid @RequestBody request: ResetPasswordRequest
@@ -104,8 +176,18 @@ class AuthController(
         )
     }
 
+    @Operation(
+        summary = "Change password",
+        description = "Change password for authenticated user"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Password changed successfully"),
+        ApiResponse(responseCode = "400", description = "Invalid current password or password requirements not met"),
+        ApiResponse(responseCode = "401", description = "Not authenticated")
+    ])
     @PostMapping("/change-password")
     fun changePassword(
+        @Parameter(hidden = true)
         @CurrentUserId currentUserId: UUID,
         @Valid @RequestBody request: ChangePasswordRequest
     ): ResponseEntity<ApiResponse<Nothing>> {
