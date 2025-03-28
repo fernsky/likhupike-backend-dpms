@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
-import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import np.likhupikemun.dpms.common.annotation.Public
@@ -38,9 +38,9 @@ class AuthController(
         description = "Register a new user account. The account will require admin approval before it can be used."
     )
     @ApiResponses(value = [
-        ApiResponse(responseCode = "201", description = "User registered successfully"),
-        ApiResponse(responseCode = "400", description = "Invalid input"),
-        ApiResponse(responseCode = "409", description = "User already exists", content = [
+        SwaggerResponse(responseCode = "201", description = "User registered successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid input"),
+        SwaggerResponse(responseCode = "409", description = "User already exists", content = [
             Content(schema = Schema(implementation = ApiResponse::class))
         ])
     ])
@@ -64,10 +64,10 @@ class AuthController(
         description = "Authenticate user credentials and receive access token"
     )
     @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Authentication successful"),
-        ApiResponse(responseCode = "400", description = "Invalid credentials"),
-        ApiResponse(responseCode = "403", description = "Account not approved"),
-        ApiResponse(responseCode = "429", description = "Too many attempts")
+        SwaggerResponse(responseCode = "200", description = "Authentication successful"),
+        SwaggerResponse(responseCode = "400", description = "Invalid credentials"),
+        SwaggerResponse(responseCode = "403", description = "Account not approved"),
+        SwaggerResponse(responseCode = "429", description = "Too many attempts")
     ])
     @Public
     @PostMapping("/login", consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -89,8 +89,8 @@ class AuthController(
         description = "Get new access token using refresh token"
     )
     @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
-        ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+        SwaggerResponse(responseCode = "200", description = "Token refreshed successfully"),
+        SwaggerResponse(responseCode = "401", description = "Invalid or expired refresh token")
     ])
     @Public
     @PostMapping("/refresh")
@@ -112,8 +112,8 @@ class AuthController(
         description = "Invalidate current authentication token"
     )
     @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Logged out successfully"),
-        ApiResponse(responseCode = "401", description = "Invalid token")
+        SwaggerResponse(responseCode = "200", description = "Logged out successfully"),
+        SwaggerResponse(responseCode = "401", description = "Invalid token")
     ])
     @PostMapping("/logout")
     fun logout(
@@ -134,9 +134,9 @@ class AuthController(
         description = "Request a password reset OTP that will be sent via email"
     )
     @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Password reset OTP sent"),
-        ApiResponse(responseCode = "404", description = "User not found"),
-        ApiResponse(responseCode = "429", description = "Too many reset attempts")
+        SwaggerResponse(responseCode = "200", description = "Password reset OTP sent"),
+        SwaggerResponse(responseCode = "404", description = "User not found"),
+        SwaggerResponse(responseCode = "429", description = "Too many reset attempts")
     ])
     @Public
     @PostMapping("/password-reset/request")
@@ -157,10 +157,10 @@ class AuthController(
         description = "Reset password using the OTP received via email"
     )
     @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Password reset successful"),
-        ApiResponse(responseCode = "400", description = "Invalid OTP or password requirements not met"),
-        ApiResponse(responseCode = "404", description = "User not found"),
-        ApiResponse(responseCode = "429", description = "Too many attempts")
+        SwaggerResponse(responseCode = "200", description = "Password reset successful"),
+        SwaggerResponse(responseCode = "400", description = "Invalid OTP or password requirements not met"),
+        SwaggerResponse(responseCode = "404", description = "User not found"),
+        SwaggerResponse(responseCode = "429", description = "Too many attempts")
     ])
     @Public
     @PostMapping("/password-reset/reset")
@@ -181,9 +181,9 @@ class AuthController(
         description = "Change password for authenticated user"
     )
     @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Password changed successfully"),
-        ApiResponse(responseCode = "400", description = "Invalid current password or password requirements not met"),
-        ApiResponse(responseCode = "401", description = "Not authenticated")
+        SwaggerResponse(responseCode = "200", description = "Password changed successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid current password or password requirements not met"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated")
     ])
     @PostMapping("/change-password")
     fun changePassword(
