@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'np.likhupikemun'
-version = '0.3.6-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 
 java {
 	toolchain {
@@ -60,6 +60,11 @@ dependencies {
 	testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testRuntimeOnly 'com.h2database:h2'
+	
+	// OpenAPI Documentation
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-common:2.3.0'
+	implementation 'org.springdoc:springdoc-openapi-kotlin:1.7.0'
 }
 
 kotlin {

@@ -34,8 +34,13 @@ class SecurityConfig(
             .cors { it.configurationSource(corsConfigurationSource()) }
             .authorizeHttpRequests {
                 it
-                    .requestMatchers("/error", "/actuator/health")
-                    .permitAll()
+                    .requestMatchers(
+                        "/error",
+                        "/actuator/health",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html"
+                    ).permitAll()
                     .requestMatchers(
                         createRequestMatcher { request ->
                             routeRegistry.isPublicRoute(request.servletPath, HttpMethod.valueOf(request.method))
