@@ -11,7 +11,7 @@ interface UserService {
     fun updatePermissions(userId: UUID, permissions: UserPermissionsDto): User
     fun resetPassword(userId: UUID, newPassword: String): User
     fun approveUser(userId: UUID, approvedBy: UUID): User
-    fun deleteUser(userId: UUID, deletedBy: String): User
+    fun deleteUser(userId: UUID, deletedBy: UUID): User
     fun searchUsers(criteria: UserSearchCriteria): Page<UserProjection>
     fun updateUser(userId: UUID, request: UpdateUserRequest): User
     fun getUserById(userId: UUID): User

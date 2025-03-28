@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="01-change-deleted-by-to-uuid">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="users"/>
+            <columnExists tableName="users" columnName="deleted_by"/>
+        </preConditions>
+        
+        <comment>Convert deleted_by column from VARCHAR to UUID</comment>
+        
+        <!-- First set null for any non-UUID values -->
+        <update tableName="users">
+            <column name="deleted_by" value="null"/>
+            <where>deleted_by IS NOT NULL AND deleted_by !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'</where>
+        </update>
+        
+        <!-- Then modify the column type -->
+        <modifyDataType tableName="users" columnName="deleted_by" newDataType="UUID"/>
+    </changeSet>
+</databaseChangeLog>

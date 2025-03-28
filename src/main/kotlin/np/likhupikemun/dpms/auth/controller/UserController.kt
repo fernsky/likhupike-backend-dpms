@@ -79,9 +79,9 @@ class UserController(
     @PreAuthorize("hasPermission(null, 'DELETE_USER')")
     fun deleteUser(
         @PathVariable userId: UUID,
-        @RequestAttribute("currentUser") currentUser: String
+         @CurrentUserId currentUserId: UUID
     ): ResponseEntity<ApiResponse<User>> {
-        val deletedUser = userService.deleteUser(userId, currentUser)
+        val deletedUser = userService.deleteUser(userId, currentUserId)
         return ResponseEntity.ok(
             ApiResponse.success(
                 data = deletedUser,

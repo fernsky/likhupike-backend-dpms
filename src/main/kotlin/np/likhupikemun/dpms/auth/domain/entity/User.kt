@@ -47,7 +47,7 @@ class User :
     var deletedAt: LocalDateTime? = null
 
     @Column(name = "deleted_by")
-    var deletedBy: String? = null
+    var deletedBy: UUID? = null
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
     private var permissions: MutableSet<UserPermission> = mutableSetOf()

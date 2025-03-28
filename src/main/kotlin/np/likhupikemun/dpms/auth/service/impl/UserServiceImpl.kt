@@ -145,7 +145,7 @@ class UserServiceImpl(
         return approvedUser
     }
 
-    override fun deleteUser(userId: UUID, deletedBy: String): User {
+    override fun deleteUser(userId: UUID, deletedBy: UUID): User {
         val user = userRepository.findById(userId)
             .orElseThrow { AuthException.UserNotFoundException(userId.toString()) }
 
