@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.core.env.Environment
+import np.likhupikemun.dpms.common.annotation.Public
 
 @Configuration
 class OpenAPIConfig(private val env: Environment) {
