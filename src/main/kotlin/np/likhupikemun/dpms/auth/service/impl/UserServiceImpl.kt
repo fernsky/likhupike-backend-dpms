@@ -33,10 +33,37 @@ class UserServiceImpl(
 
 
     override fun createUser(createUserDto: CreateUserDto): User {
-        if (userRepository.existsByEmail(createUserDto.email)) {
-            throw AuthException.UserAlreadyExistsException(createUserDto.email)
+        // Check if user exists
+        val existingUser = userRepository.findByEmail(createUserDto.email)
+        
+        if (existingUser.isPresent) {
+            val user = existingUser.get()
+            if (user.isDeleted) {
+                // Reactivate deleted user
+                user.apply {
+                    isDeleted = false
+                    deletedBy = null
+                    deletedAt = null
+                    setPassword(passwordEncoder.encode(createUserDto.password))
+                    isWardLevelUser = createUserDto.isWardLevelUser
+                    wardNumber = createUserDto.wardNumber
+                    // Clear existing permissions
+                    clearPermissions()
+                }
+                
+                // Add new permissions
+                val permissions = permissionService.findByTypes(createUserDto.permissions.filterValues { it }.keys)
+                permissions.forEach { user.addPermission(it) }
+                
+                val reactivatedUser = userRepository.save(user)
+
+                return reactivatedUser
+            } else {
+                throw AuthException.UserAlreadyExistsException(createUserDto.email)
+            }
         }
         
+        // Create new user if doesn't exist
         val user = User().apply {
             email = createUserDto.email
             setPassword(passwordEncoder.encode(createUserDto.password))
@@ -51,13 +78,10 @@ class UserServiceImpl(
         val createdUser = userRepository.save(user)
 
         try {
-            // Generate reset token for the new user
             val resetToken = jwtService.generateToken(createdUser)
-            // Send account created email with reset token
-            emailService.sendAccountCreatedEmail(createdUser.email!!, resetToken)
+            emailService.sendAccountCreatedEmailAsync(createdUser.email!!, resetToken)
         } catch (e: Exception) {
             logger.error("Failed to send account created email to: {}", createdUser.email, e)
-            // Don't throw since user creation was successful
         }
 
         return createdUser
@@ -136,7 +160,7 @@ class UserServiceImpl(
 
         try {
             // Send account approved email using template
-            emailService.sendAccountApprovedEmail(approvedUser.email!!)
+            emailService.sendAccountApprovedEmailAsync(approvedUser.email!!)
         } catch (e: Exception) {
             // Log but don't throw since approval was successful
             logger.error("Failed to send approval email to: {}", approvedUser.email, e)
@@ -156,6 +180,7 @@ class UserServiceImpl(
         user.apply {
             isDeleted = true
             this.deletedBy = deletedBy
+            this.isApproved = false
             deletedAt = LocalDateTime.now()
         }
 

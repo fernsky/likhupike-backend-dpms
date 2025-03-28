@@ -73,7 +73,7 @@ class AuthServiceImpl(
 
         try {
             // Send welcome email using template
-            emailService.sendWelcomeEmail(user.email!!)
+            emailService.sendWelcomeEmailAsync(user.email!!)
             logger.info("Welcome email sent to: {}", user.email)
         } catch (e: Exception) {
             logger.error("Failed to send welcome email to: {}", user.email, e)
@@ -170,7 +170,7 @@ class AuthServiceImpl(
         otpRepository.save(passwordResetOtp)
         
         try {
-            emailService.sendPasswordResetOtp(request.email, otp)
+            emailService.sendPasswordResetOtpAsync(request.email, otp)
             logger.info("Password reset OTP sent to user: {}", request.email)
         } catch (e: Exception) {
             logger.error("Failed to send password reset OTP to: {}", request.email, e)
@@ -216,7 +216,7 @@ class AuthServiceImpl(
         logger.info("Password reset successful for user: {}", request.email)
 
         try {
-            emailService.sendPasswordResetConfirmation(request.email)
+            emailService.sendPasswordResetConfirmationAsync(request.email)
         } catch (e: Exception) {
             logger.error("Failed to send password reset confirmation email to: {}", request.email, e)
             // Don't throw since password reset was successful
@@ -244,7 +244,7 @@ class AuthServiceImpl(
         userService.resetPassword(currentUserId, request.newPassword)
         
         try {
-            emailService.sendPasswordResetConfirmation(user.email!!)
+            emailService.sendPasswordResetConfirmationAsync(user.email!!)
         } catch (e: Exception) {
             logger.error("Failed to send password change confirmation email to: {}", user.email, e)
             // Don't throw since password change was successful

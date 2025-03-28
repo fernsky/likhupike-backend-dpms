@@ -8,6 +8,8 @@ import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Service
 import jakarta.mail.internet.MimeMessage
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Async
+import java.util.concurrent.CompletableFuture
 
 @Service
 class EmailServiceImpl(
@@ -104,5 +106,54 @@ class EmailServiceImpl(
             subject = EmailTemplate.PASSWORD_RESET_SUCCESS.subject,
             htmlContent = template
         )
+    }
+
+    @Async
+    override fun sendEmailAsync(to: String, subject: String, htmlContent: String): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            sendEmail(to, subject, htmlContent)
+        }
+    }
+
+    @Async
+    override fun sendAccountCreatedEmailAsync(to: String, resetToken: String): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            sendAccountCreatedEmail(to, resetToken)
+        }
+    }
+
+    @Async
+    override fun sendAccountApprovedEmailAsync(to: String): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            sendAccountApprovedEmail(to)
+        }
+    }
+
+    @Async
+    override fun sendWelcomeEmailAsync(to: String): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            sendWelcomeEmail(to)
+        }
+    }
+
+    @Async
+    override fun sendPasswordResetEmailAsync(to: String, resetToken: String): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            sendPasswordResetEmail(to, resetToken)
+        }
+    }
+
+    @Async
+    override fun sendPasswordResetOtpAsync(to: String, otp: String): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            sendPasswordResetOtp(to, otp)
+        }
+    }
+
+    @Async
+    override fun sendPasswordResetConfirmationAsync(to: String): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            sendPasswordResetConfirmation(to)
+        }
     }
 }
