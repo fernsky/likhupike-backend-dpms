@@ -15,7 +15,18 @@ import java.util.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import np.likhupikemun.dpms.common.service.I18nMessageService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 
+@Tag(
+    name = "User Management",
+    description = "Endpoints for managing users, permissions, and account operations"
+)
 @RestController
 @RequestMapping("/api/v1/users")
 class UserController(
@@ -23,6 +34,17 @@ class UserController(
     private val i18nMessageService: I18nMessageService,
     private val log: Logger = LoggerFactory.getLogger(UserController::class.java)
 ) {
+    @Operation(
+        summary = "Create new user",
+        description = "Create and automatically approve a new user account with specified permissions"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "User created successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid input data"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing CREATE_USER permission"),
+        SwaggerResponse(responseCode = "409", description = "User already exists")
+    ])
     @PostMapping
     @PreAuthorize("hasPermission(null, 'CREATE_USER')")
     fun createUser(
@@ -45,6 +67,17 @@ class UserController(
         )
     }
 
+    @Operation(
+        summary = "Search users",
+        description = "Search and filter users with pagination"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "Search successful"),
+        SwaggerResponse(responseCode = "400", description = "Invalid search criteria"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing VIEW_USER permission"),
+        SwaggerResponse(responseCode = "404", description = "Page does not exist")
+    ])
     @GetMapping("/search")
     @PreAuthorize("hasPermission(null, 'VIEW_USER')")
     fun searchUsers(
@@ -60,6 +93,17 @@ class UserController(
         )
     }
 
+    @Operation(
+        summary = "Approve user",
+        description = "Approve a pending user registration"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "User approved successfully"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing APPROVE_USER permission"),
+        SwaggerResponse(responseCode = "404", description = "User not found"),
+        SwaggerResponse(responseCode = "409", description = "User already approved")
+    ])
     @PostMapping("/{userId}/approve")
     @PreAuthorize("hasPermission(null, 'APPROVE_USER')")
     fun approveUser(
@@ -75,6 +119,17 @@ class UserController(
         )
     }
 
+    @Operation(
+        summary = "Delete user",
+        description = "Soft delete a user account"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "User deleted successfully"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing DELETE_USER permission"),
+        SwaggerResponse(responseCode = "404", description = "User not found"),
+        SwaggerResponse(responseCode = "409", description = "User already deleted")
+    ])
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasPermission(null, 'DELETE_USER')")
     fun deleteUser(
@@ -90,6 +145,17 @@ class UserController(
         )
     }
 
+    @Operation(
+        summary = "Update user permissions",
+        description = "Modify the permissions assigned to a user"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "Permissions updated successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid permissions"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing EDIT_USER permission"),
+        SwaggerResponse(responseCode = "404", description = "User not found")
+    ])
     @PutMapping("/{userId}/permissions")
     @PreAuthorize("hasPermission(null, 'EDIT_USER')")
     fun updatePermissions(
@@ -105,6 +171,17 @@ class UserController(
         )
     }
 
+    @Operation(
+        summary = "Reset user password",
+        description = "Administrative password reset for a user"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "Password reset successful"),
+        SwaggerResponse(responseCode = "400", description = "Invalid password or passwords don't match"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing RESET_USER_PASSWORD permission"),
+        SwaggerResponse(responseCode = "404", description = "User not found")
+    ])
     @PostMapping("/{userId}/reset-password")
     @PreAuthorize("hasPermission(null, 'RESET_USER_PASSWORD')")
     fun resetPassword(
@@ -120,6 +197,16 @@ class UserController(
         )
     }
 
+    @Operation(
+        summary = "Get user by ID",
+        description = "Retrieve detailed user information"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "User retrieved successfully"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing VIEW_USER permission"),
+        SwaggerResponse(responseCode = "404", description = "User not found")
+    ])
     @GetMapping("/{userId}")
     @PreAuthorize("hasPermission(null, 'VIEW_USER')")
     fun getUserById(
@@ -135,6 +222,18 @@ class UserController(
         )
     }
 
+    @Operation(
+        summary = "Update user",
+        description = "Update user information (email, ward access)"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "User updated successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid input data"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing EDIT_USER permission"),
+        SwaggerResponse(responseCode = "404", description = "User not found"),
+        SwaggerResponse(responseCode = "409", description = "Email already exists")
+    ])
     @PutMapping("/{userId}")
     @PreAuthorize("hasPermission(null, 'EDIT_USER')")
     fun updateUser(
