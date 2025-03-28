@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.mockito.kotlin.*
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
+
 
 abstract class BasePermissionControllerTest : BaseUserControllerTest() {
     @MockBean
@@ -41,6 +43,13 @@ abstract class BasePermissionControllerTest : BaseUserControllerTest() {
         doNothing().whenever(emailService).sendEmail(any(), any(), any())
         doNothing().whenever(emailService).sendPasswordResetEmail(any(), any())
         doNothing().whenever(emailService).sendPasswordResetOtp(any(), any())
+          whenever(emailService.sendEmailAsync(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendPasswordResetEmailAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendWelcomeEmailAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendAccountApprovedEmailAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendAccountCreatedEmailAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendPasswordResetOtpAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendPasswordResetConfirmationAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
     }
 
     private fun setupUsers() {

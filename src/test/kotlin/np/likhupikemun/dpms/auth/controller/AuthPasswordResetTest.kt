@@ -11,6 +11,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.mockito.kotlin.*
 import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
+
 
 class AuthPasswordResetTest : BaseAuthControllerTest() {
     private val REQUEST_ENDPOINT = "/api/v1/auth/password-reset/request"
@@ -23,7 +25,7 @@ class AuthPasswordResetTest : BaseAuthControllerTest() {
         // Create user first
         createTestUser()
         
-        doNothing().whenever(emailService).sendPasswordResetOtp(any(), any())
+        whenever(emailService.sendPasswordResetOtpAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
 
         mockMvc.perform(
             post(REQUEST_ENDPOINT)
@@ -34,7 +36,7 @@ class AuthPasswordResetTest : BaseAuthControllerTest() {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("Password reset email sent"))
 
-        verify(emailService).sendPasswordResetOtp(eq(TEST_EMAIL), any())
+        verify(emailService).sendPasswordResetOtpAsync(eq(TEST_EMAIL), any())
     }
 
     @Test
@@ -56,7 +58,7 @@ class AuthPasswordResetTest : BaseAuthControllerTest() {
             any()
         )).thenReturn(otpEntity)
 
-        doNothing().whenever(emailService).sendPasswordResetConfirmation(any())
+        whenever(emailService.sendPasswordResetConfirmationAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
 
         mockMvc.perform(
             post(RESET_ENDPOINT)
@@ -77,7 +79,7 @@ class AuthPasswordResetTest : BaseAuthControllerTest() {
         verify(otpRepository).save(argThat { 
             isUsed && attempts >= 1 
         })
-        verify(emailService).sendPasswordResetConfirmation(TEST_EMAIL)
+        verify(emailService).sendPasswordResetConfirmationAsync(TEST_EMAIL)
     }
 
     @Test

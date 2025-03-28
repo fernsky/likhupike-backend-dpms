@@ -10,6 +10,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.mockito.kotlin.*
 import org.slf4j.LoggerFactory
 import org.junit.jupiter.api.BeforeEach
+import java.util.concurrent.CompletableFuture
+
 
 abstract class BaseAuthControllerTest : BaseIntegrationTest() {
     protected val log = LoggerFactory.getLogger(javaClass)
@@ -49,5 +51,12 @@ abstract class BaseAuthControllerTest : BaseIntegrationTest() {
         doNothing().whenever(emailService).sendAccountCreatedEmail(any(), any())
         doNothing().whenever(emailService).sendPasswordResetOtp(any(), any())
         doNothing().whenever(emailService).sendPasswordResetConfirmation(any())
+        whenever(emailService.sendEmailAsync(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendPasswordResetEmailAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendWelcomeEmailAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendAccountApprovedEmailAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendAccountCreatedEmailAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendPasswordResetOtpAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendPasswordResetConfirmationAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
     }
 }

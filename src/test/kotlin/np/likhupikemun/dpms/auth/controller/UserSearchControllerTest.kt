@@ -17,6 +17,8 @@ import org.mockito.kotlin.whenever
 import org.mockito.kotlin.any
 import np.likhupikemun.dpms.common.service.EmailService
 import org.springframework.boot.test.mock.mockito.MockBean
+import java.util.concurrent.CompletableFuture
+
 
 class UserSearchControllerTest : BaseUserControllerTest() {
     @MockBean
@@ -29,9 +31,9 @@ class UserSearchControllerTest : BaseUserControllerTest() {
     @BeforeEach
     fun setup() {
         // Mock email service methods before creating users
-        doNothing().whenever(emailService).sendAccountCreatedEmail(any(), any())
-        doNothing().whenever(emailService).sendAccountApprovedEmail(any())
-        doNothing().whenever(emailService).sendWelcomeEmail(any())
+        whenever(emailService.sendAccountCreatedEmailAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendAccountApprovedEmailAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
+        whenever(emailService.sendWelcomeEmailAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
         
         // Clean up existing data
         cleanupTestData()
@@ -76,7 +78,7 @@ class UserSearchControllerTest : BaseUserControllerTest() {
         mockMvc.perform(get(ENDPOINT)
             .header("Authorization", getAuthHeaderForUser(adminUser.email))
             .param("email", "test3@example.com")  // Use full email
-            .param("page", "0")
+            .param("page", "1")
             .param("size", "10")
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk)
@@ -103,7 +105,7 @@ class UserSearchControllerTest : BaseUserControllerTest() {
         mockMvc.perform(get(ENDPOINT)
             .header("Authorization", getAuthHeaderForUser(adminUser.email))
             .param("wardNumber", "2")    // Changed to single wardNumber parameter
-            .param("page", "0")
+            .param("page", "1")
             .param("size", "10")
             .contentType(MediaType.APPLICATION_JSON))
             .andDo { result -> log.debug("Response: ${result.response.contentAsString}") }
@@ -149,8 +151,8 @@ class UserSearchControllerTest : BaseUserControllerTest() {
         userService.searchUsers(criteria).content.forEach { projection ->
             try {
                 // Get ID safely using string interpolation of nullable property
-                val userId = projection.getId()?.toString() ?: return@forEach
-                userService.deleteUser(UUID.fromString(userId), "test-cleanup")
+                val userId = projection.getId().toString() ?: return@forEach
+                userService.deleteUser(UUID.fromString(userId), UUID.fromString(userId))
             } catch (e: Exception) {
                 log.warn("Failed to delete test user: ${e.message}")
             }

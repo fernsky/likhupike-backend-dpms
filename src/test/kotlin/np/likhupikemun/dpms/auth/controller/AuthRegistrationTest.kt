@@ -8,6 +8,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.mockito.kotlin.*
+import java.util.concurrent.CompletableFuture
+
 
 class AuthRegistrationTest : BaseAuthControllerTest() {
     private val ENDPOINT = "/api/v1/auth/register"
@@ -16,7 +18,7 @@ class AuthRegistrationTest : BaseAuthControllerTest() {
     fun `should register a new regular user successfully`() {
         // Arrange
         val request = UserTestFixture.createRegisterRequest()
-        doNothing().whenever(emailService).sendWelcomeEmail(any())
+        whenever(emailService.sendWelcomeEmailAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
 
         // Act & Assert
         mockMvc.perform(
@@ -29,7 +31,7 @@ class AuthRegistrationTest : BaseAuthControllerTest() {
             .andExpect(jsonPath("$.data.email").value(request.email))
             .andExpect(jsonPath("$.message").value("Registration successful. Waiting for admin approval."))
 
-        verify(emailService).sendWelcomeEmail(request.email)
+        verify(emailService).sendWelcomeEmailAsync(request.email)
     }
 
     @Test
@@ -39,7 +41,7 @@ class AuthRegistrationTest : BaseAuthControllerTest() {
             isWardLevelUser = true,
             wardNumber = 1
         )
-        doNothing().whenever(emailService).sendWelcomeEmail(any())
+        whenever(emailService.sendEmailAsync(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null))
 
         // Act & Assert
         mockMvc.perform(
@@ -52,7 +54,7 @@ class AuthRegistrationTest : BaseAuthControllerTest() {
             .andExpect(jsonPath("$.data.email").value(request.email))
             .andExpect(jsonPath("$.message").value("Registration successful. Waiting for admin approval."))
 
-        verify(emailService).sendWelcomeEmail(request.email)
+        verify(emailService).sendWelcomeEmailAsync(request.email)
     }
 
     @Test

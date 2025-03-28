@@ -10,6 +10,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.mockito.kotlin.*
+import java.util.concurrent.CompletableFuture
+
 
 class UserPasswordResetTest : BasePermissionControllerTest() {
     private lateinit var targetUser: CreateUserDto
@@ -28,7 +30,7 @@ class UserPasswordResetTest : BasePermissionControllerTest() {
 
         // Reset mock and setup expectations
         clearInvocations(emailService)
-        doNothing().whenever(emailService).sendPasswordResetConfirmation(any())
+        whenever(emailService.sendPasswordResetConfirmationAsync(any())).thenReturn(CompletableFuture.completedFuture(null))
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/users/${targetUser.id}/reset-password")
