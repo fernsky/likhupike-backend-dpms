@@ -11,4 +11,5 @@ interface UserRepositoryCustom {
     fun findByEmailWithPermissions(email: String): Optional<User>
     fun findByIdWithPermissions(id: UUID): Optional<User>
     fun findAllWithProjection(spec: Specification<User>, pageable: Pageable, columns: Set<String>): Page<UserProjection>
+    fun countDistinct(spec: Specification<User>): Long
 }

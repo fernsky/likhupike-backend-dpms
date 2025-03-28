@@ -190,12 +190,16 @@ class UserServiceImpl(
     override fun searchUsers(criteria: UserSearchCriteria): Page<UserProjection> {
         val specification = UserSpecifications.fromCriteria(criteria)
         
-        // Get total count first
-        val totalElements = userRepository.count(specification)
+        // Use distinct count when permissions are involved
+        val totalElements = if (criteria.permissions?.isNotEmpty() == true) {
+            userRepository.countDistinct(specification)
+        } else {
+            userRepository.count(specification)
+        }
+        
         val totalPages = (totalElements + criteria.size - 1) / criteria.size
         
-        // Validate page number
-        if (criteria.page > totalPages) {
+        if (criteria.page > totalPages && totalPages > 0) {
             throw AuthException.PageDoesNotExistException("Page number ${criteria.page} is invalid. Total pages available: $totalPages")
         }
         

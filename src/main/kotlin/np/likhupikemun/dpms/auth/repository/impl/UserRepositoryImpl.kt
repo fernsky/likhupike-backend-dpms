@@ -67,10 +67,22 @@ class UserRepositoryImpl(
     ): Page<UserProjection> {
         val cb = entityManager.criteriaBuilder
         
-        // Execute count query first
+        // Execute count query with distinct
         val countQuery = cb.createQuery(Long::class.java)
         val countRoot = countQuery.from(User::class.java)
-        countQuery.select(cb.count(countRoot))
+        
+        // If permissions are in columns or spec contains permissions, we need distinct count
+        val needsDistinct = "permissions" in columns || spec.toString().contains("permissions")
+        
+        if (needsDistinct) {
+            countQuery.select(cb.countDistinct(countRoot))
+            // Join permissions for count query if needed
+            countRoot.join<User, UserPermission>("permissions", JoinType.LEFT)
+                .join<UserPermission, Permission>("permission", JoinType.LEFT)
+        } else {
+            countQuery.select(cb.count(countRoot))
+        }
+        
         spec.toPredicate(countRoot, countQuery, cb)?.let { countQuery.where(it) }
         val total = entityManager.createQuery(countQuery).singleResult
 
@@ -82,7 +94,12 @@ class UserRepositoryImpl(
         // Execute main query with pagination
         val query = cb.createQuery(User::class.java)
         val root = query.from(User::class.java)
+        
+        if (needsDistinct) {
+            query.distinct(true)
+        }
 
+        // Always join permissions if they're requested in columns
         if ("permissions" in columns) {
             root.fetch<User, UserPermission>("permissions", JoinType.LEFT)
                 .fetch<UserPermission, Permission>("permission", JoinType.LEFT)
@@ -98,7 +115,7 @@ class UserRepositoryImpl(
                     if (order.isAscending) cb.asc(path) else cb.desc(path)
                 )
             }
-            query.orderBy(*orders.toTypedArray()) // Convert list to vararg array
+            query.orderBy(*orders.toTypedArray())
         }
 
         val results = entityManager.createQuery(query)
@@ -108,5 +125,19 @@ class UserRepositoryImpl(
             .map { user -> UserProjectionImpl(user as User, columns) }
 
         return PageImpl(results, pageable, total)
+    }
+
+    override fun countDistinct(spec: Specification<User>): Long {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createQuery(Long::class.java)
+        val root = query.from(User::class.java)
+        
+        // Select distinct count
+        query.select(cb.countDistinct(root))
+        
+        // Add the specification predicate if it exists
+        spec.toPredicate(root, query, cb)?.let { query.where(it) }
+        
+        return entityManager.createQuery(query).singleResult
     }
 }
