@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'np.likhupikemun'
-version = '0.3.3-SNAPSHOT'
+version = '0.3.4-SNAPSHOT'
 
 java {
 	toolchain {

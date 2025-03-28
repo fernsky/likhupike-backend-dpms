@@ -47,7 +47,7 @@ class SecurityConfig(
                         }
                     ).authenticated()
                     .anyRequest()
-                    .permitAll()
+                    .denyAll() // Change from permitAll to denyAll to return 403 for unregistered routes
             }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -56,8 +56,8 @@ class SecurityConfig(
                 it
                     .authenticationEntryPoint(customAuthenticationEntryPoint)
                     .accessDeniedHandler { request, response, _ ->
-                        val exception = object : AuthenticationException("Access Denied") {}
-                        customAuthenticationEntryPoint.commence(request, response, exception)
+                        // Return 404 for all unregistered routes
+                        response.status = 404
                     }
             }
             .authenticationProvider(authenticationProvider)

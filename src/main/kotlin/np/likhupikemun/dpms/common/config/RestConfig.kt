@@ -1,4 +1,4 @@
-package np.gov.mofaga.imis.shared.config
+package np.likhupikemun.dpms.common.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -12,9 +12,15 @@ class RestConfig {
     @Bean
     fun repositoryRestConfigurer(): RepositoryRestConfigurer =
         RepositoryRestConfigurer.withConfig { config: RepositoryRestConfiguration, cors: CorsRegistry ->
-            config.setBasePath("/api")
-            config.repositoryDetectionStrategy =
+            // Set base path to a non-used path to avoid conflicts
+            config.setBasePath("/api/data-rest-disabled")
+            
+            // Disable auto-detection of repositories
+            config.repositoryDetectionStrategy = 
                 RepositoryDetectionStrategy.RepositoryDetectionStrategies.ANNOTATED
+            
+            // Disable default exposure completely
+            config.disableDefaultExposure()
 
             cors
                 .addMapping("/api/**")
