@@ -1,4 +1,4 @@
-== Document History
+= Document History
 
 [cols="1,1,2,4",options="header"]
 |===
