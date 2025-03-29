@@ -5,6 +5,46 @@ import np.sthaniya.dpis.auth.domain.enums.PermissionType
 import java.util.UUID
 import io.swagger.v3.oas.annotations.media.Schema
 
+/**
+ * Data Transfer Object (DTO) for administrative user creation requests.
+ *
+ * This class handles the validation and transport of new user creation data, including:
+ * - Basic user information
+ * - Permission assignments
+ * - Ward-level access configuration
+ *
+ * Features:
+ * - Email validation
+ * - Password strength requirements
+ * - Permission assignment
+ * - Ward-level access control
+ * - OpenAPI/Swagger documentation
+ *
+ * Usage with [UserService]:
+ * ```kotlin
+ * val dto = CreateUserDto(
+ *     email = "user@example.com",
+ *     password = "SecurePass123!",
+ *     permissions = mapOf(PermissionType.VIEW_USER to true),
+ *     isWardLevelUser = true,
+ *     wardNumber = 5
+ * )
+ * userService.createUser(dto)
+ * ```
+ *
+ * Integration:
+ * - Used by [UserController] for user creation
+ * - Validated by Jakarta Validation
+ * - Processed by [UserServiceImpl]
+ *
+ * @property email User's email address (unique identifier)
+ * @property password Initial password meeting security requirements
+ * @property permissions Map of permissions to grant/deny
+ * @property isWardLevelUser Flag for ward-level access restriction
+ * @property wardNumber Optional ward number for ward-level users
+ * @property isApproved Flag indicating if user should be pre-approved
+ * @property approvedBy UUID of admin pre-approving the user
+ */
 @Schema(
     description = "Request payload for creating a new user",
     title = "Create User Request",
@@ -80,6 +120,14 @@ data class CreateUserDto(
     )
     val approvedBy: UUID? = null
 ) {
+    /**
+     * Validates ward number configuration.
+     *
+     * Ensures that ward-level users have a valid ward number assigned.
+     * This is in addition to the @Min/@Max validations on the wardNumber property.
+     *
+     * @return true if ward number configuration is valid
+     */
     @AssertTrue(message = "Ward number is required for ward level users")
     fun isWardNumberValid(): Boolean = !isWardLevelUser || wardNumber != null
 }
