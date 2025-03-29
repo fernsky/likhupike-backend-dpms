@@ -18,10 +18,13 @@ object BaseEmailTemplate {
                 background: linear-gradient(165deg, $PRIMARY_MAIN 0%, rgba(18, 55, 114, 0.95) 45%, rgba(10, 21, 38, 0.98) 75%, #0a1526 100%);
                 min-height: 100vh;
                 padding: 2rem 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             ">
                 <div style="
+                    width: 100%;
                     max-width: 600px;
-                    margin: 0 auto;
                     background: rgba(255, 255, 255, 0.98);
                     border-radius: 24px;
                     overflow: hidden;
