@@ -14,7 +14,7 @@ import org.springframework.http.HttpMethod
  * - Refresh token requires expired but valid JWT
  * - Password reset uses two-step verification
  * 
- * Base path: /api/v1/auth/*
+ * Base path: /api/v1/auth/
  */
 @Configuration
 class AuthRouteConfig(
