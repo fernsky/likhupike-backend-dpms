@@ -1,13 +1,15 @@
-package np.sthaniya.dpis.auth.config
+package np.sthaniya.dpis.common.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.stereotype.Component
 import java.time.Duration
 
+@Component
 @ConfigurationProperties(prefix = "resilience4j.ratelimiter")
-data class RateLimitProperties(
-    val enabled: Boolean = false,
-    val instances: Map<String, RateLimitInstanceProperties> = emptyMap()
-)
+class RateLimitProperties {
+    var enabled: Boolean = false
+    var instances: Map<String, RateLimitInstanceProperties> = emptyMap()
+}
 
 data class RateLimitInstanceProperties(
     val limitRefreshPeriod: String = "1m",

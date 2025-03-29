@@ -23,12 +23,11 @@ import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.auth.resolver.CurrentUserId
 import java.util.*
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
-import np.sthaniya.dpis.auth.config.RateLimitProperties
 import np.sthaniya.dpis.common.exception.RateLimitExceededException
-import np.sthaniya.dpis.common.config.RateLimiterConfig.ClientRateLimiterHelper
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
+import org.springframework.beans.factory.annotation.Value
 
 /**
  * REST controller handling all authentication-related endpoints in the Digital Profile System.
@@ -73,10 +72,17 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 class AuthController(
     private val authService: AuthService,
     private val i18nMessageService: I18nMessageService,
-    private val rateLimiterHelper: ClientRateLimiterHelper,
-    private val rateLimitProperties: RateLimitProperties
+    @Value("\${resilience4j.ratelimiter.instances.auth-client.limitRefreshPeriod:1m}") 
+    private val authClientRefreshPeriod: String,
+    @Value("\${resilience4j.ratelimiter.instances.auth-global.limitRefreshPeriod:1m}") 
+    private val authGlobalRefreshPeriod: String
 ) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthController::class.java)
+        
+        // Default rate limit refresh period in seconds if parsing fails
+        private const val DEFAULT_RATE_LIMIT_PERIOD_SECONDS = 60L
+    }
 
     /**
      * Registers a new user in the system.
@@ -174,11 +180,15 @@ class AuthController(
         )
     }
 
-    private fun loginFallback(request: LoginRequest, e: Exception): ResponseEntity<ApiResponse<Nothing>> {
-        logger.warn("Rate limit exceeded for login attempt from IP: {}", getClientIp())
+    private fun loginFallback(request: LoginRequest, ex: Exception): ResponseEntity<ApiResponse<Nothing>> {
+        val clientIp = getClientIp()
+        logger.warn("Rate limit exceeded for login attempt. Client IP: {}", clientIp)
+        
+        val remainingSeconds = parseRefreshPeriodToSeconds(authClientRefreshPeriod)
+        
         throw RateLimitExceededException(
             message = i18nMessageService.getMessage("auth.error.RATE_001"),
-            remainingSeconds = rateLimitProperties.instances["auth-client"]?.getRefreshPeriodInSeconds() ?: 60L
+            remainingSeconds = remainingSeconds
         )
     }
 
@@ -391,11 +401,8 @@ class AuthController(
 
     private fun rateLimiterFallback(e: Exception): ResponseEntity<ApiResponse<Nothing>> {
         if (e is RequestNotPermitted) {
-            val instanceProps = rateLimitProperties.instances["auth-client"]
-                ?: rateLimitProperties.instances["auth-global"]
-                ?: throw e
-
-            val remainingSeconds = instanceProps.getRefreshPeriodInSeconds()
+            val remainingSeconds = parseRefreshPeriodToSeconds(authClientRefreshPeriod)
+            
             logger.warn(
                 "Rate limit exceeded. Client: {}, Remaining seconds: {}", 
                 getClientIp(), 
@@ -415,5 +422,26 @@ class AuthController(
         return request.getHeader("X-Forwarded-For")?.split(",")?.get(0)
             ?: request.getHeader("X-Real-IP")
             ?: request.remoteAddr
+    }
+    
+    /**
+     * Parses rate limit refresh period string to seconds.
+     * 
+     * Handles values like "1m", "30s", etc. and converts to seconds.
+     * Returns default value if parsing fails.
+     */
+    private fun parseRefreshPeriodToSeconds(period: String): Long {
+        return try {
+            when {
+                period.endsWith("s", ignoreCase = true) -> period.dropLast(1).toLong()
+                period.endsWith("m", ignoreCase = true) -> period.dropLast(1).toLong() * 60
+                period.endsWith("h", ignoreCase = true) -> period.dropLast(1).toLong() * 3600
+                period.endsWith("d", ignoreCase = true) -> period.dropLast(1).toLong() * 86400
+                else -> period.toLong()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to parse rate limit period: {}, using default", period)
+            DEFAULT_RATE_LIMIT_PERIOD_SECONDS
+        }
     }
 }
