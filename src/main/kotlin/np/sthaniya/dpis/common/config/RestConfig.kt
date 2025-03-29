@@ -7,8 +7,32 @@ import org.springframework.data.rest.core.mapping.RepositoryDetectionStrategy
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 
+/**
+ * Configuration class for REST API settings and CORS policies.
+ *
+ * This configuration handles:
+ * - Spring Data REST repository exposure settings
+ * - Cross-Origin Resource Sharing (CORS) configuration
+ * - Repository detection strategies
+ * - Base path configuration for REST endpoints
+ */
 @Configuration
 class RestConfig {
+    /**
+     * Creates and configures the [RepositoryRestConfigurer] for the application.
+     *
+     * The configurer provides:
+     * - Disabled default repository exposure for security
+     * - Custom base path to avoid endpoint conflicts
+     * - Annotated-only repository detection strategy
+     * - CORS configuration for API endpoints with:
+     *   - Allowed origins: all
+     *   - Allowed methods: GET, POST, PUT, DELETE, OPTIONS, PATCH
+     *   - Exposed headers: Authorization
+     *   - Max age: 1 hour
+     *
+     * @return A configured [RepositoryRestConfigurer]
+     */
     @Bean
     fun repositoryRestConfigurer(): RepositoryRestConfigurer =
         RepositoryRestConfigurer.withConfig { config: RepositoryRestConfiguration, cors: CorsRegistry ->
