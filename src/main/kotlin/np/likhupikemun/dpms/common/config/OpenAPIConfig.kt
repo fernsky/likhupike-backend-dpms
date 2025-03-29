@@ -12,71 +12,73 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.core.env.Environment
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import np.likhupikemun.dpms.common.annotation.Public
 
 @Configuration
+@ConditionalOnProperty(
+    value = ["springdoc.api-docs.enabled", "springdoc.swagger-ui.enabled"],
+    havingValue = "true",
+    matchIfMissing = false
+)
 class OpenAPIConfig(private val env: Environment) {
 
+    companion object {
+        private const val SECURITY_SCHEME_NAME = "bearerAuth"
+    }
+
     @Bean
-    fun publicApi(): GroupedOpenApi {
+    fun authenticationApi(): GroupedOpenApi {
         return GroupedOpenApi.builder()
-            .group("public")
-            .pathsToMatch("/api/v1/auth/**", "/api/v1/public/**")
+            .group("1. Authentication")
+            .pathsToMatch("/api/v1/auth/**")
+            .addOpenApiMethodFilter { method -> method.isAnnotationPresent(Public::class.java) }
             .build()
     }
 
     @Bean
-    fun privateApi(): GroupedOpenApi {
+    fun userManagementApi(): GroupedOpenApi {
         return GroupedOpenApi.builder()
-            .group("private")
-            .pathsToMatch("/api/v1/**")
-            .addOpenApiMethodFilter { method -> !method.isAnnotationPresent(Public::class.java) }
+            .group("2. User Management")
+            .pathsToMatch("/api/v1/users/**")
             .build()
     }
 
     @Bean
     fun customOpenAPI(): OpenAPI {
-        val securitySchemeName = "bearerAuth"
         val serverUrl = env.getProperty("app.api.url", "/")
-        
+
         return OpenAPI()
             .info(
                 Info()
-                    .title("Likhupike Digital Profile Management System API")
+                    .title("Digital Profile Management System API")
                     .version("1.0.0")
                     .description("""
-                        REST API documentation for Likhupike Digital Profile Management System
-                        
-                        Authentication:
-                        - All private endpoints require Bearer JWT token
-                        - Public endpoints are accessible without authentication
-                        - Token can be obtained from /api/v1/auth/login endpoint
+                        REST API documentation for Digital Profile Management System.
+                        Authentication is required for most endpoints except those marked as public.
                     """.trimIndent())
                     .contact(
                         Contact()
-                            .name("Likhupike Team")
-                            .email("support@likhupikemun.np")
-                            .url("https://likhupikemun.np")
+                            .name("Support Team")
+                            .email("support@example.com")
                     )
                     .license(
                         License()
                             .name("Private License")
-                            .url("https://likhupikemun.np/license")
                     )
             )
-            .addSecurityItem(SecurityRequirement().addList(securitySchemeName))
             .components(
                 Components()
                     .addSecuritySchemes(
-                        securitySchemeName,
+                        SECURITY_SCHEME_NAME,
                         SecurityScheme()
-                            .name(securitySchemeName)
                             .type(SecurityScheme.Type.HTTP)
                             .scheme("bearer")
                             .bearerFormat("JWT")
-                            .description("Enter JWT token with 'Bearer ' prefix")
+                            .description("JWT token authentication")
                     )
             )
-            .addServersItem(Server().url(serverUrl).description("API Server"))
+            .addSecurityItem(SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+            .addServersItem(Server().url(serverUrl))
     }
 }

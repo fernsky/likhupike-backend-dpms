@@ -5,6 +5,7 @@ import np.likhupikemun.dpms.auth.config.JwtAuthenticationFilter
 import np.likhupikemun.dpms.common.config.RouteRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.env.Environment
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -25,33 +26,39 @@ class SecurityConfig(
     private val authenticationProvider: AuthenticationProvider,
     private val customAuthenticationEntryPoint: CustomAuthenticationEntryPoint,
     private val routeRegistry: RouteRegistry,
-    private val permissionEvaluator: CustomPermissionEvaluator
+    private val permissionEvaluator: CustomPermissionEvaluator,
+    private val env: Environment
 ) {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        val swaggerEnabled = env.getProperty("springdoc.swagger-ui.enabled", Boolean::class.java, false)
+
         http
             .csrf { it.disable() }
             .cors { it.configurationSource(corsConfigurationSource()) }
             .authorizeHttpRequests {
-                it
-                    .requestMatchers(
-                        "/error",
-                        "/actuator/health",
+                it.requestMatchers("/error", "/actuator/health").permitAll()
+
+                // Only permit Swagger paths if enabled
+                if (swaggerEnabled) {
+                    it.requestMatchers(
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html"
                     ).permitAll()
-                    .requestMatchers(
-                        createRequestMatcher { request ->
-                            routeRegistry.isPublicRoute(request.servletPath, HttpMethod.valueOf(request.method))
-                        }
-                    ).permitAll()
-                    .requestMatchers(
-                        createRequestMatcher { request ->
-                            routeRegistry.isValidRoute(request.servletPath, HttpMethod.valueOf(request.method))
-                        }
-                    ).authenticated()
-                    .anyRequest()
+                }
+
+                it.requestMatchers(
+                    createRequestMatcher { request ->
+                        routeRegistry.isPublicRoute(request.servletPath, HttpMethod.valueOf(request.method))
+                    }
+                ).permitAll()
+                it.requestMatchers(
+                    createRequestMatcher { request ->
+                        routeRegistry.isValidRoute(request.servletPath, HttpMethod.valueOf(request.method))
+                    }
+                ).authenticated()
+                it.anyRequest()
                     .denyAll() // Change from permitAll to denyAll to return 403 for unregistered routes
             }
             .sessionManagement {

@@ -41,3 +41,14 @@ jwt:
   secret-key: ${JWT_SECRET:464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EF11E36FD39} # Change in production
   expiration: 24 # hours
   refresh-expiration: 168 # 7 days in hours
+
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+    # Add additional customizations
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+    path: /swagger-ui.html
