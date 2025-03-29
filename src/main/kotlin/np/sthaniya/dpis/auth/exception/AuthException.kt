@@ -39,74 +39,92 @@ sealed class AuthException(
         USER_NOT_FOUND {
             override val code = "AUTH_001"
             override val defaultMessage = "User not found"
+            override val i18nKey = "auth.error.AUTH_001"
         },
         USER_ALREADY_EXISTS {
             override val code = "AUTH_002"
             override val defaultMessage = "User already exists"
+            override val i18nKey = "auth.error.AUTH_002"
         },
         USER_ALREADY_DELETED {
             override val code = "AUTH_003"
             override val defaultMessage = "User is already deleted"
+            override val i18nKey = "auth.error.AUTH_003"
         },
         USER_ALREADY_APPROVED {
             override val code = "AUTH_004"
             override val defaultMessage = "User is already approved"
+            override val i18nKey = "auth.error.AUTH_004"
         },
         INVALID_USER_STATE {
             override val code = "AUTH_005"
             override val defaultMessage = "Invalid user state"
+            override val i18nKey = "auth.error.AUTH_005"
         },
         PERMISSION_NOT_FOUND {
             override val code = "AUTH_006"
             override val defaultMessage = "Permission not found"
+            override val i18nKey = "auth.error.AUTH_006"
         },
         MISSING_PERMISSIONS {
             override val code = "AUTH_007"
             override val defaultMessage = "Required permissions are missing"
+            override val i18nKey = "auth.error.AUTH_007"
         },
         UNAUTHENTICATED {
             override val code = "AUTH_008"
             override val defaultMessage = "Authentication required"
+            override val i18nKey = "auth.error.AUTH_008"
         },
         INSUFFICIENT_PERMISSIONS {
             override val code = "AUTH_009"
             override val defaultMessage = "Insufficient permissions"
+            override val i18nKey = "auth.error.AUTH_009"
         },
         INVALID_CREDENTIALS {
             override val code = "AUTH_010"
             override val defaultMessage = "Invalid credentials"
+            override val i18nKey = "auth.error.AUTH_010"
         },
         USER_NOT_APPROVED {
             override val code = "AUTH_011"
             override val defaultMessage = "User not approved"
+            override val i18nKey = "auth.error.AUTH_011"
         },
         INVALID_TOKEN {
             override val code = "AUTH_012"
             override val defaultMessage = "Invalid or expired token"
+            override val i18nKey = "auth.error.AUTH_012"
         },
         INVALID_PASSWORD {
             override val code = "AUTH_013"
             override val defaultMessage = "Invalid password provided"
+            override val i18nKey = "auth.error.AUTH_013"
         },
         JWT_VALIDATION_FAILED {
             override val code = "AUTH_014"
             override val defaultMessage = "JWT token validation failed"
+            override val i18nKey = "auth.error.AUTH_014"
         },
         PASSWORD_RESET_OTP_INVALID {
             override val code = "AUTH_015"
             override val defaultMessage = "Invalid or expired OTP"
+            override val i18nKey = "auth.error.AUTH_015"
         },
         PASSWORDS_DO_NOT_MATCH {
             override val code = "AUTH_016"
             override val defaultMessage = "Passwords do not match"
+            override val i18nKey = "auth.error.AUTH_016"
         },
         TOO_MANY_ATTEMPTS {
             override val code = "AUTH_017"
             override val defaultMessage = "Too many invalid attempts"
+            override val i18nKey = "auth.error.AUTH_017"
         },
         PAGE_DOES_NOT_EXIST {
             override val code = "AUTH_018"
             override val defaultMessage = "Page does not exist"
+            override val i18nKey = "auth.error.AUTH_018"
         }
     }
 
