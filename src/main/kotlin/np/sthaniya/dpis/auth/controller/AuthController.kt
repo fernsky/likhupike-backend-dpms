@@ -11,6 +11,8 @@ import np.sthaniya.dpis.common.annotation.Public
 import np.sthaniya.dpis.auth.service.AuthService
 import np.sthaniya.dpis.auth.dto.*
 import np.sthaniya.dpis.common.dto.ApiResponse
+import np.sthaniya.dpis.common.annotation.RateLimited
+import np.sthaniya.dpis.common.enum.RateLimitType
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -20,6 +22,13 @@ import org.springframework.web.bind.annotation.*
 import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.auth.resolver.CurrentUserId
 import java.util.*
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
+import np.sthaniya.dpis.auth.config.RateLimitProperties
+import np.sthaniya.dpis.common.exception.RateLimitExceededException
+import np.sthaniya.dpis.common.config.RateLimiterConfig.ClientRateLimiterHelper
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 
 /**
  * REST controller handling all authentication-related endpoints in the Digital Profile System.
@@ -63,7 +72,9 @@ import java.util.*
 @RequestMapping("/api/v1/auth", produces = [MediaType.APPLICATION_JSON_VALUE])
 class AuthController(
     private val authService: AuthService,
-    private val i18nMessageService: I18nMessageService
+    private val i18nMessageService: I18nMessageService,
+    private val rateLimiterHelper: ClientRateLimiterHelper,
+    private val rateLimitProperties: RateLimitProperties
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -103,6 +114,7 @@ class AuthController(
         ])
     ])
     @Public
+    @RateLimited(type = RateLimitType.AUTH)
     @PostMapping("/register", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun register(
         @Valid @RequestBody request: RegisterRequest
@@ -147,6 +159,7 @@ class AuthController(
         SwaggerResponse(responseCode = "429", description = "Too many attempts")
     ])
     @Public
+    @RateLimiter(name = "auth-client", fallbackMethod = "loginFallback")
     @PostMapping("/login", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun login(
         @Valid @RequestBody request: LoginRequest
@@ -158,6 +171,14 @@ class AuthController(
                 data = response,
                 message = i18nMessageService.getMessage("auth.login.success")
             )
+        )
+    }
+
+    private fun loginFallback(request: LoginRequest, e: Exception): ResponseEntity<ApiResponse<Nothing>> {
+        logger.warn("Rate limit exceeded for login attempt from IP: {}", getClientIp())
+        throw RateLimitExceededException(
+            message = i18nMessageService.getMessage("auth.error.RATE_001"),
+            remainingSeconds = rateLimitProperties.instances["auth-client"]?.getRefreshPeriodInSeconds() ?: 60L
         )
     }
 
@@ -187,6 +208,7 @@ class AuthController(
     ])
     @Public
     @PostMapping("/refresh")
+    @RateLimited(type = RateLimitType.AUTH)
     fun refreshToken(
         @RequestHeader("X-Refresh-Token") refreshToken: String
     ): ResponseEntity<ApiResponse<AuthResponse>> {
@@ -225,6 +247,7 @@ class AuthController(
         SwaggerResponse(responseCode = "401", description = "Invalid token")
     ])
     @PostMapping("/logout")
+    @RateLimited(type = RateLimitType.AUTH)
     fun logout(
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<ApiResponse<Nothing>> {
@@ -265,6 +288,7 @@ class AuthController(
     ])
     @Public
     @PostMapping("/password-reset/request")
+    @RateLimited(type = RateLimitType.AUTH)
     fun requestPasswordReset(
         @Valid @RequestBody request: RequestPasswordResetRequest
     ): ResponseEntity<ApiResponse<Nothing>> {
@@ -306,6 +330,7 @@ class AuthController(
     ])
     @Public
     @PostMapping("/password-reset/reset")
+    @RateLimited(type = RateLimitType.AUTH)
     fun resetPassword(
         @Valid @RequestBody request: ResetPasswordRequest
     ): ResponseEntity<ApiResponse<Nothing>> {
@@ -349,6 +374,7 @@ class AuthController(
         SwaggerResponse(responseCode = "401", description = "Not authenticated")
     ])
     @PostMapping("/change-password")
+    @RateLimited(type = RateLimitType.AUTH)
     fun changePassword(
         @Parameter(hidden = true)
         @CurrentUserId currentUserId: UUID,
@@ -361,5 +387,33 @@ class AuthController(
                 message = i18nMessageService.getMessage("auth.password.change.success")
             )
         )
+    }
+
+    private fun rateLimiterFallback(e: Exception): ResponseEntity<ApiResponse<Nothing>> {
+        if (e is RequestNotPermitted) {
+            val instanceProps = rateLimitProperties.instances["auth-client"]
+                ?: rateLimitProperties.instances["auth-global"]
+                ?: throw e
+
+            val remainingSeconds = instanceProps.getRefreshPeriodInSeconds()
+            logger.warn(
+                "Rate limit exceeded. Client: {}, Remaining seconds: {}", 
+                getClientIp(), 
+                remainingSeconds
+            )
+
+            throw RateLimitExceededException(
+                message = i18nMessageService.getMessage("auth.error.RATE_001"),
+                remainingSeconds = remainingSeconds
+            )
+        }
+        throw e
+    }
+
+    private fun getClientIp(): String {
+        val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
+        return request.getHeader("X-Forwarded-For")?.split(",")?.get(0)
+            ?: request.getHeader("X-Real-IP")
+            ?: request.remoteAddr
     }
 }
