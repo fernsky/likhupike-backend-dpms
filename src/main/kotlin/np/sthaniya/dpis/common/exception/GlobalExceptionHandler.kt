@@ -29,7 +29,7 @@ class GlobalExceptionHandler(
                 ApiResponse.error(
                     ErrorDetails(
                         code = ex.errorCode.code,
-                        message = i18nMessageService.getErrorMessage(ex.errorCode.code, ex.message ?: ex.errorCode.defaultMessage),
+                        message = i18nMessageService.getMessage(ex.errorCode.i18nKey, ex.message ?: ex.errorCode.defaultMessage),
                         details = ex.metadata,
                         status = ex.status.value()
                     )
