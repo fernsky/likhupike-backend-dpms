@@ -1,10 +1,15 @@
 package np.sthaniya.dpis.auth.security
 
+import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import np.sthaniya.dpis.auth.config.JwtAuthenticationFilter
+import np.sthaniya.dpis.auth.config.RateLimitFilter
 import np.sthaniya.dpis.common.config.RouteRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationProvider
@@ -15,9 +20,11 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.util.matcher.RequestMatcher
+import org.springframework.stereotype.Component
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.slf4j.LoggerFactory
 
 /**
  * Spring Security configuration implementing JWT-based authentication.
@@ -62,6 +69,7 @@ class SecurityConfig(
     private val customAuthenticationEntryPoint: CustomAuthenticationEntryPoint,
     private val routeRegistry: RouteRegistry,
     private val permissionEvaluator: CustomPermissionEvaluator,
+    private val rateLimitFilter: RateLimitFilter,
     private val env: Environment
 ) {
     /**
@@ -69,9 +77,10 @@ class SecurityConfig(
      *
      * Chain Order:
      * 1. CORS/CSRF filters
-     * 2. JWT authentication filter
-     * 3. Exception handling
-     * 4. Route security
+     * 2. Rate limit filter
+     * 3. JWT authentication filter
+     * 4. Exception handling
+     * 5. Route security
      *
      * Performance Notes:
      * - Use antMatcher for better performance on fixed paths
@@ -125,7 +134,8 @@ class SecurityConfig(
                     }
             }
             .authenticationProvider(authenticationProvider)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterAfter(jwtAuthenticationFilter, RateLimitFilter::class.java)
 
         return http.build()
     }

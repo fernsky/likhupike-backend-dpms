@@ -6,10 +6,13 @@ import jakarta.servlet.http.HttpServletResponse
 import np.sthaniya.dpis.auth.exception.AuthException
 import np.sthaniya.dpis.auth.security.JwtService
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
+import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 /**
@@ -35,11 +38,14 @@ import org.springframework.web.filter.OncePerRequestFilter
  * @property jwtService Service for JWT token operations
  * @property userDetailsService Service for loading user details
  */
-@Configuration
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE + 10)
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
     private val userDetailsService: UserDetailsService,
-) : OncePerRequestFilter() {
+) : OncePerRequestFilter(), Ordered {
+
+    override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE + 10
 
     /**
      * Main filter method that processes each HTTP request exactly once.
