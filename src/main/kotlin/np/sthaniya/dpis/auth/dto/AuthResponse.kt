@@ -4,6 +4,39 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
 import io.swagger.v3.oas.annotations.media.Schema
 
+/**
+ * Data Transfer Object (DTO) representing the authentication response.
+ *
+ * This class encapsulates all necessary information returned after successful authentication:
+ * - JWT tokens for API access
+ * - User identification and profile information
+ * - User permissions and access levels
+ *
+ * Features:
+ * - JWT token pair (access + refresh)
+ * - User identification details
+ * - Permission set for authorization
+ * - Ward-level access information
+ * - OpenAPI/Swagger documentation
+ *
+ * Usage:
+ * ```kotlin
+ * val authResponse = AuthResponse(
+ *     token = "jwt_access_token",
+ *     refreshToken = "jwt_refresh_token",
+ *     userId = "user-uuid",
+ *     email = "user@example.com",
+ *     permissions = setOf(PermissionType.VIEW_USER),
+ *     expiresIn = 3600,
+ *     isWardLevelUser = false
+ * )
+ * ```
+ *
+ * Integration:
+ * - Used by [AuthController] for login responses
+ * - Used by [AuthService] for token refresh
+ * - Serialized to JSON in API responses
+ */
 @Schema(
     description = "Authentication response containing tokens and user information",
     title = "Authentication Response"
