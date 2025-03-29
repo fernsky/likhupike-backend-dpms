@@ -1,5 +1,8 @@
 package np.sthaniya.dpis.auth.domain.entity
 
+import jakarta.persistence.*
+import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.common.entity.BaseEntity
 /**
  * Represents a system permission entity that can be assigned to users.
  *
