@@ -7,42 +7,19 @@ import np.sthaniya.dpis.common.validation.PasswordMatch
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * Data Transfer Object (DTO) for administrative password reset requests.
+ * Data transfer object for administrative password reset operations.
+ * 
+ * Encapsulates password reset data for administrative operations, with validation
+ * constraints enforced through Jakarta Validation annotations. Used in conjunction
+ * with [UserService.resetPassword].
  *
- * This class handles validation and transport of administrative password reset data,
- * used by administrators to reset user passwords without requiring the current password
- * or OTP verification.
- *
- * Features:
- * - Password strength validation
- * - Password confirmation
- * - Custom validation using @PasswordMatch
- * - OpenAPI/Swagger documentation
- *
- * Usage with [UserService]:
- * ```kotlin
- * val request = ResetUserPasswordRequest(
- *     newPassword = "NewSecurePass123!",
- *     confirmPassword = "NewSecurePass123!"
- * )
- * userService.resetPassword(userId, request)
- * ```
- *
- * Security:
- * - Requires RESET_USER_PASSWORD permission
- * - Strong password requirements
- * - Password confirmation validation
- * - Audit logging of password resets
- *
- * @property newPassword The new password to set for the user
- * @property confirmPassword Confirmation of the new password
+ * @property newPassword The new password to set, must meet complexity requirements
+ * @property confirmPassword Confirmation of new password, must match newPassword
+ * @throws jakarta.validation.ConstraintViolationException if validation fails
+ * @see np.sthaniya.dpis.common.validation.PasswordMatch for password matching validation
  */
-@Schema(
-    description = "Request payload for resetting user password by admin",
-    title = "Reset User Password Request",
-    requiredProperties = ["newPassword", "confirmPassword"]
-)
-@PasswordMatch // Add custom validation annotation
+@Schema(description = "Request payload for resetting user password by admin")
+@PasswordMatch
 data class ResetUserPasswordRequest(
     @Schema(
         description = """

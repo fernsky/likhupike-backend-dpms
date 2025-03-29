@@ -6,6 +6,29 @@ import np.sthaniya.dpis.auth.domain.enums.PermissionType
 import java.time.LocalDateTime
 import java.util.*
 
+/**
+ * Reference implementation of [UserProjection] that provides field-level data selection.
+ * 
+ * Implements the projection interface by initializing and caching selected fields
+ * from the source User entity on instantiation. Fields not included in [includedFields]
+ * are not loaded or cached.
+ * 
+ * Permissions are converted from Spring Security authorities to [PermissionType] enums
+ * during initialization. Invalid or unrecognized authorities are silently ignored.
+ *
+ * Usage with repository:
+ * ```kotlin
+ * val projection = UserProjectionImpl(
+ *     user = userEntity,
+ *     includedFields = setOf("id", "email", "permissions")
+ * )
+ * ```
+ * 
+ * @param user Source User entity
+ * @param includedFields Set of field names to include in the projection
+ * @see UserProjection
+ * @see UserRepositoryCustom
+ */
 class UserProjectionImpl(
     @JsonIgnore private val user: User,
     @JsonIgnore private val includedFields: Set<String>

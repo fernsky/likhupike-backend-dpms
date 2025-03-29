@@ -7,42 +7,21 @@ import jakarta.validation.constraints.Email
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * Data Transfer Object (DTO) for completing a password reset using OTP.
+ * Data transfer object for OTP-based password reset operations.
  *
- * This class handles the validation and transport of password reset data including:
- * - Email verification
- * - OTP validation
- * - New password requirements
- * - Password confirmation
+ * Encapsulates the data required for password reset verification and execution,
+ * with validation constraints enforced through Jakarta Validation annotations.
+ * Used in conjunction with [AuthService.resetPassword].
  *
- * Password Reset Flow:
- * 1. User receives OTP via email
- * 2. User submits OTP with new password
- * 3. System validates OTP and password requirements
- * 4. Password is updated if validation succeeds
+ * @property email Email address associated with the password reset request
+ * @property otp One-time password received via email, must be 6 digits
+ * @property newPassword New password to set, must meet complexity requirements
+ * @property confirmPassword Confirmation of new password, must match newPassword
  *
- * Security Features:
- * - OTP format validation (6 digits)
- * - Strong password requirements
- * - Password confirmation check
- * - Limited OTP validity period
- * - Rate limiting on attempts
- *
- * Usage with [AuthService]:
- * ```kotlin
- * val request = ResetPasswordRequest(
- *     email = "user@example.com",
- *     otp = "123456",
- *     newPassword = "NewPass123!",
- *     confirmPassword = "NewPass123!"
- * )
- * authService.resetPassword(request)
- * ```
- *
- * @property email Email address for account identification
- * @property otp One-time password received via email
- * @property newPassword New password meeting security requirements
- * @property confirmPassword Confirmation of new password
+ * @throws AuthException.InvalidOtpException if OTP is invalid or expired
+ * @throws AuthException.TooManyAttemptsException if max OTP attempts exceeded
+ * @throws AuthException.UserNotFoundException if email not found
+ * @throws jakarta.validation.ConstraintViolationException if validation fails
  */
 @Schema(
     description = "Request payload for resetting user password with OTP",
