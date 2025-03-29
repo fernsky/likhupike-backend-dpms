@@ -19,7 +19,6 @@ object BaseEmailTemplate {
                 min-height: 100vh;
                 padding: 2rem 1rem;
             ">
-                <!-- Main Container -->
                 <div style="
                     max-width: 600px;
                     margin: 0 auto;
@@ -29,7 +28,6 @@ object BaseEmailTemplate {
                     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
                     border: 1px solid rgba(255, 255, 255, 0.7);
                 ">
-                    <!-- Header -->
                     <div style="
                         padding: 1.75rem 2rem 1rem;
                         background: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
@@ -38,22 +36,16 @@ object BaseEmailTemplate {
                     ">
                         <h1 style="
                             font-size: 1.5rem;
-                            margin: 0 0 0.25rem;
+                            margin: 0;
                             color: $PRIMARY_DARK;
                             font-weight: 600;
                             letter-spacing: -0.01em;
-                            line-height: 1.1;
                         ">${title}</h1>
                     </div>
                     
-                    <!-- Content -->
-                    <div style="padding: 2rem;">
-                        ${content}
-                    </div>
+                    <div style="padding: 2rem;">${content}</div>
 
-                    <!-- Footer -->
                     <div style="
-                        margin-top: 2rem;
                         padding: 1.5rem;
                         background: rgba(0, 0, 0, 0.02);
                         border-top: 1px solid rgba(0, 0, 0, 0.08);
@@ -61,9 +53,7 @@ object BaseEmailTemplate {
                         font-size: 0.875rem;
                         color: #546e7a;
                     ">
-                        <p style="margin: 0;">
-                            This is an automated message from Likhu Pike Digital Profile System
-                        </p>
+                        <p style="margin: 0;">Likhu Pike Digital Profile System</p>
                     </div>
                 </div>
             </div>
