@@ -31,6 +31,25 @@ spring:
           writetimeout: 5000
         debug: ${MAIL_DEBUG:true}
 
+resilience4j:
+  ratelimiter:
+    configs:
+      default:
+        registerHealthIndicator: true
+        limitForPeriod: 50
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0
+        allowHealthIndicator: true
+    instances:
+      auth:
+        baseConfig: default
+        limitForPeriod: 3
+        limitRefreshPeriod: 1m
+      api:
+        baseConfig: default
+        limitForPeriod: 100
+        limitRefreshPeriod: 1m
+
 app:
   admin:
     email: ${ADMIN_EMAIL:admin@likhupike.gov.np}
