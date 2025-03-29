@@ -36,6 +36,31 @@ app:
     email: ${ADMIN_EMAIL:admin@likhupike.gov.np}
     password: ${ADMIN_PASSWORD:Admin@123}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  rate-limiting:
+    enabled: true
+    # Global rate limiting
+    global:
+      capacity: 100
+      refill-tokens: 100
+      refill-duration: 1
+      refill-time-unit: MINUTES
+    # Endpoint-specific rate limits
+    endpoints:
+      login:
+        capacity: 5
+        refill-tokens: 5
+        refill-duration: 1
+        refill-time-unit: MINUTES
+      reset-password:
+        capacity: 3
+        refill-tokens: 3
+        refill-duration: 10
+        refill-time-unit: MINUTES
+      register:
+        capacity: 5
+        refill-tokens: 5
+        refill-duration: 1
+        refill-time-unit: MINUTES
 
 jwt:
   secret-key: ${JWT_SECRET:464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EF11E36FD39} # Change in production
