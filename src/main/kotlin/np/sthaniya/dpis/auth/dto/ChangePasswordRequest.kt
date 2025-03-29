@@ -1,5 +1,9 @@
 package np.sthaniya.dpis.auth.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 /**
  * Data Transfer Object (DTO) for handling password change requests from authenticated users.
  *
