@@ -5,38 +5,38 @@ The users table is the cornerstone of the DPIS, managing user authentication and
 [cols="2,2,1,4",options="header"]
 |===
 |Column Name |Data Type |Nullable |Description
-|id |UUID |No |Primary key for user identification
-|email |VARCHAR(255) |No |Unique email address for authentication
-|password |VARCHAR(255) |No |Encrypted password hash
-|is_ward_level_user |BOOLEAN |No |Flag indicating ward-level access restrictions
-|ward_number |INTEGER |Yes |Associated ward number for ward-level users
-|is_approved |BOOLEAN |No |Account approval status
-|approved_by |UUID |Yes |Reference to approving administrator
-|approved_at |TIMESTAMP |Yes |Timestamp of approval
-|is_deleted |BOOLEAN |No |Soft deletion flag
-|deleted_at |TIMESTAMP |Yes |Soft deletion timestamp
-|deleted_by |UUID |Yes |Reference to deleting administrator
-|created_at |TIMESTAMP WITH TIME ZONE |No |Record creation timestamp
-|created_by |UUID |Yes |Reference to creating user
-|updated_at |TIMESTAMP WITH TIME ZONE |No |Last update timestamp
-|updated_by |UUID |Yes |Reference to last updating user
-|version |BIGINT |Yes |Optimistic locking version number
+|`id` |`UUID` |`false` |Primary key for user identification
+|`email` |`VARCHAR(255)` |`false` |Unique email address for authentication
+|`password` |`VARCHAR(255)` |`false` |Encrypted password hash
+|`is_ward_level_user` |`BOOLEAN` |`false` |Flag indicating ward-level access restrictions
+|`ward_number` |`INTEGER` |`true` |Associated ward number for ward-level users
+|`is_approved` |`BOOLEAN` |`false` |Account approval status
+|`approved_by` |`UUID` |`true` |Reference to approving administrator
+|`approved_at` |`TIMESTAMP` |`true` |Timestamp of approval
+|`is_deleted` |`BOOLEAN` |`false` |Soft deletion flag
+|`deleted_at` |`TIMESTAMP` |`true` |Soft deletion timestamp
+|`deleted_by` |`UUID` |`true` |Reference to deleting administrator
+|`created_at` |`TIMESTAMP WITH TIME ZONE` |`false` |Record creation timestamp
+|`created_by` |`UUID` |`true` |Reference to creating user
+|`updated_at` |`TIMESTAMP WITH TIME ZONE` |`false` |Last update timestamp
+|`updated_by` |`UUID` |`true` |Reference to last updating user
+|`version` |`BIGINT` |`true` |Optimistic locking version number
 |===
 
 .Indexes
 [cols="2,2,1",options="header"]
 |===
 |Name |Columns |Type
-|users_pkey |id |Primary Key
-|idx_users_email |email |Unique
+|`users_pkey` |`id` |Primary Key
+|`idx_users_email` |`email` |Unique
 |===
 
 .Constraints
 [cols="3,3",options="header"]
 |===
 |Constraint Name |Description
-|users_pkey |Primary key constraint on id
-|uk_users_email |Unique constraint on email
+|`users_pkey` |Primary key constraint on `id`
+|`uk_users_email` |Unique constraint on `email`
 |===
 
 === Design Considerations
@@ -47,9 +47,9 @@ The users table is the cornerstone of the DPIS, managing user authentication and
 * Versioning for concurrent access control
 
 ==== User Types
-* System-level users (is_ward_level_user = false)
-* Ward-level users (is_ward_level_user = true)
-* Approval workflow through is_approved flag
+* System-level users have `is_ward_level_user = false`
+* Ward-level users have `is_ward_level_user = true`
+* Approval workflow through `is_approved` flag
 
 ==== Audit Trail
 * Complete tracking of creation and modifications

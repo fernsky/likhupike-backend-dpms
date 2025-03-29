@@ -1,5 +1,29 @@
 = Application History
 
+== Overview
+This chapter documents the evolution of the DPIS database schema, tracking all significant changes and improvements made to the system's data structure.
+
+=== Version Numbering
+The versioning follows the pattern:
+
+* Major version: Significant architectural changes
+* Minor version: New features or tables
+* Patch version: Bug fixes and minor improvements
+* SNAPSHOT: Development versions
+
+=== Change Categories
+The history tracks several types of changes:
+
+* Schema modifications
+* Table creation/modification
+* Index optimizations
+* Data type improvements
+
+== Version History
+
+=== Historical Timeline
+Below is the comprehensive timeline of all database changes:
+
 [cols="2,1,2,4a",options="header"]
 |===
 |Version |Date |Author |Changes
@@ -28,3 +52,19 @@
 * Added detailed table descriptions
 * Included design considerations
 |===
+
+== Summary of Major Changes
+
+=== Initial Setup (`v0.0.1-SNAPSHOT`)
+Focus on session management implementation with Spring Session integration.
+
+=== Core Features (`v0.0.2-SNAPSHOT`)
+Introduction of fundamental user management capabilities.
+
+=== Security Enhancements (`v0.3.x-SNAPSHOT`)
+Multiple releases focusing on security features and data consistency.
+
+=== Production Release (`v1.0.0`)
+First stable release with complete documentation.
+
+<<<
