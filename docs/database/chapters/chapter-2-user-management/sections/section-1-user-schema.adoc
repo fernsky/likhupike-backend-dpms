@@ -1,6 +1,4 @@
-== Core Schema: User Management
-
-=== Users Table
+== Users Table
 The users table is the cornerstone of the DPIS, managing user authentication and authorization.
 
 .Table: users

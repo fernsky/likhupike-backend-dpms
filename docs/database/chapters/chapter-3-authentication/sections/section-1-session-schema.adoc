@@ -1,6 +1,4 @@
-== Session Management Schema
-
-=== Spring Session Table
+== Spring Session Table
 The spring_session table manages HTTP session information for the application.
 
 .Table: spring_session
