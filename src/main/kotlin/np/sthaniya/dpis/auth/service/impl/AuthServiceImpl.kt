@@ -155,8 +155,13 @@ class AuthServiceImpl(
         (100000..999999).random().toString()
 
     override fun requestPasswordReset(request: RequestPasswordResetRequest) {
-        val user = userService.findByEmail(request.email)
-            ?: throw AuthException.UserNotFoundException(request.email)
+        // val user = userService.findByEmail(request.email)
+        //     ?: throw AuthException.UserNotFoundException(request.email)
+
+        val user = userService.findByEmail(request.email) ?: run {
+            logger.info("Password reset requested for non-existing user: {}", request.email)
+            return
+        }
 
         // Generate new OTP
         val otp = generateOtp()
