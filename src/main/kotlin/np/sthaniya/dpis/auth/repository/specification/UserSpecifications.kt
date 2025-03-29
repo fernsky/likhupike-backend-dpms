@@ -7,6 +7,27 @@ import np.sthaniya.dpis.auth.domain.entity.UserPermission
 import np.sthaniya.dpis.auth.dto.UserSearchCriteria
 import org.springframework.data.jpa.domain.Specification
 
+/**
+ * Object providing specification builders for dynamic User entity queries.
+ *
+ * This object encapsulates:
+ * - Dynamic query criteria building
+ * - Complex join handling
+ * - Search and filter specifications
+ *
+ * Key Features:
+ * - Type-safe specification building
+ * - Support for complex search criteria
+ * - Permission-based filtering
+ * - Date range queries
+ * - Ward-level filtering
+ *
+ * Usage:
+ * ```
+ * val spec = UserSpecifications.fromCriteria(criteria)
+ * userRepository.findAll(spec)
+ * ```
+ */
 object UserSpecifications {
     fun fromCriteria(criteria: UserSearchCriteria): Specification<User> =
         Specification
@@ -19,6 +40,12 @@ object UserSpecifications {
             .and(withEmail(criteria))
             .and(notDeleted())
 
+    /**
+     * Builds ward number specification.
+     *
+     * @param criteria Search criteria containing ward number
+     * @return Specification filtering by ward number if provided
+     */
     private fun withWardNumber(criteria: UserSearchCriteria) =
         Specification<User> { root, _, cb ->
             criteria.wardNumber?.let { wardNumber ->
@@ -26,6 +53,12 @@ object UserSpecifications {
             }
         }
 
+    /**
+     * Builds search term specification for email pattern matching.
+     *
+     * @param criteria Search criteria containing search term
+     * @return Specification for case-insensitive email search
+     */
     private fun withSearchTerm(criteria: UserSearchCriteria) =
         Specification<User> { root, _, cb ->
             criteria.searchTerm?.let { term ->
@@ -34,6 +67,12 @@ object UserSpecifications {
             }
         }
 
+    /**
+     * Builds permission-based specification with proper joins.
+     *
+     * @param criteria Search criteria containing permission filters
+     * @return Specification handling permission joins and filtering
+     */
     private fun withPermissions(criteria: UserSearchCriteria) =
         Specification<User> { root, query, _ ->
             criteria.permissions?.let { permissions -> 
