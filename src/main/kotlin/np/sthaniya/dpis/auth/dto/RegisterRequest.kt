@@ -1,5 +1,8 @@
 package np.sthaniya.dpis.auth.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.*
+
 /**
  * Data Transfer Object (DTO) for user self-registration requests.
  *
