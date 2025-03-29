@@ -1,4 +1,4 @@
-= Document History
+= Application History
 
 [cols="2,1,2,4",options="header"]
 |===

@@ -9,7 +9,7 @@ v1.0, 2024-01
 :sectnums:
 
 include::chapters/chapter-0-preface/chapter-0-preface.adoc[]
-include::chapters/chapter-1-document-history/chapter-1-document-history.adoc[]
+include::chapters/chapter-1-application-history/chapter-1-application-history.adoc[]
 include::chapters/chapter-2-introduction/chapter-2-introduction.adoc[]
 include::chapters/chapter-3-user-management/chapter-3-user-management.adoc[]
 include::chapters/chapter-4-authentication/chapter-4-authentication.adoc[]
