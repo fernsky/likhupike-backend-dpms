@@ -9,9 +9,29 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver
 import org.springframework.web.servlet.LocaleResolver
 import java.util.*
 
+/**
+ * Configuration class for internationalization (i18n) message handling.
+ *
+ * This configuration sets up the message source and locale resolution for the application,
+ * providing support for:
+ * - Multiple languages (English and Nepali)
+ * - UTF-8 encoded message files
+ * - Accept-Language header based locale resolution
+ * - Fallback message handling
+ */
 @Configuration
 class MessageSourceConfig : WebMvcConfigurer {
     
+    /**
+     * Creates and configures the application's [MessageSource].
+     *
+     * The message source is configured to:
+     * - Load messages from "messages" resource bundles
+     * - Use UTF-8 encoding for message files
+     * - Fall back to message codes when translations are missing
+     *
+     * @return A configured [ResourceBundleMessageSource]
+     */
     @Bean
     fun messageSource(): MessageSource {
         val messageSource = ResourceBundleMessageSource()
@@ -21,6 +41,16 @@ class MessageSourceConfig : WebMvcConfigurer {
         return messageSource
     }
 
+    /**
+     * Creates and configures the application's [LocaleResolver].
+     *
+     * The resolver is configured to:
+     * - Support English (default) and Nepali locales
+     * - Determine locale from Accept-Language header
+     * - Fall back to English when requested locale is not supported
+     *
+     * @return A configured [AcceptHeaderLocaleResolver]
+     */
     @Bean
     fun localeResolver(): LocaleResolver {
         val resolver = AcceptHeaderLocaleResolver()
