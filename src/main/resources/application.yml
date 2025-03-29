@@ -33,7 +33,7 @@ spring:
 
 resilience4j:
   ratelimiter:
-    enabled: ${RATE_LIMIT_ENABLED:false}
+    enabled: ${RATE_LIMIT_ENABLED:true}
     configs:
       default:
         registerHealthIndicator: true
@@ -59,9 +59,10 @@ resilience4j:
         limitRefreshPeriod: ${RATE_LIMIT_API_GLOBAL_REFRESH:1m}
       # Per-client limits
       auth-client:
-        baseConfig: per-client
-        limitForPeriod: ${RATE_LIMIT_AUTH_CLIENT_LIMIT:10}
+        limitForPeriod: ${RATE_LIMIT_AUTH_CLIENT_LIMIT:3}
         limitRefreshPeriod: ${RATE_LIMIT_AUTH_CLIENT_REFRESH:1m}
+        timeoutDuration: 0
+        registerHealthIndicator: true
       api-client:
         baseConfig: per-client
         limitForPeriod: ${RATE_LIMIT_API_CLIENT_LIMIT:300}
@@ -88,3 +89,19 @@ springdoc:
     tags-sorter: alpha
     display-request-duration: true
     path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,ratelimiters
+  endpoint:
+    health:
+      show-details: when_authorized
+    metrics:
+      enabled: true
+
+logging:
+  level:
+    np.sthaniya.dpis.common.config: DEBUG
+    io.github.resilience4j: DEBUG
