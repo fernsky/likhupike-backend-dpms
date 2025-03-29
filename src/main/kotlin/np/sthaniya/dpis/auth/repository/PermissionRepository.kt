@@ -6,23 +6,39 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.stereotype.Repository
 import java.util.*
+
 /**
- * Primary repository interface for Permission entity operations.
+ * Repository for managing Permission entities with JPA and custom implementations.
  *
- * This repository provides:
- * - Standard JPA operations for Permission entities
- * - Specification-based querying capabilities
- * - Custom operations through [PermissionRepositoryCustom]
+ * Technical Details:
+ * - Primary key: PermissionType (Enum)
+ * - No soft delete implementation
+ * - Supports JPA Specifications
+ * 
+ * Transaction Behavior:
+ * - Inherits transaction context
+ * - Read operations don't require transaction
+ * - Write operations require active transaction
  *
- * Key Features:
- * - CRUD operations for Permission entities
- * - Dynamic querying support
- * - Permission type existence checks
+ * Usage Examples:
+ * ```kotlin
+ * // Basic CRUD
+ * val exists = repository.existsByType(PermissionType.CREATE_USER)
+ * val permission = Permission(type = PermissionType.CREATE_USER)
+ * repository.save(permission)
  *
- * Integration Points:
- * - Works with Permission domain entity
- * - Uses PermissionType as primary key
- * - Supports Spring Data JPA patterns
+ * // Specification Usage
+ * val spec = PermissionSpecs.byCategory("ADMIN")
+ * val permissions = repository.findAll(spec)
+ *
+ * // Custom Operations
+ * val permSet = repository.findByTypes(setOf(PermissionType.CREATE_USER))
+ * ```
+ *
+ * Performance Notes:
+ * - Low memory footprint (typically < 100 records)
+ * - Suitable for full table scans
+ * - Consider caching for frequent lookups
  */
 @Repository
 interface PermissionRepository : 

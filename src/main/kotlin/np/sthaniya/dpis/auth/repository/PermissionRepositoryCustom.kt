@@ -1,5 +1,7 @@
 package np.sthaniya.dpis.auth.repository
 
+import np.sthaniya.dpis.auth.domain.entity.Permission
+import np.sthaniya.dpis.auth.domain.enums.PermissionType
 /**
  * Custom repository interface for specialized Permission entity operations.
  *
