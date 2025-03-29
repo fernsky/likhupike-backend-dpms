@@ -1,6 +1,4 @@
-== Permissions Schema
-
-=== Permissions Table
+== Permissions Table
 The permissions table defines the available system-wide permissions that can be assigned to users.
 
 .Table: permissions
