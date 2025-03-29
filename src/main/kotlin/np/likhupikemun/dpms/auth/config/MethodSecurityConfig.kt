@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.auth.config
+package np.likhupikemun.dpis.auth.config
 
-import np.likhupikemun.dpms.auth.security.CustomPermissionEvaluator
+import np.likhupikemun.dpis.auth.security.CustomPermissionEvaluator
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary

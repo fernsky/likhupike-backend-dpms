@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.config
+package np.likhupikemun.dpis.common.config
 
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.rest.core.annotation.RepositoryRestResource

@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.controller
+package np.likhupikemun.dpis.auth.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -7,18 +7,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import np.likhupikemun.dpms.common.annotation.Public
-import np.likhupikemun.dpms.auth.service.AuthService
-import np.likhupikemun.dpms.auth.dto.*
-import np.likhupikemun.dpms.common.dto.ApiResponse
+import np.likhupikemun.dpis.common.annotation.Public
+import np.likhupikemun.dpis.auth.service.AuthService
+import np.likhupikemun.dpis.auth.dto.*
+import np.likhupikemun.dpis.common.dto.ApiResponse
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import np.likhupikemun.dpms.common.service.I18nMessageService
-import np.likhupikemun.dpms.auth.resolver.CurrentUserId
+import np.likhupikemun.dpis.common.service.I18nMessageService
+import np.likhupikemun.dpis.auth.resolver.CurrentUserId
 import java.util.*
 
 @Tag(

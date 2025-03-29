@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.auth.service
+package np.likhupikemun.dpis.auth.service
 
-import np.likhupikemun.dpms.auth.dto.*
+import np.likhupikemun.dpis.auth.dto.*
 import java.util.UUID
 
 interface AuthService {

@@ -1,12 +1,12 @@
-package np.likhupikemun.dpms.fixtures
+package np.likhupikemun.dpis.fixtures
 
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.domain.entity.Permission
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
-import np.likhupikemun.dpms.auth.dto.CreateUserDto
-import np.likhupikemun.dpms.auth.dto.LoginRequest
-import np.likhupikemun.dpms.auth.dto.RegisterRequest
-import np.likhupikemun.dpms.auth.dto.ResetUserPasswordRequest
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.domain.entity.Permission
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.auth.dto.CreateUserDto
+import np.likhupikemun.dpis.auth.dto.LoginRequest
+import np.likhupikemun.dpis.auth.dto.RegisterRequest
+import np.likhupikemun.dpis.auth.dto.ResetUserPasswordRequest
 import java.util.*
 
 object UserTestFixture {

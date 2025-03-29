@@ -1,16 +1,16 @@
-package np.likhupikemun.dpms.auth.service.impl
+package np.likhupikemun.dpis.auth.service.impl
 
 import jakarta.persistence.EntityManager
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
-import np.likhupikemun.dpms.auth.repository.specification.UserSpecifications
-import np.likhupikemun.dpms.auth.service.UserService
-import np.likhupikemun.dpms.auth.repository.UserRepository
-import np.likhupikemun.dpms.auth.service.PermissionService
-import np.likhupikemun.dpms.auth.exception.AuthException
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.security.JwtService
-import np.likhupikemun.dpms.auth.dto.*
-import np.likhupikemun.dpms.common.service.EmailService
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.auth.repository.specification.UserSpecifications
+import np.likhupikemun.dpis.auth.service.UserService
+import np.likhupikemun.dpis.auth.repository.UserRepository
+import np.likhupikemun.dpis.auth.service.PermissionService
+import np.likhupikemun.dpis.auth.exception.AuthException
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.security.JwtService
+import np.likhupikemun.dpis.auth.dto.*
+import np.likhupikemun.dpis.common.service.EmailService
 import org.springframework.data.domain.Page
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service

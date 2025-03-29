@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.enum
+package np.likhupikemun.dpis.common.enum
 
 enum class EmailTemplate(val subject: String, val template: String) {
     PASSWORD_RESET(
@@ -42,16 +42,16 @@ enum class EmailTemplate(val subject: String, val template: String) {
             <html>
             <head>
                 <meta charset="UTF-8">
-                <title>Welcome to DPMS</title>
+                <title>Welcome to dpis</title>
             </head>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                     <div style="text-align: center; margin-bottom: 30px;">
-                        <h1 style="color: #2c3e50;">Welcome to DPMS</h1>
+                        <h1 style="color: #2c3e50;">Welcome to dpis</h1>
                     </div>
                     <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
                         <p>Hello,</p>
-                        <p>Welcome to the Likhu Pike Digital Profile Management System. Your account has been created successfully and is pending approval.</p>
+                        <p>Welcome to the Likhu Pike Digital Profile Information System. Your account has been created successfully and is pending approval.</p>
                         <p>Once your account is approved, you will receive another email with login instructions.</p>
                         <div style="margin: 30px 0; padding: 15px; background-color: #e8f4f8; border-radius: 5px;">
                             <p style="margin: 0;"><strong>Email:</strong> %email%</p>
@@ -68,7 +68,7 @@ enum class EmailTemplate(val subject: String, val template: String) {
     ),
 
     ACCOUNT_APPROVED(
-        subject = "Your Account Has Been Approved - Likhu Pike DPMS",
+        subject = "Your Account Has Been Approved - Likhu Pike dpis",
         template = """
             <!DOCTYPE html>
             <html>
@@ -102,7 +102,7 @@ enum class EmailTemplate(val subject: String, val template: String) {
     ),
 
     ACCOUNT_CREATED(
-        subject = "Your Account Has Been Created - Likhu Pike DPMS",
+        subject = "Your Account Has Been Created - Likhu Pike dpis",
         template = """
             <!DOCTYPE html>
             <html>
@@ -117,7 +117,7 @@ enum class EmailTemplate(val subject: String, val template: String) {
                     </div>
                     <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
                         <p>Hello,</p>
-                        <p>An account has been created for you in the Likhu Pike Digital Profile Management System.</p>
+                        <p>An account has been created for you in the Likhu Pike Digital Profile Information System.</p>
                         <p>For security reasons, you need to set your own password before you can access your account.</p>
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="%resetLink%" style="background-color: #e74c3c; color: white; padding: 12px 25px; text-decoration: none; border-radius: 3px;">Set Your Password</a>
@@ -138,7 +138,7 @@ enum class EmailTemplate(val subject: String, val template: String) {
     ),
 
     PASSWORD_RESET_OTP(
-        subject = "Your Password Reset OTP - Likhu Pike DPMS",
+        subject = "Your Password Reset OTP - Likhu Pike dpis",
         template = """
             <!DOCTYPE html>
             <html>
@@ -180,7 +180,7 @@ enum class EmailTemplate(val subject: String, val template: String) {
     ),
 
     PASSWORD_RESET_SUCCESS(
-        subject = "Password Reset Successful - Likhu Pike DPMS",
+        subject = "Password Reset Successful - Likhu Pike dpis",
         template = """
             <!DOCTYPE html>
             <html>

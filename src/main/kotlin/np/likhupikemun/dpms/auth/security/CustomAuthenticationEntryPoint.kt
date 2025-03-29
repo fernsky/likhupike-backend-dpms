@@ -1,11 +1,11 @@
-package np.likhupikemun.dpms.auth.security
+package np.likhupikemun.dpis.auth.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import np.likhupikemun.dpms.common.config.RouteRegistry
-import np.likhupikemun.dpms.common.dto.ApiResponse
-import np.likhupikemun.dpms.common.dto.ErrorDetails
+import np.likhupikemun.dpis.common.config.RouteRegistry
+import np.likhupikemun.dpis.common.dto.ApiResponse
+import np.likhupikemun.dpis.common.dto.ErrorDetails
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType

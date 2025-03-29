@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.annotation
+package np.likhupikemun.dpis.common.annotation
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

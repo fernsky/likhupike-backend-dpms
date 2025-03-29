@@ -1,8 +1,8 @@
-package np.likhupikemun.dpms.auth.controller
+package np.likhupikemun.dpis.auth.controller
 
-import np.likhupikemun.dpms.common.BaseIntegrationTest
-import np.likhupikemun.dpms.fixtures.UserTestFixture
-import np.likhupikemun.dpms.auth.security.TestJwtService
+import np.likhupikemun.dpis.common.BaseIntegrationTest
+import np.likhupikemun.dpis.fixtures.UserTestFixture
+import np.likhupikemun.dpis.auth.security.TestJwtService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -12,9 +12,9 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import np.likhupikemun.dpms.auth.service.UserService
-import np.likhupikemun.dpms.auth.dto.CreateUserDto
-import np.likhupikemun.dpms.auth.security.JwtService
+import np.likhupikemun.dpis.auth.service.UserService
+import np.likhupikemun.dpis.auth.dto.CreateUserDto
+import np.likhupikemun.dpis.auth.security.JwtService
 import org.slf4j.LoggerFactory
 import java.util.UUID
 import org.springframework.boot.test.context.SpringBootTest
@@ -27,9 +27,9 @@ import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever  // Add this for when() functionality
 import org.mockito.kotlin.mock
-import np.likhupikemun.dpms.common.service.EmailService
-import np.likhupikemun.dpms.auth.repository.PasswordResetOtpRepository
-import np.likhupikemun.dpms.auth.domain.entity.PasswordResetOtp
+import np.likhupikemun.dpis.common.service.EmailService
+import np.likhupikemun.dpis.auth.repository.PasswordResetOtpRepository
+import np.likhupikemun.dpis.auth.domain.entity.PasswordResetOtp
 import java.time.LocalDateTime
 
 @SpringBootTest

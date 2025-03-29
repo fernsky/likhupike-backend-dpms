@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.config
+package np.likhupikemun.dpis.common.config
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper

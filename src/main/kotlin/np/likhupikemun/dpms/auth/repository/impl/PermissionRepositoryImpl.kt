@@ -1,9 +1,9 @@
-package np.likhupikemun.dpms.auth.repository.impl
+package np.likhupikemun.dpis.auth.repository.impl
 
 import jakarta.persistence.EntityManager
-import np.likhupikemun.dpms.auth.domain.entity.Permission
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
-import np.likhupikemun.dpms.auth.repository.PermissionRepositoryCustom
+import np.likhupikemun.dpis.auth.domain.entity.Permission
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.auth.repository.PermissionRepositoryCustom
 
 class PermissionRepositoryImpl(
     private val entityManager: EntityManager

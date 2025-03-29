@@ -1,8 +1,8 @@
-package np.likhupikemun.dpms.common.exception
+package np.likhupikemun.dpis.common.exception
 
 import org.springframework.http.HttpStatus
 
-abstract class DpmsException(
+abstract class dpisException(
     val errorCode: ErrorCode,
     message: String? = null,
     val status: HttpStatus = HttpStatus.BAD_REQUEST,

@@ -1,8 +1,8 @@
-package np.likhupikemun.dpms.auth.security
+package np.likhupikemun.dpis.auth.security
 
 import jakarta.servlet.http.HttpServletRequest
-import np.likhupikemun.dpms.auth.config.JwtAuthenticationFilter
-import np.likhupikemun.dpms.common.config.RouteRegistry
+import np.likhupikemun.dpis.auth.config.JwtAuthenticationFilter
+import np.likhupikemun.dpis.common.config.RouteRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment

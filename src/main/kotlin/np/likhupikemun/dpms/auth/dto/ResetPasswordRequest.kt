@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.dto
+package np.likhupikemun.dpis.auth.dto
 
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern

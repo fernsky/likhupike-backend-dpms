@@ -1,13 +1,13 @@
-package np.likhupikemun.dpms.auth.repository.impl
+package np.likhupikemun.dpis.auth.repository.impl
 
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.JoinType
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.domain.entity.UserPermission
-import np.likhupikemun.dpms.auth.domain.entity.Permission
-import np.likhupikemun.dpms.auth.repository.UserRepositoryCustom
-import np.likhupikemun.dpms.auth.dto.UserProjection
-import np.likhupikemun.dpms.auth.dto.UserProjectionImpl
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.domain.entity.UserPermission
+import np.likhupikemun.dpis.auth.domain.entity.Permission
+import np.likhupikemun.dpis.auth.repository.UserRepositoryCustom
+import np.likhupikemun.dpis.auth.dto.UserProjection
+import np.likhupikemun.dpis.auth.dto.UserProjectionImpl
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable

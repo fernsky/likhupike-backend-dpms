@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.auth.repository
+package np.likhupikemun.dpis.auth.repository
 
-import np.likhupikemun.dpms.auth.domain.entity.PasswordResetOtp
+import np.likhupikemun.dpis.auth.domain.entity.PasswordResetOtp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID

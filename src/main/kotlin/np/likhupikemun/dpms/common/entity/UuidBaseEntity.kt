@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.entity
+package np.likhupikemun.dpis.common.entity
 
 import jakarta.persistence.*
 import java.util.*

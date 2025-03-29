@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.security
+package np.likhupikemun.dpis.auth.security
 
 import org.springframework.security.access.expression.SecurityExpressionRoot
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations

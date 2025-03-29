@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.auth.config
+package np.likhupikemun.dpis.auth.config
 
-import np.likhupikemun.dpms.common.config.RouteRegistry
+import np.likhupikemun.dpis.common.config.RouteRegistry
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 

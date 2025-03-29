@@ -1,8 +1,8 @@
-package np.likhupikemun.dpms.auth.controller
+package np.likhupikemun.dpis.auth.controller
 
-import np.likhupikemun.dpms.auth.controller.base.BasePermissionControllerTest
-import np.likhupikemun.dpms.auth.dto.CreateUserDto
-import np.likhupikemun.dpms.fixtures.UserTestFixture
+import np.likhupikemun.dpis.auth.controller.base.BasePermissionControllerTest
+import np.likhupikemun.dpis.auth.dto.CreateUserDto
+import np.likhupikemun.dpis.fixtures.UserTestFixture
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType

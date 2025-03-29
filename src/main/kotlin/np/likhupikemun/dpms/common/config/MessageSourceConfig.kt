@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.config
+package np.likhupikemun.dpis.common.config
 
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean

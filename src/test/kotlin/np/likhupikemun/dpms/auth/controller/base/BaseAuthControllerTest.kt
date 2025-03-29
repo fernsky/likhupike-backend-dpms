@@ -1,10 +1,10 @@
-package np.likhupikemun.dpms.auth.controller.base
+package np.likhupikemun.dpis.auth.controller.base
 
-import np.likhupikemun.dpms.common.BaseIntegrationTest
-import np.likhupikemun.dpms.auth.service.UserService
-import np.likhupikemun.dpms.auth.security.JwtService
-import np.likhupikemun.dpms.common.service.EmailService
-import np.likhupikemun.dpms.auth.repository.PasswordResetOtpRepository
+import np.likhupikemun.dpis.common.BaseIntegrationTest
+import np.likhupikemun.dpis.auth.service.UserService
+import np.likhupikemun.dpis.auth.security.JwtService
+import np.likhupikemun.dpis.common.service.EmailService
+import np.likhupikemun.dpis.auth.repository.PasswordResetOtpRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.mockito.kotlin.*

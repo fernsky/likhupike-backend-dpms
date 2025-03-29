@@ -1,10 +1,10 @@
-package np.likhupikemun.dpms.auth.repository.specification
+package np.likhupikemun.dpis.auth.repository.specification
 
 import jakarta.persistence.criteria.JoinType
-import np.likhupikemun.dpms.auth.domain.entity.Permission
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.domain.entity.UserPermission
-import np.likhupikemun.dpms.auth.dto.UserSearchCriteria
+import np.likhupikemun.dpis.auth.domain.entity.Permission
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.domain.entity.UserPermission
+import np.likhupikemun.dpis.auth.dto.UserSearchCriteria
 import org.springframework.data.jpa.domain.Specification
 
 object UserSpecifications {

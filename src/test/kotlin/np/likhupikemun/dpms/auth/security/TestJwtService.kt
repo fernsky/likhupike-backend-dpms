@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.auth.security
+package np.likhupikemun.dpis.auth.security
 
-import np.likhupikemun.dpms.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.domain.entity.User
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.Duration
 

@@ -1,8 +1,8 @@
-package np.likhupikemun.dpms.auth.domain.entity
+package np.likhupikemun.dpis.auth.domain.entity
 
 import jakarta.persistence.*
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
-import np.likhupikemun.dpms.common.entity.BaseEntity
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.common.entity.BaseEntity
 
 @Entity
 @Table(name = "permissions")

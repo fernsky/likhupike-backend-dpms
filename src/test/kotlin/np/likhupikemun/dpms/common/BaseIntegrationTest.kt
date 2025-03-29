@@ -1,7 +1,7 @@
-package np.likhupikemun.dpms.common
+package np.likhupikemun.dpis.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import np.likhupikemun.dpms.config.TestConfig
+import np.likhupikemun.dpis.config.TestConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest

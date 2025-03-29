@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.config
+package np.likhupikemun.dpis.common.config
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.core.env.Environment
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import np.likhupikemun.dpms.common.annotation.Public
+import np.likhupikemun.dpis.common.annotation.Public
 
 @Configuration
 @ConditionalOnProperty(
@@ -51,10 +51,10 @@ class OpenAPIConfig(private val env: Environment) {
         return OpenAPI()
             .info(
                 Info()
-                    .title("Digital Profile Management System API")
+                    .title("Digital Profile Information System API")
                     .version("1.0.0")
                     .description("""
-                        REST API documentation for Digital Profile Management System.
+                        REST API documentation for Digital Profile Information System.
                         Authentication is required for most endpoints except those marked as public.
                     """.trimIndent())
                     .contact(

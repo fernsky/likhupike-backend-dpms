@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.service
+package np.likhupikemun.dpis.common.service
 
 import java.util.concurrent.CompletableFuture
 

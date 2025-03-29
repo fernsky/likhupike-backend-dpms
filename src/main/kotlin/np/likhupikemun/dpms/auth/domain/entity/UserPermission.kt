@@ -1,7 +1,7 @@
-package np.likhupikemun.dpms.auth.domain.entity
+package np.likhupikemun.dpis.auth.domain.entity
 
 import jakarta.persistence.*
-import np.likhupikemun.dpms.common.entity.UuidBaseEntity
+import np.likhupikemun.dpis.common.entity.UuidBaseEntity
 
 @Entity
 @Table(

@@ -1,9 +1,9 @@
-package np.likhupikemun.dpms.auth.controller.base
+package np.likhupikemun.dpis.auth.controller.base
 
-import np.likhupikemun.dpms.common.BaseIntegrationTest
-import np.likhupikemun.dpms.auth.service.UserService
-import np.likhupikemun.dpms.auth.security.JwtService
-import np.likhupikemun.dpms.fixtures.UserTestFixture
+import np.likhupikemun.dpis.common.BaseIntegrationTest
+import np.likhupikemun.dpis.auth.service.UserService
+import np.likhupikemun.dpis.auth.security.JwtService
+import np.likhupikemun.dpis.fixtures.UserTestFixture
 import org.springframework.beans.factory.annotation.Autowired
 import org.slf4j.LoggerFactory
 

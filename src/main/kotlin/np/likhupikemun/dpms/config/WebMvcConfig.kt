@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.config
+package np.likhupikemun.dpis.config
 
-import np.likhupikemun.dpms.auth.resolver.CurrentUserIdResolver
+import np.likhupikemun.dpis.auth.resolver.CurrentUserIdResolver
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer

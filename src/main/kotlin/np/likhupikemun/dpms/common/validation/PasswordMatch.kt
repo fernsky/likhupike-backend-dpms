@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.validation
+package np.likhupikemun.dpis.common.validation
 
 import jakarta.validation.Constraint
 import jakarta.validation.Payload

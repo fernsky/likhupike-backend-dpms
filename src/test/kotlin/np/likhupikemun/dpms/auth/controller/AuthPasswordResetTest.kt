@@ -1,9 +1,9 @@
-package np.likhupikemun.dpms.auth.controller
+package np.likhupikemun.dpis.auth.controller
 
-import np.likhupikemun.dpms.auth.controller.base.BaseAuthControllerTest
-import np.likhupikemun.dpms.fixtures.UserTestFixture
-import np.likhupikemun.dpms.auth.domain.entity.PasswordResetOtp
-import np.likhupikemun.dpms.auth.dto.CreateUserDto
+import np.likhupikemun.dpis.auth.controller.base.BaseAuthControllerTest
+import np.likhupikemun.dpis.fixtures.UserTestFixture
+import np.likhupikemun.dpis.auth.domain.entity.PasswordResetOtp
+import np.likhupikemun.dpis.auth.dto.CreateUserDto
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post

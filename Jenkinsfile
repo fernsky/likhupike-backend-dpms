@@ -4,7 +4,7 @@ pipeline {
     environment {
         JAVA_HOME = '/var/jenkins_home/tools/hudson.model.JDK/JDK_21/jdk-21.0.5'
         PATH = "${JAVA_HOME}/bin:${PATH}"
-        DOCKER_IMAGE = 'isresearch/likhupike-dpms-api'
+        DOCKER_IMAGE = 'isresearch/likhupike-dpis-api'
         DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
     }
     

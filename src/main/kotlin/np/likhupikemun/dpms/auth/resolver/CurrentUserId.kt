@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.resolver
+package np.likhupikemun.dpis.auth.resolver
 
 @Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)

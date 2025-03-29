@@ -1,10 +1,10 @@
-package np.likhupikemun.dpms.auth.controller
+package np.likhupikemun.dpis.auth.controller
 
-import np.likhupikemun.dpms.auth.controller.base.BaseUserControllerTest
-import np.likhupikemun.dpms.auth.dto.CreateUserDto
-import np.likhupikemun.dpms.auth.dto.UserSearchCriteria
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
-import np.likhupikemun.dpms.fixtures.UserTestFixture
+import np.likhupikemun.dpis.auth.controller.base.BaseUserControllerTest
+import np.likhupikemun.dpis.auth.dto.CreateUserDto
+import np.likhupikemun.dpis.auth.dto.UserSearchCriteria
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.fixtures.UserTestFixture
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -15,7 +15,7 @@ import java.util.UUID
 import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.any
-import np.likhupikemun.dpms.common.service.EmailService
+import np.likhupikemun.dpis.common.service.EmailService
 import org.springframework.boot.test.mock.mockito.MockBean
 import java.util.concurrent.CompletableFuture
 

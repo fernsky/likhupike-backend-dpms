@@ -1,8 +1,8 @@
-package np.likhupikemun.dpms.auth.dto
+package np.likhupikemun.dpis.auth.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
 import java.time.LocalDateTime
 import java.util.*
 

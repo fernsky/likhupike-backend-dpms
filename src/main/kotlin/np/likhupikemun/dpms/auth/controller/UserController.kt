@@ -1,12 +1,12 @@
-package np.likhupikemun.dpms.auth.controller
+package np.likhupikemun.dpis.auth.controller
 
 import jakarta.validation.Valid
-import np.likhupikemun.dpms.auth.service.UserService
-import np.likhupikemun.dpms.common.dto.ApiResponse
-import np.likhupikemun.dpms.auth.mapper.UserMapper
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.dto.*
-import np.likhupikemun.dpms.auth.resolver.CurrentUserId
+import np.likhupikemun.dpis.auth.service.UserService
+import np.likhupikemun.dpis.common.dto.ApiResponse
+import np.likhupikemun.dpis.auth.mapper.UserMapper
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.dto.*
+import np.likhupikemun.dpis.auth.resolver.CurrentUserId
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import np.likhupikemun.dpms.common.service.I18nMessageService
+import np.likhupikemun.dpis.common.service.I18nMessageService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content

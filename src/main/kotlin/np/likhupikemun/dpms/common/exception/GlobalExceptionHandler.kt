@@ -1,10 +1,10 @@
-package np.likhupikemun.dpms.common.exception
+package np.likhupikemun.dpis.common.exception
 
-import np.likhupikemun.dpms.common.service.I18nMessageService
+import np.likhupikemun.dpis.common.service.I18nMessageService
 import jakarta.validation.ConstraintViolationException
-import np.likhupikemun.dpms.common.dto.ApiResponse
-import np.likhupikemun.dpms.common.dto.ErrorDetails
-import np.likhupikemun.dpms.auth.exception.AuthException
+import np.likhupikemun.dpis.common.dto.ApiResponse
+import np.likhupikemun.dpis.common.dto.ErrorDetails
+import np.likhupikemun.dpis.auth.exception.AuthException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -21,8 +21,8 @@ class GlobalExceptionHandler(
     private val i18nMessageService: I18nMessageService
 ) {
     
-    @ExceptionHandler(DpmsException::class)
-    fun handleDpmsException(ex: DpmsException): ResponseEntity<ApiResponse<Nothing>> =
+    @ExceptionHandler(dpisException::class)
+    fun handledpisException(ex: dpisException): ResponseEntity<ApiResponse<Nothing>> =
         ResponseEntity
             .status(ex.status)
             .body(
@@ -90,7 +90,7 @@ class GlobalExceptionHandler(
             )
         }
 
-        return handleDpmsException(exception)
+        return handledpisException(exception)
     }
 
     private fun getRequiredPermissions(ex: AccessDeniedException): Set<String>? {

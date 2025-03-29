@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.config
+package np.likhupikemun.dpis.auth.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

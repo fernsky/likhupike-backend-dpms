@@ -1,9 +1,9 @@
-package np.likhupikemun.dpms.auth.controller.base
+package np.likhupikemun.dpis.auth.controller.base
 
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
-import np.likhupikemun.dpms.auth.dto.CreateUserDto
-import np.likhupikemun.dpms.fixtures.UserTestFixture
-import np.likhupikemun.dpms.common.service.EmailService
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.auth.dto.CreateUserDto
+import np.likhupikemun.dpis.fixtures.UserTestFixture
+import np.likhupikemun.dpis.common.service.EmailService
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.mockito.kotlin.*

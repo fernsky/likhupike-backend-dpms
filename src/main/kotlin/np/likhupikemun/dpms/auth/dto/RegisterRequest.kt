@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.dto
+package np.likhupikemun.dpis.auth.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*

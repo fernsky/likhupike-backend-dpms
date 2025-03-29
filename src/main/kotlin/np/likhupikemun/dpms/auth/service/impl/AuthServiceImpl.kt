@@ -1,12 +1,12 @@
-package np.likhupikemun.dpms.auth.service.impl
+package np.likhupikemun.dpis.auth.service.impl
 
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.service.AuthService
-import np.likhupikemun.dpms.auth.service.UserService
-import np.likhupikemun.dpms.auth.dto.*
-import np.likhupikemun.dpms.auth.exception.AuthException
-import np.likhupikemun.dpms.auth.security.JwtService
-import np.likhupikemun.dpms.auth.security.TokenPair
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.service.AuthService
+import np.likhupikemun.dpis.auth.service.UserService
+import np.likhupikemun.dpis.auth.dto.*
+import np.likhupikemun.dpis.auth.exception.AuthException
+import np.likhupikemun.dpis.auth.security.JwtService
+import np.likhupikemun.dpis.auth.security.TokenPair
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -18,10 +18,10 @@ import org.springframework.transaction.annotation.Transactional
 import org.slf4j.LoggerFactory
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
-import np.likhupikemun.dpms.common.service.EmailService
-import np.likhupikemun.dpms.auth.repository.PasswordResetOtpRepository
-import np.likhupikemun.dpms.auth.domain.entity.PasswordResetOtp
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.common.service.EmailService
+import np.likhupikemun.dpis.auth.repository.PasswordResetOtpRepository
+import np.likhupikemun.dpis.auth.domain.entity.PasswordResetOtp
 import java.time.LocalDateTime
 
 @Service

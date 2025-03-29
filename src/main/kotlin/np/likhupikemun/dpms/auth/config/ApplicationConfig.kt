@@ -1,7 +1,7 @@
-package np.likhupikemun.dpms.auth.config
+package np.likhupikemun.dpis.auth.config
 
-import np.likhupikemun.dpms.auth.repository.UserRepository
-import np.likhupikemun.dpms.auth.exception.AuthException
+import np.likhupikemun.dpis.auth.repository.UserRepository
+import np.likhupikemun.dpis.auth.exception.AuthException
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager

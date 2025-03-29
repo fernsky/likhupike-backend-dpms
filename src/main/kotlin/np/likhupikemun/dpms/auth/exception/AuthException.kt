@@ -1,7 +1,7 @@
-package np.likhupikemun.dpms.auth.exception
+package np.likhupikemun.dpis.auth.exception
 
-import np.likhupikemun.dpms.common.exception.DpmsException
-import np.likhupikemun.dpms.common.exception.ErrorCode
+import np.likhupikemun.dpis.common.exception.dpisException
+import np.likhupikemun.dpis.common.exception.ErrorCode
 import org.springframework.http.HttpStatus
 
 sealed class AuthException(
@@ -9,7 +9,7 @@ sealed class AuthException(
     message: String? = null,
     metadata: Map<String, Any> = emptyMap(),
     status: HttpStatus
-) : DpmsException(errorCode, message, status, metadata) {
+) : dpisException(errorCode, message, status, metadata) {
 
     enum class AuthErrorCode : ErrorCode {
         USER_NOT_FOUND {

@@ -1,7 +1,7 @@
-package np.likhupikemun.dpms.auth.service
+package np.likhupikemun.dpis.auth.service
 
-import np.likhupikemun.dpms.auth.domain.entity.Permission
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.auth.domain.entity.Permission
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
 
 interface PermissionService {
     fun findByType(type: PermissionType): Permission

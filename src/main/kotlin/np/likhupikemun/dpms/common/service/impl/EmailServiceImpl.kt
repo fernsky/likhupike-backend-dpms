@@ -1,7 +1,7 @@
-package np.likhupikemun.dpms.common.service.impl
+package np.likhupikemun.dpis.common.service.impl
 
-import np.likhupikemun.dpms.common.service.EmailService
-import np.likhupikemun.dpms.common.enum.EmailTemplate
+import np.likhupikemun.dpis.common.service.EmailService
+import np.likhupikemun.dpis.common.enum.EmailTemplate
 import org.slf4j.LoggerFactory
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper

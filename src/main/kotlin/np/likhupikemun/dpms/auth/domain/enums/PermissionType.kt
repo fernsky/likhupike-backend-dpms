@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.domain.enums
+package np.likhupikemun.dpis.auth.domain.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 

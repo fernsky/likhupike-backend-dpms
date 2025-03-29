@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.common.exception
+package np.likhupikemun.dpis.common.exception
 
 interface ErrorCode {
     val code: String

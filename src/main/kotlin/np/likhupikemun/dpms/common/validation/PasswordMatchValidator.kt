@@ -1,8 +1,8 @@
-package np.likhupikemun.dpms.common.validation
+package np.likhupikemun.dpis.common.validation
 
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
-import np.likhupikemun.dpms.auth.dto.ResetUserPasswordRequest
+import np.likhupikemun.dpis.auth.dto.ResetUserPasswordRequest
 
 class PasswordMatchValidator : ConstraintValidator<PasswordMatch, ResetUserPasswordRequest> {
     override fun isValid(request: ResetUserPasswordRequest?, context: ConstraintValidatorContext?): Boolean {

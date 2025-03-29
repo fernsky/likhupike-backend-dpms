@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.config
+package np.likhupikemun.dpis.config
 
-import np.likhupikemun.dpms.auth.security.*
+import np.likhupikemun.dpis.auth.security.*
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary

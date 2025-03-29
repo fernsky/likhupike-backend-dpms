@@ -1,12 +1,12 @@
-package np.likhupikemun.dpms.auth.security.impl
+package np.likhupikemun.dpis.auth.security.impl
 
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
-import np.likhupikemun.dpms.auth.domain.entity.User
-import np.likhupikemun.dpms.auth.security.JwtService
-import np.likhupikemun.dpms.auth.security.TokenPair
+import np.likhupikemun.dpis.auth.domain.entity.User
+import np.likhupikemun.dpis.auth.security.JwtService
+import np.likhupikemun.dpis.auth.security.TokenPair
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service

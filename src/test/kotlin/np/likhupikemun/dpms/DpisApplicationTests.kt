@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms
+package np.likhupikemun.dpis
 
-import np.likhupikemun.dpms.auth.security.impl.JwtServiceImpl
+import np.likhupikemun.dpis.auth.security.impl.JwtServiceImpl
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.FilterType
@@ -13,7 +13,7 @@ import org.springframework.test.annotation.DirtiesContext
     ]
 )
 @ComponentScan(
-    basePackages = ["np.likhupikemun.dpms"],
+    basePackages = ["np.likhupikemun.dpis"],
     excludeFilters = [
         ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,
@@ -22,6 +22,6 @@ import org.springframework.test.annotation.DirtiesContext
     ]
 )
 @DirtiesContext
-class DpmsApplicationTests {
+class dpisApplicationTests {
     // Test methods will go here
 }

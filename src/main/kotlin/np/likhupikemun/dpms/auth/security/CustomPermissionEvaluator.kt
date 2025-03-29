@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.auth.security
+package np.likhupikemun.dpis.auth.security
 
-import np.likhupikemun.dpms.auth.domain.enums.PermissionType
+import np.likhupikemun.dpis.auth.domain.enums.PermissionType
 import org.springframework.security.access.PermissionEvaluator
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Component

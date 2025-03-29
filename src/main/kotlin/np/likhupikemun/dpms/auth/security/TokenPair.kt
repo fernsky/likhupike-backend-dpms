@@ -1,4 +1,4 @@
-package np.likhupikemun.dpms.auth.security
+package np.likhupikemun.dpis.auth.security
 
 data class TokenPair(
     val accessToken: String,

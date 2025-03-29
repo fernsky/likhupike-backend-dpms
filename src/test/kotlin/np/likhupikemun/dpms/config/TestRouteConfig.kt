@@ -1,6 +1,6 @@
-package np.likhupikemun.dpms.config
+package np.likhupikemun.dpis.config
 
-import np.likhupikemun.dpms.common.config.RouteRegistry
+import np.likhupikemun.dpis.common.config.RouteRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
