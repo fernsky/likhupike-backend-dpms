@@ -8,44 +8,36 @@ enum class EmailTemplate(val subject: String, val template: String) {
         template = BaseEmailTemplate.wrap(
             "Password Reset Request",
             """
-                <p style="margin: 0 0 20px; color: #1e293b;">Dear User,</p>
-                <p style="margin: 0 0 24px; color: #334155;">We received a request to reset your password. Use the button below to reset it. If you didn't request this, you can safely ignore this email.</p>
-                <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                        <td align="center" style="padding: 24px 0 32px;">
-                            <table cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td align="center" style="
-                                        background-color: #123772;
-                                        border-radius: 10px;
-                                    ">
-                                        <a href="%resetLink%" style="
-                                            display: inline-block;
-                                            padding: 16px 36px;
-                                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-                                            font-size: 15px;
-                                            font-weight: 600;
-                                            color: #ffffff;
-                                            text-decoration: none;
-                                            letter-spacing: 0.01em;
-                                        ">Reset Password</a>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-                <p style="
-                    margin: 0;
-                    padding: 16px 24px;
-                    background-color: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    color: #64748b;
-                    font-size: 14px;
-                    letter-spacing: -0.01em;
-                    line-height: 1.5;
-                ">For security, this request will expire in 15 minutes. After that, you'll need to submit a new password reset request.</p>
+                <div style="padding: 0 20px;">
+                    <p style="margin: 0 0 20px; color: rgba(0,0,0,0.87);">Hi there,</p>
+                    <p style="margin: 0 0 20px; color: rgba(0,0,0,0.87);">We received a request to reset your password. Click the button below to choose a new one.</p>
+                    
+                    <div style="padding: 32px 0; text-align: center;">
+                        <a href="%resetLink%" style="
+                            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+                            line-height: 16px;
+                            color: #ffffff;
+                            font-weight: 400;
+                            text-decoration: none;
+                            font-size: 14px;
+                            display: inline-block;
+                            padding: 10px 24px;
+                            background-color: #4184F3;
+                            border-radius: 4px;
+                            min-width: 90px;
+                        ">Reset password</a>
+                    </div>
+                    
+                    <p style="
+                        margin: 0;
+                        padding: 12px 24px;
+                        background-color: #f8f9fa;
+                        border-radius: 4px;
+                        color: rgba(0,0,0,0.54);
+                        font-size: 13px;
+                        line-height: 18px;
+                    ">This password reset link will expire in 15 minutes. If you didn't request a password reset, you can ignore this email.</p>
+                </div>
             """
         )
     ),

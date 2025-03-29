@@ -1,11 +1,10 @@
 package np.sthaniya.dpis.common.template
 
 object BaseEmailTemplate {
-    private const val PRIMARY_DARK = "#0b1f42"
-    private const val PRIMARY_MAIN = "#123772"
-    private const val SLATE_600 = "#475569"
-    private const val SLATE_700 = "#334155"
-    private const val SLATE_800 = "#1e293b"
+    private const val PRIMARY_DARK = "#1f1f1f"
+    private const val PRIMARY_MAIN = "#4184F3"
+    private const val GRAY_TEXT = "rgba(0, 0, 0, 0.87)"
+    private const val LIGHT_GRAY = "rgba(0, 0, 0, 0.54)"
     
     fun wrap(title: String, content: String) = """
         <!DOCTYPE html>
@@ -14,87 +13,74 @@ object BaseEmailTemplate {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${title}</title>
+            <link href="//fonts.googleapis.com/css?family=Google+Sans:400,500,700" rel="stylesheet">
         </head>
         <body style="
             margin: 0;
             padding: 0;
-            background-color: #f8fafc;
+            background-color: #ffffff;
             -webkit-font-smoothing: antialiased;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Helvetica Neue', Arial, sans-serif;
         ">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="
-                background-color: $PRIMARY_MAIN;
-                min-width: 100%;
-            ">
-                <tr>
-                    <td align="center" style="padding: 60px 10px;">
-                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 580px;">
+            <table width="100%" height="100%" border="0" cellspacing="0" cellpadding="0" style="min-width: 348px;">
+                <tr height="32"><td></td></tr>
+                <tr align="center">
+                    <td>
+                        <table border="0" cellspacing="0" cellpadding="0" style="padding-bottom: 20px; max-width: 516px; min-width: 220px;">
                             <tr>
-                                <td align="center" bgcolor="#ffffff" style="
-                                    border-radius: 16px;
-                                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-                                    border: 1px solid #f1f5f9;
-                                ">
-                                    <!-- Header -->
-                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                        <tr>
-                                            <td align="center" style="
-                                                padding: 48px 40px 40px;
-                                                border-bottom: 1px solid #f1f5f9;
-                                                background-color: #ffffff;
-                                                border-radius: 16px 16px 0 0;
-                                            ">
-                                                <h1 style="
-                                                    margin: 0;
-                                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-                                                    font-size: 26px;
-                                                    line-height: 1.3;
-                                                    font-weight: 700;
-                                                    color: $SLATE_800;
-                                                    letter-spacing: -0.025em;
-                                                ">${title}</h1>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                    
-                                    <!-- Content -->
-                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                        <tr>
-                                            <td style="
-                                                padding: 40px 40px 48px;
-                                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-                                                font-size: 16px;
-                                                line-height: 1.625;
-                                                color: $SLATE_700;
-                                            ">
-                                                ${content}
-                                            </td>
-                                        </tr>
-                                    </table>
+                                <td width="8"></td>
+                                <td>
+                                    <div style="
+                                        border: thin solid #dadce0;
+                                        border-radius: 8px;
+                                        padding: 40px 20px;
+                                    " align="center">
+                                        <div style="
+                                            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+                                            border-bottom: thin solid #dadce0;
+                                            color: $GRAY_TEXT;
+                                            line-height: 32px;
+                                            padding-bottom: 24px;
+                                            text-align: center;
+                                            word-break: break-word;
+                                        ">
+                                            <div style="font-size: 24px;">${title}</div>
+                                        </div>
+                                        
+                                        <div style="
+                                            font-family: Roboto, Arial, sans-serif;
+                                            font-size: 14px;
+                                            color: $GRAY_TEXT;
+                                            line-height: 20px;
+                                            padding-top: 20px;
+                                            text-align: left;
+                                        ">
+                                            ${content}
+                                        </div>
 
-                                    <!-- Footer -->
-                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                        <tr>
-                                            <td align="center" style="
-                                                padding: 32px 40px;
-                                                background-color: #f8fafc;
-                                                border-top: 1px solid #f1f5f9;
-                                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-                                                font-size: 13px;
-                                                line-height: 1.5;
-                                                color: $SLATE_600;
-                                                border-radius: 0 0 16px 16px;
-                                            ">
-                                                <strong style="color: $SLATE_700;">Likhu Pike Digital Profile System</strong><br>
+                                        <div style="
+                                            padding-top: 20px;
+                                            font-size: 12px;
+                                            line-height: 16px;
+                                            color: $LIGHT_GRAY;
+                                            letter-spacing: 0.3px;
+                                            text-align: center;
+                                            border-top: 1px solid #dadce0;
+                                            margin-top: 20px;
+                                            padding-top: 20px;
+                                        ">
+                                            <div style="direction: ltr">
+                                                Likhu Pike Rural Municipality<br>
                                                 Digital Profile Information System
-                                            </td>
-                                        </tr>
-                                    </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
+                                <td width="8"></td>
                             </tr>
                         </table>
                     </td>
                 </tr>
+                <tr height="32"><td></td></tr>
             </table>
         </body>
         </html>
