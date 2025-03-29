@@ -3,6 +3,7 @@ package np.sthaniya.dpis.auth.security
 import jakarta.servlet.http.HttpServletRequest
 import np.sthaniya.dpis.auth.config.JwtAuthenticationFilter
 import np.sthaniya.dpis.common.config.RouteRegistry
+import np.sthaniya.dpis.common.filter.RateLimitFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
@@ -11,7 +12,6 @@ import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.util.matcher.RequestMatcher
@@ -43,6 +43,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
  * ```
  *
  * Technical Details:
+ * - Rate limiting filter runs before all authentication filters
  * - JWT filter runs before Spring's UsernamePasswordAuthenticationFilter
  * - Uses custom RequestMatcher for dynamic route validation
  * - Returns 404 for unregistered routes (security by obscurity)
@@ -58,6 +59,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val rateLimitFilter: RateLimitFilter,
     private val authenticationProvider: AuthenticationProvider,
     private val customAuthenticationEntryPoint: CustomAuthenticationEntryPoint,
     private val routeRegistry: RouteRegistry,
@@ -68,10 +70,11 @@ class SecurityConfig(
      * Configures the security filter chain.
      *
      * Chain Order:
-     * 1. CORS/CSRF filters
-     * 2. JWT authentication filter
-     * 3. Exception handling
-     * 4. Route security
+     * 1. Rate Limiting Filter
+     * 2. CORS/CSRF filters
+     * 3. JWT authentication filter
+     * 4. Exception handling
+     * 5. Route security
      *
      * Performance Notes:
      * - Use antMatcher for better performance on fixed paths
@@ -125,7 +128,9 @@ class SecurityConfig(
                     }
             }
             .authenticationProvider(authenticationProvider)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            // Apply rate limiting filter first, then JWT authentication filter
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterAfter(jwtAuthenticationFilter, rateLimitFilter::class.java)
 
         return http.build()
     }
