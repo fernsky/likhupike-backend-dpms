@@ -1,4 +1,4 @@
-= Introduction and Overview
+
 
 == Purpose and Scope
 The Digital Profile Information System's database is designed to store and manage digital profiles, user permissions, and related data for municipal-level digital governance. This document provides comprehensive details about the database schema, relationships, and design decisions.

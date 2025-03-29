@@ -1,4 +1,2 @@
-= Authorization System
-
 == Permission Management
 include::./sections/permissions-schema.adoc[leveloffset=+1]

@@ -1,9 +1,9 @@
 = Document History
 
-[cols="1,1,2,4",options="header"]
+[cols="2,1,2,4",options="header"]
 |===
 |Version |Date |Author |Changes
-|v0.0.1-SNAPSHOT |2024-01 |Trilochan |Initial version: Added Spring Session management
+|`v0.0.1-SNAPSHOT` |2024-01 |Trilochan |Initial version: Added Spring Session management
 - Created spring_session table with indexes
 - Created spring_session_attributes table
 
