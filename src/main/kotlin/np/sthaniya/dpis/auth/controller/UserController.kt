@@ -23,6 +23,37 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 
+/**
+ * REST controller handling user management operations in the Digital Profile System.
+ *
+ * This controller provides comprehensive user management capabilities including:
+ * 1. User Administration:
+ *    - User creation and approval
+ *    - User search and retrieval
+ *    - User updates and deletion
+ *
+ * 2. Permission Management:
+ *    - Permission assignment
+ *    - Permission updates
+ *    - Role-based access control
+ *
+ * 3. User Account Operations:
+ *    - Administrative password reset
+ *    - Ward-level access management
+ *
+ * Security:
+ * - All endpoints require authentication
+ * - Permission-based access control using @PreAuthorize
+ * - Audit logging for administrative actions
+ *
+ * Integration:
+ * - Uses [UserService] for business logic implementation
+ * - Integrates with [I18nMessageService] for internationalized responses
+ * - Implements OpenAPI/Swagger documentation
+ *
+ * @property userService Service handling user management operations
+ * @property i18nMessageService Service for internationalized messages
+ */
 @Tag(
     name = "User Management",
     description = "Endpoints for managing users, permissions, and account operations"
@@ -34,6 +65,28 @@ class UserController(
     private val i18nMessageService: I18nMessageService,
     private val log: Logger = LoggerFactory.getLogger(UserController::class.java)
 ) {
+
+    /**
+     * Creates and automatically approves a new user account.
+     *
+     * This endpoint handles the administrative creation of users, including:
+     * 1. User account creation with specified permissions
+     * 2. Automatic approval by the creating admin
+     * 3. Initial password setup
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.createUser] for account creation
+     * - Uses [UserServiceImpl.approveUser] for automatic approval
+     *
+     * Security:
+     * - Requires CREATE_USER permission
+     * - Validates input data
+     * - Prevents duplicate emails
+     *
+     * @param request User creation details including permissions
+     * @param currentUserId ID of the admin creating the user
+     * @throws AuthException.UserAlreadyExistsException if email is taken
+     */
     @Operation(
         summary = "Create new user",
         description = "Create and automatically approve a new user account with specified permissions"
@@ -67,6 +120,22 @@ class UserController(
         )
     }
 
+    /**
+     * Searches and filters users with pagination.
+     *
+     * Features:
+     * - Dynamic filtering based on multiple criteria
+     * - Pagination support
+     * - Permission-based filtering
+     * - Ward-level access restrictions
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.searchUsers] with specifications
+     * - Supports complex search criteria through [UserSearchCriteria]
+     *
+     * @param criteria Search and filter parameters
+     * @throws AuthException.PageDoesNotExistException for invalid page numbers
+     */
     @Operation(
         summary = "Search users",
         description = "Search and filter users with pagination"
@@ -93,6 +162,21 @@ class UserController(
         )
     }
 
+    /**
+     * Approves a pending user registration.
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.approveUser] for approval process
+     *
+     * Security:
+     * - Requires APPROVE_USER permission
+     * - Validates user existence and approval status
+     *
+     * @param userId ID of the user to approve
+     * @param currentUserId ID of the admin approving the user
+     * @throws AuthException.UserNotFoundException if user doesn't exist
+     * @throws AuthException.UserAlreadyApprovedException if user is already approved
+     */
     @Operation(
         summary = "Approve user",
         description = "Approve a pending user registration"
@@ -119,6 +203,21 @@ class UserController(
         )
     }
 
+    /**
+     * Soft deletes a user account.
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.deleteUser] for deletion process
+     *
+     * Security:
+     * - Requires DELETE_USER permission
+     * - Validates user existence and deletion status
+     *
+     * @param userId ID of the user to delete
+     * @param currentUserId ID of the admin deleting the user
+     * @throws AuthException.UserNotFoundException if user doesn't exist
+     * @throws AuthException.UserAlreadyDeletedException if user is already deleted
+     */
     @Operation(
         summary = "Delete user",
         description = "Soft delete a user account"
@@ -145,6 +244,28 @@ class UserController(
         )
     }
 
+    /**
+     * Updates user permissions.
+     *
+     * Permission Update Process:
+     * 1. Validates requested permission changes
+     * 2. Applies permission updates atomically
+     * 3. Records permission change audit
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.updatePermissions] for permission management
+     * - Handles permission comparison and modification
+     *
+     * Security:
+     * - Requires EDIT_USER permission
+     * - Validates permission combinations
+     * - Prevents unauthorized elevation
+     *
+     * @param userId ID of the user to update
+     * @param permissions New permission set
+     * @throws AuthException.UserNotFoundException if user doesn't exist
+     * @throws AuthException.UserAlreadyDeletedException if user is deleted
+     */
     @Operation(
         summary = "Update user permissions",
         description = "Modify the permissions assigned to a user"
@@ -171,6 +292,20 @@ class UserController(
         )
     }
 
+    /**
+     * Resets user password administratively.
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.resetPassword] for password reset
+     *
+     * Security:
+     * - Requires RESET_USER_PASSWORD permission
+     * - Validates password strength and match
+     *
+     * @param userId ID of the user to reset password
+     * @param request Password reset details
+     * @throws AuthException.UserNotFoundException if user doesn't exist
+     */
     @Operation(
         summary = "Reset user password",
         description = "Administrative password reset for a user"
@@ -197,6 +332,19 @@ class UserController(
         )
     }
 
+    /**
+     * Retrieves detailed user information by ID.
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.getUserById] for user retrieval
+     *
+     * Security:
+     * - Requires VIEW_USER permission
+     * - Validates user existence
+     *
+     * @param userId ID of the user to retrieve
+     * @throws AuthException.UserNotFoundException if user doesn't exist
+     */
     @Operation(
         summary = "Get user by ID",
         description = "Retrieve detailed user information"
@@ -222,6 +370,22 @@ class UserController(
         )
     }
 
+    /**
+     * Updates user information such as email and ward access.
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.updateUser] for user update
+     *
+     * Security:
+     * - Requires EDIT_USER permission
+     * - Validates input data
+     * - Prevents duplicate emails
+     *
+     * @param userId ID of the user to update
+     * @param request User update details
+     * @throws AuthException.UserNotFoundException if user doesn't exist
+     * @throws AuthException.EmailAlreadyExistsException if email is taken
+     */
     @Operation(
         summary = "Update user",
         description = "Update user information (email, ward access)"
