@@ -33,22 +33,39 @@ spring:
 
 resilience4j:
   ratelimiter:
+    enabled: ${RATE_LIMIT_ENABLED:false}
     configs:
       default:
         registerHealthIndicator: true
-        limitForPeriod: 50
-        limitRefreshPeriod: 1s
-        timeoutDuration: 0
+        limitForPeriod: ${RATE_LIMIT_DEFAULT_LIMIT:100}
+        limitRefreshPeriod: ${RATE_LIMIT_DEFAULT_REFRESH:1s}
+        timeoutDuration: ${RATE_LIMIT_DEFAULT_TIMEOUT:0}
+        allowHealthIndicator: true
+      per-client:
+        registerHealthIndicator: true
+        limitForPeriod: ${RATE_LIMIT_CLIENT_LIMIT:10}
+        limitRefreshPeriod: ${RATE_LIMIT_CLIENT_REFRESH:1m}
+        timeoutDuration: ${RATE_LIMIT_CLIENT_TIMEOUT:0}
         allowHealthIndicator: true
     instances:
-      auth:
+      # Global limits
+      auth-global:
         baseConfig: default
-        limitForPeriod: 3
-        limitRefreshPeriod: 1m
-      api:
+        limitForPeriod: ${RATE_LIMIT_AUTH_GLOBAL_LIMIT:1000}
+        limitRefreshPeriod: ${RATE_LIMIT_AUTH_GLOBAL_REFRESH:1m}
+      api-global:
         baseConfig: default
-        limitForPeriod: 100
-        limitRefreshPeriod: 1m
+        limitForPeriod: ${RATE_LIMIT_API_GLOBAL_LIMIT:3000}
+        limitRefreshPeriod: ${RATE_LIMIT_API_GLOBAL_REFRESH:1m}
+      # Per-client limits
+      auth-client:
+        baseConfig: per-client
+        limitForPeriod: ${RATE_LIMIT_AUTH_CLIENT_LIMIT:10}
+        limitRefreshPeriod: ${RATE_LIMIT_AUTH_CLIENT_REFRESH:1m}
+      api-client:
+        baseConfig: per-client
+        limitForPeriod: ${RATE_LIMIT_API_CLIENT_LIMIT:300}
+        limitRefreshPeriod: ${RATE_LIMIT_API_CLIENT_REFRESH:1m}
 
 app:
   admin:
