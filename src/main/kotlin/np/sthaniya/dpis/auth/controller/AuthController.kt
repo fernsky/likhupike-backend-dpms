@@ -21,10 +21,44 @@ import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.auth.resolver.CurrentUserId
 import java.util.*
 
-@Tag(
-    name = "Authentication",
-    description = "Endpoints for user authentication and account management"
-)
+/**
+ * REST controller handling all authentication-related endpoints in the Digital Profile System.
+ *
+ * This controller provides a comprehensive authentication API including:
+ * 1. User Registration Flow:
+ *    - New user registration with email verification
+ *    - Pending admin approval system
+ *
+ * 2. Authentication Flow:
+ *    - Login with email/password
+ *    - JWT token generation and refresh
+ *    - Secure logout mechanism
+ *
+ * 3. Password Management:
+ *    - Password reset via email OTP
+ *    - Password change for authenticated users
+ *
+ * Security Features:
+ * - JWT-based stateless authentication
+ * - Rate limiting on sensitive operations
+ * - Email verification for password reset
+ * - Secure password handling
+ *
+ * Integration Points:
+ * - Uses [AuthService] for business logic
+ * - Integrates with [I18nMessageService] for internationalized responses
+ * - OpenAPI/Swagger documentation for API discovery
+ * - Standardized [ApiResponse] wrapper for all responses
+ *
+ * Error Handling:
+ * - Comprehensive validation error responses
+ * - Proper HTTP status codes for different scenarios
+ * - Detailed error messages through i18n
+ *
+ * @property authService Service handling core authentication logic
+ * @property i18nMessageService Service for internationalized message handling
+ */
+@Tag(name = "Authentication", description = "Endpoints for user authentication and account management")
 @RestController
 @RequestMapping("/api/v1/auth", produces = [MediaType.APPLICATION_JSON_VALUE])
 class AuthController(
@@ -33,6 +67,30 @@ class AuthController(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Registers a new user in the system.
+     *
+     * This endpoint:
+     * 1. Validates user input (email format, password requirements)
+     * 2. Creates a new unverified user account
+     * 3. Queues account for admin approval
+     *
+     * Registration Flow:
+     * 1. User submits registration data
+     * 2. System validates input
+     * 3. Creates pending account
+     * 4. Admin must approve account
+     * 5. User can then login
+     *
+     * Security:
+     * - Public endpoint (no authentication required)
+     * - Rate limited to prevent abuse
+     * - Password complexity validation
+     *
+     * @param request Registration details including email and password
+     * @return ResponseEntity containing registration confirmation
+     * @throws AuthException.UserAlreadyExistsException if email is taken
+     */
     @Operation(
         summary = "Register new user",
         description = "Register a new user account. The account will require admin approval before it can be used."
@@ -59,6 +117,25 @@ class AuthController(
             ))
     }
 
+    /**
+     * Authenticates a user and provides JWT access tokens.
+     *
+     * Authentication Process:
+     * 1. Validates credentials
+     * 2. Checks account status (approved, not deleted)
+     * 3. Generates JWT token pair (access + refresh)
+     * 4. Returns tokens with user details
+     *
+     * Security Features:
+     * - Rate limiting on failed attempts
+     * - Account status validation
+     * - Secure token generation
+     *
+     * @param request Login credentials (email and password)
+     * @return JWT tokens and user information
+     * @throws AuthException.InvalidCredentialsException for wrong credentials
+     * @throws AuthException.AccountNotApprovedException if account pending approval
+     */
     @Operation(
         summary = "Authenticate user",
         description = "Authenticate user credentials and receive access token"
@@ -84,6 +161,22 @@ class AuthController(
         )
     }
 
+    /**
+     * Refreshes authentication token using a valid refresh token.
+     *
+     * Token Refresh Process:
+     * 1. Validates refresh token
+     * 2. Generates new access token
+     * 3. Returns new token pair
+     *
+     * Security Features:
+     * - Requires valid refresh token
+     * - Invalidates old tokens
+     *
+     * @param refreshToken Refresh token provided in the request header
+     * @return New JWT token pair
+     * @throws AuthException.InvalidTokenException if refresh token is invalid or expired
+     */
     @Operation(
         summary = "Refresh authentication token",
         description = "Get new access token using refresh token"
@@ -107,6 +200,22 @@ class AuthController(
         )
     }
 
+    /**
+     * Logs out the authenticated user by invalidating the current token.
+     *
+     * Logout Process:
+     * 1. Validates current token
+     * 2. Invalidates token in the system
+     * 3. Confirms logout
+     *
+     * Security Features:
+     * - Requires valid authentication token
+     * - Invalidates token securely
+     *
+     * @param token Bearer token provided in the request header
+     * @return Confirmation of logout
+     * @throws AuthException.InvalidTokenException if token is invalid
+     */
     @Operation(
         summary = "Logout user",
         description = "Invalidate current authentication token"
@@ -129,6 +238,22 @@ class AuthController(
         )
     }
 
+    /**
+     * Requests a password reset OTP to be sent via email.
+     *
+     * Password Reset Request Process:
+     * 1. Validates user email
+     * 2. Generates OTP
+     * 3. Sends OTP via email
+     *
+     * Security Features:
+     * - Public endpoint (no authentication required)
+     * - Rate limited to prevent abuse
+     *
+     * @param request Email address for password reset
+     * @return Confirmation of OTP sent
+     * @throws AuthException.UserNotFoundException if user does not exist
+     */
     @Operation(
         summary = "Request password reset",
         description = "Request a password reset OTP that will be sent via email"
@@ -152,6 +277,23 @@ class AuthController(
         )
     }
 
+    /**
+     * Resets password using the OTP received via email.
+     *
+     * Password Reset Process:
+     * 1. Validates OTP
+     * 2. Checks new password requirements
+     * 3. Updates password securely
+     *
+     * Security Features:
+     * - Public endpoint (no authentication required)
+     * - Validates OTP and password complexity
+     *
+     * @param request OTP and new password details
+     * @return Confirmation of password reset
+     * @throws AuthException.InvalidOtpException if OTP is invalid
+     * @throws AuthException.InvalidPasswordException if new password doesn't meet requirements
+     */
     @Operation(
         summary = "Reset password using OTP",
         description = "Reset password using the OTP received via email"
@@ -176,6 +318,27 @@ class AuthController(
         )
     }
 
+    /**
+     * Changes password for an authenticated user.
+     *
+     * Password Change Process:
+     * 1. Validates current password
+     * 2. Checks new password requirements
+     * 3. Updates password securely
+     * 4. Invalidates all existing sessions
+     *
+     * Security:
+     * - Requires authentication
+     * - Validates current password
+     * - Enforces password complexity
+     * - Logs out all sessions
+     *
+     * @param currentUserId ID of the authenticated user
+     * @param request Password change details
+     * @return Confirmation of password change
+     * @throws AuthException.InvalidCredentialsException if current password is wrong
+     * @throws AuthException.InvalidPasswordException if new password doesn't meet requirements
+     */
     @Operation(
         summary = "Change password",
         description = "Change password for authenticated user"
