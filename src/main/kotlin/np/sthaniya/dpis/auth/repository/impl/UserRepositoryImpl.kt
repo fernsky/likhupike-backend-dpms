@@ -14,28 +14,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import java.util.*
 
-/**
- * Implementation of custom User repository operations using JPA Criteria API.
- *
- * This class provides:
- * - Optimized query implementations
- * - Custom projection handling
- * - Complex join management
- *
- * Performance Features:
- * - Minimized database round trips
- * - Efficient join handling
- * - Proper pagination support
- * - Dynamic projection optimization
- *
- * Implementation Details:
- * - Uses EntityManager for low-level query control
- * - Implements Criteria API for dynamic queries
- * - Handles distinct counting for joined queries
- * - Supports column-level projections
- *
- * @property entityManager JPA EntityManager for query execution
- */
 class UserRepositoryImpl(
     private val entityManager: EntityManager
 ) : UserRepositoryCustom {

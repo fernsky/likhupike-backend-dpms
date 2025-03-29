@@ -24,6 +24,19 @@ import np.sthaniya.dpis.auth.repository.PasswordResetOtpRepository
 import np.sthaniya.dpis.auth.domain.entity.PasswordResetOtp
 import java.time.LocalDateTime
 
+/**
+ * Implementation of [AuthService] that provides authentication and user management functionality.
+ *
+ * This service handles user registration, authentication, password management, and token operations
+ * while maintaining security best practices and proper error handling.
+ *
+ * @property userService Service for user-related operations
+ * @property passwordEncoder Encoder for secure password handling
+ * @property jwtService Service for JWT token operations
+ * @property authenticationManager Spring Security authentication manager
+ * @property emailService Service for sending email notifications
+ * @property otpRepository Repository for password reset OTP operations
+ */
 @Service
 @Transactional
 class AuthServiceImpl(
@@ -31,7 +44,7 @@ class AuthServiceImpl(
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
     private val authenticationManager: AuthenticationManager,
-    private val emailService: EmailService,  // Add email service
+    private val emailService: EmailService,
     private val otpRepository: PasswordResetOtpRepository
 ) : AuthService {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -40,6 +53,13 @@ class AuthServiceImpl(
     private val resetTokens = ConcurrentHashMap<String, Pair<String, Long>>()
     private val RESET_TOKEN_VALIDITY = 15 * 60 * 1000L // 15 minutes in milliseconds
 
+    /**
+     * Creates an [AuthResponse] from a user and token pair.
+     *
+     * @param user The authenticated user
+     * @param tokenPair The generated access and refresh tokens
+     * @return [AuthResponse] containing user details and tokens
+     */
     private fun createAuthResponseFromUser(user: User, tokenPair: TokenPair): AuthResponse {
         val permissions = user.getAuthorities()
             .mapNotNull { authority -> 
@@ -61,6 +81,12 @@ class AuthServiceImpl(
         )
     }
 
+    /**
+     * Registers a new user in the system.
+     *
+     * @param request The registration request containing user details
+     * @return [RegisterResponse] containing the registered user's email
+     */
     override fun register(request: RegisterRequest): RegisterResponse {
         val user = userService.createUser(
             CreateUserDto(
@@ -83,6 +109,12 @@ class AuthServiceImpl(
         return RegisterResponse(email = user.email!!)
     }
 
+    /**
+     * Authenticates a user and generates an authentication response.
+     *
+     * @param request The login request containing user credentials
+     * @return [AuthResponse] containing user details and tokens
+     */
     override fun login(request: LoginRequest): AuthResponse {
         // First find user but don't expose its existence
         val user = userService.findByEmail(request.email)
@@ -128,6 +160,12 @@ class AuthServiceImpl(
         }
     }
 
+    /**
+     * Refreshes an expired token and generates a new authentication response.
+     *
+     * @param refreshToken The refresh token to validate and use
+     * @return [AuthResponse] containing user details and new tokens
+     */
     override fun refreshToken(refreshToken: String): AuthResponse {
         if (!jwtService.validateToken(refreshToken)) {
             throw AuthException.InvalidTokenException()
@@ -145,19 +183,31 @@ class AuthServiceImpl(
         return createAuthResponseFromUser(user, tokenPair)
     }
 
+    /**
+     * Logs out a user by invalidating their token.
+     *
+     * @param token The token to invalidate
+     */
     override fun logout(token: String) {
         jwtService.invalidateToken(token)
         val email = jwtService.extractEmail(token)
         logger.info("User logged out: {}", email)
     }
 
+    /**
+     * Generates a random 6-digit OTP for password reset.
+     *
+     * @return String containing the generated OTP
+     */
     private fun generateOtp(): String =
         (100000..999999).random().toString()
 
+    /**
+     * Requests a password reset by generating and sending an OTP to the user's email.
+     *
+     * @param request The request containing the user's email
+     */
     override fun requestPasswordReset(request: RequestPasswordResetRequest) {
-        // val user = userService.findByEmail(request.email)
-        //     ?: throw AuthException.UserNotFoundException(request.email)
-
         val user = userService.findByEmail(request.email) ?: run {
             logger.info("Password reset requested for non-existing user: {}", request.email)
             return
@@ -183,6 +233,11 @@ class AuthServiceImpl(
         }
     }
 
+    /**
+     * Resets a user's password using a valid OTP.
+     *
+     * @param request The request containing the user's email, OTP, and new password
+     */
     override fun resetPassword(request: ResetPasswordRequest) {
         // Check if passwords match
         if (request.newPassword != request.confirmPassword) {
@@ -228,6 +283,12 @@ class AuthServiceImpl(
         }
     }
 
+    /**
+     * Changes a user's password after verifying the current password.
+     *
+     * @param currentUserId The ID of the current user
+     * @param request The request containing the current and new passwords
+     */
     override fun changePassword(currentUserId: UUID, request: ChangePasswordRequest) {
         if (!request.isValid()) {
             throw AuthException.PasswordsDoNotMatchException()

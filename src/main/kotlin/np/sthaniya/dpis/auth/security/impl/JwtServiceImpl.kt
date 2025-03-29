@@ -14,6 +14,21 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 
+/**
+ * JWT token management implementation using JJWT library with HMAC-SHA256 signing.
+ *
+ * Threading: Thread-safe via [Collections.synchronizedSet]
+ * Memory: O(n) where n = number of blacklisted tokens
+ * Performance: O(1) for token operations, O(n) for blacklist cleanup
+ *
+ * Configuration:
+ * ```yaml
+ * jwt:
+ *   secret-key: "base64-encoded-key"
+ *   expiration: 1 # hours
+ *   refresh-expiration: 168 # hours (1 week)
+ * ```
+ */
 @Service
 class JwtServiceImpl(
     @Value("\${jwt.secret-key}")
@@ -27,15 +42,50 @@ class JwtServiceImpl(
     private val key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey))
     private val blacklistedTokens = Collections.synchronizedSet(HashSet<String>())
 
+    /**
+     * Extracts subject claim from JWT payload.
+     * Complexity: O(1)
+     * 
+     * Technical flow:
+     * 1. Parse JWT using HMAC-SHA256
+     * 2. Verify signature using secret key
+     * 3. Extract and return subject claim
+     */
     override fun extractUsername(token: String): String? = 
         extractClaim(token) { it.subject }
 
+    /**
+     * Forces username extraction with null safety.
+     * Complexity: O(1)
+     * 
+     * Error handling:
+     * - Throws if subject claim missing
+     * - Propagates JWT parsing exceptions
+     */
     override fun extractEmail(token: String): String = 
         extractUsername(token) ?: throw IllegalStateException("Token has no subject claim")
 
+    /**
+     * Creates JWT with default claims.
+     * Complexity: O(1)
+     * Memory: Creates new JWT string
+     */
     override fun generateToken(userDetails: UserDetails): String = 
         generateToken(mapOf(), userDetails, jwtExpiration)
 
+    /**
+     * Creates JWT with user permissions.
+     * Complexity: O(n) where n = number of permissions
+     * 
+     * Claims structure:
+     * {
+     *   "sub": "<email>",
+     *   "email": "<email>",
+     *   "permissions": ["PERM_1", "PERM_2"],
+     *   "iat": <timestamp>,
+     *   "exp": <timestamp>
+     * }
+     */
     override fun generateToken(user: User): String =
         generateToken(
             mapOf(
@@ -46,6 +96,19 @@ class JwtServiceImpl(
             jwtExpiration
         )
 
+    /**
+     * Creates refresh token with minimal claims.
+     * Complexity: O(1)
+     * 
+     * Claims structure:
+     * {
+     *   "sub": "<email>",
+     *   "email": "<email>",
+     *   "type": "refresh",
+     *   "iat": <timestamp>,
+     *   "exp": <timestamp + refresh_duration>
+     * }
+     */
     override fun generateRefreshToken(user: User): String =
         generateToken(
             mapOf(
@@ -66,6 +129,16 @@ class JwtServiceImpl(
             -1L  // Negative expiration means token is already expired
         )
 
+    /**
+     * Low-level token generation with custom claims.
+     * Complexity: O(n) where n = size of extraClaims
+     * 
+     * Technical steps:
+     * 1. Build claims set from Map
+     * 2. Add standard claims (sub, iat, exp)
+     * 3. Sign using HMAC-SHA256
+     * 4. Compact into JWT string
+     */
     override fun generateToken(
         extraClaims: Map<String, Any>,
         userDetails: UserDetails,
@@ -79,6 +152,16 @@ class JwtServiceImpl(
             .signWith(key)
             .compact()
 
+    /**
+     * Validates token for specific user.
+     * Complexity: O(1) average, O(n) worst case for blacklist check
+     * 
+     * Validation steps:
+     * 1. Extract and compare username
+     * 2. Check expiration timestamp
+     * 3. Verify against blacklist
+     * 4. Verify HMAC signature
+     */
     override fun isTokenValid(token: String, userDetails: UserDetails): Boolean {
         val username = extractUsername(token)
         return username == userDetails.username && !isTokenExpired(token) && !isTokenBlacklisted(token)
@@ -103,6 +186,15 @@ class JwtServiceImpl(
         )
     }
 
+    /**
+     * Thread-safe token blacklisting with cleanup.
+     * Complexity: O(n) where n = blacklisted tokens
+     * 
+     * Implementation notes:
+     * - Uses synchronized HashSet for thread safety
+     * - Performs eager cleanup of expired tokens
+     * - Memory grows with number of valid blacklisted tokens
+     */
     override fun invalidateToken(token: String) {
         blacklistedTokens.add(token)
         // Clean up expired tokens from blacklist
@@ -123,6 +215,17 @@ class JwtServiceImpl(
     private fun extractExpiration(token: String): Date? = 
         extractClaim(token) { it.expiration }
 
+    /**
+     * Extracts JWT claims with error handling.
+     * Complexity: O(1)
+     * 
+     * Technical flow:
+     * 1. Parse JWT string
+     * 2. Verify HMAC signature
+     * 3. Extract claims object
+     * 4. Apply claims resolver function
+     * 5. Handle parsing/validation exceptions
+     */
     private fun <T> extractClaim(token: String, claimsResolver: (Claims) -> T): T? =
         try {
             extractAllClaims(token)?.let(claimsResolver)
@@ -130,6 +233,16 @@ class JwtServiceImpl(
             null
         }
 
+    /**
+     * Low-level JWT parsing and verification.
+     * Complexity: O(1)
+     * 
+     * Error cases:
+     * - Malformed JWT
+     * - Invalid signature
+     * - Expired token
+     * - Invalid claim format
+     */
     private fun extractAllClaims(token: String): Claims? =
         try {
             Jwts.parser()

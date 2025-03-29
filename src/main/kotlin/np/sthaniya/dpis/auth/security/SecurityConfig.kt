@@ -19,6 +19,41 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
+/**
+ * Spring Security configuration implementing JWT-based authentication.
+ *
+ * Implementation Notes:
+ * - Uses custom JwtAuthenticationFilter for token validation
+ * - Implements stateless session management
+ * - Configures route-based security rules
+ * - Handles CORS/CSRF configuration
+ *
+ * Usage Example:
+ * ```kotlin
+ * // Adding custom security rules
+ * http.authorizeHttpRequests {
+ *     it.requestMatchers("/api/public/<all>").permitAll()
+ *     it.requestMatchers("/api/admin/<all>").hasRole("ADMIN")
+ *     it.anyRequest().authenticated()
+ * }
+ *
+ * // Implementing custom authentication
+ * http.authenticationProvider(customProvider)
+ *     .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
+ * ```
+ *
+ * Technical Details:
+ * - JWT filter runs before Spring's UsernamePasswordAuthenticationFilter
+ * - Uses custom RequestMatcher for dynamic route validation
+ * - Returns 404 for unregistered routes (security by obscurity)
+ * - Configures CORS with specific allowed origins/methods
+ *
+ * Security Considerations:
+ * - CSRF disabled for stateless API
+ * - Swagger UI conditionally secured
+ * - All routes denied by default
+ * - Custom authentication entry point
+ */
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
@@ -29,6 +64,23 @@ class SecurityConfig(
     private val permissionEvaluator: CustomPermissionEvaluator,
     private val env: Environment
 ) {
+    /**
+     * Configures the security filter chain.
+     *
+     * Chain Order:
+     * 1. CORS/CSRF filters
+     * 2. JWT authentication filter
+     * 3. Exception handling
+     * 4. Route security
+     *
+     * Performance Notes:
+     * - Use antMatcher for better performance on fixed paths
+     * - Custom matchers may impact performance on high load
+     * - Consider caching route registry results
+     *
+     * @param http Spring Security builder
+     * @return Configured SecurityFilterChain
+     */
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         val swaggerEnabled = env.getProperty("springdoc.swagger-ui.enabled", Boolean::class.java, false)
@@ -78,6 +130,21 @@ class SecurityConfig(
         return http.build()
     }
 
+    /**
+     * Configures CORS settings for cross-origin requests.
+     *
+     * Configuration Details:
+     * - Allows all origins (*) - customize for production
+     * - Permits common HTTP methods
+     * - Exposes Authorization header
+     * - Sets preflight cache to 1 hour
+     *
+     * Production Considerations:
+     * - Replace * with specific origins
+     * - Limit exposed headers
+     * - Adjust cache duration
+     * - Consider environment-specific configs
+     */
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
@@ -92,6 +159,19 @@ class SecurityConfig(
         return source
     }
 
+    /**
+     * Creates dynamic request matcher for route validation.
+     *
+     * Implementation Details:
+     * - Lazy evaluation of routes
+     * - Supports dynamic path patterns
+     * - Integrates with RouteRegistry
+     *
+     * Performance Impact:
+     * - Evaluated per request
+     * - Consider caching for high-traffic routes
+     * - Use antMatcher for fixed paths instead
+     */
     private fun createRequestMatcher(matcher: (HttpServletRequest) -> Boolean): RequestMatcher =
         RequestMatcher { request -> matcher(request) }
 }

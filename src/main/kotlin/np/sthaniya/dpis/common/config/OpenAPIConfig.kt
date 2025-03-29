@@ -15,6 +15,24 @@ import org.springframework.core.env.Environment
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import np.sthaniya.dpis.common.annotation.Public
 
+/**
+ * Configuration class for OpenAPI (Swagger) documentation settings.
+ *
+ * This class configures the OpenAPI documentation for the application's REST APIs,
+ * including security schemes, API grouping, and general API information.
+ * The configuration is only active when Swagger UI and API docs are enabled in properties.
+ *
+ * Required properties:
+ * ```yaml
+ * springdoc:
+ *   api-docs:
+ *     enabled: true
+ *   swagger-ui:
+ *     enabled: true
+ * ```
+ *
+ * @property env Spring environment for accessing application properties
+ */
 @Configuration
 @ConditionalOnProperty(
     value = ["springdoc.api-docs.enabled", "springdoc.swagger-ui.enabled"],
@@ -27,6 +45,14 @@ class OpenAPIConfig(private val env: Environment) {
         private const val SECURITY_SCHEME_NAME = "bearerAuth"
     }
 
+    /**
+     * Configures the authentication API documentation group.
+     *
+     * Groups all authentication-related endpoints under "/api/v1/auth/<all>"
+     * and filters them based on the [Public] annotation.
+     *
+     * @return Configured [GroupedOpenApi] for authentication endpoints
+     */
     @Bean
     fun authenticationApi(): GroupedOpenApi {
         return GroupedOpenApi.builder()
@@ -36,6 +62,13 @@ class OpenAPIConfig(private val env: Environment) {
             .build()
     }
 
+    /**
+     * Configures the user management API documentation group.
+     *
+     * Groups all user management endpoints under "/api/v1/users/<all>".
+     *
+     * @return Configured [GroupedOpenApi] for user management endpoints
+     */
     @Bean
     fun userManagementApi(): GroupedOpenApi {
         return GroupedOpenApi.builder()
@@ -44,6 +77,17 @@ class OpenAPIConfig(private val env: Environment) {
             .build()
     }
 
+    /**
+     * Creates the main OpenAPI configuration.
+     *
+     * Configures:
+     * - API information and metadata
+     * - Security schemes (JWT Bearer authentication)
+     * - Server URL from application properties
+     * - Contact information and license details
+     *
+     * @return Configured [OpenAPI] instance
+     */
     @Bean
     fun customOpenAPI(): OpenAPI {
         val serverUrl = env.getProperty("app.api.url", "/")
