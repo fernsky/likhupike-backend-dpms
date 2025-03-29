@@ -11,6 +11,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import java.util.concurrent.CompletableFuture
 
+/**
+ * Implementation of [EmailService] that handles email operations using Spring's [JavaMailSender].
+ *
+ * This service provides both synchronous and asynchronous email sending capabilities,
+ * utilizing predefined email templates for various system notifications.
+ *
+ * @property mailSender The Spring mail sender for handling email operations
+ * @property frontendUrl The base URL of the frontend application
+ * @property fromAddress The email address used as the sender
+ *
+ * @constructor Creates an email service with the specified mail sender and configuration properties
+ */
 @Service
 class EmailServiceImpl(
     private val mailSender: JavaMailSender,
