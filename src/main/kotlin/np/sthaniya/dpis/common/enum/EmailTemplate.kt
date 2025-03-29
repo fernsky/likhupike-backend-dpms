@@ -8,34 +8,43 @@ enum class EmailTemplate(val subject: String, val template: String) {
         template = BaseEmailTemplate.wrap(
             "Password Reset Request",
             """
-                <div style="padding: 0 20px;">
-                    <p style="margin: 0 0 20px; color: rgba(0,0,0,0.87);">Hi there,</p>
-                    <p style="margin: 0 0 20px; color: rgba(0,0,0,0.87);">We received a request to reset your password. Click the button below to choose a new one.</p>
+                <div style="padding: 0 8px;">
+                    <p style="
+                        margin: 0 0 20px;
+                        color: rgba(0,0,0,0.87);
+                        font-size: 15px;
+                    ">Hi there,</p>
+                    <p style="
+                        margin: 0 0 24px;
+                        color: rgba(0,0,0,0.87);
+                        font-size: 15px;
+                        line-height: 1.6;
+                    ">We received a request to reset your password. Click the button below to choose a new one.</p>
                     
                     <div style="padding: 32px 0; text-align: center;">
                         <a href="%resetLink%" style="
-                            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+                            font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
                             line-height: 16px;
                             color: #ffffff;
-                            font-weight: 400;
+                            font-weight: 500;
                             text-decoration: none;
                             font-size: 14px;
                             display: inline-block;
-                            padding: 10px 24px;
+                            padding: 12px 32px;
                             background-color: #4184F3;
-                            border-radius: 4px;
-                            min-width: 90px;
+                            border-radius: 6px;
+                            min-width: 120px;
                         ">Reset password</a>
                     </div>
                     
                     <p style="
                         margin: 0;
-                        padding: 12px 24px;
+                        padding: 16px 24px;
                         background-color: #f8f9fa;
-                        border-radius: 4px;
-                        color: rgba(0,0,0,0.54);
+                        border-radius: 6px;
+                        color: rgba(0,0,0,0.66);
                         font-size: 13px;
-                        line-height: 18px;
+                        line-height: 1.5;
                     ">This password reset link will expire in 15 minutes. If you didn't request a password reset, you can ignore this email.</p>
                 </div>
             """
