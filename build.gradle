@@ -10,7 +10,7 @@ plugins {
 	id 'org.jetbrains.dokka' version '1.9.20'
 }
 
-group = 'np.likhupikemun'
+group = 'np.sthaniya'
 version = '1.0.1-SNAPSHOT'
 
 java {

@@ -20,7 +20,7 @@ spring:
 logging:
   level:
     root: INFO
-    np.likhupikemun.dpis: TRACE
+    np.sthaniya.dpis: TRACE
     org.springframework.security: TRACE
     org.springframework.web: TRACE
     org.springframework.test.web.servlet.result: DEBUG

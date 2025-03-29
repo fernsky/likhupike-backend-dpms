@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="np.likhupikemun.dpis" level="DEBUG"/>
+    <logger name="np.sthaniya.dpis" level="DEBUG"/>
     <logger name="org.springframework.security" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
     <logger name="org.springframework.test.web.servlet" level="DEBUG"/>
