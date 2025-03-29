@@ -3,8 +3,7 @@ package np.sthaniya.dpis.common.template
 object BaseEmailTemplate {
     private const val PRIMARY_DARK = "#0b1f42"
     private const val PRIMARY_MAIN = "#123772"
-    private const val PRIMARY_LIGHT = "#1a4894"
-
+    
     fun wrap(title: String, content: String) = """
         <!DOCTYPE html>
         <html>
@@ -13,53 +12,72 @@ object BaseEmailTemplate {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${title}</title>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #546e7a; background: #f5f5f5;">
-            <div style="
-                background: linear-gradient(165deg, $PRIMARY_MAIN 0%, rgba(18, 55, 114, 0.95) 45%, rgba(10, 21, 38, 0.98) 75%, #0a1526 100%);
-                min-height: 100vh;
-                padding: 2rem 1rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            ">
-                <div style="
-                    width: 100%;
-                    max-width: 600px;
-                    background: rgba(255, 255, 255, 0.98);
-                    border-radius: 24px;
-                    overflow: hidden;
-                    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
-                    border: 1px solid rgba(255, 255, 255, 0.7);
-                ">
-                    <div style="
-                        padding: 1.75rem 2rem 1rem;
-                        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
-                        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-                        text-align: center;
-                    ">
-                        <h1 style="
-                            font-size: 1.5rem;
-                            margin: 0;
-                            color: $PRIMARY_DARK;
-                            font-weight: 600;
-                            letter-spacing: -0.01em;
-                        ">${title}</h1>
-                    </div>
-                    
-                    <div style="padding: 2rem;">${content}</div>
+        <body style="margin: 0; padding: 0; background-color: #f5f5f5;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5;">
+                <tr>
+                    <td align="center" style="padding: 40px 10px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px;">
+                            <tr>
+                                <td align="center" bgcolor="#ffffff" style="
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                                ">
+                                    <!-- Header -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td align="center" style="
+                                                padding: 30px 30px 20px;
+                                                border-bottom: 1px solid #edf2f7;
+                                            ">
+                                                <h1 style="
+                                                    margin: 0;
+                                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                                                    font-size: 24px;
+                                                    line-height: 32px;
+                                                    font-weight: 600;
+                                                    color: $PRIMARY_DARK;
+                                                ">${title}</h1>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Content -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="
+                                                padding: 32px 30px;
+                                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                                                font-size: 16px;
+                                                line-height: 24px;
+                                                color: #333333;
+                                            ">
+                                                ${content}
+                                            </td>
+                                        </tr>
+                                    </table>
 
-                    <div style="
-                        padding: 1.5rem;
-                        background: rgba(0, 0, 0, 0.02);
-                        border-top: 1px solid rgba(0, 0, 0, 0.08);
-                        text-align: center;
-                        font-size: 0.875rem;
-                        color: #546e7a;
-                    ">
-                        <p style="margin: 0;">Likhu Pike Digital Profile System</p>
-                    </div>
-                </div>
-            </div>
+                                    <!-- Footer -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td align="center" style="
+                                                padding: 24px 30px;
+                                                background-color: #f8fafc;
+                                                border-top: 1px solid #edf2f7;
+                                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                                                font-size: 14px;
+                                                line-height: 20px;
+                                                color: #64748b;
+                                            ">
+                                                Likhu Pike Digital Profile System
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </body>
         </html>
     """
