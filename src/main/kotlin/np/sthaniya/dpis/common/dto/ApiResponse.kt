@@ -4,6 +4,23 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 import org.springframework.data.domain.Page
 
+/**
+ * Standard response wrapper for all API endpoints.
+ *
+ * Provides a consistent response structure with support for:
+ * - Success/failure status
+ * - Optional payload data
+ * - Success messages
+ * - Pagination metadata
+ * - Error details
+ *
+ * @param T The type of the response payload data
+ * @property success Indicates if the request was successful
+ * @property data Optional response payload
+ * @property message Optional success message
+ * @property meta Optional pagination metadata
+ * @property error Optional error details when success is false
+ */
 @Schema(
     description = "Standard API response wrapper for all endpoints",
     title = "API Response"
@@ -26,6 +43,15 @@ data class ApiResponse<T>(
     val error: ErrorDetails? = null,
 ) {
     companion object {
+        /**
+         * Creates a successful response with optional data, message, and pagination metadata.
+         *
+         * @param T The type of the response payload
+         * @param data Optional response payload
+         * @param message Optional success message
+         * @param meta Optional pagination metadata
+         * @return [ApiResponse] instance with success status
+         */
         fun <T> success(
             data: T? = null,
             message: String? = null,
@@ -37,11 +63,26 @@ data class ApiResponse<T>(
             meta = meta,
         )
 
+        /**
+         * Creates an error response with error details.
+         *
+         * @param T The type of the response payload
+         * @param error Error details for the failed request
+         * @return [ApiResponse] instance with failure status
+         */
         fun <T> error(error: ErrorDetails) = ApiResponse<T>(
             success = false,
             error = error,
         )
 
+        /**
+         * Creates a paginated response from a Spring [Page] instance.
+         *
+         * @param T The type of the page content
+         * @param page Spring Page instance containing the data
+         * @param message Optional success message
+         * @return [ApiResponse] instance with paginated data
+         */
         fun <T> withPage(
             page: Page<T>,
             message: String? = null
@@ -54,6 +95,14 @@ data class ApiResponse<T>(
     }
 }
 
+/**
+ * Represents detailed error information for failed requests.
+ *
+ * @property code Unique identifier for the error type
+ * @property message Human-readable error description
+ * @property details Additional contextual information about the error
+ * @property status HTTP status code associated with the error
+ */
 @Schema(
     description = "Error details structure for failed requests",
     title = "Error Details"
@@ -76,6 +125,16 @@ data class ErrorDetails(
     val status: Int,
 )
 
+/**
+ * Contains metadata for paginated responses.
+ *
+ * @property page Current page number (1-based)
+ * @property size Number of items per page
+ * @property totalElements Total number of items across all pages
+ * @property totalPages Total number of available pages
+ * @property isFirst Whether this is the first page
+ * @property isLast Whether this is the last page
+ */
 @Schema(
     description = "Pagination metadata for paginated responses",
     title = "Page Metadata"
@@ -100,6 +159,13 @@ data class PageMeta(
     val isLast: Boolean
 ) {
     companion object {
+        /**
+         * Creates pagination metadata from a Spring [Page] instance.
+         *
+         * @param T The type of the page content
+         * @param page Spring Page instance to extract metadata from
+         * @return [PageMeta] instance with pagination details
+         */
         fun <T> from(page: Page<T>) = PageMeta(
             page = page.number + 1, // Convert 0-based to 1-based
             size = page.size,
@@ -111,4 +177,11 @@ data class PageMeta(
     }
 }
 
+/**
+ * Converts a Spring [Page] instance to an [ApiResponse] with pagination.
+ *
+ * @param T The type of the page content
+ * @param message Optional success message
+ * @return [ApiResponse] instance containing the page content and metadata
+ */
 fun <T> Page<T>.toApiResponse(message: String? = null) = ApiResponse.withPage(this, message)
