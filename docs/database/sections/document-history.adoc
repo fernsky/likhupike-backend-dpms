@@ -1,0 +1,29 @@
+== Document History
+
+[cols="1,1,2,4",options="header"]
+|===
+|Version |Date |Author |Changes
+|v0.0.1-SNAPSHOT |2024-01 |Trilochan |Initial version: Added Spring Session management
+- Created spring_session table with indexes
+- Created spring_session_attributes table
+
+|v0.0.2-SNAPSHOT |2024-01 |Trilochan |Core User Management Implementation
+- Created users table with audit fields
+- Created permissions table
+- Created user_permissions junction table
+- Added initial permission types (CREATE_USER, APPROVE_USER, etc.)
+
+|v0.3.1-SNAPSHOT |2024-01 |Trilochan |Password Reset System
+- Added password_reset_otps table
+- Implemented OTP-based password reset functionality
+- Added indexes for efficient OTP lookups
+
+|v0.3.3-SNAPSHOT |2024-01 |Trilochan |Schema Improvements
+- Modified users.deleted_by column from VARCHAR to UUID
+- Improved data type consistency for user references
+
+|1.0.0 |2024-01 |Trilochan |Initial Documentation Release
+- Comprehensive database schema documentation
+- Added detailed table descriptions
+- Included design considerations
+|===
