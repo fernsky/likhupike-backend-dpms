@@ -1,4 +1,4 @@
-== Spring Session Table
+==== Spring Session Table
 The `spring_session` table manages HTTP session information for the application.
 
 .Table: spring_session
@@ -24,7 +24,7 @@ The `spring_session` table manages HTTP session information for the application.
 |`spring_session_ix3` |`principal_name` |Normal
 |===
 
-=== Session Attributes Table
+==== Session Attributes Table
 The `spring_session_attributes` table stores session-specific attributes.
 
 .Table: spring_session_attributes
@@ -44,19 +44,19 @@ The `spring_session_attributes` table stores session-specific attributes.
 |`spring_session_attributes_fk` |Foreign key to `spring_session(primary_id)`
 |===
 
-=== Design Considerations
+==== Design Considerations
 
-==== Session Management
+===== Session Management
 * JDBC-based session persistence
 * Clustered session support
 * Automatic session cleanup
 
-==== Security Features
+===== Security Features
 * Secure session ID generation
 * Session timeout management
 * Principal-based session tracking
 
-==== Performance
+===== Performance
 * Indexed session lookups
 * Efficient attribute storage
 * Optimized cleanup process

@@ -1,10 +1,10 @@
-= User Management System
+== User Management System
 
-== Core User Schema
+=== Core User Schema
 include::./sections/section-1-user-schema.adoc[leveloffset=+1]
 
-== Profile Management
-=== Future Additions
+=== Profile Management
+==== Future Additions
 * Personal Information
 * Contact Details
 * Address Information

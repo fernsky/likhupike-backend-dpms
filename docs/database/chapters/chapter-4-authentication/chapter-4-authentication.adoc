@@ -1,9 +1,9 @@
-= Authentication System
+== Authentication System
 
-== Session Management
+=== Session Management
 include::./sections/section-1-session-schema.adoc[leveloffset=+1]
 
-== Password Reset System
+=== Password Reset System
 include::./sections/section-2-password-reset-schema.adoc[leveloffset=+1]
 
 <<<

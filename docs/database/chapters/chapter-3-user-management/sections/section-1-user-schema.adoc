@@ -1,4 +1,4 @@
-== Users Table
+==== Users Table
 The users table is the cornerstone of the DPIS, managing user authentication and authorization.
 
 .Table: users
@@ -39,19 +39,19 @@ The users table is the cornerstone of the DPIS, managing user authentication and
 |`uk_users_email` |Unique constraint on `email`
 |===
 
-=== Design Considerations
+==== Design Considerations
 
-==== Security Features
+===== Security Features
 * Passwords are stored using secure hashing algorithms
 * Soft deletion support for audit trails
 * Versioning for concurrent access control
 
-==== User Types
+===== User Types
 * System-level users have `is_ward_level_user = false`
 * Ward-level users have `is_ward_level_user = true`
 * Approval workflow through `is_approved` flag
 
-==== Audit Trail
+===== Audit Trail
 * Complete tracking of creation and modifications
 * Soft deletion with timestamp and deletion author
 * Version control for optimistic locking

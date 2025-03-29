@@ -1,6 +1,4 @@
-= Application History
-
-== Overview
+== Versioning
 This chapter documents the evolution of the DPIS database schema, tracking all significant changes and improvements made to the system's data structure.
 
 === Version Numbering
@@ -19,8 +17,6 @@ The history tracks several types of changes:
 * Index optimizations
 * Data type improvements
 
-== Version History
-
 === Historical Timeline
 Below is the comprehensive timeline of all database changes:
 
@@ -28,43 +24,43 @@ Below is the comprehensive timeline of all database changes:
 |===
 |Version |Date |Author |Changes
 
-|`v0.0.1-SNAPSHOT` |2024-01 |Trilochan Bhusal |* Initial version: Added Spring Session management
-* Created `spring_session` table with indexes
-* Created `spring_session_attributes` table
+|`1.0.0` |2024-03 |Trilochan Bhusal |* Initial Documentation Release
+* Comprehensive database schema documentation
+* Added detailed table descriptions
+* Included design considerations
 
-|`v0.0.2-SNAPSHOT` |2024-01 |Trilochan Bhusal |* Core User Management Implementation
+|`v0.3.3-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Schema Improvements
+* Modified `users.deleted_by` column from `VARCHAR` to `UUID`
+* Improved data type consistency for user references
+
+|`v0.3.1-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Password Reset System
+* Added `password_reset_otps` table
+* Implemented OTP-based password reset functionality
+* Added indexes for efficient OTP lookups
+
+|`v0.0.2-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Core User Management Implementation
 * Created `users` table with audit fields
 * Created `permissions` table
 * Created `user_permissions` junction table
 * Added initial permission types (*CREATE_USER*, *APPROVE_USER*)
 
-|`v0.3.1-SNAPSHOT` |2024-01 |Trilochan Bhusal |* Password Reset System
-* Added `password_reset_otps` table
-* Implemented OTP-based password reset functionality
-* Added indexes for efficient OTP lookups
-
-|`v0.3.3-SNAPSHOT` |2024-01 |Trilochan Bhusal |* Schema Improvements
-* Modified `users.deleted_by` column from `VARCHAR` to `UUID`
-* Improved data type consistency for user references
-
-|`1.0.0` |2024-01 |Trilochan Bhusal |* Initial Documentation Release
-* Comprehensive database schema documentation
-* Added detailed table descriptions
-* Included design considerations
+|`v0.0.1-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Initial version: Added Spring Session management
+* Created `spring_session` table with indexes
+* Created `spring_session_attributes` table
 |===
 
-== Summary of Major Changes
+=== Summary of Major Changes
 
-=== Initial Setup (`v0.0.1-SNAPSHOT`)
+==== Initial Setup (`v0.0.1-SNAPSHOT`)
 Focus on session management implementation with Spring Session integration.
 
-=== Core Features (`v0.0.2-SNAPSHOT`)
+==== Core Features (`v0.0.2-SNAPSHOT`)
 Introduction of fundamental user management capabilities.
 
-=== Security Enhancements (`v0.3.x-SNAPSHOT`)
+==== Security Enhancements (`v0.3.x-SNAPSHOT`)
 Multiple releases focusing on security features and data consistency.
 
-=== Production Release (`v1.0.0`)
+==== Production Release (`v1.0.0`)
 First stable release with complete documentation.
 
 <<<

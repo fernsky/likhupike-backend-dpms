@@ -1,4 +1,4 @@
-= Preface
+== Preface
 
 This comprehensive documentation covers the database design and implementation of the Digital Profile Information System (DPIS). It serves as the authoritative reference for database administrators, developers, and system architects.
 
