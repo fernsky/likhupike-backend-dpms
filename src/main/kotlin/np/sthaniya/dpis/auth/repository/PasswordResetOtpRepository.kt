@@ -6,22 +6,38 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 import java.time.LocalDateTime
 /**
- * Repository interface for managing password reset OTP (One-Time Password) operations.
- * 
- * This repository handles:
- * - OTP validation and verification
- * - Expiration time management
- * - Email-based OTP lookups
+ * Repository for OTP management with focus on password reset functionality.
  *
- * Security Features:
- * - Single-use OTP enforcement
- * - Time-based expiration
- * - Email verification
+ * Technical Details:
+ * - Primary key: UUID (auto-generated)
+ * - Index on email + otp combination
+ * - Index on email for latest lookup
  *
- * Implementation Details:
- * - Uses UUID as primary key
- * - Supports expiration time checks
- * - Tracks OTP usage status
+ * Database Considerations:
+ * - Regular cleanup required for expired OTPs
+ * - High write, low read ratio
+ * - Potential for table growth
+ *
+ * Usage Examples:
+ * ```kotlin
+ * // Validate OTP
+ * val otp = repository.findByEmailAndOtpAndIsUsedFalseAndExpiresAtAfter(
+ *     email = "user@example.com",
+ *     otp = "123456",
+ *     currentTime = LocalDateTime.now()
+ * )
+ *
+ * // Rate limiting check
+ * val lastOtp = repository.findLatestByEmail("user@example.com")
+ * if (lastOtp?.createdAt?.isAfter(LocalDateTime.now().minusMinutes(5))) {
+ *     throw TooManyRequestsException()
+ * }
+ * ```
+ *
+ * Implementation Notes:
+ * - Uses composite queries for validation
+ * - No soft delete mechanism
+ * - Requires periodic cleanup job
  */
 @Repository
 interface PasswordResetOtpRepository : JpaRepository<PasswordResetOtp, UUID> {
