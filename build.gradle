@@ -7,6 +7,7 @@ plugins {
 	id 'org.graalvm.buildtools.native' version '0.10.5'
 	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
 	id 'org.liquibase.gradle' version '2.2.1'
+	id 'org.jetbrains.dokka' version '1.9.20'
 }
 
 group = 'np.likhupikemun'
@@ -67,6 +68,9 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-kotlin:1.7.0'
 
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	
+	// Dokka dependencies
+	dokkaHtmlPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:1.9.20")
 }
 
 kotlin {
@@ -89,4 +93,31 @@ allOpen {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.dokkaHtml.configure {
+	outputDirectory.set(file("${buildDir}/dokka"))
+	
+	// Dokka configuration
+	moduleName.set(project.name)
+	moduleVersion.set(project.version.toString())
+	
+	// Source sets configuration
+	dokkaSourceSets {
+		named("main") {
+			displayName.set("Backend API")
+			sourceRoots.from(file("src/main/kotlin"))
+			
+			jdkVersion.set(21)
+			noStdlibLink.set(false)
+			noJdkLink.set(false)
+			
+			// Optional: Configure source links
+			sourceLink {
+				localDirectory.set(file("src/main/kotlin"))
+				remoteUrl.set(java.net.URI("https://github.com/yourorganization/yourproject/tree/main/src/main/kotlin").toURL())
+				remoteLineSuffix.set("#L")
+			}
+		}
+	}
 }
