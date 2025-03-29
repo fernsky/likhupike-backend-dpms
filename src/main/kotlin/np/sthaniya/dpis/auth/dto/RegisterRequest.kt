@@ -1,8 +1,36 @@
 package np.sthaniya.dpis.auth.dto
 
-import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.constraints.*
-
+/**
+ * Data Transfer Object (DTO) for user self-registration requests.
+ *
+ * This class handles validation and transport of new user registration data.
+ * It differs from [CreateUserDto] as it's used for self-registration rather than
+ * administrative user creation.
+ *
+ * Features:
+ * - Email format validation
+ * - Password strength requirements
+ * - Password confirmation
+ * - Ward-level access configuration
+ * - Jakarta Validation integration
+ *
+ * Security:
+ * - Strong password requirements
+ * - Input validation
+ * - Rate limiting (at service level)
+ *
+ * Registration Flow:
+ * 1. User submits registration data
+ * 2. Data is validated
+ * 3. Account created in pending state
+ * 4. Awaits admin approval
+ *
+ * @property email User's email address (must be unique)
+ * @property password User's desired password
+ * @property confirmPassword Password confirmation to prevent typos
+ * @property isWardLevelUser Flag indicating if user needs ward-level access
+ * @property wardNumber Ward number for ward-level users (1-33)
+ */
 @Schema(
     description = "Request payload for user registration",
     title = "Register Request",
@@ -66,9 +94,19 @@ data class RegisterRequest(
     @field:Max(value = 5, message = "Ward number cannot be greater than 5")
     val wardNumber: Int? = null
 ) {
+    /**
+     * Validates password confirmation match.
+     *
+     * @return true if passwords match, false otherwise
+     */
     @AssertTrue(message = "Passwords do not match")
     fun isPasswordValid(): Boolean = password == confirmPassword
 
+    /**
+     * Validates ward number requirements for ward-level users.
+     *
+     * @return true if ward configuration is valid, false otherwise
+     */
     @AssertTrue(message = "Ward number is required for ward level users")
     fun isWardNumberValid(): Boolean = !isWardLevelUser || wardNumber != null
 }
