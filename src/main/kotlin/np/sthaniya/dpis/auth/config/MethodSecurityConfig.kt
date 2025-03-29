@@ -8,46 +8,26 @@ import org.springframework.security.access.expression.method.DefaultMethodSecuri
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 
 /**
- * Configuration class for method-level security using Spring Security's expression-based annotations.
- *
- * This configuration enables and configures method-level security features including:
- * - @PreAuthorize/@PostAuthorize annotations
- * - Custom permission evaluation through [CustomPermissionEvaluator]
- * - Method security expression handling
- *
- * Features:
- * - Method-level security annotations
- * - Custom permission evaluation logic
- * - Integration with Spring Security's method security infrastructure
- *
- * Usage:
+ * Configures Spring method security with custom permission evaluation.
+ * 
+ * Technical implementation:
+ * - Enables @PreAuthorize/@PostAuthorize processing
+ * - Injects CustomPermissionEvaluator into security expression handler
+ * - Supports SpEL expressions in security annotations
+ * 
+ * Usage in controllers:
  * ```kotlin
- * @PreAuthorize("hasPermission('CREATE_USER')")
- * fun createUser(user: User) {
- *     // Method is secured and requires CREATE_USER permission
- * }
+ * @PreAuthorize("hasPermission('USERS_WRITE')")
+ * fun updateUser(..) // Method only executes if permission check passes
  * ```
  */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 class MethodSecurityConfig {
     
-    /**
-     * Creates the custom permission evaluator bean for method security.
-     *
-     * @return CustomPermissionEvaluator instance for evaluating permissions
-     */
     @Bean
     fun permissionEvaluator() = CustomPermissionEvaluator()
 
-    /**
-     * Configures the method security expression handler with custom permission evaluation.
-     *
-     * This primary bean ensures that our custom permission evaluator is used for
-     * all method security expressions throughout the application.
-     *
-     * @return Configured DefaultMethodSecurityExpressionHandler
-     */
     @Bean
     @Primary
     fun defaultMethodSecurityExpressionHandler(): DefaultMethodSecurityExpressionHandler {

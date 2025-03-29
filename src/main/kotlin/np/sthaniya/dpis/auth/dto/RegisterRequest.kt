@@ -4,35 +4,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
 
 /**
- * Data Transfer Object (DTO) for user self-registration requests.
+ * Data transfer object for self-registration requests.
+ * 
+ * Used with [AuthService.register] to handle new user registration. Unlike [CreateUserDto],
+ * this DTO is used for self-registration and requires admin approval before activation.
  *
- * This class handles validation and transport of new user registration data.
- * It differs from [CreateUserDto] as it's used for self-registration rather than
- * administrative user creation.
+ * Validation:
+ * - Email format and uniqueness
+ * - Password complexity requirements
+ * - Password confirmation matching
+ * - Ward-level access validation
+ * 
+ * @property email User's email address for authentication
+ * @property password Password meeting complexity requirements
+ * @property confirmPassword Password confirmation for validation
+ * @property isWardLevelUser Flag for ward-level access restrictions
+ * @property wardNumber Ward number (1-33) required if isWardLevelUser=true
  *
- * Features:
- * - Email format validation
- * - Password strength requirements
- * - Password confirmation
- * - Ward-level access configuration
- * - Jakarta Validation integration
- *
- * Security:
- * - Strong password requirements
- * - Input validation
- * - Rate limiting (at service level)
- *
- * Registration Flow:
- * 1. User submits registration data
- * 2. Data is validated
- * 3. Account created in pending state
- * 4. Awaits admin approval
- *
- * @property email User's email address (must be unique)
- * @property password User's desired password
- * @property confirmPassword Password confirmation to prevent typos
- * @property isWardLevelUser Flag indicating if user needs ward-level access
- * @property wardNumber Ward number for ward-level users (1-33)
+ * @throws AuthException.UserAlreadyExistsException if email is taken
+ * @throws AuthException.InvalidUserStateException if ward configuration is invalid
  */
 @Schema(
     description = "Request payload for user registration",
@@ -98,17 +88,15 @@ data class RegisterRequest(
     val wardNumber: Int? = null
 ) {
     /**
-     * Validates password confirmation match.
-     *
+     * Validates that password and confirmation match.
      * @return true if passwords match, false otherwise
      */
     @AssertTrue(message = "Passwords do not match")
     fun isPasswordValid(): Boolean = password == confirmPassword
 
     /**
-     * Validates ward number requirements for ward-level users.
-     *
-     * @return true if ward configuration is valid, false otherwise
+     * Validates ward-level user configuration.
+     * @return true if ward number is provided when required
      */
     @AssertTrue(message = "Ward number is required for ward level users")
     fun isWardNumberValid(): Boolean = !isWardLevelUser || wardNumber != null

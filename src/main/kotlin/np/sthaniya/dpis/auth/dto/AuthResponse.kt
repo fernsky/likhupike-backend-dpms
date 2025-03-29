@@ -5,42 +5,24 @@ import np.sthaniya.dpis.auth.domain.enums.PermissionType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * Data Transfer Object (DTO) representing the authentication response.
+ * Response object for successful authentication operations.
+ * 
+ * Contains JWT tokens and user profile data returned after successful authentication
+ * through [AuthService.login] or token refresh through [AuthService.refreshToken].
  *
- * This class encapsulates all necessary information returned after successful authentication:
- * - JWT tokens for API access
- * - User identification and profile information
- * - User permissions and access levels
+ * @property token JWT access token for API authentication
+ * @property refreshToken JWT refresh token for obtaining new access tokens
+ * @property userId Unique identifier of the authenticated user
+ * @property email Email address of the authenticated user
+ * @property permissions Set of [PermissionType] granted to the user
+ * @property expiresIn Token validity duration in seconds
+ * @property isWardLevelUser Indicates if user has ward-level access restrictions
+ * @property wardNumber Ward number if user has ward-level access, null otherwise
  *
- * Features:
- * - JWT token pair (access + refresh)
- * - User identification details
- * - Permission set for authorization
- * - Ward-level access information
- * - OpenAPI/Swagger documentation
- *
- * Usage:
- * ```kotlin
- * val authResponse = AuthResponse(
- *     token = "jwt_access_token",
- *     refreshToken = "jwt_refresh_token",
- *     userId = "user-uuid",
- *     email = "user@example.com",
- *     permissions = setOf(PermissionType.VIEW_USER),
- *     expiresIn = 3600,
- *     isWardLevelUser = false
- * )
- * ```
- *
- * Integration:
- * - Used by [AuthController] for login responses
- * - Used by [AuthService] for token refresh
- * - Serialized to JSON in API responses
+ * @see JwtService for token generation details
+ * @see AuthController.login for usage in authentication flow
  */
-@Schema(
-    description = "Authentication response containing tokens and user information",
-    title = "Authentication Response"
-)
+@Schema(description = "Authentication response containing tokens and user information")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AuthResponse(
     @Schema(

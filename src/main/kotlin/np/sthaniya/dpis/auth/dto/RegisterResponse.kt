@@ -1,39 +1,19 @@
 package np.sthaniya.dpis.auth.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
+
 /**
- * Data Transfer Object (DTO) representing the response after successful user registration.
+ * Response object for successful user registration operations.
+ * 
+ * Used by [AuthService.register] to return registration confirmation details
+ * to the client. Contains the registered email and a status message about
+ * the approval process.
  *
- * This DTO provides confirmation details for newly registered users, including:
- * - Email address of the registered account
- * - Status message explaining next steps
- *
- * Features:
- * - Simple confirmation response
- * - Informative message about approval process
- * - OpenAPI/Swagger documentation
- *
- * Usage in [AuthController]:
- * ```kotlin
- * val response = RegisterResponse(
- *     email = request.email,
- *     message = "Your registration is pending approval..."
- * )
- * return ApiResponse.success(data = response)
- * ```
- *
- * Integration:
- * - Used by [AuthService.register] method
- * - Returned to client after successful registration
- * - Part of registration workflow
- *
- * @property email The email address of the registered user
- * @property message Informative message about pending approval
+ * @property email The email address that was registered
+ * @property message Description of next steps in registration process
+ * @see AuthController.register
  */
-@Schema(
-    description = "Response payload for successful user registration",
-    title = "Register Response"
-)
+@Schema(description = "Response payload for successful user registration")
 data class RegisterResponse(
     @Schema(
         description = "Email address of the registered user",

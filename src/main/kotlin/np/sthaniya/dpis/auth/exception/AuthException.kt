@@ -3,7 +3,28 @@ package np.sthaniya.dpis.auth.exception
 import np.sthaniya.dpis.common.exception.dpisException
 import np.sthaniya.dpis.common.exception.ErrorCode
 import org.springframework.http.HttpStatus
-
+/**
+ * Base exception hierarchy for authentication and authorization errors.
+ *
+ * Each exception type corresponds to a specific authentication/authorization failure scenario
+ * and maps to an appropriate HTTP status code. Error codes follow the format AUTH_XXX
+ * for consistent error handling and client identification.
+ *
+ * Exception Categories:
+ * 1. User State (001-005): Exceptions related to user existence and status
+ * 2. Permissions (006-009): Permission and authorization related failures
+ * 3. Authentication (010-014): Login and token related failures
+ * 4. Password Reset (015-017): OTP and password reset specific errors
+ * 5. Pagination (018): Page navigation errors
+ *
+ * @param errorCode Specific error code from [AuthErrorCode]
+ * @param message Optional custom error message
+ * @param metadata Additional error context data
+ * @param status HTTP status code to return
+ *
+ * @see dpisException Base exception class
+ * @see ErrorCode Error code interface
+ */
 sealed class AuthException(
     errorCode: AuthErrorCode,
     message: String? = null,
@@ -11,6 +32,9 @@ sealed class AuthException(
     status: HttpStatus
 ) : dpisException(errorCode, message, status, metadata) {
 
+    /**
+     * Error codes specific to authentication and authorization failures
+     */
     enum class AuthErrorCode : ErrorCode {
         USER_NOT_FOUND {
             override val code = "AUTH_001"
@@ -86,53 +110,80 @@ sealed class AuthException(
         }
     }
 
+    /**
+     * Exception thrown when a user cannot be found by ID or email
+     */
     class UserNotFoundException(id: String) : AuthException(
         AuthErrorCode.USER_NOT_FOUND,
         metadata = mapOf("id" to id),
         status = HttpStatus.NOT_FOUND
     )
 
+    /**
+     * Exception thrown when attempting to create a user with an existing email
+     */
     class UserAlreadyExistsException(email: String) : AuthException(
         AuthErrorCode.USER_ALREADY_EXISTS,
         metadata = mapOf("email" to email),
         status = HttpStatus.CONFLICT
     )
 
+    /**
+     * Exception thrown when attempting to delete a user that is already deleted
+     */
     class UserAlreadyDeletedException(id: String) : AuthException(
         AuthErrorCode.USER_ALREADY_DELETED,
         metadata = mapOf("id" to id),
         status = HttpStatus.CONFLICT
     )
 
+    /**
+     * Exception thrown when attempting to approve a user that is already approved
+     */
     class UserAlreadyApprovedException(id: String) : AuthException(
         AuthErrorCode.USER_ALREADY_APPROVED,
         metadata = mapOf("id" to id),
         status = HttpStatus.CONFLICT
     )
 
+    /**
+     * Exception thrown when a user is in an invalid state for the requested operation
+     */
     class InvalidUserStateException(message: String) : AuthException(
         AuthErrorCode.INVALID_USER_STATE,
         message = message,
         status = HttpStatus.BAD_REQUEST
     )
 
+    /**
+     * Exception thrown when a required permission type cannot be found
+     */
     class PermissionNotFoundException(type: String) : AuthException(
         AuthErrorCode.PERMISSION_NOT_FOUND,
         metadata = mapOf("type" to type),
         status = HttpStatus.NOT_FOUND
     )
 
+    /**
+     * Exception thrown when required permissions are missing for an operation
+     */
     class MissingPermissionsException(types: Set<String>) : AuthException(
         AuthErrorCode.MISSING_PERMISSIONS,
         metadata = mapOf("types" to types),
         status = HttpStatus.FORBIDDEN
     )
 
+    /**
+     * Exception thrown when authentication is required but not provided
+     */
     class UnauthenticatedException : AuthException(
         AuthErrorCode.UNAUTHENTICATED,
         status = HttpStatus.UNAUTHORIZED
     )
 
+    /**
+     * Exception thrown when the user has insufficient permissions for an operation
+     */
     class InsufficientPermissionsException(
         requiredPermissions: Set<String>? = null,
         message: String? = null
@@ -143,27 +194,42 @@ sealed class AuthException(
         status = HttpStatus.FORBIDDEN
     )
 
+    /**
+     * Exception thrown when invalid credentials are provided during authentication
+     */
     class InvalidCredentialsException : AuthException(
         AuthErrorCode.INVALID_CREDENTIALS,
         status = HttpStatus.UNAUTHORIZED
     )
 
+    /**
+     * Exception thrown when a user is not approved for access
+     */
     class UserNotApprovedException : AuthException(
         AuthErrorCode.USER_NOT_APPROVED,
         status = HttpStatus.FORBIDDEN
     )
 
+    /**
+     * Exception thrown when an invalid or expired token is provided
+     */
     class InvalidTokenException : AuthException(
         AuthErrorCode.INVALID_TOKEN,
         status = HttpStatus.UNAUTHORIZED
     )
 
+    /**
+     * Exception thrown when an invalid password is provided
+     */
     class InvalidPasswordException(message: String? = null) : AuthException(
         AuthErrorCode.INVALID_PASSWORD,
         message = message,
         status = HttpStatus.BAD_REQUEST
     )
 
+    /**
+     * Exception thrown when JWT token validation fails
+     */
     class JwtAuthenticationException(
         message: String? = null,
         details: Map<String, Any> = emptyMap()
@@ -174,22 +240,34 @@ sealed class AuthException(
         status = HttpStatus.UNAUTHORIZED
     )
 
+    /**
+     * Exception thrown when an invalid or expired OTP is provided for password reset
+     */
     class InvalidPasswordResetTokenException(message: String? = null) : AuthException(
         AuthErrorCode.PASSWORD_RESET_OTP_INVALID,
         message = message,
         status = HttpStatus.BAD_REQUEST
     )
 
+    /**
+     * Exception thrown when passwords do not match during password reset
+     */
     class PasswordsDoNotMatchException : AuthException(
         AuthErrorCode.PASSWORDS_DO_NOT_MATCH,
         status = HttpStatus.BAD_REQUEST
     )
 
+    /**
+     * Exception thrown when too many invalid attempts are made
+     */
     class TooManyAttemptsException : AuthException(
         AuthErrorCode.TOO_MANY_ATTEMPTS,
         status = HttpStatus.BAD_REQUEST
     )
 
+    /**
+     * Exception thrown when a requested page does not exist
+     */
     class PageDoesNotExistException(message: String) : AuthException(
         AuthErrorCode.PAGE_DOES_NOT_EXIST,
         message = message,

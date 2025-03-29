@@ -5,37 +5,21 @@ import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
 /**
- * Data Transfer Object (DTO) for user authentication requests.
+ * Data transfer object for authentication requests.
+ * 
+ * Used by [AuthService.login] to process user authentication attempts. 
+ * Implements validation using Jakarta Validation constraints.
  *
- * This class handles login request validation and data transport for the authentication process.
- * It is used in conjunction with [AuthService] to process user login attempts.
- *
- * Features:
- * - Email format validation
- * - Required field validation
- * - OpenAPI/Swagger documentation
- * - Security input validation
- *
- * Usage with [AuthController]:
- * ```kotlin
- * val loginRequest = LoginRequest(
- *     email = "user@example.com",
- *     password = "userPassword123!"
- * )
- * authService.login(loginRequest)
- * ```
- *
- * Security:
- * - Password field is marked as password format in OpenAPI
- * - Input validation prevents empty/malformed data
- * - Rate limiting applied at service level
- *
- * @property email User's email address for authentication
- * @property password User's password (plain text, will be verified against hashed version)
+ * @property email User's email address, must be in valid email format
+ * @property password User's plaintext password for authentication
+ * 
+ * @throws AuthException.InvalidCredentialsException if credentials are incorrect
+ * @throws AuthException.AccountNotApprovedException if account pending approval
+ * @throws AuthException.AccountDeletedException if account is deleted
+ * @see AuthResponse for authentication response data
  */
 @Schema(
     description = "Request payload for user authentication",
-    title = "Login Request",
     requiredProperties = ["email", "password"]
 )
 data class LoginRequest(

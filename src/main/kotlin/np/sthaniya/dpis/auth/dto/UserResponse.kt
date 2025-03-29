@@ -5,6 +5,26 @@ import np.sthaniya.dpis.auth.domain.enums.PermissionType
 import java.time.LocalDateTime
 import java.util.UUID
 
+/**
+ * Represents user data in API responses for user management operations.
+ * 
+ * Used by [UserController] to provide consistent user information in responses.
+ * The data is mapped from [User] entities by [UserMapper].
+ *
+ * @property id Unique identifier of the user
+ * @property email User's email address used for authentication
+ * @property permissions Set of user's granted permissions
+ * @property isWardLevelUser Determines if user has ward-specific access restrictions
+ * @property wardNumber Associated ward number, required if isWardLevelUser=true
+ * @property isApproved Account approval status
+ * @property approvedBy Reference to admin who approved the account
+ * @property approvedAt Timestamp of account approval
+ * @property createdAt Account creation timestamp
+ * @property updatedAt Last modification timestamp
+ *
+ * @see UserMapper.toResponse for entity conversion
+ * @see UserController for API usage
+ */
 @Schema(
     description = "Response payload containing user information",
     title = "User Response"

@@ -9,6 +9,43 @@ import java.time.LocalDate
 import jakarta.validation.constraints.AssertTrue
 import io.swagger.v3.oas.annotations.media.Schema
 
+/**
+ * Search criteria for user queries with pagination, filtering, and sorting support.
+ * Used by [UserService.searchUsers] to filter and paginate user data.
+ *
+ * Search Parameters:
+ * - Exact match: email
+ * - Pattern match: searchTerm (matches against email)
+ * - Boolean filters: isApproved, isWardLevelUser
+ * - Numeric filters: wardNumber
+ * - Date range: createdAfter, createdBefore
+ * - Permission-based: permissions
+ *
+ * Pagination/Sorting:
+ * - Page number (1-based)
+ * - Page size
+ * - Sort field
+ * - Sort direction
+ *
+ * Column Selection:
+ * Supports field selection via [columns]. Valid columns defined in [ALLOWED_COLUMNS].
+ *
+ * Usage:
+ * ```kotlin
+ * val criteria = UserSearchCriteria(
+ *     email = "user@example.com",
+ *     isApproved = true,
+ *     page = 1,
+ *     size = 20,
+ *     sortBy = "createdAt"
+ * )
+ * userService.searchUsers(criteria)
+ * ```
+ * 
+ * @throws AuthException.PageDoesNotExistException if requested page exceeds total pages
+ * @see UserController.searchUsers for API endpoint
+ * @see UserSpecifications for criteria to specification conversion
+ */
 @Schema(
     description = "Search criteria for filtering and paginating users",
     title = "User Search Criteria"
@@ -110,6 +147,10 @@ data class UserSearchCriteria(
     )
     val sortDirection: Sort.Direction = Sort.Direction.DESC,
 ) {
+    /**
+     * Converts the criteria to Spring Data's Pageable object.
+     * Handles 1-based to 0-based page number conversion.
+     */
     fun toPageable(): Pageable =
         PageRequest.of(
             (page - 1).coerceAtLeast(0), // Convert 1-based to 0-based
@@ -118,6 +159,10 @@ data class UserSearchCriteria(
         )
 
     companion object {
+        /**
+         * Set of field names that can be included in query results.
+         * Used to validate and filter requested columns.
+         */
         val ALLOWED_COLUMNS =
             setOf(
                 "id",
@@ -133,7 +178,16 @@ data class UserSearchCriteria(
             )
     }
 
+    /**
+     * Returns validated set of columns to include in query results.
+     * Falls back to all allowed columns if none specified.
+     */
     fun getValidColumns(): Set<String> = columns?.filter { it in ALLOWED_COLUMNS }?.toSet() ?: ALLOWED_COLUMNS
+
+    /**
+     * Validates that page number is positive.
+     * Required by Jakarta Validation.
+     */
     @AssertTrue(message = "Page number must be greater than 0")
     fun isPageNumberValid(): Boolean = page > 0
 }

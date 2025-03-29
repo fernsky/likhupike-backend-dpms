@@ -4,42 +4,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+
 /**
- * Data Transfer Object (DTO) for handling password change requests from authenticated users.
+ * Data transfer object for authenticated user password change operations.
  *
- * This class handles the validation and transport of password change data, including:
- * - Current password verification
- * - New password validation
- * - Password confirmation matching
+ * Used by [AuthService.changePassword] to validate and process password changes
+ * for authenticated users. Requires current password verification.
  *
- * Password Requirements:
- * - Minimum 8 characters
- * - At least one digit (0-9)
- * - At least one lowercase letter (a-z)
- * - At least one uppercase letter (A-Z)
- * - At least one special character (@#$%^&+=)
+ * Validation rules:
+ * - Current password must be valid
+ * - New password must meet complexity requirements
+ * - New password must not match current password
+ * - Confirmation must match new password
  *
- * Security Features:
- * - Input validation using Jakarta Validation
- * - Password strength enforcement
- * - Password confirmation check
- * - Prevention of password reuse
+ * @property currentPassword User's current password for verification
+ * @property newPassword New password that meets complexity requirements
+ * @property confirmPassword Confirmation to prevent typos
  *
- * Usage:
- * ```kotlin
- * val request = ChangePasswordRequest(
- *     currentPassword = "OldPass123!",
- *     newPassword = "NewPass456@",
- *     confirmPassword = "NewPass456@"
- * )
- * if (request.isValid()) {
- *     // Process password change
- * }
- * ```
- *
- * @property currentPassword The user's current password for verification
- * @property newPassword The desired new password meeting security requirements
- * @property confirmPassword Confirmation of the new password to prevent typos
+ * @throws AuthException.InvalidCredentialsException if current password is incorrect
+ * @throws AuthException.InvalidPasswordException if new password invalid
+ * @throws jakarta.validation.ConstraintViolationException if validation fails
  */
 @Schema(
     description = "Request payload for changing user password",
@@ -84,15 +68,10 @@ data class ChangePasswordRequest(
     val confirmPassword: String
 ) {
     /**
-     * Validates the password change request.
+     * Validates password change request.
+     * Checks both confirmation match and password change.
      *
-     * Performs the following checks:
-     * 1. New password matches confirmation password
-     * 2. New password is different from current password
-     *
-     * Note: Password complexity requirements are handled by field validation annotations.
-     *
-     * @return true if the request is valid, false otherwise
+     * @return false if passwords don't match or new matches current
      */
     fun isValid(): Boolean = newPassword == confirmPassword && newPassword != currentPassword
 }

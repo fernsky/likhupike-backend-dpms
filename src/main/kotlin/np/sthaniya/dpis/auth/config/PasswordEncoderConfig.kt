@@ -6,40 +6,31 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 
 /**
- * Configuration class for password encryption in the application.
+ * Provides BCrypt [PasswordEncoder] bean for password hashing.
+ * Used by Spring Security for password operations.
  *
- * This configuration provides a singleton [PasswordEncoder] bean using BCrypt hashing algorithm.
- * The encoder is used throughout the application for:
- * - Encrypting new user passwords
- * - Verifying password during authentication
- * - Password change operations
- *
- * Features:
- * - BCrypt hashing algorithm
- * - Automatic salt generation
- * - Default strength factor (10 rounds)
- * - Integration with Spring Security authentication
- *
- * Usage:
+ * Example:
  * ```kotlin
  * @Autowired
  * private lateinit var passwordEncoder: PasswordEncoder
  *
- * fun validatePassword(rawPassword: String, encodedPassword: String): Boolean {
- *     return passwordEncoder.matches(rawPassword, encodedPassword)
- * }
- *
- * fun encodePassword(rawPassword: String): String {
- *     return passwordEncoder.encode(rawPassword)
- * }
+ * fun hashPassword(raw: String) = passwordEncoder.encode(raw)
+ * fun verify(raw: String, hash: String) = passwordEncoder.matches(raw, hash)
  * ```
  *
- * Note: This encoder is used by [ApplicationConfig] for configuring
- * Spring Security's authentication provider.
+ * Configures BCrypt password encoder with default strength (10).
+ * Used by Spring Security's DaoAuthenticationProvider for password verification.
+ * 
+ * Implementation details:
+ * - Uses BCrypt with salt
+ * - Default work factor: 10 rounds
+ * - Generates different hashes for same password due to random salt
+ * 
+ * @see BCryptPasswordEncoder Internal implementation
+ * @see DaoAuthenticationProvider Consumer of this bean
  */
 @Configuration
 class PasswordEncoderConfig {
-    
     /**
      * Creates a BCrypt password encoder bean.
      *

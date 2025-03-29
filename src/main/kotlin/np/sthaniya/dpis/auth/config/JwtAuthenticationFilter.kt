@@ -22,12 +22,6 @@ import org.springframework.web.filter.OncePerRequestFilter
  * - Loading user details using [UserDetailsService]
  * - Setting up the Spring Security context
  *
- * Features:
- * - Bearer token authentication
- * - Automatic user context setup
- * - Exception handling for invalid tokens
- * - Integration with Spring Security filter chain
- *
  * Filter Chain Process:
  * 1. Extract Bearer token from Authorization header
  * 2. Validate JWT token

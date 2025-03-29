@@ -6,44 +6,26 @@ import java.util.UUID
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * Data Transfer Object (DTO) for administrative user creation requests.
+ * Data transfer object for administrative user creation operations.
+ * Used by [UserService.createUser] to create new user accounts with specified permissions.
  *
- * This class handles the validation and transport of new user creation data, including:
- * - Basic user information
- * - Permission assignments
- * - Ward-level access configuration
+ * Required fields:
+ * - email: Must be unique in the system
+ * - password: Must meet complexity requirements
+ * - isWardLevelUser: Determines access level type
  *
- * Features:
- * - Email validation
- * - Password strength requirements
- * - Permission assignment
- * - Ward-level access control
- * - OpenAPI/Swagger documentation
+ * Optional fields:
+ * - permissions: Map of initial permissions to grant
+ * - wardNumber: Required only if isWardLevelUser=true
+ * - isApproved: Auto-approval flag
+ * - approvedBy: Admin ID for auto-approval
  *
- * Usage with [UserService]:
- * ```kotlin
- * val dto = CreateUserDto(
- *     email = "user@example.com",
- *     password = "SecurePass123!",
- *     permissions = mapOf(PermissionType.VIEW_USER to true),
- *     isWardLevelUser = true,
- *     wardNumber = 5
- * )
- * userService.createUser(dto)
- * ```
+ * @throws AuthException.UserAlreadyExistsException if email exists
+ * @throws AuthException.InvalidUserStateException if ward config invalid
+ * @throws jakarta.validation.ConstraintViolationException if validation fails
  *
- * Integration:
- * - Used by [UserController] for user creation
- * - Validated by Jakarta Validation
- * - Processed by [UserServiceImpl]
- *
- * @property email User's email address (unique identifier)
- * @property password Initial password meeting security requirements
- * @property permissions Map of permissions to grant/deny
- * @property isWardLevelUser Flag for ward-level access restriction
- * @property wardNumber Optional ward number for ward-level users
- * @property isApproved Flag indicating if user should be pre-approved
- * @property approvedBy UUID of admin pre-approving the user
+ * @see UserController.createUser for API endpoint usage
+ * @see UserServiceImpl.createUser for implementation details
  */
 @Schema(
     description = "Request payload for creating a new user",
@@ -121,12 +103,8 @@ data class CreateUserDto(
     val approvedBy: UUID? = null
 ) {
     /**
-     * Validates ward number configuration.
-     *
-     * Ensures that ward-level users have a valid ward number assigned.
-     * This is in addition to the @Min/@Max validations on the wardNumber property.
-     *
-     * @return true if ward number configuration is valid
+     * Validates ward-level user configuration.
+     * Ward number must be provided when isWardLevelUser=true.
      */
     @AssertTrue(message = "Ward number is required for ward level users")
     fun isWardNumberValid(): Boolean = !isWardLevelUser || wardNumber != null

@@ -3,28 +3,17 @@ package np.sthaniya.dpis.auth.config
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the system administrator account.
- *
- * This class manages the initial admin user configuration, which is used by [AdminInitializationService]
- * to create or update the system administrator account during application startup.
- *
- * Features:
- * - Automatic configuration binding from application properties
- * - Support for default admin account setup
- * - Permission configuration through property files
- *
- * Usage in application.yml:
+ * Binds application.yml admin properties to a data class.
+ * 
+ * During application startup, Spring Boot binds the following YAML structure:
  * ```yaml
- * app:
- *   admin:
- *     email: "admin@example.com"
- *     password: "securePassword123"
- *     permissions: ["*"]  # Wildcard for all permissions
+ * app.admin:
+ *   email: string          # Required: Admin login email
+ *   password: string       # Required: Initial admin password (plaintext)
+ *   permissions: string[]  # Optional: Defaults to ["*"] for full access
  * ```
- *
- * @property email The email address for the admin account
- * @property password The initial password for the admin account (should be changed after first login)
- * @property permissions Set of permission strings, where "*" grants all available permissions
+ * 
+ * @see AdminInitializationService Uses this config to create/update admin user
  */
 @ConfigurationProperties(prefix = "app.admin")
 data class AdminConfig(
