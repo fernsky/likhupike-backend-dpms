@@ -1,0 +1,18 @@
+= DPIS Database Documentation
+Trilochan
+v1.0, 2024-01
+:doctype: book
+:icons: font
+:source-highlighter: rouge
+:toc: left
+:toclevels: 3
+:sectlinks:
+:sectnums:
+:chapter-signifier: Chapter
+
+include::sections/preface.adoc[]
+include::sections/document-history.adoc[]
+include::chapters/chapter-1-introduction/chapter-1-introduction.adoc[]
+include::chapters/chapter-2-user-management/chapter-2-user-management.adoc[]
+include::chapters/chapter-3-authentication/chapter-3-authentication.adoc[]
+include::chapters/chapter-4-authorization/chapter-4-authorization.adoc[]
