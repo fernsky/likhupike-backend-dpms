@@ -1,0 +1,82 @@
+== Permissions Schema
+
+=== Permissions Table
+The permissions table defines the available system-wide permissions that can be assigned to users.
+
+.Table: permissions
+[cols="2,2,1,4",options="header"]
+|===
+|Column Name |Data Type |Nullable |Description
+|type |VARCHAR(50) |No |Primary key, permission type identifier
+|created_at |TIMESTAMP WITH TIME ZONE |No |Record creation timestamp
+|created_by |UUID |Yes |Reference to creating user
+|updated_at |TIMESTAMP WITH TIME ZONE |No |Last update timestamp
+|updated_by |UUID |Yes |Reference to last updating user
+|version |BIGINT |Yes |Optimistic locking version number
+|===
+
+.Constraints
+[cols="3,3",options="header"]
+|===
+|Constraint Name |Description
+|permissions_pkey |Primary key constraint on type
+|===
+
+=== User Permissions Table
+The user_permissions table manages the many-to-many relationship between users and permissions.
+
+.Table: user_permissions
+[cols="2,2,1,4",options="header"]
+|===
+|Column Name |Data Type |Nullable |Description
+|id |UUID |No |Primary key for the junction table
+|user_id |UUID |No |Reference to the user
+|permission_type |VARCHAR(50) |No |Reference to the permission type
+|created_at |TIMESTAMP WITH TIME ZONE |No |Record creation timestamp
+|created_by |UUID |Yes |Reference to creating user
+|updated_at |TIMESTAMP WITH TIME ZONE |No |Last update timestamp
+|updated_by |UUID |Yes |Reference to last updating user
+|version |BIGINT |Yes |Optimistic locking version number
+|===
+
+.Indexes and Constraints
+[cols="2,2,2",options="header"]
+|===
+|Name |Type |Description
+|user_permissions_pkey |Primary Key |Constraint on id
+|uk_user_permission |Unique Key |Ensures unique user-permission combinations
+|fk_user_permissions_user |Foreign Key |References users(id)
+|fk_user_permissions_permission |Foreign Key |References permissions(type)
+|===
+
+=== Standard Permission Types
+The system includes the following pre-defined permission types:
+
+.Standard Permissions
+[cols="2,4",options="header"]
+|===
+|Permission |Description
+|CREATE_USER |Allows creation of new user accounts
+|APPROVE_USER |Enables approval of user registrations
+|EDIT_USER |Permits modification of user details
+|DELETE_USER |Allows soft deletion of user accounts
+|VIEW_USER |Enables viewing user information
+|RESET_USER_PASSWORD |Permits password reset operations
+|===
+
+=== Design Considerations
+
+==== Permission Management
+* Enum-driven permission types for type safety
+* Granular access control through permission combinations
+* Hierarchical permission structure
+
+==== Security Implementation
+* Role-based access control (RBAC) model
+* Permission inheritance support
+* Audit trail for permission changes
+
+==== Scalability
+* Extensible permission system
+* Easy addition of new permission types
+* Efficient permission checking
