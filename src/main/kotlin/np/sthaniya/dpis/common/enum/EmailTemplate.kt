@@ -6,27 +6,28 @@ enum class EmailTemplate(val subject: String, val template: String) {
     PASSWORD_RESET(
         subject = "Reset Your Password",
         template = BaseEmailTemplate.wrap(
-            "Password Reset",
+            "Password Reset Request",
             """
-                <p style="margin: 0 0 16px; color: #334155;">Hello,</p>
-                <p style="margin: 0 0 24px; color: #334155;">Click the button below to reset your password:</p>
+                <p style="margin: 0 0 20px; color: #1e293b;">Dear User,</p>
+                <p style="margin: 0 0 24px; color: #334155;">We received a request to reset your password. Use the button below to reset it. If you didn't request this, you can safely ignore this email.</p>
                 <table width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                        <td align="center" style="padding: 16px 0 32px;">
+                        <td align="center" style="padding: 24px 0 32px;">
                             <table cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                     <td align="center" style="
                                         background-color: #123772;
-                                        border-radius: 8px;
+                                        border-radius: 10px;
                                     ">
                                         <a href="%resetLink%" style="
                                             display: inline-block;
-                                            padding: 14px 32px;
-                                            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+                                            padding: 16px 36px;
+                                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
                                             font-size: 15px;
-                                            font-weight: 500;
+                                            font-weight: 600;
                                             color: #ffffff;
                                             text-decoration: none;
+                                            letter-spacing: 0.01em;
                                         ">Reset Password</a>
                                     </td>
                                 </tr>
@@ -36,10 +37,15 @@ enum class EmailTemplate(val subject: String, val template: String) {
                 </table>
                 <p style="
                     margin: 0;
+                    padding: 16px 24px;
+                    background-color: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
                     color: #64748b;
                     font-size: 14px;
                     letter-spacing: -0.01em;
-                ">This link will expire in 15 minutes.</p>
+                    line-height: 1.5;
+                ">For security, this request will expire in 15 minutes. After that, you'll need to submit a new password reset request.</p>
             """
         )
     ),
