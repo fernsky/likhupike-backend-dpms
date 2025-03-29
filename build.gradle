@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'np.sthaniya'
-version = '1.0.1-SNAPSHOT'
+version = '1.1.0-SNAPSHOT'
 
 java {
 	toolchain {
@@ -71,6 +71,12 @@ dependencies {
 	
 	// Dokka dependencies
 	dokkaHtmlPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:1.9.20")
+	
+	// Resilience4j dependencies
+	implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
+	implementation 'io.github.resilience4j:resilience4j-ratelimiter:2.1.0'
+	implementation 'io.github.resilience4j:resilience4j-annotations:2.1.0'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
 }
 
 kotlin {
