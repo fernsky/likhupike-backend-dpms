@@ -14,10 +14,21 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import java.util.*
 
+/**
+ * Implementation of [UserRepositoryCustom] that provides custom query functionality for [User] entities.
+ * 
+ * This implementation uses JPA Criteria API to build dynamic queries with efficient fetching strategies
+ * for user permissions and related entities.
+ *
+ * @property entityManager The JPA [EntityManager] used for creating and executing queries
+ */
 class UserRepositoryImpl(
     private val entityManager: EntityManager
 ) : UserRepositoryCustom {
 
+    /**
+     * @see UserRepositoryCustom.findByEmailWithPermissions
+     */
     override fun findByEmailWithPermissions(email: String): Optional<User> {
         val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(User::class.java)
@@ -39,6 +50,9 @@ class UserRepositoryImpl(
             .let { Optional.ofNullable(it) }
     }
 
+    /**
+     * @see UserRepositoryCustom.findByIdWithPermissions
+     */
     override fun findByIdWithPermissions(id: UUID): Optional<User> {
         val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(User::class.java)
@@ -60,6 +74,12 @@ class UserRepositoryImpl(
             .let { Optional.ofNullable(it) }
     }
 
+    /**
+     * @see UserRepositoryCustom.findAllWithProjection
+     *
+     * The implementation handles distinct counting and fetching when permissions are included
+     * in the requested columns or when the specification references permissions.
+     */
     override fun findAllWithProjection(
         spec: Specification<User>,
         pageable: Pageable,
@@ -127,6 +147,9 @@ class UserRepositoryImpl(
         return PageImpl(results, pageable, total)
     }
 
+    /**
+     * @see UserRepositoryCustom.countDistinct
+     */
     override fun countDistinct(spec: Specification<User>): Long {
         val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(Long::class.java)
