@@ -1,0 +1,5 @@
+== Authorization System
+
+include::./sections/permissions-schema.adoc[leveloffset=+1]
+
+<<<

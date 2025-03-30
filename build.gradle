@@ -84,14 +84,12 @@ dependencies {
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 	
-	// Reflections library for database documentation generation
-	implementation 'org.reflections:reflections:0.10.2'
+
 }
 
 ext {
 	snippetsDir = file('build/generated-snippets')
 	docsDir = file('src/docs/asciidoc')
-	dbDocsDir = file('src/docs/asciidoc/database/generated')
 }
 
 springBoot {
@@ -106,18 +104,15 @@ test {
 asciidoctor {
 	configurations 'asciidoctorExt'
 	inputs.dir snippetsDir
-	inputs.dir dbDocsDir
+
 	dependsOn test
-	if (project.hasProperty('generateDbDocs')) {
-		dependsOn generateDatabaseDocs
-	}
+	
 	sources {
 		include '*.adoc'
 	}
 	baseDirFollowsSourceDir()
 	attributes = [
 		'snippets': snippetsDir,
-		'dbdocs': dbDocsDir,
 		'version': project.version,
 		'revdate': new Date().format('yyyy-MM-dd')
 	]
@@ -179,27 +174,9 @@ tasks.dokkaHtml.configure {
 	}
 }
 
-task generateDatabaseDocs {
-	description = 'Generates database documentation from entity classes'
-	group = 'Documentation'
-	
-	doLast {
-		// Ensure directory exists
-		dbDocsDir.mkdirs()
-		
-		// Run the application with documentation generation enabled
-		javaexec {
-			classpath = sourceSets.main.runtimeClasspath
-			mainClass = 'np.sthaniya.dpis.ApplicationKt'
-			args = ['--spring.profiles.active=dev', '--documentation.database.enabled=true']
-			environment = [
-				'DOCUMENTATION_DATABASE_OUTPUT_DIR': dbDocsDir.absolutePath
-			]
-		}
-	}
-}
 
-task generateDocs(dependsOn: ['test', 'generateDatabaseDocs', 'asciidoctor']) {
+
+task generateDocs(dependsOn: ['test', 'asciidoctor']) {
 	description = 'Generates complete API and database documentation'
 	group = 'Documentation'
 }
