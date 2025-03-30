@@ -8,6 +8,7 @@ plugins {
 	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
 	id 'org.liquibase.gradle' version '2.2.1'
 	id 'org.jetbrains.dokka' version '1.9.20'
+	id 'org.asciidoctor.jvm.convert' version '3.3.2'
 }
 
 group = 'np.sthaniya'
@@ -23,6 +24,7 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	asciidoctorExt
 }
 
 repositories {
@@ -77,6 +79,55 @@ dependencies {
 	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-jcache:7.6.0'
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	
+	// Spring REST Docs
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+	
+	// Reflections library for database documentation generation
+	implementation 'org.reflections:reflections:0.10.2'
+}
+
+ext {
+	snippetsDir = file('build/generated-snippets')
+	docsDir = file('src/docs/asciidoc')
+	dbDocsDir = file('src/docs/asciidoc/database/generated')
+}
+
+springBoot {
+	buildInfo()
+}
+
+test {
+	useJUnitPlatform()
+	outputs.dir snippetsDir
+}
+
+asciidoctor {
+	configurations 'asciidoctorExt'
+	inputs.dir snippetsDir
+	inputs.dir dbDocsDir
+	dependsOn test
+	if (project.hasProperty('generateDbDocs')) {
+		dependsOn generateDatabaseDocs
+	}
+	sources {
+		include '*.adoc'
+	}
+	baseDirFollowsSourceDir()
+	attributes = [
+		'snippets': snippetsDir,
+		'dbdocs': dbDocsDir,
+		'version': project.version,
+		'revdate': new Date().format('yyyy-MM-dd')
+	]
+}
+
+bootJar {
+	dependsOn asciidoctor
+	from ("${asciidoctor.outputDir}/html5") {
+		into 'static/docs'
+	}
 }
 
 kotlin {
@@ -126,4 +177,29 @@ tasks.dokkaHtml.configure {
 			}
 		}
 	}
+}
+
+task generateDatabaseDocs {
+	description = 'Generates database documentation from entity classes'
+	group = 'Documentation'
+	
+	doLast {
+		// Ensure directory exists
+		dbDocsDir.mkdirs()
+		
+		// Run the application with documentation generation enabled
+		javaexec {
+			classpath = sourceSets.main.runtimeClasspath
+			mainClass = 'np.sthaniya.dpis.ApplicationKt'
+			args = ['--spring.profiles.active=dev', '--documentation.database.enabled=true']
+			environment = [
+				'DOCUMENTATION_DATABASE_OUTPUT_DIR': dbDocsDir.absolutePath
+			]
+		}
+	}
+}
+
+task generateDocs(dependsOn: ['test', 'generateDatabaseDocs', 'asciidoctor']) {
+	description = 'Generates complete API and database documentation'
+	group = 'Documentation'
 }
