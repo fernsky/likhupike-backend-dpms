@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse
 import np.sthaniya.dpis.common.config.RouteRegistry
 import np.sthaniya.dpis.common.dto.ApiResponse
 import np.sthaniya.dpis.common.dto.ErrorDetails
+import np.sthaniya.dpis.common.service.I18nMessageService
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -25,11 +26,13 @@ import org.springframework.stereotype.Component
  *
  * @property objectMapper The Jackson object mapper used for JSON serialization
  * @property routeRegistry The registry containing route patterns and their configurations
+ * @property i18nMessageService The service for retrieving internationalized messages
  */
 @Component
 class CustomAuthenticationEntryPoint(
     private val objectMapper: ObjectMapper,
     private val routeRegistry: RouteRegistry,
+    private val i18nMessageService: I18nMessageService,
 ) : AuthenticationEntryPoint {
     /**
      * Handles the authentication entry point by determining the appropriate error response
@@ -84,7 +87,7 @@ class CustomAuthenticationEntryPoint(
             ApiResponse.error<Nothing>(
                 ErrorDetails(
                     code = "METHOD_NOT_ALLOWED",
-                    message = "Method not allowed for this resource",
+                    message = i18nMessageService.getMessage("common.error.METHOD_NOT_ALLOWED"),
                     status = HttpStatus.METHOD_NOT_ALLOWED.value(),
                     details = mapOf("allowedMethods" to allowedMethods.map { it.toString() }),
                 ),
@@ -106,7 +109,7 @@ class CustomAuthenticationEntryPoint(
             ApiResponse.error<Nothing>(
                 ErrorDetails(
                     code = "UNAUTHORIZED",
-                    message = "Please authenticate to access this resource",
+                    message = i18nMessageService.getMessage("common.error.UNAUTHORIZED"),
                     status = HttpStatus.UNAUTHORIZED.value(),
                 ),
             )
@@ -127,7 +130,7 @@ class CustomAuthenticationEntryPoint(
             ApiResponse.error<Nothing>(
                 ErrorDetails(
                     code = "NOT_FOUND",
-                    message = "Resource not found",
+                    message = i18nMessageService.getMessage("common.error.NOT_FOUND"),
                     status = HttpStatus.NOT_FOUND.value(),
                 ),
             )
@@ -135,3 +138,4 @@ class CustomAuthenticationEntryPoint(
         objectMapper.writeValue(response.outputStream, errorResponse)
     }
 }
+
