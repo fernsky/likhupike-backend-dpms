@@ -37,7 +37,7 @@ app:
     password: ${ADMIN_PASSWORD:Admin@123}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   rate-limiting:
-    enabled: ${RATE_LIMIT_EANBLED:true}
+    enabled: ${RATE_LIMIT_ENABLED:true}
     # Global rate limiting
     global:
       capacity: 100
