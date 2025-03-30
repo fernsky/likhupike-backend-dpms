@@ -102,9 +102,8 @@ class RateLimitFilter(
         
         // Map path to endpoint identifier
         return when {
-            path.contains("/api/v1/auth/login") -> "login"
-            path.contains("/api/v1/auth/reset-password") -> "reset-password"
-            path.contains("/api/v1/auth/register") -> "register"
+            path.contains("/api/v1/auth") -> "auth"
+            path.contains("/api/v1/users") -> "user-management"
             else -> "default"
         }.also {
             logger.debug("Mapped path: $path to endpoint identifier: $it")
