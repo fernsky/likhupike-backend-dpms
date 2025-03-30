@@ -42,23 +42,18 @@ app:
     global:
       capacity: 100
       refill-tokens: 100
-      refill-duration: 1
-      refill-time-unit: MINUTES
+      refill-duration: 10
+      refill-time-unit: SECONDS
     # Endpoint-specific rate limits
     endpoints:
-      login:
-        capacity: 5
-        refill-tokens: 5
+      auth:
+        capacity: 20
+        refill-tokens: 20
         refill-duration: 1
         refill-time-unit: MINUTES
-      reset-password:
-        capacity: 3
-        refill-tokens: 3
-        refill-duration: 10
-        refill-time-unit: MINUTES
-      register:
-        capacity: 5
-        refill-tokens: 5
+      user-management:
+        capacity: 100
+        refill-tokens: 100
         refill-duration: 1
         refill-time-unit: MINUTES
 
