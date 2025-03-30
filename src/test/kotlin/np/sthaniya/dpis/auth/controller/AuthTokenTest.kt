@@ -1,16 +1,20 @@
 package np.sthaniya.dpis.auth.controller
 
-import np.sthaniya.dpis.auth.controller.base.BaseAuthControllerTest
+import np.sthaniya.dpis.auth.controller.base.BaseRestDocsTest
 import np.sthaniya.dpis.fixtures.UserTestFixture
 import np.sthaniya.dpis.auth.dto.CreateUserDto
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.restdocs.headers.HeaderDocumentation.headerWithName
+import org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders
+import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
+import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
 
-class AuthTokenTest : BaseAuthControllerTest() {
+class AuthTokenTest : BaseRestDocsTest() {
     private val REFRESH_ENDPOINT = "/api/v1/auth/refresh"
     private val LOGOUT_ENDPOINT = "/api/v1/auth/logout"
 
@@ -37,6 +41,26 @@ class AuthTokenTest : BaseAuthControllerTest() {
             .andExpect(jsonPath("$.data.token").exists())
             .andExpect(jsonPath("$.data.refreshToken").exists())
             .andExpect(jsonPath("$.message").value("Token refreshed successfully"))
+            .andDo(
+                document(
+                    "auth-token-refresh-success",
+                    requestHeaders(
+                        headerWithName("X-Refresh-Token").description("Valid refresh token")
+                    ),
+                    responseFields(
+                        fieldWithPath("success").description("Indicates if the request was successful"),
+                        fieldWithPath("message").description("Success message"),
+                        fieldWithPath("data").description("Response data object"),
+                        fieldWithPath("data.token").description("New JWT access token"),
+                        fieldWithPath("data.refreshToken").description("New JWT refresh token"),
+                        fieldWithPath("data.userId").description("Unique identifier of the user"),
+                        fieldWithPath("data.email").description("Email address of the user"),
+                        fieldWithPath("data.permissions").description("List of user permissions"),
+                        fieldWithPath("data.isWardLevelUser").description("Flag indicating if the user is ward-level"),
+                        fieldWithPath("data.expiresIn").description("Access token expiration time in seconds")
+                    )
+                )
+            )
     }
 
     @Test
