@@ -1,0 +1,28 @@
+= Digital Profile Information System Documentation
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[overview]]
+== Overview
+
+This comprehensive documentation covers both the REST APIs and database structure of the Digital Profile Information System.
+
+== Application History
+
+include::database/chapters/chapter-1-application-history/chapter-1-application-history.adoc[leveloffset=+1]
+
+== API Documentation
+
+include::api/index.adoc[leveloffset=+1]
+
+== Database Documentation
+
+include::database/index.adoc[leveloffset=+1]
+
+== Developer Guidelines
+
+include::development/index.adoc[leveloffset=+1]

@@ -1,0 +1,59 @@
+= API Documentation
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[api-overview]]
+== API Overview
+
+The Digital Profile Information System provides a RESTful API for managing user authentication,
+user management, and digital profiles.
+
+=== API Structure
+
+The API is organized into the following domains:
+
+* Authentication API - User registration, login, token refresh, password management
+* User Management API - Admin operations for user accounts
+* Profile API - Digital profile management
+
+=== Response Format
+
+All API responses follow a standard structure:
+
+[source,json]
+----
+{
+  "success": true|false,
+  "message": "Human-readable message",
+  "data": { /* Response data object (for successful responses) */ },
+  "error": { /* Error details (for error responses) */ }
+}
+----
+
+=== Error Format
+
+Error responses include detailed information:
+
+[source,json]
+----
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "status": 400, // HTTP status code
+    "details": { // Optional additional error details
+      "field1": "Error reason",
+      "field2": "Error reason"
+    }
+  }
+}
+----
+
+include::authentication/index.adoc[leveloffset=+1]
+include::user-management/index.adoc[leveloffset=+1]
+include::profiles/index.adoc[leveloffset=+1]
