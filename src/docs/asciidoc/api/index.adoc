@@ -1,4 +1,4 @@
-= API Documentation
+== API Overview
 :doctype: book
 :icons: font
 :source-highlighter: highlightjs
@@ -7,7 +7,6 @@
 :sectlinks:
 
 [[api-overview]]
-== API Overview
 
 The Digital Profile Information System provides a RESTful API for managing user authentication,
 user management, and digital profiles.
@@ -55,5 +54,5 @@ Error responses include detailed information:
 ----
 
 include::authentication/index.adoc[leveloffset=+1]
-include::user-management/index.adoc[leveloffset=+1]
-include::profiles/index.adoc[leveloffset=+1]
+// include::user-management/index.adoc[leveloffset=+1]
+// include::profiles/index.adoc[leveloffset=+1]

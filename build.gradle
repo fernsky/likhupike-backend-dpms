@@ -9,6 +9,7 @@ plugins {
 	id 'org.liquibase.gradle' version '2.2.1'
 	id 'org.jetbrains.dokka' version '1.9.20'
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
+	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
 }
 
 group = 'np.sthaniya'
@@ -84,7 +85,8 @@ dependencies {
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 	
-
+	// Asciidoctor PDF theme dependencies
+	asciidoctorExt 'org.asciidoctor:asciidoctorj-pdf:2.3.9'
 }
 
 ext {
@@ -114,14 +116,42 @@ asciidoctor {
 	attributes = [
 		'snippets': snippetsDir,
 		'version': project.version,
-		'revdate': new Date().format('yyyy-MM-dd')
+		'revdate': new Date().format('yyyy-MM-dd'),
+		'toc': 'left',
+		'icons': 'font',
+		'source-highlighter': 'highlight.js'
+	]
+}
+
+asciidoctorPdf {
+	configurations 'asciidoctorExt'
+	inputs.dir snippetsDir
+
+	dependsOn test
+	
+	sources {
+		include '*.adoc'
+	}
+	baseDirFollowsSourceDir()
+	attributes = [
+		'snippets': snippetsDir,
+		'version': project.version,
+		'revdate': new Date().format('yyyy-MM-dd'),
+		'toc': 'left',
+		'icons': 'font',
+		'source-highlighter': 'coderay',
+		'pdf-stylesdir': "${docsDir}/theme",
+		'pdf-style': 'custom'
 	]
 }
 
 bootJar {
-	dependsOn asciidoctor
+	dependsOn asciidoctor, asciidoctorPdf
 	from ("${asciidoctor.outputDir}/html5") {
-		into 'static/docs'
+		into 'static/docs/html'
+	}
+	from ("${asciidoctorPdf.outputDir}/pdf") {
+		into 'static/docs/pdf'
 	}
 }
 
@@ -174,9 +204,7 @@ tasks.dokkaHtml.configure {
 	}
 }
 
-
-
-task generateDocs(dependsOn: ['test', 'asciidoctor']) {
-	description = 'Generates complete API and database documentation'
+task generateDocs(dependsOn: ['test', 'asciidoctor', 'asciidoctorPdf']) {
+	description = 'Generates complete API and database documentation in HTML and PDF formats'
 	group = 'Documentation'
 }

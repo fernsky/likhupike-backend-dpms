@@ -26,9 +26,9 @@ image::authentication-flow.png[Authentication Flow]
 6. When the access token expires, the refresh token can be used to get a new access token
 
 include::login.adoc[leveloffset=+1]
-include::register.adoc[leveloffset=+1]
-include::token.adoc[leveloffset=+1]
-include::password.adoc[leveloffset=+1]
+// include::register.adoc[leveloffset=+1]
+// include::token.adoc[leveloffset=+1]
+// include::password.adoc[leveloffset=+1]
 
 [[auth-error-codes]]
 == Error Codes
