@@ -1,13 +1,17 @@
 package np.sthaniya.dpis.common.filter
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import np.sthaniya.dpis.common.config.RateLimitConfig
+import np.sthaniya.dpis.common.dto.ApiResponse
+import np.sthaniya.dpis.common.dto.ErrorDetails
+import np.sthaniya.dpis.common.exception.RateLimitedException
+import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.common.service.RateLimitService
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.Order
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -15,7 +19,9 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Order(1)
 class RateLimitFilter(
     private val rateLimitService: RateLimitService,
-    private val rateLimitConfig: RateLimitConfig
+    private val rateLimitConfig: RateLimitConfig,
+    private val i18nMessageService: I18nMessageService,
+    private val objectMapper: ObjectMapper
 ) : OncePerRequestFilter() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -47,10 +53,38 @@ class RateLimitFilter(
             filterChain.doFilter(request, response)
         } else {
             logger.warn("Rate limit exceeded for client: $clientId, endpoint: $endpoint, path: $path")
-            response.status = HttpStatus.TOO_MANY_REQUESTS.value()
-            response.contentType = "application/json"
-            response.writer.write("{\"error\": \"Rate limit exceeded. Please try again later.\"}")
+            
+            // Create RateLimitedException with context metadata
+            val exception = RateLimitedException(
+                metadata = mapOf(
+                    "clientId" to clientId,
+                    "endpoint" to endpoint,
+                    "path" to path
+                )
+            )
+            
+            // Build and send the error response
+            sendErrorResponse(response, exception)
         }
+    }
+    
+    /**
+     * Sends a properly formatted error response for rate limiting
+     */
+    private fun sendErrorResponse(response: HttpServletResponse, exception: RateLimitedException) {
+        val errorCode = exception.errorCode
+        val errorResponse = ApiResponse.error<Nothing>(
+            ErrorDetails(
+                code = errorCode.code,
+                message = i18nMessageService.getErrorMessage(errorCode),
+                details = exception.metadata,
+                status = exception.status.value()
+            )
+        )
+        
+        response.status = exception.status.value()
+        response.contentType = "application/json"
+        response.writer.write(objectMapper.writeValueAsString(errorResponse))
     }
     
     private fun getClientId(request: HttpServletRequest): String {
