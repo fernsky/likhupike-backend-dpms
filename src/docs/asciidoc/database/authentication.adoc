@@ -1,0 +1,9 @@
+== Authentication System
+
+=== Session Management
+include::authentication/session-schema.adoc[leveloffset=+1]
+
+=== Password Reset System
+include::authentication/password-reset-schema.adoc[leveloffset=+1]
+
+<<<

@@ -1,7 +1,7 @@
 == User Management System
 
 === Core User Schema
-include::./sections/section-1-user-schema.adoc[leveloffset=+1]
+include::user-management/user-schema.adoc[leveloffset=+1]
 
 === Profile Management
 ==== Future Additions

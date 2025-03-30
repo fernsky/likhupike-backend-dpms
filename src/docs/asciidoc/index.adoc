@@ -15,6 +15,10 @@ This comprehensive documentation covers both the REST APIs and database structur
 
 include::changelog/changelog.adoc[leveloffset=+1]
 
+== System Design
+
+include::design/index.adoc[leveloffset=+1]
+
 == API Documentation
 
 include::api/index.adoc[leveloffset=+1]
