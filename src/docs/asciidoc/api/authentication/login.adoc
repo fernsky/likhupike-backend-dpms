@@ -1,0 +1,75 @@
+= User Login
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[login]]
+== User Login
+
+This endpoint authenticates a user and provides JWT tokens for accessing protected resources.
+
+=== Successful Login
+
+A successful login occurs when valid credentials for an approved user are provided.
+
+.HTTP Request
+include::{snippets}/auth-login-success/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/auth-login-success/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/auth-login-success/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/auth-login-success/response-fields.adoc[]
+
+=== Error Scenarios
+
+==== User Not Approved Error
+
+This error occurs when attempting to login with a user account that has not been approved by an administrator.
+
+.HTTP Request
+include::{snippets}/auth-login-user-not-approved/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/auth-login-user-not-approved/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/auth-login-user-not-approved/response-fields.adoc[]
+
+==== Invalid Credentials Error
+
+This error occurs when providing incorrect credentials for an existing user.
+
+.HTTP Request
+include::{snippets}/auth-login-invalid-credentials/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/auth-login-invalid-credentials/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/auth-login-invalid-credentials/response-fields.adoc[]
+
+==== User Not Found Error
+
+This error occurs when attempting to login with an email that does not exist in the system.
+
+.HTTP Request
+include::{snippets}/auth-login-user-not-found/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/auth-login-user-not-found/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/auth-login-user-not-found/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Rate limiting is applied to prevent brute force attacks
+* Failed login attempts are logged for security monitoring
+* After multiple failed attempts, temporary account locking may be triggered
