@@ -1,0 +1,17 @@
+==== {entity-name}
+
+{entity-description}
+
+.Table: {table-name}
+[cols="2,2,1,4",options="header"]
+|===
+|Column Name |Data Type |Nullable |Description
+{field-rows}
+|===
+
+===== Design Considerations
+
+* Add your design considerations here
+* Document indexing strategies
+* Document relationships
+* Document validation rules
