@@ -45,17 +45,4 @@ class I18nMessageService(
     fun getErrorMessage(errorCode: ErrorCode, args: Array<Any>? = null): String {
         return getMessage(errorCode.i18nKey, args, errorCode.defaultMessage)
     }
-
-    /**
-     * Retrieves a localized error message for the given error code string.
-     * 
-     * Error messages are looked up using the prefix "auth.error." followed by the error code.
-     *
-     * @param errorCode The specific error code as a string
-     * @param defaultMessage Optional fallback message if the error code is not found
-     * @return The localized error message, or the default message/error code if not found
-     */
-    fun getErrorMessage(errorCode: String, defaultMessage: String? = null): String {
-        return getMessage("auth.error.$errorCode", null, defaultMessage)
-    }
 }
