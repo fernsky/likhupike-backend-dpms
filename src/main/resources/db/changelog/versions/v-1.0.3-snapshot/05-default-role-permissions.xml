@@ -23,12 +23,22 @@
         <!-- System Administrator gets all permissions -->
         <sql>
             INSERT INTO role_permissions (id, role_type, permission_type)
-            SELECT gen_random_uuid(), 'SYSTEM_ADMINISTRATOR', type
-            FROM permissions
-            WHERE NOT EXISTS (
-                SELECT 1 FROM role_permissions 
-                WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = permissions.type
-            )
+            VALUES ('6f8e0452-6382-4a72-9b78-0734a4421623', 'SYSTEM_ADMINISTRATOR', 'CREATE_USER');
+
+            INSERT INTO role_permissions (id, role_type, permission_type)
+            VALUES ('a57c305e-e8e0-4a6c-9cfa-4b5b32bbc1d0', 'SYSTEM_ADMINISTRATOR', 'EDIT_USER');
+
+            INSERT INTO role_permissions (id, role_type, permission_type)
+            VALUES ('9e8c2574-f60f-4b3a-bd9d-932822c1b8f7', 'SYSTEM_ADMINISTRATOR', 'DELETE_USER');
+
+            INSERT INTO role_permissions (id, role_type, permission_type)
+            VALUES ('b0d90fe1-7982-4067-a489-797c92679ecc', 'SYSTEM_ADMINISTRATOR', 'VIEW_USER');
+
+            INSERT INTO role_permissions (id, role_type, permission_type)
+            VALUES ('c1a632e5-8d22-4bdb-97dd-5ff7a3721152', 'SYSTEM_ADMINISTRATOR', 'APPROVE_USER');
+
+            INSERT INTO role_permissions (id, role_type, permission_type)
+            VALUES ('d28e55f6-9387-4fb5-8951-b9b3e1f7ce12', 'SYSTEM_ADMINISTRATOR', 'RESET_USER_PASSWORD');
         </sql>
     </changeSet>
     
@@ -50,7 +60,7 @@
         <comment>Assign view user permission to Land Records Officer role</comment>
         
         <insert tableName="role_permissions">
-            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="id" value="af5e90d5-9638-41f2-9c2d-abb3f2601508"/>
             <column name="role_type" value="LAND_RECORDS_OFFICER"/>
             <column name="permission_type" value="VIEW_USER"/>
         </insert>
@@ -74,11 +84,10 @@
         <comment>Assign view user permission to Land Surveyor role</comment>
         
         <insert tableName="role_permissions">
-            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="id" value="ca081d6e-a788-42d6-b096-27f72b469727"/>
             <column name="role_type" value="LAND_SURVEYOR"/>
             <column name="permission_type" value="VIEW_USER"/>
         </insert>
     </changeSet>
-    
- 
+     
 </databaseChangeLog>

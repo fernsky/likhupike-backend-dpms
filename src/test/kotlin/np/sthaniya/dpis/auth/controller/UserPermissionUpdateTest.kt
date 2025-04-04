@@ -41,9 +41,9 @@ class UserPermissionUpdateTest : BasePermissionControllerTest() {
             .content("""
                 {
                     "roles": {
-                        "ADMIN": true,
-                        "USER": true,
-                        "MANAGER": false
+                        "SYSTEM_ADMINISTRATOR": true,
+                        "LAND_RECORDS_OFFICER": true,
+                        "LAND_SURVEYOR": false
                     }
                 }
             """.trimIndent()))

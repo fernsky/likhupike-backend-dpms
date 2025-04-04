@@ -56,6 +56,7 @@ class AuthLoginTest : BaseRestDocsTest() {
                         fieldWithPath("data.userId").description("Unique identifier of the user"),
                         fieldWithPath("data.email").description("Email address of the user"),
                         fieldWithPath("data.permissions").description("List of user permissions"),
+                        fieldWithPath("data.roles").description("List of user roles"),
                         fieldWithPath("data.isWardLevelUser").description("Flag indicating if the user is ward-level"),
                         fieldWithPath("data.expiresIn").description("Access token expiration time in seconds")
                     )
