@@ -39,6 +39,18 @@ interface UserService {
      */
     fun updatePermissions(userId: UUID, permissions: UserPermissionsDto): User
 
+
+    /**
+     * Updates the roles for a specific user.
+     *
+     * @param userId The ID of the user whose roles are being updated
+     * @param roles The new roles to assign to the user
+     * @return The updated [User] entity
+     * @throws AuthException.UserNotFoundException if the user doesn't exist
+     */
+    fun updateRoles(userId: UUID, roles: UserRolesDto): User
+
+
     /**
      * Resets a user's password.
      *

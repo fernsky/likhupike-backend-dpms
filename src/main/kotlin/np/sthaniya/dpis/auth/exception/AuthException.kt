@@ -291,4 +291,26 @@ sealed class AuthException(
         message = message,
         status = HttpStatus.BAD_REQUEST
     )
+
+    /**
+     * Exception thrown when a requested role is not found.
+     *
+     * @param roleName The name of the role that was not found
+     */
+    class RoleNotFoundException(roleName: String) : AuthException(
+        "Role not found: $roleName",
+        "role.not.found",
+        mapOf("roleName" to roleName)
+    )
+
+    /**
+     * Exception thrown when one or more required roles are missing from the system.
+     *
+     * @param missingRoles Set of missing role names
+     */
+    class MissingRolesException(missingRoles: Set<String>) : AuthException(
+        "Missing roles: ${missingRoles.joinToString()}",
+        "roles.missing",
+        mapOf("missingRoles" to missingRoles)
+    )
 }

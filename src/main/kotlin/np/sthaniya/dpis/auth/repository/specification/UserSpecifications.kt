@@ -4,6 +4,8 @@ import jakarta.persistence.criteria.JoinType
 import np.sthaniya.dpis.auth.domain.entity.Permission
 import np.sthaniya.dpis.auth.domain.entity.User
 import np.sthaniya.dpis.auth.domain.entity.UserPermission
+import np.sthaniya.dpis.auth.domain.entity.Role
+import np.sthaniya.dpis.auth.domain.entity.UserRole
 import np.sthaniya.dpis.auth.dto.UserSearchCriteria
 import org.springframework.data.jpa.domain.Specification
 
@@ -88,6 +90,31 @@ object UserSpecifications {
                 }
             }
         }
+
+    
+    /**
+     * Builds role-based specification with proper joins.
+     *
+     * @param criteria Search criteria containing role filters
+     * @return Specification handling role joins and filtering
+     */
+    private fun withRoles(criteria: UserSearchCriteria) =
+        Specification<User> { root, query, _ ->
+            criteria.roles?.let { roles ->
+                if (roles.isNotEmpty()) {
+                    query?.distinct(true)
+                    val rolesJoin =
+                        root
+                            .join<User, UserRole>("roles", JoinType.LEFT)
+                            .join<UserRole, Role>("role", JoinType.LEFT)
+                    rolesJoin.get<Any>("type").`in`(roles)
+                } else {
+                    null
+                }
+            }
+        }
+
+
 
     private fun withApprovalStatus(criteria: UserSearchCriteria) =
         Specification<User> { root, _, cb ->
