@@ -16,14 +16,15 @@ import java.math.BigDecimal
     ],
 )
 class Province : BaseEntity() {
+    @Id
+    @Column(nullable = false, unique = true, length = 36)
+    var code: String? = null
+
     @Column(nullable = false, length = 100)
     var name: String? = null
 
     @Column(nullable = false, length = 100)
     var nameNepali: String? = null
-
-    @Column(nullable = false, unique = true, length = 36)
-    var code: String? = null
 
     @Column(precision = 10, scale = 2)
     var area: BigDecimal? = null

@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.auth.repository.impl
 
 import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import jakarta.persistence.criteria.JoinType
 import np.sthaniya.dpis.auth.domain.entity.User
 import np.sthaniya.dpis.auth.domain.entity.UserPermission
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
+import org.springframework.stereotype.Repository
 import java.util.*
 
 /**
@@ -21,12 +23,12 @@ import java.util.*
  * 
  * This implementation uses JPA Criteria API to build dynamic queries with efficient fetching strategies
  * for user permissions, roles, and related entities.
- *
- * @property entityManager The JPA [EntityManager] used for creating and executing queries
  */
-class UserRepositoryImpl(
-    private val entityManager: EntityManager
-) : UserRepositoryCustom {
+@Repository
+class UserRepositoryImpl : UserRepositoryCustom {
+
+    @PersistenceContext
+    private lateinit var entityManager: EntityManager
 
     /**
      * @see UserRepositoryCustom.findByEmailWithPermissions

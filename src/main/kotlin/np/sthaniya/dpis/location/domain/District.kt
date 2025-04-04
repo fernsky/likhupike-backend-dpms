@@ -22,6 +22,7 @@ import java.math.BigDecimal
     ],
 )
 class District : BaseEntity() {
+    @Id
     @Column(nullable = false, unique = true, length = 36)
     var code: String? = null
 

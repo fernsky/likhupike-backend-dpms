@@ -24,6 +24,7 @@ import java.math.BigDecimal
     ],
 )
 class Municipality : BaseEntity() {
+    @Id
     @Column(nullable = false, length = 36, unique = true)
     var code: String? = null
 
