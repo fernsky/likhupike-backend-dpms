@@ -35,6 +35,11 @@ app:
   admin:
     email: ${ADMIN_EMAIL:admin@likhupike.gov.np}
     password: ${ADMIN_PASSWORD:Admin@123}
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    bucket: ${MINIO_BUCKET_NAME:dpis-bucket}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   rate-limiting:
     enabled: ${RATE_LIMIT_ENABLED:true}

@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'np.sthaniya'
-version = '1.0.1-SNAPSHOT'
+version = '1.0.2-SNAPSHOT'
 
 java {
 	toolchain {
@@ -87,6 +87,11 @@ dependencies {
 	
 	// Asciidoctor PDF theme dependencies
 	asciidoctorExt 'org.asciidoctor:asciidoctorj-pdf:2.3.9'
+
+	// Storage
+	  // Storage
+    implementation "io.minio:minio:8.5.9"
+    implementation "software.amazon.awssdk:s3:2.25.11"
 }
 
 ext {
