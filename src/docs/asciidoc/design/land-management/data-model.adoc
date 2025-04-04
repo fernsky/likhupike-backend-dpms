@@ -6,7 +6,7 @@ The model centers around the LandParcel entity which stores geographical and adm
 
 The model accommodates Nepal's diverse land classification system through specialized entities like GuthiDetails and GovernmentLandDetails, and supports the various ownership types defined in the Land Revenue Act, 1978. Additionally, the system manages LandOwnershipCertificates (Lalpurja) as legal documents that verify ownership claims.
 
-Supporting entities track land use types, building information, and other physical and administrative attributes of land parcels. The relationships are structured to maintain data integrity while providing flexibility for the diverse land management scenarios encountered across Nepal's regions.
+Supporting entities track land use types and other physical and administrative attributes of land parcels. The relationships are structured to maintain data integrity while providing flexibility for the diverse land management scenarios encountered across Nepal's regions.
 
 ==== Entity Relationship Diagram
 
@@ -101,27 +101,8 @@ entity GovernmentLandDetails {
   * landOwnerId : UUID
 }
 
-entity Building {
-  * id : UUID
-  * buildingNumber : String
-  * constructionYear : Integer
-  * floorCount : Integer
-  * totalArea : Double
-  * usageTypeId : UUID
-  * landParcelId : UUID
-  * coordinates : Geometry
-}
-
-entity BuildingUsageType {
-  * id : UUID
-  * name : String
-  * description : String
-}
-
 LandParcel }o--|| LandUseType
 LandParcel }o--|| LandOwnershipType
-LandParcel ||--o{ Building
-Building }o--|| BuildingUsageType
 
 LandParcel ||--o{ LandParcelOwnership
 LandOwner ||--o{ LandParcelOwnership
@@ -159,7 +140,3 @@ As per Land Revenue Act, 1978, the system supports various land registration cat
 ===== Specialized Ownership Entities
 * **GuthiDetails**: Additional information for land owned by religious or charitable trusts (Guthi)
 * **GovernmentLandDetails**: Additional details for government-owned land parcels
-
-===== Built Environment
-* **Building**: Structures built on land parcels
-* **BuildingUsageType**: Classification of building usage (residential, commercial, etc.)
