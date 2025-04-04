@@ -16,6 +16,8 @@ import java.util.*
  * Users can be either ward-level or system-level users, with different permissions and access levels.
  * The entity includes audit fields for tracking user approval and deletion status.
  *
+ * This class uses JPA inheritance and can be extended by specific user types like Citizen.
+ *
  * @property email The unique email address of the user, used as the username for authentication
  * @property password The encrypted password of the user
  * @property isWardLevelUser Indicates if the user has ward-level access restrictions
@@ -36,6 +38,8 @@ import java.util.*
         Index(name = "idx_users_email", columnList = "email")
     ],
 )
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "user_type")
 class User :
     UuidBaseEntity(),
     UserDetails {
@@ -69,6 +73,9 @@ class User :
 
     @Column(name = "deleted_by")
     var deletedBy: UUID? = null
+    
+    @Column(name = "phone_number")
+    var phoneNumber: String? = null
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
     private var permissions: MutableSet<UserPermission> = mutableSetOf()

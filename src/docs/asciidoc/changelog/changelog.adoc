@@ -24,6 +24,15 @@ Below is the comprehensive timeline of all database changes:
 |===
 |Version |Date |Author |Changes
 
+|`v1.0.4-SNAPSHOT` |2025-04-10 |Trilochan Bhusal |* Citizen Entity Implementation
+* Modified `users` table to support inheritance
+* Added `user_type` discriminator column to users table
+* Created `citizens` table extending the users table
+* Added fields for citizen personal information
+* Added support for document storage references (photo and citizenship)
+* Created indexes for efficient citizen lookups
+* Updated Entity-Relationship model with inheritance
+
 |`v1.0.3-SNAPSHOT` |2025-04-04 |Trilochan Bhusal |* Role-Based Access Control Implementation
 * Created `roles` table for storing system roles
 * Created `role_permissions` junction table to link roles with permissions  
@@ -82,6 +91,14 @@ Implementation of comprehensive role system with hierarchical permissions:
 * Effective permissions combine both direct and role-derived permissions
 * Spring Security integration for both role and permission-based authorization
 
-This implementation supports the complex authorization requirements of the land management system, where different user types need varying levels of access to system functionality.
+==== Citizen Entity Implementation (`v1.0.4-SNAPSHOT`)
+Extended the user system to support citizen profiles:
+
+* Implemented JPA inheritance between User and Citizen entities
+* Added support for storing citizen personal information
+* Created storage system for citizen documents and photos
+* Integrated with S3-compatible storage (MinIO) for document management
+* Added unique constraints and indexes for efficient citizen lookups
+* Enhanced entity model to support user specialization
 
 <<<

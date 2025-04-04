@@ -1,0 +1,100 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="02-citizens-table-create">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="users"/>
+            <not>
+                <tableExists tableName="citizens"/>
+            </not>
+        </preConditions>
+        
+        <comment>Create citizens table for User inheritance with structured address fields</comment>
+        
+        <createTable tableName="citizens">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="citizens_pkey"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="citizenship_number" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_citizens_citizenship_number"/>
+            </column>
+            <column name="citizenship_issued_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="citizenship_issued_office" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Permanent Address Fields -->
+            <column name="permanent_province" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permanent_district" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permanent_municipality" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permanent_ward_number" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permanent_street_address" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            
+            <!-- Temporary Address Fields -->
+            <column name="temporary_province" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="temporary_district" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="temporary_municipality" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="temporary_ward_number" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="temporary_street_address" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            
+            <column name="father_name" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="grandfather_name" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="spouse_name" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="photo_key" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="citizenship_front_key" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="citizenship_back_key" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Add foreign key constraint to users table -->
+        <addForeignKeyConstraint 
+            baseTableName="citizens"
+            baseColumnNames="id"
+            constraintName="fk_citizens_users"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- Add index for citizenship number searches -->
+        <createIndex indexName="idx_citizens_citizenship_number" tableName="citizens">
+            <column name="citizenship_number"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
