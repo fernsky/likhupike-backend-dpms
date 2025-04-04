@@ -5,6 +5,8 @@ import jakarta.persistence.criteria.JoinType
 import np.sthaniya.dpis.auth.domain.entity.User
 import np.sthaniya.dpis.auth.domain.entity.UserPermission
 import np.sthaniya.dpis.auth.domain.entity.Permission
+import np.sthaniya.dpis.auth.domain.entity.UserRole
+import np.sthaniya.dpis.auth.domain.entity.Role
 import np.sthaniya.dpis.auth.repository.UserRepositoryCustom
 import np.sthaniya.dpis.auth.dto.UserProjection
 import np.sthaniya.dpis.auth.dto.UserProjectionImpl
@@ -18,7 +20,7 @@ import java.util.*
  * Implementation of [UserRepositoryCustom] that provides custom query functionality for [User] entities.
  * 
  * This implementation uses JPA Criteria API to build dynamic queries with efficient fetching strategies
- * for user permissions and related entities.
+ * for user permissions, roles, and related entities.
  *
  * @property entityManager The JPA [EntityManager] used for creating and executing queries
  */
@@ -73,12 +75,118 @@ class UserRepositoryImpl(
             .firstOrNull()
             .let { Optional.ofNullable(it) }
     }
+    
+    /**
+     * @see UserRepositoryCustom.findByEmailWithRoles
+     */
+    override fun findByEmailWithRoles(email: String): Optional<User> {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createQuery(User::class.java)
+        val root = query.from(User::class.java)
+        
+        root.fetch<User, UserRole>("roles", JoinType.LEFT)
+            .fetch<UserRole, Role>("role", JoinType.LEFT)
+
+        query.where(
+            cb.and(
+                cb.equal(root.get<String>("email"), email),
+                cb.equal(root.get<Boolean>("isDeleted"), false)
+            )
+        )
+
+        return entityManager.createQuery(query)
+            .resultList
+            .firstOrNull()
+            .let { Optional.ofNullable(it) }
+    }
+
+    /**
+     * @see UserRepositoryCustom.findByIdWithRoles
+     */
+    override fun findByIdWithRoles(id: UUID): Optional<User> {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createQuery(User::class.java)
+        val root = query.from(User::class.java)
+        
+        root.fetch<User, UserRole>("roles", JoinType.LEFT)
+            .fetch<UserRole, Role>("role", JoinType.LEFT)
+
+        query.where(
+            cb.and(
+                cb.equal(root.get<UUID>("id"), id),
+                cb.equal(root.get<Boolean>("isDeleted"), false)
+            )
+        )
+
+        return entityManager.createQuery(query)
+            .resultList
+            .firstOrNull()
+            .let { Optional.ofNullable(it) }
+    }
+    
+    /**
+     * @see UserRepositoryCustom.findByEmailWithPermissionsAndRoles
+     */
+    override fun findByEmailWithPermissionsAndRoles(email: String): Optional<User> {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createQuery(User::class.java)
+        val root = query.from(User::class.java)
+        
+        // Fetch permissions with their related permission entities
+        root.fetch<User, UserPermission>("permissions", JoinType.LEFT)
+            .fetch<UserPermission, Permission>("permission", JoinType.LEFT)
+            
+        // Fetch roles with their related role entities
+        root.fetch<User, UserRole>("roles", JoinType.LEFT)
+            .fetch<UserRole, Role>("role", JoinType.LEFT)
+
+        query.where(
+            cb.and(
+                cb.equal(root.get<String>("email"), email),
+                cb.equal(root.get<Boolean>("isDeleted"), false)
+            )
+        )
+
+        return entityManager.createQuery(query)
+            .resultList
+            .firstOrNull()
+            .let { Optional.ofNullable(it) }
+    }
+
+    /**
+     * @see UserRepositoryCustom.findByIdWithPermissionsAndRoles
+     */
+    override fun findByIdWithPermissionsAndRoles(id: UUID): Optional<User> {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createQuery(User::class.java)
+        val root = query.from(User::class.java)
+        
+        // Fetch permissions with their related permission entities
+        root.fetch<User, UserPermission>("permissions", JoinType.LEFT)
+            .fetch<UserPermission, Permission>("permission", JoinType.LEFT)
+            
+        // Fetch roles with their related role entities
+        root.fetch<User, UserRole>("roles", JoinType.LEFT)
+            .fetch<UserRole, Role>("role", JoinType.LEFT)
+
+        query.where(
+            cb.and(
+                cb.equal(root.get<UUID>("id"), id),
+                cb.equal(root.get<Boolean>("isDeleted"), false)
+            )
+        )
+
+        return entityManager.createQuery(query)
+            .resultList
+            .firstOrNull()
+            .let { Optional.ofNullable(it) }
+    }
 
     /**
      * @see UserRepositoryCustom.findAllWithProjection
      *
-     * The implementation handles distinct counting and fetching when permissions are included
-     * in the requested columns or when the specification references permissions.
+     * The implementation handles distinct counting and fetching when permissions or roles are included
+     * in the requested columns or when the specification references permissions or roles.
      */
     override fun findAllWithProjection(
         spec: Specification<User>,
@@ -91,14 +199,26 @@ class UserRepositoryImpl(
         val countQuery = cb.createQuery(Long::class.java)
         val countRoot = countQuery.from(User::class.java)
         
-        // If permissions are in columns or spec contains permissions, we need distinct count
-        val needsDistinct = "permissions" in columns || spec.toString().contains("permissions")
+        // If permissions or roles are in columns or spec contains them, we need distinct count
+        val specString = spec.toString()
+        val needsDistinct = columns.any { it in setOf("permissions", "roles") } || 
+                            specString.contains("permissions") || 
+                            specString.contains("roles")
         
         if (needsDistinct) {
             countQuery.select(cb.countDistinct(countRoot))
+            
             // Join permissions for count query if needed
-            countRoot.join<User, UserPermission>("permissions", JoinType.LEFT)
-                .join<UserPermission, Permission>("permission", JoinType.LEFT)
+            if (specString.contains("permissions")) {
+                countRoot.join<User, UserPermission>("permissions", JoinType.LEFT)
+                    .join<UserPermission, Permission>("permission", JoinType.LEFT)
+            }
+            
+            // Join roles for count query if needed
+            if (specString.contains("roles")) {
+                countRoot.join<User, UserRole>("roles", JoinType.LEFT)
+                    .join<UserRole, Role>("role", JoinType.LEFT)
+            }
         } else {
             countQuery.select(cb.count(countRoot))
         }
@@ -123,6 +243,12 @@ class UserRepositoryImpl(
         if ("permissions" in columns) {
             root.fetch<User, UserPermission>("permissions", JoinType.LEFT)
                 .fetch<UserPermission, Permission>("permission", JoinType.LEFT)
+        }
+        
+        // Always join roles if they're requested in columns
+        if ("roles" in columns) {
+            root.fetch<User, UserRole>("roles", JoinType.LEFT)
+                .fetch<UserRole, Role>("role", JoinType.LEFT)
         }
 
         spec.toPredicate(root, query, cb)?.let { query.where(it) }

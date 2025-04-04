@@ -27,6 +27,38 @@ interface UserRepositoryCustom {
      * @return An [Optional] containing the user with their permissions if found, or empty if not found
      */
     fun findByIdWithPermissions(id: UUID): Optional<User>
+    
+    /**
+     * Finds a user by their email address and eagerly loads their roles.
+     *
+     * @param email The email address to search for
+     * @return An [Optional] containing the user with their roles if found, or empty if not found
+     */
+    fun findByEmailWithRoles(email: String): Optional<User>
+
+    /**
+     * Finds a user by their ID and eagerly loads their roles.
+     *
+     * @param id The UUID of the user to search for
+     * @return An [Optional] containing the user with their roles if found, or empty if not found
+     */
+    fun findByIdWithRoles(id: UUID): Optional<User>
+    
+    /**
+     * Finds a user by their email address and eagerly loads both their permissions and roles.
+     *
+     * @param email The email address to search for
+     * @return An [Optional] containing the user with their permissions and roles if found, or empty if not found
+     */
+    fun findByEmailWithPermissionsAndRoles(email: String): Optional<User>
+
+    /**
+     * Finds a user by their ID and eagerly loads both their permissions and roles.
+     *
+     * @param id The UUID of the user to search for
+     * @return An [Optional] containing the user with their permissions and roles if found, or empty if not found
+     */
+    fun findByIdWithPermissionsAndRoles(id: UUID): Optional<User>
 
     /**
      * Retrieves a paginated list of users as projections based on the given specification and selected columns.
