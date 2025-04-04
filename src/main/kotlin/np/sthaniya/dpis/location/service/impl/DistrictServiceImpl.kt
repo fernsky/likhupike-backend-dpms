@@ -180,7 +180,7 @@ class DistrictServiceImpl(
         provinceCode: String,
     ) {
         if (districtRepository.existsByCodeAndProvince(code.uppercase(), provinceCode.uppercase())) {
-            throw DistrictCodeExistsException(code)
+            throw LocationException.DistrictCodeExistsException(code)
         }
     }
 

@@ -206,7 +206,7 @@ class MunicipalityServiceImpl(
         districtCode: String,
     ) {
         if (municipalityRepository.existsByCodeAndDistrict(code.uppercase(), districtCode)) {
-            throw DuplicateMunicipalityCodeException(code, districtCode)
+            throw LocationException.DuplicateMunicipalityCodeException(code, districtCode)
         }
     }
 

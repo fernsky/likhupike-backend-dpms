@@ -42,7 +42,7 @@ class WardServiceImpl(
         val municipality =
             municipalityRepository
                 .findByCodeIgnoreCase(request.municipalityCode)
-                .orElseThrow { MunicipalityNotFoundException(request.municipalityCode) }
+                .orElseThrow { LocationException.MunicipalityNotFoundException(request.municipalityCode) }
 
         validateWardNumber(request.wardNumber, request.municipalityCode)
 
@@ -180,14 +180,14 @@ class WardServiceImpl(
     ): Ward =
         wardRepository
             .findByWardNumberAndMunicipalityCode(wardNumber, municipalityCode)
-            .orElseThrow { WardNotFoundException(wardNumber, municipalityCode) }
+            .orElseThrow { LocationException.WardNotFoundException(wardNumber, municipalityCode) }
 
     private fun validateWardNumber(
         wardNumber: Int,
         municipalityCode: String,
     ) {
         if (wardRepository.existsByWardNumberAndMunicipality(wardNumber, municipalityCode)) {
-            throw DuplicateWardNumberException(wardNumber, municipalityCode)
+            throw LocationException.DuplicateWardNumberException(wardNumber, municipalityCode)
         }
     }
 }
