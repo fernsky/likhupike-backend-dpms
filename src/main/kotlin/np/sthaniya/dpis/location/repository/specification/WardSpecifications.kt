@@ -1,114 +1,216 @@
 package np.sthaniya.dpis.location.repository.specification
 
-import jakarta.persistence.criteria.Join
-import jakarta.persistence.criteria.Predicate
+import jakarta.persistence.criteria.JoinType
 import np.sthaniya.dpis.location.api.dto.criteria.WardSearchCriteria
-import np.sthaniya.dpis.location.domain.*
+import np.sthaniya.dpis.location.domain.Ward
 import org.springframework.data.jpa.domain.Specification
 import java.math.BigDecimal
 import kotlin.math.*
 
+/**
+ * Object providing specification builders for dynamic Ward entity queries.
+ *
+ * This object encapsulates:
+ * - Dynamic query criteria building
+ * - Complex join handling
+ * - Geographic bounding box calculations
+ * - Search and filter specifications
+ *
+ * Key Features:
+ * - Type-safe specification building
+ * - Support for complex search criteria
+ * - Municipality, district, and province-based filtering
+ * - Geographic area search with bounding box optimization
+ */
 object WardSpecifications {
+    
+    /**
+     * Creates a specification from search criteria by combining all applicable filters.
+     *
+     * @param criteria Search criteria containing filter parameters
+     * @return Combined specification with all filters applied
+     */
     fun withSearchCriteria(criteria: WardSearchCriteria): Specification<Ward> =
-        Specification<Ward> { root, query, cb ->
-            val predicates = mutableListOf<Predicate>()
+        Specification
+            .where(withMunicipalityCode(criteria))
+            .and(withDistrictCode(criteria))
+            .and(withProvinceCode(criteria))
+            .and(withWardNumber(criteria))
+            .and(withPopulationRange(criteria))
+            .and(withAreaRange(criteria))
+            .and(withWardNumberRange(criteria))
+            .and(withGeographicSearch(criteria))
 
-            // Municipality filter
+    /**
+     * Builds municipality code specification with join to municipality entity.
+     *
+     * @param criteria Search criteria containing municipality code
+     * @return Specification filtering wards by their municipality code
+     */
+    private fun withMunicipalityCode(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
             criteria.municipalityCode?.let { code ->
-                val municipality: Join<Ward, Municipality> = root.join(Ward_.municipality)
-                predicates.add(
-                    cb.equal(
-                        cb.lower(municipality.get(Municipality_.code)),
-                        code.lowercase(),
-                    ),
+                val municipality = root.join<Ward, Any>("municipality", JoinType.INNER)
+                cb.equal(
+                    cb.lower(municipality.get("code")),
+                    code.lowercase()
                 )
             }
+        }
 
-            // District filter
+    /**
+     * Builds district code specification with joins to municipality and district entities.
+     *
+     * @param criteria Search criteria containing district code
+     * @return Specification filtering wards by their district code
+     */
+    private fun withDistrictCode(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
             criteria.districtCode?.let { code ->
-                val municipality: Join<Ward, Municipality> = root.join(Ward_.municipality)
-                val district: Join<Municipality, District> = municipality.join(Municipality_.district)
-                predicates.add(
-                    cb.equal(
-                        cb.lower(district.get(District_.code)),
-                        code.lowercase(),
-                    ),
+                val municipality = root.join<Ward, Any>("municipality", JoinType.INNER)
+                val district = municipality.join<Any, Any>("district", JoinType.INNER)
+                cb.equal(
+                    cb.lower(district.get("code")),
+                    code.lowercase()
                 )
             }
+        }
 
-            // Province filter
+    /**
+     * Builds province code specification with joins to municipality, district, and province entities.
+     *
+     * @param criteria Search criteria containing province code
+     * @return Specification filtering wards by their province code
+     */
+    private fun withProvinceCode(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
             criteria.provinceCode?.let { code ->
-                val municipality: Join<Ward, Municipality> = root.join(Ward_.municipality)
-                val district: Join<Municipality, District> = municipality.join(Municipality_.district)
-                val province: Join<District, Province> = district.join(District_.province)
-                predicates.add(
-                    cb.equal(
-                        cb.lower(province.get(Province_.code)),
-                        code.lowercase(),
-                    ),
+                val municipality = root.join<Ward, Any>("municipality", JoinType.INNER)
+                val district = municipality.join<Any, Any>("district", JoinType.INNER)
+                val province = district.join<Any, Any>("province", JoinType.INNER)
+                cb.equal(
+                    cb.lower(province.get("code")),
+                    code.lowercase()
                 )
             }
+        }
 
-            // Basic criteria
-            criteria.wardNumber?.let {
-                predicates.add(cb.equal(root.get<Int>(Ward_.wardNumber), it))
+    /**
+     * Builds ward number exact match specification.
+     *
+     * @param criteria Search criteria containing ward number
+     * @return Specification for exact ward number matching
+     */
+    private fun withWardNumber(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
+            criteria.wardNumber?.let { number ->
+                cb.equal(root.get<Int>("wardNumber"), number)
+            }
+        }
+
+    /**
+     * Builds population range specification.
+     *
+     * @param criteria Search criteria containing min/max population
+     * @return Specification filtering wards by their population range
+     */
+    private fun withPopulationRange(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
+            val predicates = mutableListOf<jakarta.persistence.criteria.Predicate>()
+
+            criteria.minPopulation?.let { min ->
+                predicates.add(cb.greaterThanOrEqualTo(root.get("population"), min))
             }
 
-            // Population range
-            criteria.minPopulation?.let {
-                predicates.add(cb.greaterThanOrEqualTo(root.get(Ward_.population), it))
-            }
-            criteria.maxPopulation?.let {
-                predicates.add(cb.lessThanOrEqualTo(root.get(Ward_.population), it))
+            criteria.maxPopulation?.let { max ->
+                predicates.add(cb.lessThanOrEqualTo(root.get("population"), max))
             }
 
-            // Area range
-            criteria.minArea?.let {
-                predicates.add(cb.greaterThanOrEqualTo(root.get(Ward_.area), it))
-            }
-            criteria.maxArea?.let {
-                predicates.add(cb.lessThanOrEqualTo(root.get(Ward_.area), it))
+            if (predicates.isEmpty()) null else cb.and(*predicates.toTypedArray())
+        }
+
+    /**
+     * Builds area range specification.
+     *
+     * @param criteria Search criteria containing min/max area
+     * @return Specification filtering wards by their area range
+     */
+    private fun withAreaRange(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
+            val predicates = mutableListOf<jakarta.persistence.criteria.Predicate>()
+
+            criteria.minArea?.let { min ->
+                predicates.add(cb.greaterThanOrEqualTo(root.get("area"), min))
             }
 
-            // Ward number range
-            criteria.wardNumberFrom?.let {
-                predicates.add(cb.greaterThanOrEqualTo(root.get(Ward_.wardNumber), it))
-            }
-            criteria.wardNumberTo?.let {
-                predicates.add(cb.lessThanOrEqualTo(root.get(Ward_.wardNumber), it))
+            criteria.maxArea?.let { max ->
+                predicates.add(cb.lessThanOrEqualTo(root.get("area"), max))
             }
 
-            // Geographic search
+            if (predicates.isEmpty()) null else cb.and(*predicates.toTypedArray())
+        }
+
+    /**
+     * Builds ward number range specification.
+     *
+     * @param criteria Search criteria containing ward number range
+     * @return Specification filtering wards by their ward number range
+     */
+    private fun withWardNumberRange(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
+            val predicates = mutableListOf<jakarta.persistence.criteria.Predicate>()
+
+            criteria.wardNumberFrom?.let { from ->
+                predicates.add(cb.greaterThanOrEqualTo(root.get("wardNumber"), from))
+            }
+
+            criteria.wardNumberTo?.let { to ->
+                predicates.add(cb.lessThanOrEqualTo(root.get("wardNumber"), to))
+            }
+
+            if (predicates.isEmpty()) null else cb.and(*predicates.toTypedArray())
+        }
+
+    /**
+     * Builds geographic search specification using a bounding box approach.
+     *
+     * @param criteria Search criteria containing coordinates and radius
+     * @return Specification filtering wards within the geographic bounding box
+     */
+    private fun withGeographicSearch(criteria: WardSearchCriteria): Specification<Ward> =
+        Specification { root, _, cb ->
             if (criteria.isGeographicSearch()) {
                 val (minLat, maxLat, minLon, maxLon) =
                     calculateBoundingBox(
                         criteria.latitude!!.toDouble(),
                         criteria.longitude!!.toDouble(),
-                        criteria.radiusKm!!,
+                        criteria.radiusKm!!
                     )
 
-                predicates.add(
-                    cb.and(
-                        cb.greaterThanOrEqualTo(root.get<BigDecimal>(Ward_.latitude), BigDecimal.valueOf(minLat)),
-                        cb.lessThanOrEqualTo(root.get<BigDecimal>(Ward_.latitude), BigDecimal.valueOf(maxLat)),
-                        cb.greaterThanOrEqualTo(root.get<BigDecimal>(Ward_.longitude), BigDecimal.valueOf(minLon)),
-                        cb.lessThanOrEqualTo(root.get<BigDecimal>(Ward_.longitude), BigDecimal.valueOf(maxLon)),
-                    ),
+                cb.and(
+                    cb.greaterThanOrEqualTo(root.get<BigDecimal>("latitude"), BigDecimal.valueOf(minLat)),
+                    cb.lessThanOrEqualTo(root.get<BigDecimal>("latitude"), BigDecimal.valueOf(maxLat)),
+                    cb.greaterThanOrEqualTo(root.get<BigDecimal>("longitude"), BigDecimal.valueOf(minLon)),
+                    cb.lessThanOrEqualTo(root.get<BigDecimal>("longitude"), BigDecimal.valueOf(maxLon))
                 )
-            }
-
-            // Combine all predicates
-            if (predicates.isEmpty()) {
-                null
             } else {
-                cb.and(*predicates.toTypedArray())
+                null
             }
         }
 
+    /**
+     * Calculates a bounding box for geographical searches.
+     * This approximation is more efficient than precise distance calculations for initial filtering.
+     *
+     * @param lat Center latitude
+     * @param lon Center longitude
+     * @param radiusKm Search radius in kilometers
+     * @return BoundingBox with min/max latitude and longitude values
+     */
     private fun calculateBoundingBox(
         lat: Double,
         lon: Double,
-        radiusKm: Double,
+        radiusKm: Double
     ): BoundingBox {
         val earthRadiusKm = 6371.0
         val latRadians = Math.toRadians(lat)
@@ -123,14 +225,17 @@ object WardSpecifications {
             minLat = lat - latDelta,
             maxLat = lat + latDelta,
             minLon = lon - lonDelta,
-            maxLon = lon + lonDelta,
+            maxLon = lon + lonDelta
         )
     }
 
+    /**
+     * Value class representing geographic bounding box coordinates.
+     */
     private data class BoundingBox(
         val minLat: Double,
         val maxLat: Double,
         val minLon: Double,
-        val maxLon: Double,
+        val maxLon: Double
     )
 }
