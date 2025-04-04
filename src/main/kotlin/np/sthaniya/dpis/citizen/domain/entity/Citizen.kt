@@ -46,6 +46,9 @@ class Citizen : User() {
     @Column(name = "name", nullable = false)
     var name: String? = null
 
+    @Column(name = "name_devnagari", nullable = false)
+    var nameDevnagari: String? = null
+
     @Column(name = "citizenship_number", nullable = false, unique = true)
     var citizenshipNumber: String? = null
 

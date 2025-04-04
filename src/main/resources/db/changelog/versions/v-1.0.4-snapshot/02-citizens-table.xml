@@ -20,6 +20,9 @@
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="name_devnagari" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
             <column name="citizenship_number" type="VARCHAR(50)">
                 <constraints nullable="false" unique="true" uniqueConstraintName="uk_citizens_citizenship_number"/>
             </column>
