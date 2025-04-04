@@ -44,6 +44,12 @@ object UserMapper {
                             PermissionType.valueOf(it.authority.removePrefix("PERMISSION_"))
                         }.getOrNull()
                     }.toSet(),
+            roles = user.getRoles()
+                .mapNotNull { role ->
+                    runCatching {
+                        role.type
+                    }.getOrNull()
+                }.toSet(),
             isWardLevelUser = user.isWardLevelUser,
             wardNumber = user.wardNumber,
             isApproved = user.isApproved,

@@ -69,6 +69,7 @@ class UserProjectionImpl(
     override fun getId() = fields["id"] as? UUID
     override fun getEmail() = fields["email"] as? String
     override fun getPermissions() = fields["permissions"] as? Set<PermissionType>
+    override fun getRoles() = fields["roles"] as? Set<RoleType>
     override fun getIsWardLevelUser() = fields["isWardLevelUser"] as? Boolean
     override fun getWardNumber() = fields["wardNumber"] as? Int
     override fun getIsApproved() = fields["isApproved"] as? Boolean
