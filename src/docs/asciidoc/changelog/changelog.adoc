@@ -24,7 +24,19 @@ Below is the comprehensive timeline of all database changes:
 |===
 |Version |Date |Author |Changes
 
-|`v1.0.4-SNAPSHOT` |2025-04-10 |Trilochan Bhusal |* Citizen Entity Implementation
+|`v1.0.5-SNAPSHOT` |2025-04-04 |Trilochan Bhusal |* Location Entity Implementation
+* Implemented hierarchical location domain model with Province, District, Municipality, and Ward entities
+* Created geospatial data structures with proper relationships between administrative divisions
+* Added support for GIS data with Polygon geometry fields using JTS/PostGIS integration
+* Implemented proper primary key strategy: string-based codes for Province/District/Municipality
+* Created composite key for Ward entity using WardId class (wardNumber + municipalityCode)
+* Added bidirectional relationships between location entities with proper cascade behavior
+* Implemented specialized repository interfaces with geospatial query capabilities
+* Optimized location entity queries with appropriate indexes for administrative hierarchies
+* Added support for proximity-based location searches using spatial functions
+* Implemented dynamic projection system for flexible location entity responses
+
+|`v1.0.4-SNAPSHOT` |2025-04-04 |Trilochan Bhusal |* Citizen Entity Implementation
 * Modified `users` table to support inheritance
 * Added `user_type` discriminator column to users table
 * Created `citizens` table extending the users table
@@ -100,5 +112,23 @@ Extended the user system to support citizen profiles:
 * Integrated with S3-compatible storage (MinIO) for document management
 * Added unique constraints and indexes for efficient citizen lookups
 * Enhanced entity model to support user specialization
+
+==== Location Entity Improvements (`v1.0.5-SNAPSHOT`)
+Significant refactoring of the location domain entities to improve data integrity and query performance:
+
+* Fixed critical entity identification issues:
+  * Implemented proper primary key handling in all location entities
+  * Updated Province and District entities to use code field as primary key
+  * Municipality entity now uses code as natural primary key
+  * Ward entity now uses composite key (wardNumber + municipalityCode) with proper @IdClass implementation
+* Standardized data access patterns:
+  * Removed JPA metamodel dependencies in favor of string-based property access
+  * Refactored specification implementation for consistent query building
+  * Enhanced repository implementations with comprehensive documentation
+* Performance optimizations:
+  * Improved geo-spatial search capabilities
+  * Added proper join handling in complex queries
+  * Optimized count queries for paginated results
+* Added comprehensive KDoc documentation across all components
 
 <<<
