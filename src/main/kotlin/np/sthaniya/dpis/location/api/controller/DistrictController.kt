@@ -13,8 +13,8 @@ import np.sthaniya.dpis.location.api.dto.response.DistrictDetailResponse
 import np.sthaniya.dpis.location.api.dto.response.DistrictResponse
 import np.sthaniya.dpis.location.api.dto.response.DynamicDistrictProjection
 import np.sthaniya.dpis.location.service.DistrictService
-import np.sthaniya.dpis.shared.dto.ApiResponse
-import np.sthaniya.dpis.shared.dto.toApiResponse
+import np.sthaniya.dpis.common.dto.ApiResponse
+import np.sthaniya.dpis.common.dto.toApiResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize

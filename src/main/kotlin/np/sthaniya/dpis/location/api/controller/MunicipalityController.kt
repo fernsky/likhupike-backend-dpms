@@ -14,8 +14,8 @@ import np.sthaniya.dpis.location.api.dto.response.MunicipalityDetailResponse
 import np.sthaniya.dpis.location.api.dto.response.MunicipalityResponse
 import np.sthaniya.dpis.location.domain.MunicipalityType
 import np.sthaniya.dpis.location.service.MunicipalityService
-import np.sthaniya.dpis.shared.dto.ApiResponse
-import np.sthaniya.dpis.shared.dto.toApiResponse
+import np.sthaniya.dpis.common.dto.ApiResponse
+import np.sthaniya.dpis.common.dto.toApiResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize

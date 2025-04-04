@@ -92,6 +92,14 @@ dependencies {
 	  // Storage
     implementation "io.minio:minio:8.5.9"
     implementation "software.amazon.awssdk:s3:2.25.11"
+
+	   // Spatial and Geometry support
+    implementation "org.locationtech.jts:jts-core"
+    implementation "org.hibernate.orm:hibernate-spatial"
+
+	  // GeoJSON-Jackson
+    implementation "de.grundid.opendatalab:geojson-jackson:1.14"
+    implementation "org.locationtech.jts.io:jts-io-common:1.19.0"
 }
 
 ext {

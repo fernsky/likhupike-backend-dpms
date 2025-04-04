@@ -2,7 +2,7 @@ package np.sthaniya.dpis.shared.dto
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotEmpty
-import np.sthaniya.dpis.shared.validation.ValidCoordinateList
+import np.sthaniya.dpis.common.validation.ValidCoordinateList
 import org.hibernate.validator.constraints.Range
 
 typealias Coordinate = Array<Double>
