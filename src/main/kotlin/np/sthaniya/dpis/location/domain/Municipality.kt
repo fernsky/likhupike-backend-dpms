@@ -80,13 +80,13 @@ class Municipality : BaseEntity() {
         if (this === other) return true
         if (other !is Municipality) return false
         if (!super.equals(other)) return false
-        return code == other.code && district?.id == other.district?.id
+        return code == other.code && district?.code == other.district?.code
     }
 
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + (code?.hashCode() ?: 0)
-        result = 31 * result + (district?.id?.hashCode() ?: 0)
+        result = 31 * result + (district?.code?.hashCode() ?: 0)
         return result
     }
 }

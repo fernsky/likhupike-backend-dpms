@@ -56,13 +56,13 @@ class Ward : BaseEntity() {
         if (other !is Ward) return false
         if (!super.equals(other)) return false
         return wardNumber == other.wardNumber &&
-            municipality?.id == other.municipality?.id
+            municipality?.code == other.municipality?.code
     }
 
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + (wardNumber ?: 0)
-        result = 31 * result + (municipality?.id?.hashCode() ?: 0)
+        result = 31 * result + (municipality?.code?.hashCode() ?: 0)
         return result
     }
 

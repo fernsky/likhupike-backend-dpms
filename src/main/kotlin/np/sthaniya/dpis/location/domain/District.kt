@@ -68,13 +68,13 @@ class District : BaseEntity() {
         if (this === other) return true
         if (other !is District) return false
         if (!super.equals(other)) return false
-        return code == other.code && province?.id == other.province?.id
+        return code == other.code && province?.code == other.province?.code
     }
 
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + (code?.hashCode() ?: 0)
-        result = 31 * result + (province?.id?.hashCode() ?: 0)
+        result = 31 * result + (province?.code?.hashCode() ?: 0)
         return result
     }
 }
