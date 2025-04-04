@@ -44,7 +44,7 @@ class WardController(
         ],
     )
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     fun createWard(
         @Parameter(description = "Ward creation details", required = true)
         @Valid
@@ -70,7 +70,7 @@ class WardController(
         ],
     )
     @PutMapping("/{municipalityCode}/{wardNumber}")
-    @PreAuthorize("hasAnyRole('MUNICIPALITY_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR')")
     fun updateWard(
         @Parameter(description = "Municipality code", required = true)
         @PathVariable municipalityCode: String,

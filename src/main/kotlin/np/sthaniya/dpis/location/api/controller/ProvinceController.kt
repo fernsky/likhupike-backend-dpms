@@ -31,7 +31,7 @@ class ProvinceController(
 
     @Operation(summary = "Create a new province")
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     fun createProvince(
         @Valid @RequestBody request: CreateProvinceRequest,
     ): ResponseEntity<ApiResponse<ProvinceResponse>> {
@@ -97,7 +97,7 @@ class ProvinceController(
 
     @Operation(summary = "Update province")
     @PutMapping("/{code}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     fun updateProvince(
         @PathVariable code: String,
         @Valid @RequestBody request: UpdateProvinceRequest,

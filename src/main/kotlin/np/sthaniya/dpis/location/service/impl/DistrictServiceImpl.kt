@@ -37,7 +37,7 @@ class DistrictServiceImpl(
         val province =
             provinceRepository
                 .findByCodeIgnoreCase(request.provinceCode)
-                .orElseThrow { ProvinceNotFoundException(request.provinceCode) }
+                .orElseThrow { LocationException.ProvinceNotFoundException(request.provinceCode) }
 
         validateDistrictCode(request.code, request.provinceCode)
 
@@ -151,7 +151,7 @@ class DistrictServiceImpl(
     @Transactional(readOnly = true)
     override fun validateDistrictExists(code: String) {
         if (!districtRepository.existsByCode(code.uppercase())) {
-            throw DistrictNotFoundException(code)
+            throw LocationException.DistrictNotFoundException(code)
         }
     }
 
@@ -173,7 +173,7 @@ class DistrictServiceImpl(
     private fun getDistrictEntity(code: String): District =
         districtRepository
             .findByCodeIgnoreCase(code)
-            .orElseThrow { DistrictNotFoundException(code) }
+            .orElseThrow { LocationException.DistrictNotFoundException(code) }
 
     private fun validateDistrictCode(
         code: String,

@@ -41,7 +41,7 @@ class MunicipalityServiceImpl(
         val district =
             districtRepository
                 .findByCodeIgnoreCase(request.districtCode)
-                .orElseThrow { DistrictNotFoundException(request.districtCode) }
+                .orElseThrow { LocationException.DistrictNotFoundException(request.districtCode) }
 
         validateMunicipalityCode(request.code, request.districtCode)
 
@@ -130,7 +130,7 @@ class MunicipalityServiceImpl(
         logger.debug("Fetching municipalities for district: $districtCode")
 
         if (!districtRepository.existsByCode(districtCode)) {
-            throw DistrictNotFoundException(districtCode)
+            throw LocationException.DistrictNotFoundException(districtCode)
         }
 
         return municipalityRepository
@@ -190,7 +190,7 @@ class MunicipalityServiceImpl(
     @Transactional(readOnly = true)
     override fun validateMunicipalityExists(code: String) {
         if (!municipalityRepository.existsByCodeIgnoreCase(code)) {
-            throw MunicipalityNotFoundException(code)
+            throw LocationException.MunicipalityNotFoundException(code)
         }
     }
 
@@ -199,7 +199,7 @@ class MunicipalityServiceImpl(
     private fun getMunicipalityEntity(code: String): Municipality =
         municipalityRepository
             .findByCodeIgnoreCase(code)
-            .orElseThrow { MunicipalityNotFoundException(code) }
+            .orElseThrow { LocationException.MunicipalityNotFoundException(code) }
 
     private fun validateMunicipalityCode(
         code: String,

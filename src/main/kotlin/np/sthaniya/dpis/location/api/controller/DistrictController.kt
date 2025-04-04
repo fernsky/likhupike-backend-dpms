@@ -44,7 +44,7 @@ class DistrictController(
         ],
     )
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')") // This expects ROLE_SUPER_ADMIN in Spring Security
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')") // This expects ROLE_SUPER_ADMIN in Spring Security
     fun createDistrict(
         @Parameter(description = "District creation details", required = true)
         @Valid
@@ -104,7 +104,7 @@ class DistrictController(
         description = "Updates an existing district. Only accessible by super admins.",
     )
     @PutMapping("/{code}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     fun updateDistrict(
         @Parameter(description = "District code", required = true)
         @PathVariable code: String,

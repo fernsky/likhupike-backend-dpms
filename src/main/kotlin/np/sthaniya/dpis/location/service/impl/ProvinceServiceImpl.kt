@@ -126,18 +126,18 @@ class ProvinceServiceImpl(
 
     override fun validateProvinceExists(code: String) {
         if (!provinceRepository.existsByCode(code.uppercase())) {
-            throw ProvinceNotFoundException(code)
+            throw LocationException.ProvinceNotFoundException(code)
         }
     }
 
     private fun getProvinceEntity(code: String): Province =
         provinceRepository
             .findByCodeIgnoreCase(code)
-            .orElseThrow { ProvinceNotFoundException(code) }
+            .orElseThrow { LocationException.ProvinceNotFoundException(code) }
 
     private fun validateProvinceCode(code: String) {
         if (provinceRepository.existsByCode(code.uppercase())) {
-            throw ProvinceCodeExistsException(code)
+            throw LocationException.ProvinceCodeExistsException(code)
         }
     }
 }

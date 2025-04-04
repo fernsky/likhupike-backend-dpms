@@ -12,11 +12,11 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.transaction.annotation.Transactional
 
 interface MunicipalityService {
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     @Transactional
     fun createMunicipality(request: CreateMunicipalityRequest): MunicipalityResponse
 
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     @Transactional
     fun updateMunicipality(
         code: String,

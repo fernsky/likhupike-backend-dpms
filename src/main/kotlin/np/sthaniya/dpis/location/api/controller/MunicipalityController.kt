@@ -43,7 +43,7 @@ class MunicipalityController(
         ],
     )
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     fun createMunicipality(
         @Parameter(description = "Municipality creation details", required = true)
         @Valid
@@ -68,7 +68,7 @@ class MunicipalityController(
         ],
     )
     @PutMapping("/{code}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     fun updateMunicipality(
         @Parameter(description = "Municipality code", required = true)
         @PathVariable code: String,
