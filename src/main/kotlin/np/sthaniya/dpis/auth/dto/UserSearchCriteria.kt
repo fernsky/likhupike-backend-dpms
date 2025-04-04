@@ -2,6 +2,7 @@ package np.sthaniya.dpis.auth.dto
 
 import jakarta.validation.constraints.Email
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -111,6 +112,14 @@ data class UserSearchCriteria(
     val permissions: Set<PermissionType>? = null,
 
     @Schema(
+        description = "Filter by specific roles",
+        example = "[\"SYSTEM_ADMINISTRATOR\", \"LAND_OWNER\"]",
+        nullable = true
+    )
+    val roles: Set<RoleType>? = null,
+
+
+    @Schema(
         description = "Specific columns to include in the response",
         example = "[\"email\", \"isApproved\", \"permissions\"]",
         nullable = true
@@ -175,6 +184,7 @@ data class UserSearchCriteria(
                 "createdAt",
                 "updatedAt",
                 "permissions",
+                "roles"
             )
     }
 

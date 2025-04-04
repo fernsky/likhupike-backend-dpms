@@ -2,6 +2,7 @@ package np.sthaniya.dpis.auth.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -50,6 +51,13 @@ data class UserResponse(
         required = true
     )
     val permissions: Set<PermissionType>,
+
+    @Schema(
+        description = "Set of roles assigned to the user",
+        example = "[\"SYSTEM_ADMINISTRATOR\", \"LAND_OWNER\"]",
+        required = true
+    )
+    val roles: Set<RoleType>,
 
     @Schema(
         description = "Indicates if the user has ward-level access",

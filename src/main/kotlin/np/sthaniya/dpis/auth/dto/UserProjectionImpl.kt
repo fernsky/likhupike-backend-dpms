@@ -3,6 +3,7 @@ package np.sthaniya.dpis.auth.dto
 import com.fasterxml.jackson.annotation.JsonIgnore
 import np.sthaniya.dpis.auth.domain.entity.User
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import java.time.LocalDateTime
 import java.util.*
 
@@ -16,6 +17,7 @@ import java.util.*
  * Permissions are converted from Spring Security authorities to [PermissionType] enums
  * during initialization. Invalid or unrecognized authorities are silently ignored.
  *
+ * Roles are converted to [RoleType] enums
  * Usage with repository:
  * ```kotlin
  * val projection = UserProjectionImpl(
@@ -44,6 +46,14 @@ class UserProjectionImpl(
                 .mapNotNull { 
                     runCatching { 
                         PermissionType.valueOf(it.authority.removePrefix("PERMISSION_"))
+                    }.getOrNull()
+                }.toSet()
+        }
+        if ("roles" in includedFields) {
+            fields["roles"] = user.getRoles()
+                 .mapNotNull { role -> 
+                    runCatching { 
+                        role.type
                     }.getOrNull()
                 }.toSet()
         }

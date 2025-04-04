@@ -69,12 +69,22 @@ class AuthServiceImpl(
             }
             .toSet()
 
+        val roles = user.getRoles()
+            .mapNotNull { role -> 
+                runCatching { 
+                    role.type
+                }.getOrNull()
+            }
+            .toSet()
+           
+
         return AuthResponse(
             token = tokenPair.accessToken,
             refreshToken = tokenPair.refreshToken,
             userId = user.id!!.toString(),
             email = user.email!!,
             permissions = permissions,
+            roles = roles,
             expiresIn = jwtService.getExpirationDuration().toSeconds(),
             isWardLevelUser = user.isWardLevelUser,
             wardNumber = user.wardNumber

@@ -2,6 +2,7 @@ package np.sthaniya.dpis.auth.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -42,6 +43,13 @@ interface UserProjection {
      */
     fun getPermissions(): Set<PermissionType>?
 
+    /**
+     * Returns the user's assigned roles.
+     * Note: Roles are converted from Spring Security authorities.
+     * @return Set of RoleType, or null if not selected
+     */
+    fun getRoles(): Set<RoleType>?
+    
     /**
      * Gets the ward-level access status of the user.
      * @return true if user has ward-level access, null if not selected
