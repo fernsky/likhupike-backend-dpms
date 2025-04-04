@@ -3,7 +3,6 @@ package np.sthaniya.dpis.location.api.dto.criteria
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import np.sthaniya.dpis.location.api.dto.enums.ProvinceField
-import np.sthaniya.dpis.shared.dto.BaseSearchCriteria
 import org.springframework.data.domain.Sort
 
 data class ProvinceSearchCriteria(
@@ -19,7 +18,7 @@ data class ProvinceSearchCriteria(
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
     override val page: Int = 0,
     override val pageSize: Int = 20,
-) : BaseSearchCriteria(page, pageSize)
+)
 
 enum class ProvinceSortField {
     NAME,

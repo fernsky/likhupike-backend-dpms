@@ -3,8 +3,7 @@ package np.sthaniya.dpis.location.api.dto.criteria
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import np.sthaniya.dpis.location.api.dto.enums.DistrictField
-import np.sthaniya.dpis.shared.dto.BaseSearchCriteria
-import np.sthaniya.dpis.shared.exception.ValidationException
+import np.sthaniya.dpis.common.exception.ValidationException
 import org.springframework.data.domain.Sort
 import java.util.*
 
@@ -22,7 +21,7 @@ data class DistrictSearchCriteria(
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
     override val page: Int = 0,
     override val pageSize: Int = 20,
-) : BaseSearchCriteria(page, pageSize) {
+) {
     fun validate() {
         val errors = mutableMapOf<String, String>()
 

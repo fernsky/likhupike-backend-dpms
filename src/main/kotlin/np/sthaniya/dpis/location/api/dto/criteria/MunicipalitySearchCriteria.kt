@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*
 import np.sthaniya.dpis.location.api.dto.enums.MunicipalityField
 import np.sthaniya.dpis.location.api.dto.enums.MunicipalitySortField
 import np.sthaniya.dpis.location.domain.MunicipalityType
-import np.sthaniya.dpis.shared.dto.BaseSearchCriteria
 import org.springframework.data.domain.Sort
 import java.math.BigDecimal
 import java.util.*
@@ -45,7 +44,7 @@ data class MunicipalitySearchCriteria(
     override val page: Int = 0,
     @field:Min(1)
     override val pageSize: Int = 20,
-) : BaseSearchCriteria(page, pageSize) {
+)  {
     fun validate() {
         require(!(minWards != null && maxWards != null && minWards > maxWards)) {
             "Minimum wards cannot be greater than maximum wards"

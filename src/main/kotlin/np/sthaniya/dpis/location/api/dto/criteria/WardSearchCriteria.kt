@@ -2,7 +2,6 @@ package np.sthaniya.dpis.location.api.dto.criteria
 
 import jakarta.validation.constraints.*
 import np.sthaniya.dpis.location.api.dto.enums.WardField
-import np.sthaniya.dpis.shared.dto.BaseSearchCriteria
 import org.springframework.data.domain.Sort
 import java.math.BigDecimal
 
@@ -38,7 +37,7 @@ data class WardSearchCriteria(
     override val page: Int = 0,
     @field:Min(1)
     override val pageSize: Int = 20,
-) : BaseSearchCriteria(page, pageSize) {
+)  {
     fun validate() {
         require(!(wardNumberFrom != null && wardNumberTo != null && wardNumberFrom > wardNumberTo)) {
             "Starting ward number cannot be greater than ending ward number"

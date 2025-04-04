@@ -1,6 +1,6 @@
 package np.sthaniya.dpis.location.api.dto.enums
 
-import np.sthaniya.dpis.shared.enums.EntityField
+import np.sthaniya.dpis.common.enum.EntityField
 
 enum class WardField : EntityField {
     WARD_NUMBER {
