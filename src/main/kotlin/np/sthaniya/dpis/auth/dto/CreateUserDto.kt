@@ -2,12 +2,13 @@ package np.sthaniya.dpis.auth.dto
 
 import jakarta.validation.constraints.*
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import java.util.UUID
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * Data transfer object for administrative user creation operations.
- * Used by [UserService.createUser] to create new user accounts with specified permissions.
+ * Used by [UserService.createUser] to create new user accounts with specified permissions and roles.
  *
  * Required fields:
  * - email: Must be unique in the system
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Optional fields:
  * - permissions: Map of initial permissions to grant
+ * - roles: Map of initial roles to assign
  * - wardNumber: Required only if isWardLevelUser=true
  * - isApproved: Auto-approval flag
  * - approvedBy: Admin ID for auto-approval
@@ -68,6 +70,13 @@ data class CreateUserDto(
         defaultValue = "{}"
     )
     val permissions: Map<PermissionType, Boolean> = emptyMap(),
+    
+    @Schema(
+        description = "Map of roles to be assigned to the user",
+        example = """{"SYSTEM_ADMINISTRATOR": true, "LAND_RECORDS_OFFICER": false}""",
+        defaultValue = "{}"
+    )
+    val roles: Map<RoleType, Boolean> = emptyMap(),
 
     @Schema(
         description = "Indicates if the user should have ward-level access",

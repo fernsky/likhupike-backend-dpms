@@ -2,6 +2,7 @@ package np.sthaniya.dpis.auth.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @property userId Unique identifier of the authenticated user
  * @property email Email address of the authenticated user
  * @property permissions Set of [PermissionType] granted to the user
+ * @property roles Set of [RoleType] assigned to the user
  * @property expiresIn Token validity duration in seconds
  * @property isWardLevelUser Indicates if user has ward-level access restrictions
  * @property wardNumber Ward number if user has ward-level access, null otherwise
@@ -55,10 +57,17 @@ data class AuthResponse(
 
     @Schema(
         description = "List of permissions granted to the user",
-        example = "[\"USER_READ\", \"USER_WRITE\"]",
+        example = "[\"VIEW_USER\", \"CREATE_USER\"]",
         required = true
     )
     val permissions: Set<PermissionType>,
+    
+    @Schema(
+        description = "List of roles assigned to the user",
+        example = "[\"SYSTEM_ADMINISTRATOR\", \"LAND_RECORDS_OFFICER\"]",
+        required = true
+    )
+    val roles: Set<RoleType>,
 
     @Schema(
         description = "Token expiration time in seconds",
