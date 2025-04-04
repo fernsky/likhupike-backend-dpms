@@ -24,27 +24,28 @@ Below is the comprehensive timeline of all database changes:
 |===
 |Version |Date |Author |Changes
 
-|`1.0.0` |2024-03 |Trilochan Bhusal |* Initial Documentation Release
+|`1.0.1` |2025-03 |Trilochan Bhusal |* Initial Documentation Release
 * Comprehensive database schema documentation
 * Added detailed table descriptions
 * Included design considerations
+* Rate limiting and security features using `bucket4j`
 
-|`v0.3.3-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Schema Improvements
+|`v0.3.3-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Schema Improvements
 * Modified `users.deleted_by` column from `VARCHAR` to `UUID`
 * Improved data type consistency for user references
 
-|`v0.3.1-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Password Reset System
+|`v0.3.1-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Password Reset System
 * Added `password_reset_otps` table
 * Implemented OTP-based password reset functionality
 * Added indexes for efficient OTP lookups
 
-|`v0.0.2-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Core User Management Implementation
+|`v0.0.2-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Core User Management Implementation
 * Created `users` table with audit fields
 * Created `permissions` table
 * Created `user_permissions` junction table
 * Added initial permission types (*CREATE_USER*, *APPROVE_USER*)
 
-|`v0.0.1-SNAPSHOT` |2024-03 |Trilochan Bhusal |* Initial version: Added Spring Session management
+|`v0.0.1-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Initial version: Added Spring Session management
 * Created `spring_session` table with indexes
 * Created `spring_session_attributes` table
 |===
@@ -60,7 +61,7 @@ Introduction of fundamental user management capabilities.
 ==== Security Enhancements (`v0.3.x-SNAPSHOT`)
 Multiple releases focusing on security features and data consistency.
 
-==== Production Release (`v1.0.0`)
+==== Production Release (`v1.0.1-SNAPSHOT`)
 First stable release with complete documentation.
 
 <<<
