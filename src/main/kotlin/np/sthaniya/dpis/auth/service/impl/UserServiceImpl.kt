@@ -2,6 +2,7 @@ package np.sthaniya.dpis.auth.service.impl
 
 import jakarta.persistence.EntityManager
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import np.sthaniya.dpis.auth.repository.specification.UserSpecifications
 import np.sthaniya.dpis.auth.service.UserService
 import np.sthaniya.dpis.auth.repository.UserRepository
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory
 @Transactional
 class UserServiceImpl(
     private val userRepository: UserRepository,
+    private val roleService: RoleService,
     private val permissionService: PermissionService,
     private val passwordEncoder: PasswordEncoder,
     private val entityManager: EntityManager,
@@ -73,11 +75,17 @@ class UserServiceImpl(
                     wardNumber = createUserDto.wardNumber
                     // Clear existing permissions
                     clearPermissions()
+                    // Clear existing roles
+                    clearRoles()
                 }
                 
                 // Add new permissions
                 val permissions = permissionService.findByTypes(createUserDto.permissions.filterValues { it }.keys)
                 permissions.forEach { user.addPermission(it) }
+
+                // Add new roles
+                val roles = roleService.findByTypes(createUserDto.roles.filterValues { it }.keys)
+                roles.forEach { user.addRole(it) }
                 
                 val reactivatedUser = userRepository.save(user)
 
@@ -98,6 +106,10 @@ class UserServiceImpl(
         // Add permissions
         val permissions = permissionService.findByTypes(createUserDto.permissions.filterValues { it }.keys)
         permissions.forEach { user.addPermission(it) }
+
+        // Add roles
+        val roles = roleService.findByTypes(createUserDto.roles.filterValues { it }.keys)
+        roles.forEach { user.addRole(it) }
 
         val createdUser = userRepository.save(user)
 
@@ -158,6 +170,50 @@ class UserServiceImpl(
                 user.addPermission(permission)
             } else {
                 user.removePermission(permission)
+            }
+        }
+
+        entityManager.flush()
+        return userRepository.save(user)
+    }
+
+    /**
+     * Updates the roles of a user.
+     *
+     * @param userId The ID of the user
+     * @param roles The new roles to be assigned to the user
+     * @return The updated [User]
+     * @throws AuthException.UserNotFoundException if the user is not found
+     * @throws AuthException.UserAlreadyDeletedException if the user is already deleted
+     */
+    override fun updateRoles(userId: UUID, roles: UserRolesDto): User {
+        val user = userRepository.findByIdWithRoles(userId)
+            .orElseThrow { AuthException.UserNotFoundException(userId.toString()) }
+
+        if (user.isDeleted) {
+            throw AuthException.UserAlreadyDeletedException(userId.toString())
+        }
+
+        // Get current roles
+        val existingRoles = user.getAuthorities()
+            .mapNotNull { 
+                runCatching { 
+                    RoleType.valueOf(it.authority.removePrefix("ROLE_"))
+                }.getOrNull()
+            }
+            .toSet()
+
+        // Get roles that need to be modified
+        val rolesToModify = roles.getRolesToModify(existingRoles)
+
+        // Apply changes only for roles that need modification
+        rolesToModify.forEach { roleType ->
+            val role = roleService.findByType(roleType)
+            if (roles.shouldHaveRole(roleType)) {
+                // Will handle removing old role internally
+                user.addRole(role)
+            } else {
+                user.removeRole(role)
             }
         }
 
@@ -265,7 +321,7 @@ class UserServiceImpl(
         val specification = UserSpecifications.fromCriteria(criteria)
         
         // Use distinct count when permissions are involved
-        val totalElements = if (criteria.permissions?.isNotEmpty() == true) {
+        val totalElements = if (criteria.permissions?.isNotEmpty() == true || criteria.roles?.isNotEmpty() == true) {
             userRepository.countDistinct(specification)
         } else {
             userRepository.count(specification)

@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus
  * 3. Authentication (010-014): Login and token related failures
  * 4. Password Reset (015-017): OTP and password reset specific errors
  * 5. Pagination (018): Page navigation errors
+ * 6. Roles (019-020): Role-related errors
  *
  * @param errorCode Specific error code from [AuthErrorCode]
  * @param message Optional custom error message
@@ -125,7 +126,7 @@ sealed class AuthException(
             override val code = "AUTH_018"
             override val defaultMessage = "Page does not exist"
             override val i18nKey = "auth.error.AUTH_018"
-        }
+        },
         ROLE_NOT_FOUND {
             override val code = "AUTH_019"
             override val defaultMessage = "Role not found"
@@ -135,7 +136,7 @@ sealed class AuthException(
             override val code = "AUTH_020"
             override val defaultMessage = "Roles are missing"
             override val i18nKey = "auth.error.AUTH_020"
-        }
+        };
     }
 
     /**
