@@ -1,0 +1,65 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="04-role-system-administrator">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="roles"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="type" value="SYSTEM_ADMINISTRATOR"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-role-land-records-officer">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="roles"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM roles WHERE type = 'LAND_RECORDS_OFFICER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="type" value="LAND_RECORDS_OFFICER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-role-land-surveyor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="roles"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM roles WHERE type = 'LAND_SURVEYOR'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="type" value="LAND_SURVEYOR"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-role-land-owner">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="roles"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM roles WHERE type = 'LAND_OWNER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="type" value="LAND_OWNER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-role-public-user">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="roles"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM roles WHERE type = 'PUBLIC_USER'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="type" value="PUBLIC_USER"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,55 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="03-user-roles-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_roles"/>
+            </not>
+        </preConditions>
+        <comment>Create user roles junction table</comment>
+        <createTable tableName="user_roles">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="user_roles_pkey"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+
+        <addUniqueConstraint 
+            tableName="user_roles" 
+            columnNames="user_id,role_type"
+            constraintName="uk_user_role"/>
+
+        <addForeignKeyConstraint 
+            baseTableName="user_roles"
+            baseColumnNames="user_id"
+            constraintName="fk_user_roles_user"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint 
+            baseTableName="user_roles"
+            baseColumnNames="role_type"
+            constraintName="fk_user_roles_role"
+            referencedTableName="roles"
+            referencedColumnNames="type"
+            onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

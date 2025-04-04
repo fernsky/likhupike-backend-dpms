@@ -1,0 +1,97 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- System Administrator Role Permissions -->
+    <changeSet author="trilochan" id="05-system-admin-permissions" context="default">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'CREATE_USER'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        
+        <comment>Assign all user management permissions to System Administrator role</comment>
+        
+        <!-- System Administrator gets all permissions -->
+        <sql>
+            INSERT INTO role_permissions (id, role_type, permission_type)
+            SELECT gen_random_uuid(), 'SYSTEM_ADMINISTRATOR', type
+            FROM permissions
+            WHERE NOT EXISTS (
+                SELECT 1 FROM role_permissions 
+                WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = permissions.type
+            )
+        </sql>
+    </changeSet>
+    
+    <!-- Land Records Officer Role Permissions -->
+    <changeSet author="trilochan" id="05-land-records-officer-permissions" context="default">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'LAND_RECORDS_OFFICER'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'LAND_RECORDS_OFFICER' AND permission_type = 'VIEW_USER'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        
+        <comment>Assign view user permission to Land Records Officer role</comment>
+        
+        <insert tableName="role_permissions">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="role_type" value="LAND_RECORDS_OFFICER"/>
+            <column name="permission_type" value="VIEW_USER"/>
+        </insert>
+    </changeSet>
+    
+    <!-- Land Surveyor Role Permissions -->
+    <changeSet author="trilochan" id="05-land-surveyor-permissions" context="default">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'LAND_SURVEYOR'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'LAND_SURVEYOR' AND permission_type = 'VIEW_USER'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        
+        <comment>Assign view user permission to Land Surveyor role</comment>
+        
+        <insert tableName="role_permissions">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="role_type" value="LAND_SURVEYOR"/>
+            <column name="permission_type" value="VIEW_USER"/>
+        </insert>
+    </changeSet>
+    
+    <!-- Add the root changelog file to include this version -->
+    <changeSet author="trilochan" id="05-add-high-level-root-changelog" runOnChange="true">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <changeSetExecuted id="05-add-high-level-root-changelog" author="trilochan" changeLogFile="versions/v-1.0.3-snapshot/05-default-role-permissions.xml"/>
+            </not>
+        </preConditions>
+        <comment>Make sure this version is included in the master changelog</comment>
+        <sql>
+            -- This is a placeholder. The actual inclusion of this version in the root changelog
+            -- should be done manually by adding an include tag in db/changelog/changelog.xml
+            -- Example: <include file="versions/v-1.0.3-snapshot/changelog.xml" relativeToChangelogFile="true"/>
+        </sql>
+    </changeSet>
+</databaseChangeLog>

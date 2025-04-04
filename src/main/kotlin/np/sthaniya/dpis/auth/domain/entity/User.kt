@@ -3,6 +3,7 @@ package np.sthaniya.dpis.auth.domain.entity
 import jakarta.persistence.*
 import np.sthaniya.dpis.common.entity.UuidBaseEntity
 import np.sthaniya.dpis.auth.domain.enums.PermissionType
+import np.sthaniya.dpis.auth.domain.enums.RoleType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDateTime
@@ -26,6 +27,7 @@ import java.util.*
  * @property deletedAt Timestamp when the user was deleted
  * @property deletedBy UUID of the admin who deleted this user
  * @property permissions Set of permissions assigned to this user
+ * @property roles Set of roles assigned to this user
  */
 @Entity
 @Table(
@@ -71,15 +73,40 @@ class User :
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
     private var permissions: MutableSet<UserPermission> = mutableSetOf()
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
+    private var roles: MutableSet<UserRole> = mutableSetOf()
+
     /**
      * Returns the authorities granted to the user.
-     * Converts user permissions to Spring Security's SimpleGrantedAuthority format.
+     * Combines both direct permissions and role-based authorities.
      *
-     * @return Set of GrantedAuthority representing the user's permissions
+     * @return Set of GrantedAuthority representing the user's permissions and roles
      */
-    override fun getAuthorities() = permissions
-        .map { SimpleGrantedAuthority("PERMISSION_${it.permission.type}") }
-        .toSet()
+    override fun getAuthorities(): Set<SimpleGrantedAuthority> {
+        val authorities = mutableSetOf<SimpleGrantedAuthority>()
+        
+        // Add direct permissions
+        permissions.forEach { 
+            authorities.add(SimpleGrantedAuthority(it.permission.getAuthority())) 
+        }
+        
+        // Add role authorities
+        roles.forEach { 
+            authorities.add(SimpleGrantedAuthority(it.role.getAuthority()))
+        }
+        
+        // Add permissions from roles (these won't override direct permissions)
+        roles.forEach { userRole ->
+            userRole.role.getPermissions().forEach { permission ->
+                // Only add if not already directly assigned
+                if (!hasPermission(permission.type)) {
+                    authorities.add(SimpleGrantedAuthority(permission.getAuthority()))
+                }
+            }
+        }
+        
+        return authorities
+    }
 
     /**
      * Returns the password used to authenticate the user.
@@ -177,5 +204,92 @@ class User :
      */
     fun clearPermissions() {
         permissions.clear()
+    }
+
+    /**
+     * Adds a role to the user.
+     * If the role already exists, it will be replaced.
+     *
+     * @param role The role to add
+     */
+    fun addRole(role: Role) {
+        removeRole(role)
+        roles.add(UserRole(this, role))
+    }
+
+    /**
+     * Removes a role from the user.
+     *
+     * @param role The role to remove
+     */
+    fun removeRole(role: Role) {
+        roles.removeIf { it.role.type == role.type }
+    }
+
+    /**
+     * Checks if the user has a specific role.
+     *
+     * @param roleType The type of role to check
+     * @return true if the user has the role, false otherwise
+     */
+    fun hasRole(roleType: RoleType): Boolean =
+        roles.any { it.role.type == roleType }
+
+    /**
+     * Returns all roles assigned to the user.
+     *
+     * @return Set of all roles
+     */
+    fun getRoles(): Set<Role> =
+        roles.map { it.role }.toSet()
+
+    /**
+     * Clears all roles from the user.
+     */
+    fun clearRoles() {
+        roles.clear()
+    }
+
+    /**
+     * Gets the effective permissions of the user, combining direct permissions and those from roles.
+     * Direct permissions take precedence over role-based permissions.
+     * 
+     * @return Set of all effective permission types
+     */
+    fun getEffectivePermissions(): Set<PermissionType> {
+        val effectivePermissions = mutableSetOf<PermissionType>()
+        
+        // Add permissions from roles
+        roles.forEach { userRole ->
+            userRole.role.getPermissions().forEach { 
+                effectivePermissions.add(it.type)
+            }
+        }
+        
+        // Add direct permissions (these will override any from roles due to Set behavior)
+        permissions.forEach { 
+            effectivePermissions.add(it.permission.type)
+        }
+        
+        return effectivePermissions
+    }
+
+    /**
+     * Checks if the user effectively has a specific permission, either directly
+     * or through an assigned role.
+     *
+     * @param permissionType The type of permission to check
+     * @return true if the user has the permission directly or through a role, false otherwise
+     */
+    fun hasEffectivePermission(permissionType: PermissionType): Boolean {
+        // Check direct permissions first
+        if (hasPermission(permissionType)) {
+            return true
+        }
+        
+        // Check permissions from roles
+        return roles.any { userRole ->
+            userRole.role.getPermissions().any { it.type == permissionType }
+        }
     }
 }

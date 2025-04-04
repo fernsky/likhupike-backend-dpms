@@ -24,7 +24,15 @@ Below is the comprehensive timeline of all database changes:
 |===
 |Version |Date |Author |Changes
 
-|`1.0.1` |2025-03 |Trilochan Bhusal |* Initial Documentation Release
+|`v1.0.3-SNAPSHOT` |2025-04-04 |Trilochan Bhusal |* Role-Based Access Control Implementation
+* Created `roles` table for storing system roles
+* Created `role_permissions` junction table to link roles with permissions  
+* Created `user_roles` junction table to assign roles to users
+* Added predefined roles (SYSTEM_ADMINISTRATOR, LAND_RECORDS_OFFICER, LAND_SURVEYOR, LAND_OWNER, PUBLIC_USER)
+* Assigned default permissions to roles based on system requirements
+* Enhanced user security model with role inheritance
+
+|`v1.0.1` |2025-03 |Trilochan Bhusal |* Initial Documentation Release
 * Comprehensive database schema documentation
 * Added detailed table descriptions
 * Included design considerations
@@ -63,5 +71,17 @@ Multiple releases focusing on security features and data consistency.
 
 ==== Production Release (`v1.0.1-SNAPSHOT`)
 First stable release with complete documentation.
+
+==== Role-Based Access Control (`v1.0.3-SNAPSHOT`)
+Implementation of comprehensive role system with hierarchical permissions:
+
+* Roles represent specific positions in the system (e.g., LAND_RECORDS_OFFICER)
+* Users can be assigned multiple roles
+* Users retain direct permissions that override role-based permissions
+* Permissions can be assigned to roles to create permission groups
+* Effective permissions combine both direct and role-derived permissions
+* Spring Security integration for both role and permission-based authorization
+
+This implementation supports the complex authorization requirements of the land management system, where different user types need varying levels of access to system functionality.
 
 <<<
