@@ -80,18 +80,5 @@
         </insert>
     </changeSet>
     
-    <!-- Add the root changelog file to include this version -->
-    <changeSet author="trilochan" id="05-add-high-level-root-changelog" runOnChange="true">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <changeSetExecuted id="05-add-high-level-root-changelog" author="trilochan" changeLogFile="versions/v-1.0.3-snapshot/05-default-role-permissions.xml"/>
-            </not>
-        </preConditions>
-        <comment>Make sure this version is included in the master changelog</comment>
-        <sql>
-            -- This is a placeholder. The actual inclusion of this version in the root changelog
-            -- should be done manually by adding an include tag in db/changelog/changelog.xml
-            -- Example: <include file="versions/v-1.0.3-snapshot/changelog.xml" relativeToChangelogFile="true"/>
-        </sql>
-    </changeSet>
+ 
 </databaseChangeLog>
