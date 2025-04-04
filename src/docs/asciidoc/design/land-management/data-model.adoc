@@ -1,6 +1,12 @@
 === Data Model
 
-_Document the entity relationships for the land management system here._
+The land management system's data model is designed to accurately represent the complex relationships between land parcels, ownership structures, and the various legal classifications specific to Nepal's land administration system. 
+
+The model centers around the LandParcel entity which stores geographical and administrative details about each land unit. LandOwner entities represent individuals, organizations, government bodies, or religious trusts that may hold rights to land parcels. The relationship between parcels and owners is managed through the LandParcelOwnership entity, allowing for multiple owners with varying shares of a single parcel.
+
+The model accommodates Nepal's diverse land classification system through specialized entities like GuthiDetails and GovernmentLandDetails, and supports the various ownership types defined in the Land Revenue Act, 1978. Additionally, the system manages LandOwnershipCertificates (Lalpurja) as legal documents that verify ownership claims.
+
+Supporting entities track land use types, building information, and other physical and administrative attributes of land parcels. The relationships are structured to maintain data integrity while providing flexibility for the diverse land management scenarios encountered across Nepal's regions.
 
 ==== Entity Relationship Diagram
 

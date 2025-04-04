@@ -1,0 +1,380 @@
+=== User Stories and Process Flows
+
+This section outlines key user stories and process flows for the land management system, focusing on how different user roles interact with the system.
+
+==== User Roles
+
+* *Land Records Officer*: Government official responsible for processing land registration and transactions
+* *Land Surveyor*: Technical staff who conducts field surveys and updates land geometry
+* *System Administrator*: IT staff who manages the system configuration and user accounts
+* *Landowner*: Individual or entity that owns land
+* *Public User*: General public seeking land information
+
+==== Key User Stories
+
+===== Land Records Officer
+
+. *Register New Land Parcel*
++
+As a Land Records Officer, I need to register a new land parcel with complete ownership details so that official land records are maintained accurately.
+
+. *Transfer Land Ownership*
++
+As a Land Records Officer, I need to process ownership transfers between parties so that the land records reflect the current legal owner.
+
+. *Issue Land Ownership Certificate*
++
+As a Land Records Officer, I need to generate and issue land ownership certificates (Lalpurja) to landowners as legal proof of their ownership.
+
+. *Process Land Division/Amalgamation*
++
+As a Land Records Officer, I need to process requests to divide or combine land parcels so that the records reflect physical changes to property boundaries.
+
+. *Record Land Type Changes*
++
+As a Land Records Officer, I need to update land use type when authorized changes occur so that records reflect the current legal classification.
+
+. *Register Special Land Categories*
++
+As a Land Records Officer, I need to register special categories of land (Guthi, Government) with their specific details to maintain complete records.
+
+===== Land Surveyor
+
+. *Update Land Geometry*
++
+As a Land Surveyor, I need to update the geographical information of land parcels so that the digital records match the physical reality.
+
+. *Conduct Field Verification*
++
+As a Land Surveyor, I need to verify land boundaries and features in the field so that disputes can be resolved with accurate information.
+
+===== System Administrator
+
+. *Manage User Accounts*
++
+As a System Administrator, I need to create, modify, and deactivate user accounts so that appropriate access controls are maintained.
+
+. *Configure System Parameters*
++
+As a System Administrator, I need to configure system parameters like fee structures and document templates so that the system operates according to current regulations.
+
+. *Generate System Reports*
++
+As a System Administrator, I need to generate system reports on transactions and activities so that operations can be monitored and analyzed.
+
+===== Landowner/Public User
+
+. *View Land Information*
++
+As a Landowner/Public User, I need to view available information about specific land parcels so that I can verify details or plan transactions.
+
+. *Request Certificate Copy*
++
+As a Landowner, I need to request copies of my land ownership certificates so that I have current documentation for personal or legal purposes.
+
+==== Process Flows
+
+===== New Land Registration Flow
+
+[plantuml]
+----
+@startuml
+|Land Records Officer|
+start
+:Receive land registration request with documents;
+:Verify applicant identity and documents;
+if (Documents valid?) then (yes)
+  :Create new land owner record;
+  :Create new land parcel record;
+  :Link owner to parcel with ownership share;
+  :Generate registration number;
+  :Calculate and collect registration fees;
+  :Generate land ownership certificate;
+  |Land Surveyor|
+  :Verify land coordinates and boundaries;
+  if (Survey verification successful?) then (yes)
+    :Update geometrical details;
+    |Land Records Officer|
+    :Issue land ownership certificate to owner;
+    :Update land registration records;
+    :Archive registration documents;
+  else (no)
+    |Land Records Officer|
+    :Request boundary correction;
+    note right: Loop back to surveyor
+    :Notify applicant of pending issues;
+  endif
+else (no)
+  :Reject application;
+  :Notify applicant of missing/invalid documents;
+endif
+stop
+@enduml
+----
+
+===== Land Ownership Transfer Flow
+
+[plantuml]
+----
+@startuml
+|Land Records Officer|
+start
+:Receive ownership transfer request;
+:Verify current owner's identity;
+:Verify buyer's identity;
+:Verify land parcel details;
+if (Land has restrictions?) then (yes)
+  :Check if transfer is allowable under restrictions;
+  if (Transfer allowed?) then (yes)
+    :Proceed with transfer;
+  else (no)
+    :Reject transfer request;
+    :Notify parties of restrictions;
+    stop
+  endif
+endif
+
+if (All documents valid?) then (yes)
+  :Calculate transfer taxes and fees;
+  :Collect payment;
+  if (Payment received?) then (yes)
+    :Deactivate current ownership record;
+    :Create new ownership record for buyer;
+    :Generate new land ownership certificate;
+    :Issue certificate to new owner;
+    :Update land registry records;
+    :Archive transfer documents;
+  else (no)
+    :Hold transfer pending payment;
+    :Notify parties of pending payment;
+  endif
+else (no)
+  :Reject transfer request;
+  :Notify parties of missing/invalid documents;
+endif
+stop
+@enduml
+----
+
+===== Special Case: Guthi Land Registration Flow
+
+[plantuml]
+----
+@startuml
+|Land Records Officer|
+start
+:Receive Guthi land registration request;
+:Verify Guthi institution documents;
+:Verify land parcel details;
+
+if (Valid Guthi documents?) then (yes)
+  :Create Guthi entity in system;
+  :Classify Guthi type (Rajguthi, Niji Guthi, etc.);
+  :Create land parcel record;
+  
+  if (Guthi type requires beneficiary?) then (yes)
+    :Register beneficiaries and their rights;
+  endif
+  
+  :Link Guthi to land parcel;
+  :Record special Guthi conditions or restrictions;
+  :Generate Guthi land certificate;
+  |Land Surveyor|
+  :Verify land boundaries;
+  |Land Records Officer|
+  :Issue certificate to Guthi representatives;
+  :Record revenue payment arrangements;
+else (no)
+  :Reject registration;
+  :Notify applicants of issues;
+endif
+stop
+@enduml
+----
+
+===== Land Parcel Division Flow
+
+[plantuml]
+----
+@startuml
+|Land Records Officer|
+start
+:Receive land division request;
+:Verify owner identity and rights;
+:Check if land division is permissible;
+
+if (Division permissible?) then (yes)
+  |Land Surveyor|
+  :Conduct field survey for proposed division;
+  :Create new geometry for sub-parcels;
+  :Verify minimum area requirements met;
+  
+  if (Survey verification successful?) then (yes)
+    |Land Records Officer|
+    :Archive original parcel record (mark as divided);
+    :Create new land parcels with new numbers;
+    :Maintain reference to parent parcel;
+    :Transfer ownership proportionally to new parcels;
+    :Calculate and collect division fees;
+    :Generate new ownership certificates for each parcel;
+    :Issue certificates to owner(s);
+    :Update land registry records;
+  else (no)
+    :Return with survey issues;
+    :Request corrections to division plan;
+  endif
+else (no)
+  :Reject division request;
+  :Notify owner of restrictions;
+endif
+stop
+@enduml
+----
+
+==== Edge Cases and Special Scenarios
+
+===== Multiple Ownership Management Flow
+
+[plantuml]
+----
+@startuml
+|Land Records Officer|
+start
+:Receive multiple ownership registration request;
+:Verify all owners' identities;
+:Verify ownership share percentages;
+
+if (Total shares equal 100%?) then (yes)
+  :Create land parcel record;
+  :Create individual owner records;
+  
+  repeat
+    :Link owner to parcel with specific share percentage;
+  repeat while (More owners?) is (yes)
+  
+  :Generate unique certificate for each owner;
+  :Record relationship between co-owners;
+  
+  note right: Special handling for family relationships
+  
+  :Issue certificates to respective owners;
+else (no)
+  :Reject registration;
+  :Return for share percentage correction;
+endif
+stop
+@enduml
+----
+
+===== Handling Land Disputes Flow
+
+[plantuml]
+----
+@startuml
+|Land Records Officer|
+start
+:Receive dispute notification;
+:Flag affected land parcel as "In Dispute";
+:Record dispute details and claimants;
+
+fork
+  :Process continues in legal system;
+fork again
+  :Periodic status check of dispute;
+  if (Dispute resolved?) then (yes)
+    :Remove dispute flag;
+    :Update ownership based on resolution;
+    :Issue new certificates if needed;
+  else (no)
+    :Maintain dispute flag;
+    :Update dispute status notes;
+  endif
+end fork
+stop
+@enduml
+----
+
+===== System Integration Flow with External Systems
+
+[plantuml]
+----
+@startuml
+|System Administrator|
+start
+:Configure integration with external systems;
+
+fork
+  :Sync with Citizenship Database;
+fork again
+  :Sync with Tax System;
+fork again
+  :Sync with Court Management System;
+fork again
+  :Sync with Municipal GIS System;
+end fork
+
+:Schedule periodic data synchronization;
+:Monitor integration health;
+:Handle reconciliation of conflicting data;
+stop
+@enduml
+----
+
+==== System Use Case Diagram
+
+[plantuml]
+----
+@startuml
+left to right direction
+actor "Land Records Officer" as LRO
+actor "Land Surveyor" as LS
+actor "System Administrator" as SA
+actor "Landowner" as LO
+actor "Public User" as PU
+
+rectangle "Land Management System" {
+  usecase "Register Land Parcel" as UC1
+  usecase "Transfer Land Ownership" as UC2
+  usecase "Issue Certificate" as UC3
+  usecase "Process Land Division" as UC4
+  usecase "Update Land Type" as UC5
+  usecase "Register Special Categories" as UC6
+  usecase "Update Land Geometry" as UC7
+  usecase "Verify Boundaries" as UC8
+  usecase "Manage User Accounts" as UC9
+  usecase "Configure System" as UC10
+  usecase "Generate Reports" as UC11
+  usecase "View Land Information" as UC12
+  usecase "Request Certificate Copy" as UC13
+  usecase "Handle Land Disputes" as UC14
+  usecase "Process Fees and Taxes" as UC15
+}
+
+LRO --> UC1
+LRO --> UC2
+LRO --> UC3
+LRO --> UC4
+LRO --> UC5
+LRO --> UC6
+LRO --> UC14
+LRO --> UC15
+
+LS --> UC7
+LS --> UC8
+
+SA --> UC9
+SA --> UC10
+SA --> UC11
+
+LO --> UC12
+LO --> UC13
+
+PU --> UC12
+
+UC1 ..> UC7 : includes
+UC4 ..> UC7 : includes
+UC2 ..> UC3 : includes
+@enduml
+----
+
+These user stories and flow diagrams provide a foundation for defining the application architecture, including service components, repositories, and API endpoints. The diagrams illustrate both typical scenarios and edge cases that the system must handle to support the complex nature of land management in Nepal.
