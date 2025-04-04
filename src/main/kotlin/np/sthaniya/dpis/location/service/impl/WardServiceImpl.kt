@@ -171,7 +171,7 @@ class WardServiceImpl(
         }
 
         // For other roles, throw exception since they shouldn't be able to update wards
-        throw InvalidWardOperationException()
+        throw LocationException.InvalidWardOperationException()
     }
 
     private fun getWardEntity(

@@ -172,7 +172,7 @@ class MunicipalityServiceImpl(
         if (!currentUser.isSuperAdmin() &&
             !currentUser.isMunicipalityAdmin()
         ) {
-            throw MunicipalityOperationException(
+            throw LocationException.MunicipalityOperationException(
                 "User does not have access to this municipality",
                 "ACCESS_DENIED",
             )
