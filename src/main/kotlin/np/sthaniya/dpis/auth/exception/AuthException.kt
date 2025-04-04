@@ -126,6 +126,16 @@ sealed class AuthException(
             override val defaultMessage = "Page does not exist"
             override val i18nKey = "auth.error.AUTH_018"
         }
+        ROLE_NOT_FOUND {
+            override val code = "AUTH_019"
+            override val defaultMessage = "Role not found"
+            override val i18nKey = "auth.error.AUTH_019"
+        },
+        ROLES_MISSING {
+            override val code = "AUTH_020"
+            override val defaultMessage = "Roles are missing"
+            override val i18nKey = "auth.error.AUTH_020"
+        }
     }
 
     /**
@@ -298,9 +308,9 @@ sealed class AuthException(
      * @param roleName The name of the role that was not found
      */
     class RoleNotFoundException(roleName: String) : AuthException(
-        "Role not found: $roleName",
-        "role.not.found",
-        mapOf("roleName" to roleName)
+        AuthErrorCode.ROLE_NOT_FOUND,
+        metadata = mapOf("roleName" to roleName),
+        status = HttpStatus.NOT_FOUND
     )
 
     /**
@@ -309,8 +319,8 @@ sealed class AuthException(
      * @param missingRoles Set of missing role names
      */
     class MissingRolesException(missingRoles: Set<String>) : AuthException(
-        "Missing roles: ${missingRoles.joinToString()}",
-        "roles.missing",
-        mapOf("missingRoles" to missingRoles)
+        AuthErrorCode.ROLES_MISSING,
+        metadata = mapOf("missingRoles" to missingRoles),
+        status = HttpStatus.BAD_REQUEST
     )
 }
