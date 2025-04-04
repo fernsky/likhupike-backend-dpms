@@ -4,7 +4,7 @@ import io.minio.*
 import io.minio.http.Method
 import np.sthaniya.dpis.common.storage.DocumentStorageService
 import np.sthaniya.dpis.common.exception.DocumentNotFoundException
-import org.springframework.beans.factory.annotation.Value
+import np.sthaniya.dpis.common.config.StorageProperties
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.InputStream
@@ -21,14 +21,12 @@ import java.util.concurrent.TimeUnit
  * - Managing document lifecycle
  *
  * @property minioClient The MinIO client for S3 API operations
- * @property bucketName The S3 bucket name for document storage
+ * @property storageProperties Configuration properties for storage
  */
 @Service
 class DocumentStorageServiceImpl(
     private val minioClient: MinioClient,
-    
-    @Value("\${app.storage.bucket:dpis-documents}")
-    private val bucketName: String
+    private val storageProperties: StorageProperties
 ) : DocumentStorageService {
 
     /**
@@ -45,16 +43,12 @@ class DocumentStorageServiceImpl(
      * @return The storage key that can be used to retrieve the document
      */
     override fun storeDocument(file: MultipartFile, folder: String, fileName: String?): String {
-        // Generate a unique filename if one isn't provided
         val uniqueFileName = fileName ?: "${UUID.randomUUID()}-${file.originalFilename}"
-        
-        // Combine folder and filename to create the full object key
         val objectName = "$folder/$uniqueFileName"
 
-        // Use MinIO client to store the file
         minioClient.putObject(
             PutObjectArgs.builder()
-                .bucket(bucketName)
+                .bucket(storageProperties.bucket)
                 .`object`(objectName)
                 .stream(file.inputStream, file.size, -1)
                 .contentType(file.contentType)
@@ -75,7 +69,7 @@ class DocumentStorageServiceImpl(
         return try {
             minioClient.getObject(
                 GetObjectArgs.builder()
-                    .bucket(bucketName)
+                    .bucket(storageProperties.bucket)
                     .`object`(storageKey)
                     .build()
             )
@@ -83,7 +77,7 @@ class DocumentStorageServiceImpl(
             throw DocumentNotFoundException(
                 "Document not found with key: $storageKey", 
                 e,
-                mapOf("storageKey" to storageKey, "bucket" to bucketName)
+                mapOf("storageKey" to storageKey, "bucket" to storageProperties.bucket)
             )
         }
     }
@@ -98,7 +92,7 @@ class DocumentStorageServiceImpl(
         return try {
             minioClient.removeObject(
                 RemoveObjectArgs.builder()
-                    .bucket(bucketName)
+                    .bucket(storageProperties.bucket)
                     .`object`(storageKey)
                     .build()
             )
@@ -118,7 +112,7 @@ class DocumentStorageServiceImpl(
         return try {
             minioClient.statObject(
                 StatObjectArgs.builder()
-                    .bucket(bucketName)
+                    .bucket(storageProperties.bucket)
                     .`object`(storageKey)
                     .build()
             )
@@ -141,7 +135,7 @@ class DocumentStorageServiceImpl(
     override fun getDocumentUrl(storageKey: String, expiryTimeInMinutes: Int): String {
         return minioClient.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .bucket(bucketName)
+                .bucket(storageProperties.bucket)
                 .`object`(storageKey)
                 .method(Method.GET)
                 .expiry(expiryTimeInMinutes, TimeUnit.MINUTES)

@@ -3,7 +3,8 @@ package np.sthaniya.dpis.config
 import io.minio.BucketExistsArgs
 import io.minio.MakeBucketArgs
 import io.minio.MinioClient
-import org.springframework.beans.factory.annotation.Value
+import np.sthaniya.dpis.common.config.StorageProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -11,21 +12,14 @@ import org.springframework.context.annotation.Configuration
  * Configuration for MinIO S3-compatible storage client.
  * 
  * Sets up the MinIO client bean and ensures the required bucket exists.
+ *
+ * @property storageProperties Configuration properties for storage
  */
 @Configuration
-class MinioConfig {
-    
-    @Value("\${app.storage.endpoint}")
-    private lateinit var endpoint: String
-    
-    @Value("\${app.storage.access-key}")
-    private lateinit var accessKey: String
-    
-    @Value("\${app.storage.secret-key}")
-    private lateinit var secretKey: String
-    
-    @Value("\${app.storage.bucket:dpis-documents}")
-    private lateinit var bucketName: String
+@EnableConfigurationProperties(StorageProperties::class)
+class MinioConfig(
+    private val storageProperties: StorageProperties
+) {
     
     /**
      * Creates and configures the MinIO client bean.
@@ -35,13 +29,13 @@ class MinioConfig {
     @Bean
     fun minioClient(): MinioClient {
         val client = MinioClient.builder()
-            .endpoint(endpoint)
-            .credentials(accessKey, secretKey)
+            .endpoint(storageProperties.endpoint)
+            .credentials(storageProperties.accessKey, storageProperties.secretKey)
             .build()
             
         // Create bucket if it doesn't exist
-        if (!client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
-            client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build())
+        if (!client.bucketExists(BucketExistsArgs.builder().bucket(storageProperties.bucket).build())) {
+            client.makeBucket(MakeBucketArgs.builder().bucket(storageProperties.bucket).build())
         }
         
         return client

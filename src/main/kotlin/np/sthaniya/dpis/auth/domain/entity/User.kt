@@ -40,6 +40,7 @@ import java.util.*
 )
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "user_type")
+@DiscriminatorValue("USER")
 class User :
     UuidBaseEntity(),
     UserDetails {
