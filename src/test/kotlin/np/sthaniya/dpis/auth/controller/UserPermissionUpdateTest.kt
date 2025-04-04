@@ -32,6 +32,27 @@ class UserPermissionUpdateTest : BasePermissionControllerTest() {
     }
 
     @Test
+    fun `should update user roles successfully`() {
+        val targetUser = createTestUser()
+
+        mockMvc.perform(put("/api/v1/users/${targetUser.id}/roles")
+            .header("Authorization", getAuthHeaderForUser(adminUser.email))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {
+                    "roles": {
+                        "ADMIN": true,
+                        "USER": true,
+                        "MANAGER": false
+                    }
+                }
+            """.trimIndent()))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("User roles updated successfully"))
+    }
+
+    @Test
     fun `should return 403 when user lacks EDIT_USER permission`() {
         val targetUser = createTestUser()
 

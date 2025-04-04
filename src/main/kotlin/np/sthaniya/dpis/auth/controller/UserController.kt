@@ -293,6 +293,53 @@ class UserController(
     }
 
     /**
+     * Updates user roles.
+     *
+     * Role Update Process:
+     * 1. Validates requested role changes
+     * 2. Applies role updates atomically
+     * 3. Records role change audit
+     *
+     * Implementation:
+     * - Uses [UserServiceImpl.updateRoles] for role management
+     * - Handles role comparison and modification
+     *
+     * Security:
+     * - Requires EDIT_USER permission
+     * - Validates role combinations
+     * - Prevents unauthorized elevation
+     *
+     * @param userId ID of the user to update
+     * @param roles New role set
+     * @throws AuthException.UserNotFoundException if user doesn't exist
+     */
+    @Operation(
+        summary = "Update user roles",
+        description = "Modify the roles assigned to a user"
+    )
+    @ApiResponses(value = [
+        SwaggerResponse(responseCode = "200", description = "Roles updated successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid roles"),
+        SwaggerResponse(responseCode = "401", description = "Not authenticated"),
+        SwaggerResponse(responseCode = "403", description = "Missing EDIT_USER permission"),
+        SwaggerResponse(responseCode = "404", description = "User not found")
+    ])
+    @PutMapping("/{userId}/roles")
+    @PreAuthorize("hasPermission(null, 'EDIT_USER')")
+    fun updateRoles(
+        @PathVariable userId: UUID,
+        @Valid @RequestBody roles: UserRolesDto
+    ): ResponseEntity<ApiResponse<User>> {
+        val updatedUser = userService.updateRoles(userId, roles)
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                data = updatedUser,
+                message = i18nMessageService.getMessage("user.roles.update.success")
+            )
+        )
+    }
+
+    /**
      * Resets user password administratively.
      *
      * Implementation:

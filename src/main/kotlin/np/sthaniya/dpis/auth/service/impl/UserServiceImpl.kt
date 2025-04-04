@@ -7,6 +7,7 @@ import np.sthaniya.dpis.auth.repository.specification.UserSpecifications
 import np.sthaniya.dpis.auth.service.UserService
 import np.sthaniya.dpis.auth.repository.UserRepository
 import np.sthaniya.dpis.auth.service.PermissionService
+import np.sthaniya.dpis.auth.service.RoleService
 import np.sthaniya.dpis.auth.exception.AuthException
 import np.sthaniya.dpis.auth.domain.entity.User
 import np.sthaniya.dpis.auth.security.JwtService
