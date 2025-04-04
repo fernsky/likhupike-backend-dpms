@@ -1,3 +1,81 @@
 === Key Components
 
 ==== Land Ownership
+The land entity should store comprehensive ownership information, including:
+
+* Owner details (name, citizenship number, address)
+* Co-owner information and ownership share
+* Ownership history and transfer records
+* Ownership certificates (Lalpurja) issuance and management
+* Previous owner information
+
+==== Land Property Details
+* Plot number (Kitta number) - current and previous
+* Land address and location details (Ward, Municipality/Rural Municipality)
+* Land area in multiple units (Ropani-Ana-Dam-Paisa for hills, Bigha-Katha-Dhur for Terai, and square meters)
+* Land type (Aabadi/Raikar Niji, Guthi, Sarbajanik/Raikar)
+* Land classification (residential, agricultural, commercial, industrial, etc.)
+* Mohi details (if applicable)
+
+==== Land Registration and Documentation
+* Registration certificate (Lalpurja) management
+* Documentation verification process
+* Document templates and generation
+* Digital record keeping and archival
+* Land ownership transfer processing
+
+==== Land Classification System
+Support for the 10 official land classification categories as per Land Use Regulations, 2079:
+
+* Agricultural land
+* Residential land
+* Commercial land
+* Industrial land
+* Mining and mineral areas
+* Forest areas
+* Rivers, lakes and wetlands
+* Public use areas
+* Cultural and archaeological importance areas
+* Other government-designated areas
+
+==== Measurement and Conversion
+* Support for traditional Nepalese measurement units:
+** Hills: Ropani-Ana-Dam-Paisa
+** Terai: Bigha-Katha-Dhur-Kanuwa
+* Automatic conversion between units (traditional to metric)
+* Area calculation tools
+
+==== Administrative Components
+* Malpot Office interface
+* Department of Land Management and Archive integration
+* User management (land officers, surveyors, administrators)
+* Workflow management for land transactions
+* Fee calculation and payment processing
+
+==== Survey and Mapping
+* Digital cadastral mapping
+* Survey data management
+* Plot division and amalgamation tools
+* Boundary dispute resolution support
+* Geographic Information System (GIS) integration
+
+==== Reporting and Analytics
+* Land transaction reports
+* Revenue collection reports
+* Land use classification reports
+* Certificate issuance tracking
+* Ownership trend analysis
+
+==== User Interfaces
+* Administrative interface for government officials
+* Public portal for landowners and citizens
+* Mobile access for field surveyors
+* Integration with other government systems
+
+==== Security and Compliance
+* Authentication and authorization
+* Digital signature integration
+* Audit logging and transaction history
+* Compliance with Nepal's digital governance frameworks
+* Data backup and disaster recovery
+

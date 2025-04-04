@@ -10,27 +10,89 @@ _Document the entity relationships for the land management system here._
 entity LandParcel {
   * id : UUID
   * parcelNumber : String
+  * previousParcelNumber : String
   * area : Double
+  * areaInTraditionalUnit : String
   * unitOfMeasurement : String
   * wardNumber : Integer
-  * coordinates : Geometry
-  * landTypeId : UUID
+  * municipality : String
+  * district : String
+  * geometry : Geometry
+  * landUseTypeId : UUID
   * ownershipTypeId : UUID
-  * isGovernmentOwned : Boolean
   * registrationNumber : String
   * registrationDate : Date
 }
 
-entity LandType {
+entity LandUseType {
   * id : UUID
   * name : String
   * description : String
 }
 
-entity OwnershipType {
+entity LandOwnershipType {
   * id : UUID
   * name : String
+  * code : String
   * description : String
+}
+
+entity LandOwner {
+  * id : UUID
+  * name : String
+  * citizenshipNumber : String
+  * citizenshipIssuedDate : Date
+  * citizenshipIssuedOffice : String
+  * permanentAddress : String
+  * temporaryAddress : String
+  * phoneNumber : String
+  * email : String
+  * fatherName : String
+  * grandfatherName : String
+  * spouseName : String
+  * photo : Blob
+  * isGovernmentEntity : Boolean
+  * isGuthi : Boolean
+}
+
+entity LandOwnershipCertificate {
+  * id : UUID
+  * certificateNumber : String
+  * issuedDate : Date
+  * issuedBy : String
+  * certificateImage : Blob
+  * isActive : Boolean
+}
+
+entity LandParcelOwnership {
+  * id : UUID
+  * landParcelId : UUID
+  * landOwnerId : UUID
+  * ownershipShare : Double
+  * startDate : Date
+  * endDate : Date
+  * certificateId : UUID
+  * remarks : String
+}
+
+entity GuthiDetails {
+  * id : UUID
+  * guthiType : String
+  * guthiName : String
+  * establishedDate : Date
+  * purpose : String
+  * responsibleEntity : String
+  * landOwnerId : UUID
+}
+
+entity GovernmentLandDetails {
+  * id : UUID
+  * governmentDepartment : String
+  * managingAuthority : String
+  * purposeOfUse : String
+  * allocationOrder : String
+  * allocationDate : Date
+  * landOwnerId : UUID
 }
 
 entity Building {
@@ -50,48 +112,48 @@ entity BuildingUsageType {
   * description : String
 }
 
-entity Road {
-  * id : UUID
-  * name : String
-  * roadTypeId : UUID
-  * length : Double
-  * width : Double
-  * path : Geometry
-}
-
-entity RoadType {
-  * id : UUID
-  * name : String
-  * description : String
-}
-
-entity WaterBody {
-  * id : UUID
-  * name : String
-  * waterBodyTypeId : UUID
-  * area : Double
-  * boundary : Geometry
-}
-
-entity WaterBodyType {
-  * id : UUID
-  * name : String
-  * description : String
-}
-
+LandParcel }o--|| LandUseType
+LandParcel }o--|| LandOwnershipType
 LandParcel ||--o{ Building
-LandParcel }o--|| LandType
-LandParcel }o--|| OwnershipType
 Building }o--|| BuildingUsageType
-Road }o--|| RoadType
-WaterBody }o--|| WaterBodyType
+
+LandParcel ||--o{ LandParcelOwnership
+LandOwner ||--o{ LandParcelOwnership
+LandOwnershipCertificate ||--o{ LandParcelOwnership
+
+LandOwner |o--o| GuthiDetails
+LandOwner |o--o| GovernmentLandDetails
+
 @enduml
 ----
 
 ==== Key Entities
 
-* **LandParcel**: The fundamental unit of land
+===== Core Entities
+* **LandParcel**: The fundamental unit of land with details including parcel number, previous parcel number, area, location, and classification
+* **LandOwner**: Individual or entity that owns land parcels, including personal details and documentation
+* **LandOwnershipCertificate**: Represents the physical/digital certificate (Lalpurja) issued as proof of ownership
+* **LandParcelOwnership**: Associative entity that captures the relationship between land parcels and owners, including ownership share
+
+===== Land Ownership Types
+As per Land Revenue Act, 1978, the system supports various land registration categories:
+
+* Government Land: Registered in the name of Government of Nepal
+* Public Land: Registered in the name of Government of Nepal with specified usage
+* Raikar Land: Registered in the name of the private owner
+* Various Guthi Land types:
+** Guthi Land: Registered in the name of concerned Guthi
+** Guthi Raithani Nambari: Registered in the name of owner, who pays revenue to Guthi
+** Guthi Nambari: Registered in name of Guthi, which pays revenue to government
+** Guthi Tainathi: Unregistered land with Guthi having exclusive rights
+** Guthi Adhinastha: Land where holder pays revenue in kind to Guthi
+* Birta Land: Registered in the name of tenant
+* Haal Abadi Land: Registered in the name of tiller
+
+===== Specialized Ownership Entities
+* **GuthiDetails**: Additional information for land owned by religious or charitable trusts (Guthi)
+* **GovernmentLandDetails**: Additional details for government-owned land parcels
+
+===== Built Environment
 * **Building**: Structures built on land parcels
-* **Road**: Transportation infrastructure
-* **WaterBody**: Natural and artificial water features
-* **Supporting Entities**: Types and classifications for main entities
+* **BuildingUsageType**: Classification of building usage (residential, commercial, etc.)
