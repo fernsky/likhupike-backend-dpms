@@ -169,14 +169,7 @@ class MunicipalityServiceImpl(
 
         val currentUser = securityService.getCurrentUser()
 
-        if (!currentUser.isSuperAdmin() &&
-            !currentUser.isMunicipalityAdmin()
-        ) {
-            throw LocationException.MunicipalityOperationException(
-                "User does not have access to this municipality",
-                "ACCESS_DENIED",
-            )
-        }
+        
     }
 
     @Transactional(readOnly = true)
