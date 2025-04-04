@@ -1,0 +1,19 @@
+=== Authentication Mechanism
+
+_Document the authentication flow, token management, and security protocols here._
+
+==== Authentication Flow
+
+1. User submits credentials
+2. System validates credentials
+3. System generates JWT token
+4. User includes token in subsequent requests
+5. System validates token for each request
+
+==== Security Considerations
+
+* Password hashing using BCrypt
+* Short-lived JWT tokens
+* HTTPS for all communications
+* Rate limiting to prevent brute force attacks
+* Account lockout after failed attempts

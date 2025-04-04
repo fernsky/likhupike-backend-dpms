@@ -1,0 +1,97 @@
+=== Data Model
+
+_Document the entity relationships for the land management system here._
+
+==== Entity Relationship Diagram
+
+[plantuml]
+----
+@startuml
+entity LandParcel {
+  * id : UUID
+  * parcelNumber : String
+  * area : Double
+  * unitOfMeasurement : String
+  * wardNumber : Integer
+  * coordinates : Geometry
+  * landTypeId : UUID
+  * ownershipTypeId : UUID
+  * isGovernmentOwned : Boolean
+  * registrationNumber : String
+  * registrationDate : Date
+}
+
+entity LandType {
+  * id : UUID
+  * name : String
+  * description : String
+}
+
+entity OwnershipType {
+  * id : UUID
+  * name : String
+  * description : String
+}
+
+entity Building {
+  * id : UUID
+  * buildingNumber : String
+  * constructionYear : Integer
+  * floorCount : Integer
+  * totalArea : Double
+  * usageTypeId : UUID
+  * landParcelId : UUID
+  * coordinates : Geometry
+}
+
+entity BuildingUsageType {
+  * id : UUID
+  * name : String
+  * description : String
+}
+
+entity Road {
+  * id : UUID
+  * name : String
+  * roadTypeId : UUID
+  * length : Double
+  * width : Double
+  * path : Geometry
+}
+
+entity RoadType {
+  * id : UUID
+  * name : String
+  * description : String
+}
+
+entity WaterBody {
+  * id : UUID
+  * name : String
+  * waterBodyTypeId : UUID
+  * area : Double
+  * boundary : Geometry
+}
+
+entity WaterBodyType {
+  * id : UUID
+  * name : String
+  * description : String
+}
+
+LandParcel ||--o{ Building
+LandParcel }o--|| LandType
+LandParcel }o--|| OwnershipType
+Building }o--|| BuildingUsageType
+Road }o--|| RoadType
+WaterBody }o--|| WaterBodyType
+@enduml
+----
+
+==== Key Entities
+
+* **LandParcel**: The fundamental unit of land
+* **Building**: Structures built on land parcels
+* **Road**: Transportation infrastructure
+* **WaterBody**: Natural and artificial water features
+* **Supporting Entities**: Types and classifications for main entities

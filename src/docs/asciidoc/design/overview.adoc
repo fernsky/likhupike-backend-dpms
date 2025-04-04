@@ -1,0 +1,5 @@
+== Design Overview
+
+The Digital Profile Information System is designed to manage digital profiles and geographical information for municipal governance. This documentation outlines the key components, architecture decisions, and design considerations.
+
+include::overview/architecture.adoc[leveloffset=+1]

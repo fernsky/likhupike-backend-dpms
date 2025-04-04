@@ -1,0 +1,28 @@
+=== System Integrations
+
+_Document how the land management system integrates with:_
+
+==== GIS Integration
+
+* Integration with PostGIS for spatial data management
+* Support for standard GIS file formats (Shapefile, GeoJSON)
+* Map rendering capabilities
+* Spatial analysis functions
+
+==== Cadastral System Integration
+
+* Data exchange with national cadastral systems
+* Integration with land registration offices
+* Support for cadastral survey data import/export
+
+==== Property Tax System
+
+* Valuation data for tax assessment
+* Land use information for tax calculations
+* Property boundaries for tax jurisdiction
+
+==== Permit Management
+
+* Building permit application integration
+* Construction approval workflow
+* Inspection scheduling and reporting

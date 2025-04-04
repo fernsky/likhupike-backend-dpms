@@ -8,8 +8,8 @@ plugins {
 	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
 	id 'org.liquibase.gradle' version '2.2.1'
 	id 'org.jetbrains.dokka' version '1.9.20'
-	id 'org.asciidoctor.jvm.convert' version '3.3.2'
-	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
+	id 'org.asciidoctor.jvm.convert' version '4.0.2'
+	id 'org.asciidoctor.jvm.pdf' version '4.0.2'
 }
 
 group = 'np.sthaniya'
@@ -101,6 +101,13 @@ springBoot {
 test {
 	useJUnitPlatform()
 	outputs.dir snippetsDir
+}
+
+asciidoctorj {
+    modules {
+       diagram.use() 
+       diagram.version '2.3.1' 
+    }
 }
 
 asciidoctor {

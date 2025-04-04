@@ -1,0 +1,16 @@
+=== System Architecture
+
+_Document the high-level architecture of the Digital Profile Information System here. Include component diagrams, technology stack, and key architectural decisions._
+
+==== Technology Stack
+
+* Backend: Spring Boot with Kotlin
+* Database: PostgreSQL
+* Security: Spring Security with JWT
+* Documentation: AsciiDoc, OpenAPI
+* Frontend: Angular
+
+==== Key Components
+
+* User & Authentication System
+* Land Management System

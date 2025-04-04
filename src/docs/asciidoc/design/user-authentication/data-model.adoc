@@ -1,0 +1,65 @@
+=== Data Model
+
+_Document the entity relationships for users, roles, permissions, and authentication here._
+
+==== Entity Relationship Diagram
+
+[plantuml]
+----
+@startuml
+!theme carbon-gray
+entity User {
+  * id : UUID
+  * email : String
+  * password : String
+  * isWardLevelUser : Boolean
+  o wardNumber : Integer
+  * isApproved : Boolean
+  o approvedBy : UUID
+  o approvedAt : Timestamp
+  * isDeleted : Boolean
+  o deletedAt : Timestamp
+  o deletedBy : UUID
+  * createdAt : Timestamp
+  o createdBy : UUID
+  * updatedAt : Timestamp
+  o updatedBy : UUID
+  o version : Long
+}
+
+entity Role {
+  * id : UUID
+  * name : String
+  * description : String
+}
+
+entity Permission {
+  * id : UUID
+  * name : String
+  * description : String
+}
+
+entity UserRole {
+  * userId : UUID
+  * roleId : UUID
+}
+
+entity RolePermission {
+  * roleId : UUID
+  * permissionId : UUID
+}
+
+User ||--o{ UserRole
+Role ||--o{ UserRole
+Role ||--o{ RolePermission
+Permission ||--o{ RolePermission
+@enduml
+----
+
+==== Key Entities
+
+* **User**: Stores user information and authentication details
+* **Role**: Defines user roles in the system
+* **Permission**: Individual access rights
+* **UserRole**: Maps users to roles
+* **RolePermission**: Maps roles to permissions

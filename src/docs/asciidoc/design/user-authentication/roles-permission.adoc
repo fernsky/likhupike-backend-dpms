@@ -1,0 +1,23 @@
+=== User Roles & Permissions
+
+_Document the different user roles (admin, staff, public users) and their associated permissions here._
+
+==== Role Hierarchy
+
+* System Administrator
+* Municipality Administrator
+* Ward Administrator
+* Staff User
+* Public User
+
+==== Permission Matrix
+
+.Permission Matrix
+[cols="3,^1,^1,^1,^1,^1",options="header"]
+|===
+|Feature |System Admin |Municipality Admin |Ward Admin |Staff |Public
+|User Management |✓ |✓ |✓ (Ward only) |✗ |✗
+|System Configuration |✓ |✗ |✗ |✗ |✗
+|Land Management |✓ |✓ |✓ (Ward only) |✓ |✗
+|Public Reports |✓ |✓ |✓ |✓ |✓
+|===
