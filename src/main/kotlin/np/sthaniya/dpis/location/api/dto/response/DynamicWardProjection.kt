@@ -2,8 +2,8 @@ package np.sthaniya.dpis.location.api.dto.response
 
 import np.sthaniya.dpis.location.api.dto.enums.WardField
 import np.sthaniya.dpis.location.domain.Ward
-import np.sthaniya.dpis.shared.projection.BaseEntityProjection
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.projection.BaseEntityProjection
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.slf4j.LoggerFactory
 
 class DynamicWardProjection private constructor() : BaseEntityProjection<Ward, WardField>() {

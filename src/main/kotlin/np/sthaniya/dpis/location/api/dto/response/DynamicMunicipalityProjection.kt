@@ -3,8 +3,8 @@ package np.sthaniya.dpis.location.api.dto.response
 import np.sthaniya.dpis.location.api.dto.enums.MunicipalityField
 import np.sthaniya.dpis.location.api.dto.response.DistrictSummaryResponse
 import np.sthaniya.dpis.location.domain.Municipality
-import np.sthaniya.dpis.shared.projection.BaseEntityProjection
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.projection.BaseEntityProjection
+import np.sthaniya.dpis.common.util.GeometryConverter
 
 class DynamicMunicipalityProjection private constructor() : BaseEntityProjection<Municipality, MunicipalityField>() {
     companion object {

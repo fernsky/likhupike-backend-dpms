@@ -6,7 +6,7 @@ import np.sthaniya.dpis.location.api.dto.response.MunicipalityDetailResponse
 import np.sthaniya.dpis.location.api.dto.response.MunicipalityResponse
 import np.sthaniya.dpis.location.api.dto.response.MunicipalitySummaryResponse
 import np.sthaniya.dpis.location.domain.Municipality
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import np.sthaniya.dpis.location.api.dto.enums.MunicipalityField

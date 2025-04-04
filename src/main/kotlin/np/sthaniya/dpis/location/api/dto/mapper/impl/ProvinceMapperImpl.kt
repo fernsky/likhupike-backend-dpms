@@ -5,7 +5,7 @@ import np.sthaniya.dpis.location.api.dto.mapper.LocationSummaryMapper
 import np.sthaniya.dpis.location.api.dto.mapper.ProvinceMapper
 import np.sthaniya.dpis.location.api.dto.response.*
 import np.sthaniya.dpis.location.domain.Province
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

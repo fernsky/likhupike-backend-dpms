@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.*
 import np.sthaniya.dpis.location.domain.MunicipalityType
-import np.sthaniya.dpis.shared.dto.GeometryRequest
+import np.sthaniya.dpis.common.dto.GeometryRequest
 import java.math.BigDecimal
 import java.util.*
 

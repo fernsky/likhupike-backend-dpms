@@ -16,8 +16,8 @@ data class ProvinceSearchCriteria(
     val includeDistricts: Boolean = false,
     val sortBy: ProvinceSortField = ProvinceSortField.NAME,
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
-    override val page: Int = 0,
-    override val pageSize: Int = 20,
+    val page: Int = 0,
+    val pageSize: Int = 20,
 )
 
 enum class ProvinceSortField {

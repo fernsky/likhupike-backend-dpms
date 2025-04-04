@@ -1,4 +1,4 @@
-package np.sthaniya.dpis.shared.dto
+package np.sthaniya.dpis.common.dto
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotEmpty

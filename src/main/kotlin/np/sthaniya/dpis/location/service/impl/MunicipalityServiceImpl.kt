@@ -14,8 +14,8 @@ import np.sthaniya.dpis.location.repository.DistrictRepository
 import np.sthaniya.dpis.location.repository.MunicipalityRepository
 import np.sthaniya.dpis.location.repository.specification.MunicipalitySpecifications
 import np.sthaniya.dpis.location.service.MunicipalityService
-import np.sthaniya.dpis.shared.service.SecurityService
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.service.SecurityService
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest

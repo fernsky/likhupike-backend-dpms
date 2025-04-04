@@ -34,9 +34,9 @@ data class WardSearchCriteria(
     val sortBy: WardSortField = WardSortField.WARD_NUMBER,
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
     @field:Min(0)
-    override val page: Int = 0,
+    val page: Int = 0,
     @field:Min(1)
-    override val pageSize: Int = 20,
+    val pageSize: Int = 20,
 )  {
     fun validate() {
         require(!(wardNumberFrom != null && wardNumberTo != null && wardNumberFrom > wardNumberTo)) {

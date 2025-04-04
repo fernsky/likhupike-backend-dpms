@@ -6,7 +6,7 @@ import np.sthaniya.dpis.location.api.dto.mapper.LocationSummaryMapper
 import np.sthaniya.dpis.location.api.dto.response.*
 import np.sthaniya.dpis.location.api.dto.response.DynamicDistrictProjection
 import np.sthaniya.dpis.location.domain.District
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 

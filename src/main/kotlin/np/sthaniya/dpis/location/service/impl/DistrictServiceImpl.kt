@@ -13,7 +13,7 @@ import np.sthaniya.dpis.location.repository.DistrictRepository
 import np.sthaniya.dpis.location.repository.ProvinceRepository
 import np.sthaniya.dpis.location.repository.specification.DistrictSpecifications
 import np.sthaniya.dpis.location.service.DistrictService
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest

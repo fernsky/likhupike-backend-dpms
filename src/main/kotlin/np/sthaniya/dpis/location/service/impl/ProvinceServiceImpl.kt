@@ -12,7 +12,7 @@ import np.sthaniya.dpis.location.exception.*
 import np.sthaniya.dpis.location.repository.ProvinceRepository
 import np.sthaniya.dpis.location.repository.specification.ProvinceSpecifications
 import np.sthaniya.dpis.location.service.ProvinceService
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.locationtech.jts.geom.Polygon
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page

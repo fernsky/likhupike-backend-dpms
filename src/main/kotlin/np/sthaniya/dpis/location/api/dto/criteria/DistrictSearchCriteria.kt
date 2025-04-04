@@ -19,8 +19,8 @@ data class DistrictSearchCriteria(
     val includeMunicipalities: Boolean = false,
     val sortBy: DistrictSortField = DistrictSortField.NAME,
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
-    override val page: Int = 0,
-    override val pageSize: Int = 20,
+    val page: Int = 0,
+    val pageSize: Int = 20,
 ) {
     fun validate() {
         val errors = mutableMapOf<String, String>()

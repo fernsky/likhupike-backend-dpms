@@ -1,6 +1,5 @@
 package np.sthaniya.dpis.location.service.impl
 
-import np.sthaniya.dpis.family.repository.FamilyRepository
 import np.sthaniya.dpis.location.api.dto.criteria.WardSearchCriteria
 import np.sthaniya.dpis.location.api.dto.mapper.WardMapper
 import np.sthaniya.dpis.location.api.dto.request.CreateWardRequest
@@ -12,8 +11,8 @@ import np.sthaniya.dpis.location.repository.MunicipalityRepository
 import np.sthaniya.dpis.location.repository.WardRepository
 import np.sthaniya.dpis.location.repository.specification.WardSpecifications
 import np.sthaniya.dpis.location.service.WardService
-import np.sthaniya.dpis.shared.service.SecurityService
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.service.SecurityService
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -29,7 +28,6 @@ import java.util.*
 class WardServiceImpl(
     private val wardRepository: WardRepository,
     private val municipalityRepository: MunicipalityRepository,
-    private val familyRepository: FamilyRepository,
     private val securityService: SecurityService,
     private val wardMapper: WardMapper,
     private val geometryConverter: GeometryConverter,

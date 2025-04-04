@@ -41,9 +41,9 @@ data class MunicipalitySearchCriteria(
     val sortBy: MunicipalitySortField = MunicipalitySortField.NAME,
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
     @field:Min(0)
-    override val page: Int = 0,
+    val page: Int = 0,
     @field:Min(1)
-    override val pageSize: Int = 20,
+    val pageSize: Int = 20,
 )  {
     fun validate() {
         require(!(minWards != null && maxWards != null && minWards > maxWards)) {

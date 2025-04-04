@@ -8,7 +8,7 @@ import np.sthaniya.dpis.location.api.dto.response.WardDetailResponse
 import np.sthaniya.dpis.location.api.dto.response.WardResponse
 import np.sthaniya.dpis.location.api.dto.response.WardSummaryResponse
 import np.sthaniya.dpis.location.domain.Ward
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.util.GeometryConverter
 import org.springframework.stereotype.Component
 
 @Component

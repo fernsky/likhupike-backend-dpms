@@ -3,8 +3,8 @@ package np.sthaniya.dpis.location.api.dto.response
 import np.sthaniya.dpis.location.api.dto.enums.DistrictField
 import np.sthaniya.dpis.location.domain.District
 import np.sthaniya.dpis.location.domain.MunicipalityType
-import np.sthaniya.dpis.shared.projection.BaseEntityProjection
-import np.sthaniya.dpis.shared.util.GeometryConverter
+import np.sthaniya.dpis.common.projection.BaseEntityProjection
+import np.sthaniya.dpis.common.util.GeometryConverter
 import java.math.BigDecimal
 
 class DynamicDistrictProjection private constructor() : BaseEntityProjection<District, DistrictField>() {

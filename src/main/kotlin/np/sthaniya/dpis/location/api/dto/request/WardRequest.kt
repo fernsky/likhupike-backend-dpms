@@ -2,7 +2,7 @@ package np.sthaniya.dpis.location.api.dto.request
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.*
-import np.sthaniya.dpis.shared.dto.GeometryRequest
+import np.sthaniya.dpis.common.dto.GeometryRequest
 import java.math.BigDecimal
 import java.util.*
 

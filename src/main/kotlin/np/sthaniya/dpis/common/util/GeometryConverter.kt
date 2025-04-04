@@ -1,7 +1,7 @@
-package np.sthaniya.dpis.shared.util
+package np.sthaniya.dpis.common.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import np.sthaniya.dpis.shared.dto.*
+import np.sthaniya.dpis.common.dto.*
 import org.geojson.GeoJsonObject
 import org.geojson.LngLatAlt
 import org.locationtech.jts.geom.*
