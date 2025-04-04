@@ -6,6 +6,8 @@ include::land-management/components.adoc[leveloffset=+1]
 
 include::land-management/data-model.adoc[leveloffset=+1]
 
+include::land-management/user-stories.adoc[leveloffset=+1]
+
 include::land-management/integrations.adoc[leveloffset=+1]
 
 include::land-management/technical.adoc[leveloffset=+1]
