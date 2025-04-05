@@ -1,0 +1,86 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="04-wards-table-create">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="municipalities"/>
+            <not>
+                <tableExists tableName="wards"/>
+            </not>
+        </preConditions>
+        
+        <comment>Create wards table with composite primary key (ward_number, municipality_code)</comment>
+        
+        <createTable tableName="wards">
+            <column name="ward_number" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="municipality_code" type="VARCHAR(36)">
+                <constraints nullable="false" foreignKeyName="fk_ward_municipality" references="municipalities(code)"/>
+            </column>
+            <column name="area" type="DECIMAL(10, 2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="population" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="latitude" type="DECIMAL(10, 6)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="longitude" type="DECIMAL(10, 6)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="office_location" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="office_location_nepali" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            
+            <!-- Audit fields inherited from BaseEntity -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            
+            <!-- Geometry column for spatial data -->
+            <column name="geometry" type="geometry">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        
+        <!-- Add primary key -->
+        <addPrimaryKey 
+            tableName="wards" 
+            columnNames="ward_number, municipality_code" 
+            constraintName="pk_ward"/>
+        
+        <!-- Create indexes -->
+        <createIndex indexName="idx_wards_number" tableName="wards">
+            <column name="ward_number"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_wards_municipality" tableName="wards">
+            <column name="municipality_code"/>
+        </createIndex>
+        
+        <!-- Create unique constraint -->
+        <addUniqueConstraint 
+            constraintName="uk_ward_number_municipality" 
+            tableName="wards" 
+            columnNames="ward_number, municipality_code"/>
+    </changeSet>
+</databaseChangeLog>

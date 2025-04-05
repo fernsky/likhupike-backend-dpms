@@ -1,0 +1,80 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="02-districts-table-create">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="provinces"/>
+            <not>
+                <tableExists tableName="districts"/>
+            </not>
+        </preConditions>
+        
+        <comment>Create districts table that belongs to provinces</comment>
+        
+        <createTable tableName="districts">
+            <column name="code" type="VARCHAR(36)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="districts_pkey"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_nepali" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="area" type="DECIMAL(10, 2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="population" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="headquarter" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="headquarter_nepali" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="province_code" type="VARCHAR(36)">
+                <constraints nullable="false" foreignKeyName="fk_district_province" references="provinces(code)"/>
+            </column>
+            
+            <!-- Audit fields inherited from BaseEntity -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            
+            <!-- Geometry column for spatial data -->
+            <column name="geometry" type="geometry">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        
+        <!-- Create indexes -->
+        <createIndex indexName="idx_districts_name" tableName="districts">
+            <column name="name"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_districts_province" tableName="districts">
+            <column name="province_code"/>
+        </createIndex>
+        
+        <!-- Create unique constraint -->
+        <addUniqueConstraint 
+            constraintName="uk_district_code_province" 
+            tableName="districts" 
+            columnNames="code, province_code"/>
+    </changeSet>
+</databaseChangeLog>
