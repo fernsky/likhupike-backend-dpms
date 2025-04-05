@@ -1,0 +1,18 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="06-districts-sample-data" context="dev,test">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="districts"/>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM districts</sqlCheck>
+        </preConditions>
+        
+        <comment>Insert sample data for districts</comment>
+
+        <sql>
+        INSERT INTO districts(code,name,name_nepali,province_code) VALUES (101,'Taplejung','ताप्लेजुङ',1),(102,'Sankhuwasabha','संखुवासभा',1),(103,'Solukhumbu','सोलुखुम्बु',1),(104,'Okhaldhunga','ओखलढुङ्गा',1),(105,'Khotang','खोटाङ',1),(106,'Bhojpur','भोजपुर',1),(107,'Dhankuta','धनकुटा',1),(108,'Tehrathum','तेह्रथुम',1),(109,'Panchthar','पाँचथर',1),(110,'Ilam','इलाम',1),(111,'Jhapa','झापा',1),(112,'Morang','मोरङ',1),(113,'Sunsari','सुनसरी',1),(114,'Udayapur','उदयपुर',1),(201,'Saptari','सप्तरी',2),(202,'Siraha','सिरहा',2),(203,'Dhanusa','धनुषा',2),(204,'Mahottari','महोत्तरी',2),(205,'Sarlahi','सर्लाही',2),(206,'Rautahat','रौतहट',2),(207,'Bara','बारा',2),(208,'Parsa','पर्सा',2),(301,'Dolakha','दोलखा',3),(302,'Sindhupalchok','सिन्धुपाल्चोक',3),(303,'Rasuwa','रसुवा',3),(304,'Dhading','धादिङ',3),(305,'Nuwakot','नुवाकोट',3),(306,'Kathmandu','काठमाडौँ',3),(307,'Bhaktapur','भक्तपुर',3),(308,'Lalitpur','ललितपुर',3),(309,'Kavrepalanchok','काभ्रेपलाञ्चोक',3),(310,'Ramechhap','रामेछाप',3),(311,'Sindhuli','सिन्धुली',3),(312,'Makwanpur','मकवानपुर',3),(313,'Chitwan','चितवन',3),(401,'Gorkha','गोरखा',4),(402,'Manang','मनाङ',4),(403,'Mustang','मुस्ताङ',4),(404,'Myagdi','म्याग्दी',4),(405,'Kaski','कास्की',4),(406,'Lamjung','लमजुङ',4),(407,'Tanahun','तनहुँ',4),(408,'Nawalparasi East','नवलपरासी पूर्व',4),(409,'Syangja','स्याङजा',4),(410,'Parbat','पर्वत',4),(411,'Baglung','बागलुङ',4),(501,'Rukum East','रुकुम पूर्व',5),(502,'Rolpa','रोल्पा',5),(503,'Pyuthan','प्यूठान',5),(504,'Gulmi','गुल्मी',5),(505,'Arghakhanchi','अर्घाखाँची',5),(506,'Palpa','पाल्पा',5),(507,'Nawalparasi West','नवलपरासी पश्चिम',5),(508,'Rupandehi','रुपन्देही',5),(509,'Kapilbastu','कपिलवस्तु',5),(510,'Dang','दाङ',5),(511,'Banke','बाँके',5),(512,'Bardiya','बर्दिया',5),(601,'Dolpa','डोल्पा',6),(602,'Mugu','मुगु',6),(603,'Humla','हुम्ला',6),(604,'Jumla','जुम्ला',6),(605,'Kalikot','कालिकोट',6),(606,'Dailekh','दैलेख',6),(607,'Jajarkot','जाजरकोट',6),(608,'Rukum West','रुकुम पश्चिम',6),(609,'Salyan','सल्यान',6),(610,'Surkhet','सुर्खेत',6),(701,'Bajura','बाजुरा',7),(702,'Bajhang','बझाङ',7),(703,'Darchula','दार्चुला',7),(704,'Baitadi','बैतडी',7),(705,'Dandeldhura','डँडेलधुरा',7),(706,'Doti','डोटी',7),(707,'Achham','अछाम',7),(708,'Kailali','कैलाली',7),(709,'Kanchanpur','कञ्चनपुर',7);
+        </sql>
+    </changeSet>
+</databaseChangeLog>

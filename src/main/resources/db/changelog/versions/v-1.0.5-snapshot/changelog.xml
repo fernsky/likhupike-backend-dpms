@@ -9,4 +9,10 @@
     <include file="02-districts-table.xml" relativeToChangelogFile="true"/>
     <include file="03-municipalities-table.xml" relativeToChangelogFile="true"/>
     <include file="04-wards-table.xml" relativeToChangelogFile="true"/>
+    
+    <!-- Location data -->
+    <include file="05-provinces-data.xml" relativeToChangelogFile="true"/>
+    <include file="06-districts-data.xml" relativeToChangelogFile="true"/>
+    <include file="07-municipalities-data.xml" relativeToChangelogFile="true"/>
+    <include file="08-wards-data.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
