@@ -108,7 +108,6 @@ object LocationTestDataFactory {
         return Ward().apply {
             this.wardNumber = wardNumber
             this.municipality = municipality
-            this.municipalityCode = municipality.code
             this.area = area
             this.population = population
             this.latitude = latitude
