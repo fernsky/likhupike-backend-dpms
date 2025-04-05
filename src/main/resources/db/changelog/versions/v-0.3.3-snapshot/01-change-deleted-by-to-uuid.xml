@@ -12,18 +12,17 @@
         <comment>Convert deleted_by column from VARCHAR to UUID</comment>
         
         <!-- First set null for any non-UUID values using a compatible approach -->
-        <sql>
-            -- Try to cast to UUID and set to NULL if it fails
-            UPDATE users
-            SET deleted_by = NULL
-            WHERE deleted_by IS NOT NULL
-            AND (
-                LENGTH(deleted_by::TEXT) != 36
-                OR deleted_by::TEXT NOT SIMILAR TO '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-            );
-        </sql>
-        
+        <!-- <sql>
+        UPDATE users
+        SET deleted_by = NULL
+        WHERE deleted_by IS NOT NULL
+        AND (
+            LENGTH(deleted_by::TEXT) != 36
+            OR deleted_by::TEXT NOT SIMILAR TO '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+        );
+        </sql> -->
         <!-- Then modify the column type -->
+        
         <modifyDataType tableName="users" columnName="deleted_by" newDataType="UUID"/>
     </changeSet>
 </databaseChangeLog>
