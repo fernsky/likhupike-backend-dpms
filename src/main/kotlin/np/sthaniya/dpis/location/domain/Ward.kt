@@ -22,6 +22,7 @@ import java.math.BigDecimal
         Index(name = "idx_wards_municipality", columnList = "municipality_code"),
     ],
 )
+@IdClass(WardId::class)
 class Ward : BaseEntity() {
     @Id
     @Column(name = "ward_number", nullable = false)

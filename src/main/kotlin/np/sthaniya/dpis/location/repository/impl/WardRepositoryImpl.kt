@@ -2,6 +2,7 @@ package np.sthaniya.dpis.location.repository.impl
 
 import jakarta.persistence.EntityManager
 import np.sthaniya.dpis.location.domain.Ward
+import np.sthaniya.dpis.location.domain.WardId
 import np.sthaniya.dpis.location.repository.WardRepository
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository
 import org.springframework.stereotype.Repository
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class WardRepositoryImpl(
     entityManager: EntityManager,
-) : SimpleJpaRepository<Ward, String>(Ward::class.java, entityManager),
+) : SimpleJpaRepository<Ward, WardId>(Ward::class.java, entityManager),
     WardRepository {
     private val customImpl = CustomWardRepositoryImpl(entityManager)
 
