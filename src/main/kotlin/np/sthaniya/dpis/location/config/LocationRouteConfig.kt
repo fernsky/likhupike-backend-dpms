@@ -33,7 +33,7 @@ class LocationRouteConfig(
         routeRegistry.register("/api/v1/provinces/[^/]+", HttpMethod.PUT, isPublic = false) // updateProvince
 
         // District routes
-        routeRegistry.register("/api/v1/districts", HttpMethod.GET, isPublic = true) // getAllDistricts
+        // routeRegistry.register("/api/v1/districts", HttpMethod.GET, isPublic = true) // getAllDistricts
         routeRegistry.register("/api/v1/districts/[^/]+", HttpMethod.GET, isPublic = true) // getDistrictDetail
         routeRegistry.register("/api/v1/districts/search", HttpMethod.GET, isPublic = true) // searchDistricts
         routeRegistry.register("/api/v1/districts/by-province/[^/]+", HttpMethod.GET, isPublic = true) // getDistrictsByProvince
@@ -41,7 +41,7 @@ class LocationRouteConfig(
         routeRegistry.register("/api/v1/districts/[^/]+", HttpMethod.PUT, isPublic = false) // updateDistrict
 
         // Municipality routes
-        routeRegistry.register("/api/v1/municipalities", HttpMethod.GET, isPublic = true) // getAllMunicipalities
+        // routeRegistry.register("/api/v1/municipalities", HttpMethod.GET, isPublic = true) // getAllMunicipalities
         routeRegistry.register("/api/v1/municipalities/[^/]+", HttpMethod.GET, isPublic = true) // getMunicipalityDetail
         routeRegistry.register("/api/v1/municipalities/search", HttpMethod.GET, isPublic = true) // searchMunicipalities
         routeRegistry.register("/api/v1/municipalities/by-district/[^/]+", HttpMethod.GET, isPublic = true) // getMunicipalitiesByDistrict
