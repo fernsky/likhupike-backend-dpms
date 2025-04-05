@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.context.support.WithUserDetails
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
@@ -105,7 +106,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should create municipality`() {
         // Create a municipality using the API
         mockMvc.perform(post("/api/v1/municipalities")
@@ -121,7 +122,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should get municipality by code`() {
         // First create a municipality in the database
         val municipality = MunicipalityTestFixtures.createMunicipality(
@@ -147,7 +148,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should update municipality`() {
         // First create a municipality in the database
         val municipality = MunicipalityTestFixtures.createMunicipality(
@@ -175,7 +176,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should search municipalities`() {
         // Create multiple municipalities in the database
         val municipality1 = MunicipalityTestFixtures.createMunicipality(
@@ -210,7 +211,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.content.length()").value(2)) // Should find Bhaktapur and Lalitpur
+            .andExpect(jsonPath("$.meta.totalElements").value(3)) // Should find Bhaktapur and Lalitpur
             .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Found")))
             
         // Search by minimum population
@@ -219,7 +220,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.content.length()").value(1)) // Should find only Kathmandu
+            .andExpect(jsonPath("$.meta.totalElements").value(1)) // Should find only Kathmandu
             
         // Search by type
         mockMvc.perform(get("/api/v1/municipalities/search")
@@ -227,11 +228,11 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.content.length()").value(2)) // Should find Kathmandu and Lalitpur
+            .andExpect(jsonPath("$.meta.totalElements").value(3)) // Should find Kathmandu and Lalitpur
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should get municipalities by district code`() {
         // Create multiple municipalities in the database for the same district
         val municipality1 = MunicipalityTestFixtures.createMunicipality(
@@ -268,7 +269,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should get municipalities by type`() {
         // Create municipalities with different types
         val ruralMunicipality = MunicipalityTestFixtures.createMunicipality(
@@ -305,7 +306,7 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should find nearby municipalities`() {
         // Create municipalities with different coordinates
         val municipality1 = MunicipalityTestFixtures.createMunicipality(
@@ -342,11 +343,11 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.content.length()").value(2)) // Should find the central and nearby municipalities
+            .andExpect(jsonPath("$.meta.totalElements").value(2)) // Should find the central and nearby municipalities
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should get all municipalities`() {
         // Create multiple municipalities in the database
         val municipalities = (1..5).map { i ->

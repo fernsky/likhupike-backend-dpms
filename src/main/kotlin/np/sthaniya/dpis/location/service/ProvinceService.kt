@@ -16,7 +16,6 @@ interface ProvinceService {
      * Creates a new province
      * @throws ProvinceCodeExistsException if code already exists
      */
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     @Transactional
     fun createProvince(request: CreateProvinceRequest): ProvinceResponse
 
@@ -25,7 +24,6 @@ interface ProvinceService {
      * @throws ProvinceNotFoundException if province not found
      * @throws InvalidOperationException if operation not allowed
      */
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     @Transactional
     fun updateProvince(
         code: String,

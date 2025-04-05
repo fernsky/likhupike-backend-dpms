@@ -18,7 +18,6 @@ interface WardService {
      * @throws MunicipalityNotFoundException if municipality not found
      * @throws DuplicateWardNumberException if ward number already exists in municipality
      */
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     @Transactional
     fun createWard(request: CreateWardRequest): WardResponse
 
@@ -27,7 +26,6 @@ interface WardService {
      * @throws WardNotFoundException if ward not found
      * @throws InvalidWardOperationException if user doesn't have access to ward
      */
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     @Transactional
     fun updateWard(
         wardNumber: Int,

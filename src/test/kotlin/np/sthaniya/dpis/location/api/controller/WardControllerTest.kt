@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.context.support.WithUserDetails
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
@@ -118,7 +119,7 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should create ward`() {
         // Create a ward using the API
         mockMvc.perform(post("/api/v1/wards")
@@ -134,7 +135,7 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"]) 
     fun `should get ward by municipality code and ward number`() {
         // First create a ward in the database
         val ward = WardTestFixtures.createWard(
@@ -156,7 +157,7 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should update ward`() {
         // First create a ward in the database
         val ward = WardTestFixtures.createWard(
@@ -181,7 +182,7 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should search wards`() {
         // Create multiple wards in the database
         val ward1 = WardTestFixtures.createWard(
@@ -213,7 +214,7 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.content.length()").value(2)) // Should find wards 1 and 3
+            .andExpect(jsonPath("$.meta.totalElements").value(2)) // Should find wards 1 and 3
             .andExpect(jsonPath("$.message").value(containsString("Found")))
         
         // Search by municipality code
@@ -222,11 +223,11 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.content.length()").value(3)) // Should find all 3 wards
+            .andExpect(jsonPath("$.meta.totalElements").value(3)) // Should find all 3 wards
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should get wards by municipality code`() {
         // Create multiple wards in the database for the same municipality
         val wards = (1..5).map { i ->
@@ -255,12 +256,12 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.length()").value(wards.size)) // Should find all wards for test municipality
+            .andExpect(jsonPath("$.meta.totalElements").value(wards.size)) // Should find all wards for test municipality
             .andExpect(jsonPath("$.data[0].municipalityCode").value(testMunicipality.code))
     }
     
     @Test
-    @WithUserDetails("admin@system.com")
+    @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"])
     fun `should find nearby wards`() {
         // Create wards with different coordinates
         val ward1 = WardTestFixtures.createWard(
@@ -294,6 +295,6 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.content.length()").value(2)) // Should find wards 1 and 2
+            .andExpect(jsonPath("$.meta.totalElements").value(2)) // Should find wards 1 and 2
     }
 }
