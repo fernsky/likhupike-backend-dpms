@@ -66,7 +66,7 @@ class Citizen : UuidBaseEntity(), UserDetails {
     var isDeleted: Boolean = false
     
     @Column(name = "deleted_at")
-    var deletedAt: LocalDate? = null
+    var deletedAt: LocalDateTime? = null
     
     @Column(name = "deleted_by")
     var deletedBy: UUID? = null
