@@ -4,6 +4,7 @@ import np.sthaniya.dpis.citizen.api.controller.CitizenManagementController
 import np.sthaniya.dpis.citizen.dto.management.CreateCitizenDto
 import np.sthaniya.dpis.citizen.dto.management.UpdateCitizenDto
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
+import np.sthaniya.dpis.citizen.dto.response.DocumentUploadResponse
 import np.sthaniya.dpis.citizen.service.CitizenManagementService
 import np.sthaniya.dpis.common.dto.ApiResponse
 import np.sthaniya.dpis.common.service.I18nMessageService
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 /**
@@ -141,6 +143,81 @@ class CitizenManagementControllerImpl(
                 ApiResponse.success(
                     data = deletedCitizen,
                     message = i18nMessageService.getMessage("citizen.delete.success")
+                )
+            )
+    }
+
+    /**
+     * Uploads a citizen's photo.
+     *
+     * @param id The unique identifier of the citizen
+     * @param photo The photo file to upload
+     * @param currentUserId ID of the administrator uploading the document
+     * @return HTTP 200 OK with details about the uploaded photo
+     */
+    override fun uploadCitizenPhoto(id: UUID, photo: MultipartFile, currentUserId: UUID): ResponseEntity<ApiResponse<DocumentUploadResponse>> {
+        logger.info("Uploading photo for citizen with ID: $id by user: $currentUserId")
+        
+        val uploadResult = citizenManagementService.uploadCitizenPhoto(id, photo, currentUserId)
+        
+        logger.info("Successfully uploaded photo for citizen with ID: $id, storage key: ${uploadResult.storageKey}")
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                ApiResponse.success(
+                    data = uploadResult,
+                    message = i18nMessageService.getMessage("citizen.document.photo.upload.success")
+                )
+            )
+    }
+
+    /**
+     * Uploads the front page of a citizen's citizenship certificate.
+     *
+     * @param id The unique identifier of the citizen
+     * @param document The document file to upload
+     * @param currentUserId ID of the administrator uploading the document
+     * @return HTTP 200 OK with details about the uploaded document
+     */
+    override fun uploadCitizenshipFront(id: UUID, document: MultipartFile, currentUserId: UUID): ResponseEntity<ApiResponse<DocumentUploadResponse>> {
+        logger.info("Uploading citizenship front page for citizen with ID: $id by user: $currentUserId")
+        
+        val uploadResult = citizenManagementService.uploadCitizenshipFront(id, document, currentUserId)
+        
+        logger.info("Successfully uploaded citizenship front page for citizen with ID: $id, storage key: ${uploadResult.storageKey}")
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                ApiResponse.success(
+                    data = uploadResult,
+                    message = i18nMessageService.getMessage("citizen.document.citizenship.front.upload.success")
+                )
+            )
+    }
+
+    /**
+     * Uploads the back page of a citizen's citizenship certificate.
+     *
+     * @param id The unique identifier of the citizen
+     * @param document The document file to upload
+     * @param currentUserId ID of the administrator uploading the document
+     * @return HTTP 200 OK with details about the uploaded document
+     */
+    override fun uploadCitizenshipBack(id: UUID, document: MultipartFile, currentUserId: UUID): ResponseEntity<ApiResponse<DocumentUploadResponse>> {
+        logger.info("Uploading citizenship back page for citizen with ID: $id by user: $currentUserId")
+        
+        val uploadResult = citizenManagementService.uploadCitizenshipBack(id, document, currentUserId)
+        
+        logger.info("Successfully uploaded citizenship back page for citizen with ID: $id, storage key: ${uploadResult.storageKey}")
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                ApiResponse.success(
+                    data = uploadResult,
+                    message = i18nMessageService.getMessage("citizen.document.citizenship.back.upload.success")
                 )
             )
     }
