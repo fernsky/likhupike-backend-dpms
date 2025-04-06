@@ -88,7 +88,7 @@ class CitizenManagementServiceImpl(
 
         if (createCitizenDto.isApproved) {
             citizen.isApproved = true
-            citizen.approvedAt = LocalDateTime.now()
+            citizen.approvedAt = Instant.now()
             citizen.approvedBy = createCitizenDto.approvedBy ?: securityService.getCurrentUser().id
         }
 
@@ -134,7 +134,7 @@ class CitizenManagementServiceImpl(
         }
 
         citizen.isApproved = true
-        citizen.approvedAt = LocalDateTime.now()
+        citizen.approvedAt = Instant.now()
         citizen.approvedBy = approvedBy
 
         val savedCitizen = citizenRepository.save(citizen)
@@ -158,7 +158,7 @@ class CitizenManagementServiceImpl(
         }
 
         citizen.isDeleted = true
-        citizen.deletedAt = LocalDateTime.now()
+        citizen.deletedAt = Instant.now()
         citizen.deletedBy = deletedBy
 
         val savedCitizen = citizenRepository.save(citizen)
@@ -211,7 +211,7 @@ class CitizenManagementServiceImpl(
         updateCitizenDto.isApproved?.let { isApproved ->
             if (isApproved && !citizen.isApproved) {
                 citizen.isApproved = true
-                citizen.approvedAt = LocalDateTime.now()
+                citizen.approvedAt = Instant.now()
                 citizen.approvedBy = updateCitizenDto.updatedBy ?: securityService.getCurrentUser().id
             }
         }
@@ -422,13 +422,16 @@ class CitizenManagementServiceImpl(
             ""
         }
     }
-
     private fun getCitizenEntity(id: UUID): Citizen {
-        return citizenRepository.findById(id).orElseThrow {
+        logger.debug("Fetching citizen entity with ID: $id")
+        val citizen = citizenRepository.findById(id).orElseThrow {
+            logger.error("Citizen not found with ID: $id")
             throw CitizenException(
                 CitizenErrorCode.CITIZEN_NOT_FOUND,
                 "Citizen with ID $id not found"
             )
         }
+        logger.debug("Successfully retrieved citizen: ${citizen.name} (ID: ${citizen.id})")
+        return citizen
     }
 }
