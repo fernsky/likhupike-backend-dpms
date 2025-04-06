@@ -281,7 +281,7 @@ interface CitizenManagementController {
             ApiResponse(responseCode = "404", description = "Not Found - Citizen does not exist")
         ]
     )
-    @PreAuthorize("hasAuthority('PERMISSION_UPDATE_CITIZEN')")
+    @PreAuthorize("hasAuthority('PERMISSION_EDIT_CITIZEN')")
     @PostMapping(
         path = ["/{id}/photo"],
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
@@ -334,7 +334,7 @@ interface CitizenManagementController {
             ApiResponse(responseCode = "404", description = "Not Found - Citizen does not exist")
         ]
     )
-    @PreAuthorize("hasAuthority('PERMISSION_UPDATE_CITIZEN')")
+    @PreAuthorize("hasAuthority('PERMISSION_EDIT_CITIZEN')")
     @PostMapping(
         path = ["/{id}/citizenship/front"],
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
@@ -387,7 +387,7 @@ interface CitizenManagementController {
             ApiResponse(responseCode = "404", description = "Not Found - Citizen does not exist")
         ]
     )
-    @PreAuthorize("hasAuthority('PERMISSION_UPDATE_CITIZEN')")
+    @PreAuthorize("hasAuthority('PERMISSION_EDIT_CITIZEN')")
     @PostMapping(
         path = ["/{id}/citizenship/back"],
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
