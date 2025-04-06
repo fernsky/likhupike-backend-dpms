@@ -2,6 +2,7 @@ package np.sthaniya.dpis.citizen.api.controller.impl
 
 import np.sthaniya.dpis.citizen.api.controller.CitizenManagementController
 import np.sthaniya.dpis.citizen.dto.management.CreateCitizenDto
+import np.sthaniya.dpis.citizen.dto.management.UpdateCitizenDto
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
 import np.sthaniya.dpis.citizen.service.CitizenManagementService
 import np.sthaniya.dpis.common.dto.ApiResponse
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 /**
  * Implementation of the CitizenManagementController interface.
@@ -44,6 +46,30 @@ class CitizenManagementControllerImpl(
                 ApiResponse.success(
                     data = createdCitizen,
                     message = i18nMessageService.getMessage("citizen.create.success")
+                )
+            )
+    }
+
+    /**
+     * Updates an existing citizen record in the system.
+     * 
+     * @param id The unique identifier of the citizen to update
+     * @param updateCitizenDto The data for updating the citizen
+     * @return HTTP 200 OK with the updated citizen data
+     */
+    override fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto): ResponseEntity<ApiResponse<CitizenResponse>> {
+        logger.info("Updating citizen with ID: $id")
+        
+        val updatedCitizen = citizenManagementService.updateCitizen(id, updateCitizenDto)
+        
+        logger.info("Successfully updated citizen with ID: $id")
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                ApiResponse.success(
+                    data = updatedCitizen,
+                    message = i18nMessageService.getMessage("citizen.update.success")
                 )
             )
     }
