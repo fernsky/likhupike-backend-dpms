@@ -20,21 +20,51 @@ import np.sthaniya.dpis.location.domain.Ward
 @Embeddable
 class Address {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "province_code", referencedColumnName = "code", nullable = false)
+    @JoinColumn(
+        name = "province_code", 
+        referencedColumnName = "code", 
+        nullable = false,
+        insertable = false, 
+        updatable = false
+    )
     var province: Province? = null
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "district_code", referencedColumnName = "code", nullable = false)
+    @JoinColumn(
+        name = "district_code", 
+        referencedColumnName = "code", 
+        nullable = false,
+        insertable = false, 
+        updatable = false
+    )
     var district: District? = null
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "municipality_code", referencedColumnName = "code", nullable = false)
+    @JoinColumn(
+        name = "municipality_code", 
+        referencedColumnName = "code", 
+        nullable = false,
+        insertable = false, 
+        updatable = false
+    )
     var municipality: Municipality? = null
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumns(
-        JoinColumn(name = "ward_number", referencedColumnName = "ward_number", nullable = false),
-        JoinColumn(name = "ward_municipality_code", referencedColumnName = "municipality_code", nullable = false)
+        JoinColumn(
+            name = "ward_number", 
+            referencedColumnName = "ward_number", 
+            nullable = false,
+            insertable = false, 
+            updatable = false
+        ),
+        JoinColumn(
+            name = "ward_municipality_code", 
+            referencedColumnName = "municipality_code", 
+            nullable = false,
+            insertable = false, 
+            updatable = false
+        )
     )
     var ward: Ward? = null
     
