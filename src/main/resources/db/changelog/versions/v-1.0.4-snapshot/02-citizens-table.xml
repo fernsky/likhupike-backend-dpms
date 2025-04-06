@@ -10,7 +10,7 @@
             </not>
         </preConditions>
         
-        <comment>Create independent citizens table with foreign key relationships to location tables</comment>
+        <comment>Create independent citizens table with foreign key relationships to location tables and auth support</comment>
         
         <createTable tableName="citizens">
             <column name="id" type="UUID">
@@ -26,19 +26,22 @@
                 <constraints nullable="false"/>
             </column>
             <column name="name_devnagari" type="VARCHAR(255)">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="citizenship_number" type="VARCHAR(50)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="uk_citizens_citizenship_number"/>
+                <constraints nullable="true" unique="true" uniqueConstraintName="uk_citizens_citizenship_number"/>
             </column>
             <column name="citizenship_issued_date" type="DATE">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="citizenship_issued_office" type="VARCHAR(255)">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="email" type="VARCHAR(255)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="uk_citizens_email"/>
+                <constraints nullable="true" unique="true" uniqueConstraintName="uk_citizens_email"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="true"/>
             </column>
             <column name="phone_number" type="VARCHAR(20)">
                 <constraints nullable="true"/>
@@ -52,34 +55,43 @@
             <column name="deleted_by" type="UUID">
                 <constraints nullable="true"/>
             </column>
+            <column name="is_approved" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="approved_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="approved_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
             
-            <!-- Permanent Address Fields with Foreign Keys -->
+            <!-- Permanent Address Fields with Foreign Keys - All Optional -->
             <column name="permanent_province_code" type="VARCHAR(36)">
-                <constraints nullable="false" 
+                <constraints nullable="true" 
                     foreignKeyName="fk_citizens_perm_province" 
                     references="provinces(code)"/>
             </column>
             <column name="permanent_district_code" type="VARCHAR(36)">
-                <constraints nullable="false" 
+                <constraints nullable="true" 
                     foreignKeyName="fk_citizens_perm_district" 
                     references="districts(code)"/>
             </column>
             <column name="permanent_municipality_code" type="VARCHAR(36)">
-                <constraints nullable="false" 
+                <constraints nullable="true" 
                     foreignKeyName="fk_citizens_perm_municipality" 
                     references="municipalities(code)"/>
             </column>
             <column name="permanent_ward_number" type="INTEGER">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="permanent_ward_municipality_code" type="VARCHAR(36)">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="permanent_street_address" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
             
-            <!-- Temporary Address Fields with Foreign Keys -->
+            <!-- Temporary Address Fields with Foreign Keys - All Optional -->
             <column name="temporary_province_code" type="VARCHAR(36)">
                 <constraints nullable="true" 
                     foreignKeyName="fk_citizens_temp_province" 
@@ -125,7 +137,7 @@
             </column>
         </createTable>
 
-        <!-- Add foreign key constraint for permanent ward -->
+        <!-- Add foreign key constraint for permanent ward - only if both columns are not null -->
         <addForeignKeyConstraint 
             constraintName="fk_citizens_perm_ward" 
             baseTableName="citizens" 
@@ -133,7 +145,7 @@
             referencedTableName="wards" 
             referencedColumnNames="ward_number,municipality_code"/>
             
-        <!-- Add foreign key constraint for temporary ward -->
+        <!-- Add foreign key constraint for temporary ward - only if both columns are not null -->
         <addForeignKeyConstraint 
             constraintName="fk_citizens_temp_ward" 
             baseTableName="citizens" 
@@ -154,22 +166,8 @@
             <column name="phone_number"/>
         </createIndex>
         
-        <createIndex indexName="idx_citizens_perm_province" tableName="citizens">
-            <column name="permanent_province_code"/>
-        </createIndex>
-        
-        <createIndex indexName="idx_citizens_perm_district" tableName="citizens">
-            <column name="permanent_district_code"/>
-        </createIndex>
-        
-        <createIndex indexName="idx_citizens_perm_municipality" tableName="citizens">
-            <column name="permanent_municipality_code"/>
-        </createIndex>
-        
-        <createIndex indexName="idx_citizens_perm_ward" tableName="citizens">
-            <column name="permanent_ward_number"/>
-            <column name="permanent_ward_municipality_code"/>
+        <createIndex indexName="idx_citizens_is_approved" tableName="citizens">
+            <column name="is_approved"/>
         </createIndex>
     </changeSet>
-    
 </databaseChangeLog>
