@@ -5,7 +5,7 @@ import np.sthaniya.dpis.common.entity.UuidBaseEntity
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -66,7 +66,7 @@ class Citizen : UuidBaseEntity(), UserDetails {
     var isDeleted: Boolean = false
     
     @Column(name = "deleted_at")
-    var deletedAt: LocalDateTime? = null
+    var deletedAt: Instant? = null
     
     @Column(name = "deleted_by")
     var deletedBy: UUID? = null
@@ -78,44 +78,26 @@ class Citizen : UuidBaseEntity(), UserDetails {
     var approvedBy: UUID? = null
     
     @Column(name = "approved_at")
-    var approvedAt: LocalDateTime? = null
+    var approvedAt: Instant? = null
 
     @Embedded
     @AttributeOverrides(
-        // Province relationship attributes
-        AttributeOverride(name = "province.code", column = Column(name = "permanent_province_code")),
-        
-        // District relationship attributes
-        AttributeOverride(name = "district.code", column = Column(name = "permanent_district_code")),
-        
-        // Municipality relationship attributes
-        AttributeOverride(name = "municipality.code", column = Column(name = "permanent_municipality_code")),
-        
-        // Ward relationship attributes
-        AttributeOverride(name = "ward.wardNumber", column = Column(name = "permanent_ward_number")),
-        AttributeOverride(name = "ward.municipality.code", column = Column(name = "permanent_ward_municipality_code")),
-        
-        // Street address
+        AttributeOverride(name = "provinceCode", column = Column(name = "permanent_province_code")),
+        AttributeOverride(name = "districtCode", column = Column(name = "permanent_district_code")),
+        AttributeOverride(name = "municipalityCode", column = Column(name = "permanent_municipality_code")),
+        AttributeOverride(name = "wardNumber", column = Column(name = "permanent_ward_number")),
+        AttributeOverride(name = "wardMunicipalityCode", column = Column(name = "permanent_ward_municipality_code")),
         AttributeOverride(name = "streetAddress", column = Column(name = "permanent_street_address"))
     )
     var permanentAddress: Address? = null
 
     @Embedded
     @AttributeOverrides(
-        // Province relationship attributes
-        AttributeOverride(name = "province.code", column = Column(name = "temporary_province_code")),
-        
-        // District relationship attributes
-        AttributeOverride(name = "district.code", column = Column(name = "temporary_district_code")),
-        
-        // Municipality relationship attributes
-        AttributeOverride(name = "municipality.code", column = Column(name = "temporary_municipality_code")),
-        
-        // Ward relationship attributes
-        AttributeOverride(name = "ward.wardNumber", column = Column(name = "temporary_ward_number")),
-        AttributeOverride(name = "ward.municipality.code", column = Column(name = "temporary_ward_municipality_code")),
-        
-        // Street address
+        AttributeOverride(name = "provinceCode", column = Column(name = "temporary_province_code")),
+        AttributeOverride(name = "districtCode", column = Column(name = "temporary_district_code")),
+        AttributeOverride(name = "municipalityCode", column = Column(name = "temporary_municipality_code")),
+        AttributeOverride(name = "wardNumber", column = Column(name = "temporary_ward_number")),
+        AttributeOverride(name = "wardMunicipalityCode", column = Column(name = "temporary_ward_municipality_code")),
         AttributeOverride(name = "streetAddress", column = Column(name = "temporary_street_address"))
     )
     var temporaryAddress: Address? = null

@@ -14,62 +14,93 @@ import np.sthaniya.dpis.location.domain.Ward
  * It can be embedded into other entities like Citizen for representing
  * permanent or temporary addresses.
  * 
- * Foreign key relationships are established with location entities (Province, District, 
- * Municipality, Ward) but without cascading delete operations.
+ * Note: This is designed to work with @AttributeOverride in the parent entity
+ * to specify the actual column names with appropriate prefixes.
  */
 @Embeddable
 class Address {
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-        name = "province_code", 
-        referencedColumnName = "code", 
-        nullable = false,
-        insertable = false, 
-        updatable = false
-    )
-    var province: Province? = null
-    
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-        name = "district_code", 
-        referencedColumnName = "code", 
-        nullable = false,
-        insertable = false, 
-        updatable = false
-    )
-    var district: District? = null
-    
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-        name = "municipality_code", 
-        referencedColumnName = "code", 
-        nullable = false,
-        insertable = false, 
-        updatable = false
-    )
-    var municipality: Municipality? = null
-    
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumns(
-        JoinColumn(
-            name = "ward_number", 
-            referencedColumnName = "ward_number", 
-            nullable = false,
-            insertable = false, 
-            updatable = false
-        ),
-        JoinColumn(
-            name = "ward_municipality_code", 
-            referencedColumnName = "municipality_code", 
-            nullable = false,
-            insertable = false, 
-            updatable = false
-        )
-    )
-    var ward: Ward? = null
-    
+    /**
+     * Province code - stored directly without relationship to improve performance
+     */
+    @Column(name = "province_code")
+    private var provinceCode: String? = null
+
+    /**
+     * District code - stored directly without relationship to improve performance
+     */
+    @Column(name = "district_code")
+    private var districtCode: String? = null
+
+    /**
+     * Municipality code - stored directly without relationship to improve performance
+     */
+    @Column(name = "municipality_code")
+    private var municipalityCode: String? = null
+
+    /**
+     * Ward number - stored directly without relationship to improve performance
+     */
+    @Column(name = "ward_number")
+    private var wardNumber: Int? = null
+
+    /**
+     * Ward municipality code - stored directly without relationship to improve performance
+     */
+    @Column(name = "ward_municipality_code")
+    private var wardMunicipalityCode: String? = null
+
+    /**
+     * Street address or local identifier
+     */
     @Column(name = "street_address")
     var streetAddress: String? = null
+
+    // Transient relationships for convenient access
+    @Transient
+    var province: Province? = null
+        get() = if (provinceCode != null) {
+            Province().apply { code = provinceCode!! }
+        } else null
+        set(value) {
+            field = value
+            provinceCode = value?.code
+        }
+
+    @Transient
+    var district: District? = null
+        get() = if (districtCode != null) {
+            District().apply { code = districtCode!! }
+        } else null
+        set(value) {
+            field = value
+            districtCode = value?.code
+        }
+
+    @Transient
+    var municipality: Municipality? = null
+        get() = if (municipalityCode != null) {
+            Municipality().apply { code = municipalityCode!! }
+        } else null
+        set(value) {
+            field = value
+            municipalityCode = value?.code
+        }
+
+    @Transient
+    var ward: Ward? = null
+        get() = if (wardNumber != null && wardMunicipalityCode != null) {
+            Ward().apply { 
+                this.wardNumber = this@Address.wardNumber!!
+                this.municipality = Municipality().apply {
+                    code = wardMunicipalityCode!!
+                }
+            }
+        } else null
+        set(value) {
+            field = value
+            wardNumber = value?.wardNumber
+            wardMunicipalityCode = value?.municipality?.code
+        }
 
     // No-arg constructor required for JPA
     constructor()
@@ -92,29 +123,29 @@ class Address {
         if (this === other) return true
         if (other !is Address) return false
 
-        if (province?.code != other.province?.code) return false
-        if (district?.code != other.district?.code) return false
-        if (municipality?.code != other.municipality?.code) return false
-        if (ward?.wardNumber != other.ward?.wardNumber ||
-            ward?.municipality?.code != other.ward?.municipality?.code) return false
+        if (provinceCode != other.provinceCode) return false
+        if (districtCode != other.districtCode) return false
+        if (municipalityCode != other.municipalityCode) return false
+        if (wardNumber != other.wardNumber) return false
+        if (wardMunicipalityCode != other.wardMunicipalityCode) return false
         if (streetAddress != other.streetAddress) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = province?.code?.hashCode() ?: 0
-        result = 31 * result + (district?.code?.hashCode() ?: 0)
-        result = 31 * result + (municipality?.code?.hashCode() ?: 0)
-        result = 31 * result + (ward?.wardNumber ?: 0)
-        result = 31 * result + (ward?.municipality?.code?.hashCode() ?: 0)
+        var result = provinceCode?.hashCode() ?: 0
+        result = 31 * result + (districtCode?.hashCode() ?: 0)
+        result = 31 * result + (municipalityCode?.hashCode() ?: 0)
+        result = 31 * result + (wardNumber ?: 0)
+        result = 31 * result + (wardMunicipalityCode?.hashCode() ?: 0)
         result = 31 * result + (streetAddress?.hashCode() ?: 0)
         return result
     }
 
     override fun toString(): String {
-        return "Address(province=${province?.name}, district=${district?.name}, " +
-               "municipality=${municipality?.name}, ward=${ward?.wardNumber}, " +
-               "streetAddress=$streetAddress)"
+        return "Address(provinceCode=$provinceCode, districtCode=$districtCode, " +
+               "municipalityCode=$municipalityCode, wardNumber=$wardNumber, " +
+               "wardMunicipalityCode=$wardMunicipalityCode, streetAddress=$streetAddress)"
     }
 }
