@@ -13,25 +13,12 @@ import java.time.LocalDate
  * Features:
  * - Complete citizen profile with personal details
  * - Citizenship document information
- * - Structured address information using embedded Address entities
+ * - Structured address information using embedded Address entities with proper foreign key relationships
  * - Family information
  * - Document storage references for photos and citizenship certificates
  * 
  * This implementation uses JPA inheritance with a JOINED strategy,
  * creating a separate citizens table linked to the users table.
- *
- * @property name Full name of the citizen
- * @property citizenshipNumber Unique citizenship number
- * @property citizenshipIssuedDate Date when citizenship was issued
- * @property citizenshipIssuedOffice Office that issued the citizenship
- * @property permanentAddress Detailed permanent address with province, district, etc.
- * @property temporaryAddress Optional temporary/current address
- * @property fatherName Name of citizen's father
- * @property grandfatherName Name of citizen's grandfather
- * @property spouseName Name of citizen's spouse (if applicable)
- * @property photoKey Storage key for citizen's photo
- * @property citizenshipFrontKey Storage key for front side of citizenship certificate
- * @property citizenshipBackKey Storage key for back side of citizenship certificate
  */
 @Entity
 @Table(
@@ -60,20 +47,40 @@ class Citizen : User() {
 
     @Embedded
     @AttributeOverrides(
-        AttributeOverride(name = "province", column = Column(name = "permanent_province", nullable = false)),
-        AttributeOverride(name = "district", column = Column(name = "permanent_district", nullable = false)),
-        AttributeOverride(name = "municipality", column = Column(name = "permanent_municipality", nullable = false)),
-        AttributeOverride(name = "wardNumber", column = Column(name = "permanent_ward_number", nullable = false)),
+        // Province relationship attributes
+        AttributeOverride(name = "province.code", column = Column(name = "permanent_province_code", nullable = false)),
+        
+        // District relationship attributes
+        AttributeOverride(name = "district.code", column = Column(name = "permanent_district_code", nullable = false)),
+        
+        // Municipality relationship attributes
+        AttributeOverride(name = "municipality.code", column = Column(name = "permanent_municipality_code", nullable = false)),
+        
+        // Ward relationship attributes
+        AttributeOverride(name = "ward.wardNumber", column = Column(name = "permanent_ward_number", nullable = false)),
+        AttributeOverride(name = "ward.municipality.code", column = Column(name = "permanent_ward_municipality_code", nullable = false)),
+        
+        // Street address
         AttributeOverride(name = "streetAddress", column = Column(name = "permanent_street_address"))
     )
     var permanentAddress: Address? = null
 
     @Embedded
     @AttributeOverrides(
-        AttributeOverride(name = "province", column = Column(name = "temporary_province")),
-        AttributeOverride(name = "district", column = Column(name = "temporary_district")),
-        AttributeOverride(name = "municipality", column = Column(name = "temporary_municipality")),
-        AttributeOverride(name = "wardNumber", column = Column(name = "temporary_ward_number")),
+        // Province relationship attributes
+        AttributeOverride(name = "province.code", column = Column(name = "temporary_province_code")),
+        
+        // District relationship attributes
+        AttributeOverride(name = "district.code", column = Column(name = "temporary_district_code")),
+        
+        // Municipality relationship attributes
+        AttributeOverride(name = "municipality.code", column = Column(name = "temporary_municipality_code")),
+        
+        // Ward relationship attributes
+        AttributeOverride(name = "ward.wardNumber", column = Column(name = "temporary_ward_number")),
+        AttributeOverride(name = "ward.municipality.code", column = Column(name = "temporary_ward_municipality_code")),
+        
+        // Street address
         AttributeOverride(name = "streetAddress", column = Column(name = "temporary_street_address"))
     )
     var temporaryAddress: Address? = null
