@@ -12,6 +12,7 @@ import jakarta.validation.Valid
 import np.sthaniya.dpis.citizen.dto.management.CreateCitizenDto
 import np.sthaniya.dpis.citizen.dto.management.UpdateCitizenDto
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
+import np.sthaniya.dpis.auth.resolver.CurrentUserId
 import np.sthaniya.dpis.common.dto.ApiResponse as DpisApiResponse
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -118,5 +119,133 @@ interface CitizenManagementController {
             required = true
         )
         @Valid @RequestBody updateCitizenDto: UpdateCitizenDto
+    ): ResponseEntity<DpisApiResponse<CitizenResponse>>
+
+    /**
+     * Retrieves a citizen record by ID.
+     * 
+     * @param id The unique identifier of the citizen to retrieve
+     * @return The citizen data if found
+     */
+    @Operation(
+        summary = "Get a citizen record by ID",
+        description = "Retrieves details of a specific citizen record. " +
+                "Requires VIEW_CITIZEN permission.",
+        security = [SecurityRequirement(name = "bearer-auth")]
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200", 
+                description = "Citizen found and returned successfully",
+                content = [Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = Schema(implementation = DpisApiResponse::class)
+                )]
+            ),
+            ApiResponse(responseCode = "401", description = "Unauthorized"),
+            ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            ApiResponse(responseCode = "404", description = "Not Found - Citizen does not exist")
+        ]
+    )
+    @PreAuthorize("hasAuthority('PERMISSION_VIEW_CITIZEN')")
+    @GetMapping(
+        path = ["/{id}"],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getCitizenById(
+        @Parameter(
+            description = "Unique identifier of the citizen",
+            required = true
+        )
+        @PathVariable id: UUID
+    ): ResponseEntity<DpisApiResponse<CitizenResponse>>
+
+    /**
+     * Approves a citizen record.
+     * 
+     * @param id The unique identifier of the citizen to approve
+     * @param currentUserId ID of the administrator approving the citizen
+     * @return The approved citizen data
+     */
+    @Operation(
+        summary = "Approve a citizen record",
+        description = "Approves an existing citizen record. " +
+                "Requires APPROVE_CITIZEN permission.",
+        security = [SecurityRequirement(name = "bearer-auth")]
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200", 
+                description = "Citizen approved successfully",
+                content = [Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = Schema(implementation = DpisApiResponse::class)
+                )]
+            ),
+            ApiResponse(responseCode = "401", description = "Unauthorized"),
+            ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            ApiResponse(responseCode = "404", description = "Not Found - Citizen does not exist"),
+            ApiResponse(responseCode = "409", description = "Conflict - Citizen is already approved")
+        ]
+    )
+    @PreAuthorize("hasAuthority('PERMISSION_APPROVE_CITIZEN')")
+    @PostMapping(
+        path = ["/{id}/approve"],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun approveCitizen(
+        @Parameter(
+            description = "Unique identifier of the citizen",
+            required = true
+        )
+        @PathVariable id: UUID,
+        
+        @CurrentUserId currentUserId: UUID
+    ): ResponseEntity<DpisApiResponse<CitizenResponse>>
+
+    /**
+     * Deletes a citizen record.
+     * 
+     * @param id The unique identifier of the citizen to delete
+     * @param currentUserId ID of the administrator deleting the citizen
+     * @return The deleted citizen data
+     */
+    @Operation(
+        summary = "Delete a citizen record",
+        description = "Soft deletes a citizen record. " +
+                "Requires DELETE_CITIZEN permission.",
+        security = [SecurityRequirement(name = "bearer-auth")]
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200", 
+                description = "Citizen deleted successfully",
+                content = [Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = Schema(implementation = DpisApiResponse::class)
+                )]
+            ),
+            ApiResponse(responseCode = "401", description = "Unauthorized"),
+            ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            ApiResponse(responseCode = "404", description = "Not Found - Citizen does not exist"),
+            ApiResponse(responseCode = "409", description = "Conflict - Citizen is already deleted")
+        ]
+    )
+    @PreAuthorize("hasAuthority('PERMISSION_DELETE_CITIZEN')")
+    @DeleteMapping(
+        path = ["/{id}"],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun deleteCitizen(
+        @Parameter(
+            description = "Unique identifier of the citizen",
+            required = true
+        )
+        @PathVariable id: UUID,
+        
+        @CurrentUserId currentUserId: UUID
     ): ResponseEntity<DpisApiResponse<CitizenResponse>>
 }

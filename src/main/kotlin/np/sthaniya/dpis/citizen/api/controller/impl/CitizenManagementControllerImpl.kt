@@ -73,4 +73,75 @@ class CitizenManagementControllerImpl(
                 )
             )
     }
+
+    /**
+     * Retrieves a citizen record by ID.
+     * 
+     * @param id The unique identifier of the citizen to retrieve
+     * @return HTTP 200 OK with the citizen data
+     */
+    override fun getCitizenById(id: UUID): ResponseEntity<ApiResponse<CitizenResponse>> {
+        logger.info("Retrieving citizen with ID: $id")
+        
+        val citizen = citizenManagementService.getCitizenById(id)
+        
+        logger.debug("Successfully retrieved citizen with ID: $id")
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                ApiResponse.success(
+                    data = citizen,
+                    message = i18nMessageService.getMessage("citizen.get.success")
+                )
+            )
+    }
+
+    /**
+     * Approves a citizen record.
+     * 
+     * @param id The unique identifier of the citizen to approve
+     * @param currentUserId ID of the administrator approving the citizen
+     * @return HTTP 200 OK with the approved citizen data
+     */
+    override fun approveCitizen(id: UUID, currentUserId: UUID): ResponseEntity<ApiResponse<CitizenResponse>> {
+        logger.info("Approving citizen with ID: $id by user: $currentUserId")
+        
+        val approvedCitizen = citizenManagementService.approveCitizen(id, currentUserId)
+        
+        logger.info("Successfully approved citizen with ID: $id")
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                ApiResponse.success(
+                    data = approvedCitizen,
+                    message = i18nMessageService.getMessage("citizen.approve.success")
+                )
+            )
+    }
+
+    /**
+     * Deletes a citizen record.
+     * 
+     * @param id The unique identifier of the citizen to delete
+     * @param currentUserId ID of the administrator deleting the citizen
+     * @return HTTP 200 OK with the deleted citizen data
+     */
+    override fun deleteCitizen(id: UUID, currentUserId: UUID): ResponseEntity<ApiResponse<CitizenResponse>> {
+        logger.info("Deleting citizen with ID: $id by user: $currentUserId")
+        
+        val deletedCitizen = citizenManagementService.deleteCitizen(id, currentUserId)
+        
+        logger.info("Successfully deleted citizen with ID: $id")
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                ApiResponse.success(
+                    data = deletedCitizen,
+                    message = i18nMessageService.getMessage("citizen.delete.success")
+                )
+            )
+    }
 }

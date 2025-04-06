@@ -61,3 +61,4 @@ interface CitizenManagementService {
      */
     fun deleteCitizen(id: UUID, deletedBy: UUID): CitizenResponse
 }
+
