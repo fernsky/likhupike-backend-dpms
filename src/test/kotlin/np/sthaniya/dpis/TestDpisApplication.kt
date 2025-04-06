@@ -7,6 +7,6 @@ import org.springframework.boot.with
 @TestConfiguration(proxyBeanMethods = false)
 class TestdpisApplication {
     fun main(args: Array<String>) {
-        fromApplication<dpisApplication>().with(TestdpisApplication::class).run(*args)
+        fromApplication<DpisApplication>().with(TestdpisApplication::class).run(*args)
     }
 }
