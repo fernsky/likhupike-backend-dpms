@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.*
 import np.sthaniya.dpis.citizen.dto.shared.AddressDto
+import np.sthaniya.dpis.common.validation.ValidPassword
 import java.time.LocalDate
 import java.util.UUID
 
@@ -57,9 +58,17 @@ data class CreateCitizenDto(
     val email: String? = null,
     
     @Schema(
-        description = "Password for the citizen's account (if creating with authentication)",
+        description = """
+            Optional password for the citizen's account. If provided, must meet the following criteria:
+            - At least 8 characters long
+            - Contains at least one digit
+            - Contains at least one lowercase letter
+            - Contains at least one uppercase letter
+            - Contains at least one special character (@#$%^&+=)
+        """,
         example = "StrongP@ss123"
     )
+    @field:ValidPassword(optional = true)
     val password: String? = null,
     
     @Schema(

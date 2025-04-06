@@ -62,6 +62,18 @@ class InvalidPasswordException(
             override val code = "PWD_006"
             override val defaultMessage = "Password has expired and must be changed"
             override val i18nKey = "error.password.expired"
+        },
+        
+        PASSWORD_TOO_SHORT {
+            override val code = "PWD_007"
+            override val defaultMessage = "Password is too short (minimum 8 characters)"
+            override val i18nKey = "error.password.too_short"
+        },
+        
+        PASSWORD_MISSING_REQUIREMENTS {
+            override val code = "PWD_008"
+            override val defaultMessage = "Password is missing required character types"
+            override val i18nKey = "error.password.missing_requirements"
         }
     }
 }
