@@ -30,11 +30,11 @@ class PasswordValidator(
         }
 
         val validations = listOf(
-            value.length >= 8 to "validation.password.missing.length",
-            value.contains(Regex("[0-9]")) to "validation.password.missing.digit",
-            value.contains(Regex("[a-z]")) to "validation.password.missing.lowercase",
-            value.contains(Regex("[A-Z]")) to "validation.password.missing.uppercase",
-            value.contains(Regex("[@#$%^&+=]")) to "validation.password.missing.special"
+            (value.length >= 8) to "validation.password.missing.length",
+            (value.contains(Regex("[0-9]"))) to "validation.password.missing.digit",
+            (value.contains(Regex("[a-z]"))) to "validation.password.missing.lowercase",
+            (value.contains(Regex("[A-Z]"))) to "validation.password.missing.uppercase",
+            (value.contains(Regex("[@#$%^&+=]"))) to "validation.password.missing.special"
         )
 
         val failedValidations = validations.filterNot { it.first }
