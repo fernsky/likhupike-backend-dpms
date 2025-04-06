@@ -18,6 +18,7 @@ import java.util.*
  * - UTF-8 encoded message files
  * - Accept-Language header based locale resolution
  * - Fallback message handling
+ * - Domain-specific message organization
  */
 @Configuration
 class MessageSourceConfig : WebMvcConfigurer {
@@ -26,7 +27,7 @@ class MessageSourceConfig : WebMvcConfigurer {
      * Creates and configures the application's [MessageSource].
      *
      * The message source is configured to:
-     * - Load messages from "messages" resource bundles
+     * - Load messages from domain-specific resource bundles in organized directories
      * - Use UTF-8 encoding for message files
      * - Fall back to message codes when translations are missing
      *
@@ -35,7 +36,14 @@ class MessageSourceConfig : WebMvcConfigurer {
     @Bean
     fun messageSource(): MessageSource {
         val messageSource = ResourceBundleMessageSource()
-        messageSource.setBasenames("messages")
+        messageSource.setBasenames(
+            "i18n/auth/messages",
+            "i18n/common/messages",
+            "i18n/user/messages",
+            "i18n/error/messages",
+            "i18n/document/messages",
+            "i18n/citizen/messages"
+        )
         messageSource.setDefaultEncoding("UTF-8")
         messageSource.setUseCodeAsDefaultMessage(true)
         return messageSource
