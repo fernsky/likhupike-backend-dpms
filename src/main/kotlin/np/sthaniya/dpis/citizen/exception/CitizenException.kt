@@ -27,6 +27,9 @@ class CitizenException(
         CitizenErrorCode.DUPLICATE_EMAIL,
         CitizenErrorCode.CITIZEN_ALREADY_APPROVED,
         CitizenErrorCode.CITIZEN_ALREADY_DELETED -> HttpStatus.CONFLICT
+        CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
+        CitizenErrorCode.DOCUMENT_TOO_LARGE -> HttpStatus.BAD_REQUEST
+        CitizenErrorCode.DOCUMENT_UPLOAD_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR
         else -> HttpStatus.BAD_REQUEST
     },
     metadata = metadata
@@ -99,6 +102,24 @@ class CitizenException(
             override val code = "CIT_011"
             override val defaultMessage = "Citizen profile is incomplete"
             override val i18nKey = "error.citizen.profile_incomplete"
+        },
+        
+        INVALID_DOCUMENT_FORMAT {
+            override val code = "CIT_012"
+            override val defaultMessage = "Invalid document format"
+            override val i18nKey = "error.citizen.invalid_document_format"
+        },
+        
+        DOCUMENT_TOO_LARGE {
+            override val code = "CIT_013"
+            override val defaultMessage = "Document size exceeds the allowable limit"
+            override val i18nKey = "error.citizen.document_too_large"
+        },
+        
+        DOCUMENT_UPLOAD_FAILED {
+            override val code = "CIT_014"
+            override val defaultMessage = "Document upload failed due to server error"
+            override val i18nKey = "error.citizen.document_upload_failed"
         }
     }
 }
