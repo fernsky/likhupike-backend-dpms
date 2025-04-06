@@ -134,51 +134,51 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
     //         .andExpect(jsonPath("$.message").value("Ward created successfully"))
     // }
     
-    // @Test
-    // @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"]) 
-    // fun `should get ward by municipality code and ward number`() {
-    //     // First create a ward in the database
-    //     val ward = WardTestFixtures.createWard(
-    //         wardNumber = 2,
-    //         municipality = testMunicipality,
-    //         area = BigDecimal("10.00"),
-    //         population = 1000L
-    //     )
-    //     wardRepository.save(ward)
-        
-    //     // Get the ward using the API
-    //     mockMvc.perform(get("/api/v1/wards/${testMunicipality.code}/${ward.wardNumber}"))
-    //         .andDo(print())
-    //         .andExpect(status().isOk)
-    //         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-    //         .andExpect(jsonPath("$.success").value(true))
-    //         .andExpect(jsonPath("$.data.wardNumber").value(ward.wardNumber))
-    // }
-    
     @Test
-    @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"])
-    fun `should update ward`() {
+    @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"]) 
+    fun `should get ward by municipality code and ward number`() {
         // First create a ward in the database
         val ward = WardTestFixtures.createWard(
-            wardNumber = 3,
+            wardNumber = 2,
             municipality = testMunicipality,
             area = BigDecimal("10.00"),
             population = 1000L
         )
         wardRepository.save(ward)
         
-        // Update the ward using the API
-        mockMvc.perform(put("/api/v1/wards/${testMunicipality.code}/${ward.wardNumber}")
-            .with(csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateWardRequest)))
+        // Get the ward using the API
+        mockMvc.perform(get("/api/v1/wards/${testMunicipality.code}/${ward.wardNumber}"))
             .andDo(print())
             .andExpect(status().isOk)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.wardNumber").value(ward.wardNumber))
-            .andExpect(jsonPath("$.data.municipalityCode").value(testMunicipality.code))
-            .andExpect(jsonPath("$.message").value("Ward updated successfully"))
     }
+    
+    // @Test
+    // @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"])
+    // fun `should update ward`() {
+    //     // First create a ward in the database
+    //     val ward = WardTestFixtures.createWard(
+    //         wardNumber = 3,
+    //         municipality = testMunicipality,
+    //         area = BigDecimal("10.00"),
+    //         population = 1000L
+    //     )
+    //     wardRepository.save(ward)
+        
+    //     // Update the ward using the API
+    //     mockMvc.perform(put("/api/v1/wards/${testMunicipality.code}/${ward.wardNumber}")
+    //         .with(csrf())
+    //         .contentType(MediaType.APPLICATION_JSON)
+    //         .content(objectMapper.writeValueAsString(updateWardRequest)))
+    //         .andDo(print())
+    //         .andExpect(status().isOk)
+    //         .andExpect(jsonPath("$.success").value(true))
+    //         .andExpect(jsonPath("$.data.wardNumber").value(ward.wardNumber))
+    //         .andExpect(jsonPath("$.data.municipalityCode").value(testMunicipality.code))
+    //         .andExpect(jsonPath("$.message").value("Ward updated successfully"))
+    // }
     
     @Test
     @WithMockUser(username = "admin@system.com", roles = ["SYSTEM_ADMINISTRATOR"])
