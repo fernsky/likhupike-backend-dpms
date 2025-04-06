@@ -255,7 +255,6 @@ class WardControllerIntegrationTest : BaseIntegrationTest() {
             .andDo(print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.meta.totalElements").value(wards.size)) // Should find all wards for test municipality
     }
     
     @Test

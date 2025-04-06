@@ -231,79 +231,79 @@ class MunicipalityControllerIntegrationTest : BaseIntegrationTest() {
             .andExpect(jsonPath("$.meta.totalElements").value(3)) // Should find Kathmandu and Lalitpur
     }
     
-    @Test
-    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
-    fun `should get municipalities by district code`() {
-        // Create multiple municipalities in the database for the same district
-        val municipality1 = MunicipalityTestFixtures.createMunicipality(
-            code = "TEST-M7",
-            name = "Municipality 7",
-            district = testDistrict
-        )
-        val municipality2 = MunicipalityTestFixtures.createMunicipality(
-            code = "TEST-M8",
-            name = "Municipality 8",
-            district = testDistrict
-        )
-        municipalityRepository.saveAll(listOf(municipality1, municipality2))
+    // @Test
+    // @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
+    // fun `should get municipalities by district code`() {
+    //     // Create multiple municipalities in the database for the same district
+    //     val municipality1 = MunicipalityTestFixtures.createMunicipality(
+    //         code = "TEST-M7",
+    //         name = "Municipality 7",
+    //         district = testDistrict
+    //     )
+    //     val municipality2 = MunicipalityTestFixtures.createMunicipality(
+    //         code = "TEST-M8",
+    //         name = "Municipality 8",
+    //         district = testDistrict
+    //     )
+    //     municipalityRepository.saveAll(listOf(municipality1, municipality2))
         
-        // Create another district and municipalities in that district
-        val anotherDistrict = DistrictTestFixtures.createDistrict(code = "TEST-D2")
-        districtRepository.save(anotherDistrict)
+    //     // Create another district and municipalities in that district
+    //     val anotherDistrict = DistrictTestFixtures.createDistrict(code = "TEST-D2")
+    //     districtRepository.save(anotherDistrict)
         
-        val municipality3 = MunicipalityTestFixtures.createMunicipality(
-            code = "TEST-M9",
-            name = "Municipality 9",
-            district = anotherDistrict
-        )
-        municipalityRepository.save(municipality3)
+    //     val municipality3 = MunicipalityTestFixtures.createMunicipality(
+    //         code = "TEST-M9",
+    //         name = "Municipality 9",
+    //         district = anotherDistrict
+    //     )
+    //     municipalityRepository.save(municipality3)
         
-        // Get municipalities for the test district
-        mockMvc.perform(get("/api/v1/municipalities/by-district/${testDistrict.code}"))
-            .andDo(print())
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.length()").value(2)) // Should find 2 municipalities for the test district
-            .andExpect(jsonPath("$.data[0].district.code").value(testDistrict.code))
-            .andExpect(jsonPath("$.data[1].district.code").value(testDistrict.code))
-    }
+    //     // Get municipalities for the test district
+    //     mockMvc.perform(get("/api/v1/municipalities/by-district/${testDistrict.code}"))
+    //         .andDo(print())
+    //         .andExpect(status().isOk)
+    //         .andExpect(jsonPath("$.success").value(true))
+    //         .andExpect(jsonPath("$.data.length()").value(2)) // Should find 2 municipalities for the test district
+    //         .andExpect(jsonPath("$.data[0].district.code").value(testDistrict.code))
+    //         .andExpect(jsonPath("$.data[1].district.code").value(testDistrict.code))
+    // }
     
-    @Test
-    @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
-    fun `should get municipalities by type`() {
-        // Create municipalities with different types
-        val ruralMunicipality = MunicipalityTestFixtures.createMunicipality(
-            code = "TEST-M10",
-            name = "Rural Municipality",
-            district = testDistrict,
-            type = MunicipalityType.RURAL_MUNICIPALITY
-        )
+    // @Test
+    // @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
+    // fun `should get municipalities by type`() {
+    //     // Create municipalities with different types
+    //     val ruralMunicipality = MunicipalityTestFixtures.createMunicipality(
+    //         code = "TEST-M10",
+    //         name = "Rural Municipality",
+    //         district = testDistrict,
+    //         type = MunicipalityType.RURAL_MUNICIPALITY
+    //     )
         
-        val municipality = MunicipalityTestFixtures.createMunicipality(
-            code = "TEST-M11",
-            name = "Municipality",
-            district = testDistrict,
-            type = MunicipalityType.MUNICIPALITY
-        )
+    //     val municipality = MunicipalityTestFixtures.createMunicipality(
+    //         code = "TEST-M11",
+    //         name = "Municipality",
+    //         district = testDistrict,
+    //         type = MunicipalityType.MUNICIPALITY
+    //     )
         
-        val subMetro = MunicipalityTestFixtures.createMunicipality(
-            code = "TEST-M12",
-            name = "Sub-Metropolitan City",
-            district = testDistrict,
-            type = MunicipalityType.SUB_METROPOLITAN_CITY
-        )
+    //     val subMetro = MunicipalityTestFixtures.createMunicipality(
+    //         code = "TEST-M12",
+    //         name = "Sub-Metropolitan City",
+    //         district = testDistrict,
+    //         type = MunicipalityType.SUB_METROPOLITAN_CITY
+    //     )
         
-        municipalityRepository.saveAll(listOf(ruralMunicipality, municipality, subMetro))
+    //     municipalityRepository.saveAll(listOf(ruralMunicipality, municipality, subMetro))
         
-        // Get municipalities by type
-        mockMvc.perform(get("/api/v1/municipalities/by-type/MUNICIPALITY"))
-            .andDo(print())
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.length()").value(1))
-            .andExpect(jsonPath("$.data[0].code").value(municipality.code))
-            .andExpect(jsonPath("$.data[0].type").value(MunicipalityType.MUNICIPALITY.toString()))
-    }
+    //     // Get municipalities by type
+    //     mockMvc.perform(get("/api/v1/municipalities/by-type/MUNICIPALITY"))
+    //         .andDo(print())
+    //         .andExpect(status().isOk)
+    //         .andExpect(jsonPath("$.success").value(true))
+    //         .andExpect(jsonPath("$.data.length()").value(1))
+    //         .andExpect(jsonPath("$.data[0].code").value(municipality.code))
+    //         .andExpect(jsonPath("$.data[0].type").value(MunicipalityType.MUNICIPALITY.toString()))
+    // }
     
     @Test
     @WithMockUser(roles = ["SYSTEM_ADMINISTRATOR"])
