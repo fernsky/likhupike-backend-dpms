@@ -1,0 +1,201 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext 
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
+                      http://www.liquibase.org/xml/ns/dbchangelog 
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- This changeSet ensures that a System Administrator has all permissions -->
+    <changeSet author="dpis" id="05-ensure-sys-admin-has-all-permissions" context="default">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="roles"/>
+            <tableExists tableName="permissions"/>
+            <tableExists tableName="role_permissions"/>
+            <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+        </preConditions>
+        <comment>Ensure System Administrator has all permissions in the system</comment>
+    </changeSet>
+
+    <!-- Link the new permissions to the System Administrator role -->
+    <changeSet author="dpis" id="05-sys-admin-user-permissions">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'MANAGE_USERS'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="e7c6d810-5f1b-4a5e-9d2a-8a612e8c0e11"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="MANAGE_USERS"/>
+        </insert>
+        <comment>Add MANAGE_USERS permission to System Administrator role</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="05-sys-admin-user-roles-permission">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'MANAGE_USER_ROLES'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="f8d79102-a3e7-4c92-b8a4-9e3b32f71d22"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="MANAGE_USER_ROLES"/>
+        </insert>
+        <comment>Add MANAGE_USER_ROLES permission to System Administrator role</comment>
+    </changeSet>
+
+    <!-- Link the citizen permissions to the System Administrator role -->
+    <changeSet author="dpis" id="05-sys-admin-manage-citizens">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'MANAGE_CITIZENS'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="MANAGE_CITIZENS"/>
+        </insert>
+        <comment>Add MANAGE_CITIZENS permission to System Administrator role</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="05-sys-admin-create-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'CREATE_CITIZEN'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="CREATE_CITIZEN"/>
+        </insert>
+        <comment>Add CREATE_CITIZEN permission to System Administrator role</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="05-sys-admin-view-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'VIEW_CITIZEN'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="VIEW_CITIZEN"/>
+        </insert>
+        <comment>Add VIEW_CITIZEN permission to System Administrator role</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="05-sys-admin-edit-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'EDIT_CITIZEN'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="EDIT_CITIZEN"/>
+        </insert>
+        <comment>Add EDIT_CITIZEN permission to System Administrator role</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="05-sys-admin-delete-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'DELETE_CITIZEN'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="DELETE_CITIZEN"/>
+        </insert>
+        <comment>Add DELETE_CITIZEN permission to System Administrator role</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="05-sys-admin-approve-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'APPROVE_CITIZEN'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="APPROVE_CITIZEN"/>
+        </insert>
+        <comment>Add APPROVE_CITIZEN permission to System Administrator role</comment>
+    </changeSet>
+
+    <!-- Link the system permissions to the System Administrator role -->
+    <changeSet author="dpis" id="05-sys-admin-system-admin">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'SYSTEM_ADMIN'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="SYSTEM_ADMIN"/>
+        </insert>
+        <comment>Add SYSTEM_ADMIN permission to System Administrator role</comment>
+    </changeSet>
+
+</databaseChangeLog>

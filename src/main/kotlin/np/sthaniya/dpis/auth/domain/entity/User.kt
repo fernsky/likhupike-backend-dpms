@@ -281,10 +281,10 @@ class User :
 
     /**
      * Checks if the user effectively has a specific permission, either directly
-     * or through an assigned role.
+     * or through an assigned role, considering permission hierarchy.
      *
      * @param permissionType The type of permission to check
-     * @return true if the user has the permission directly or through a role, false otherwise
+     * @return true if the user has the permission directly, through a role, or through inheritance
      */
     fun hasEffectivePermission(permissionType: PermissionType): Boolean {
         // Check direct permissions first
@@ -293,8 +293,17 @@ class User :
         }
         
         // Check permissions from roles
-        return roles.any { userRole ->
+        if (roles.any { userRole ->
             userRole.role.getPermissions().any { it.type == permissionType }
+        }) {
+            return true
+        }
+        
+        // Check permission hierarchy - if the user has a higher-level permission
+        // that implies this permission
+        val userPerms = getEffectivePermissions()
+        return userPerms.any { held ->
+            PermissionType.implies(held, permissionType)
         }
     }
 }

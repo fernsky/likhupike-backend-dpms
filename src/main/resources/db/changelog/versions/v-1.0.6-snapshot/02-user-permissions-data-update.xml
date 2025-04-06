@@ -1,0 +1,32 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="dpis" id="02-permission-manage-users">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_USERS'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="MANAGE_USERS"/>
+        </insert>
+        <comment>Add MANAGE_USERS permission</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="02-permission-manage-user-roles">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_USER_ROLES'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="MANAGE_USER_ROLES"/>
+        </insert>
+        <comment>Add MANAGE_USER_ROLES permission</comment>
+    </changeSet>
+
+</databaseChangeLog>

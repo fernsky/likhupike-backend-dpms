@@ -1,0 +1,20 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Add system admin master permission -->
+    <changeSet author="dpis" id="04-permission-system-admin">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'SYSTEM_ADMIN'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="SYSTEM_ADMIN"/>
+        </insert>
+        <comment>Add SYSTEM_ADMIN permission</comment>
+    </changeSet>
+    
+</databaseChangeLog>

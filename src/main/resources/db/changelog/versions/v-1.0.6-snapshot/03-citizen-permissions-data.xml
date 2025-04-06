@@ -1,0 +1,85 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- First, add the base permission MANAGE_CITIZENS if it doesn't exist -->
+    <changeSet author="dpis" id="03-permission-manage-citizens">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_CITIZENS'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="MANAGE_CITIZENS"/>
+        </insert>
+        <comment>Add MANAGE_CITIZENS permission</comment>
+    </changeSet>
+
+    <!-- Then add the granular citizen permissions -->
+    <changeSet author="dpis" id="03-permission-view-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'VIEW_CITIZEN'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="VIEW_CITIZEN"/>
+        </insert>
+        <comment>Add VIEW_CITIZEN permission</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="03-permission-create-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'CREATE_CITIZEN'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="CREATE_CITIZEN"/>
+        </insert>
+        <comment>Add CREATE_CITIZEN permission</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="03-permission-edit-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'EDIT_CITIZEN'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="EDIT_CITIZEN"/>
+        </insert>
+        <comment>Add EDIT_CITIZEN permission</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="03-permission-delete-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'DELETE_CITIZEN'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="DELETE_CITIZEN"/>
+        </insert>
+        <comment>Add DELETE_CITIZEN permission</comment>
+    </changeSet>
+
+    <changeSet author="dpis" id="03-permission-approve-citizen">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'APPROVE_CITIZEN'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="APPROVE_CITIZEN"/>
+        </insert>
+        <comment>Add APPROVE_CITIZEN permission</comment>
+    </changeSet>
+</databaseChangeLog>
