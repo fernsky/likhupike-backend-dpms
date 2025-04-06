@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.citizen.service
 
 import np.sthaniya.dpis.citizen.dto.management.CreateCitizenDto
+import np.sthaniya.dpis.citizen.dto.management.UpdateCitizenDto
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
 import java.util.UUID
 
@@ -37,6 +38,17 @@ interface CitizenManagementService {
      * @throws CitizenException.CitizenErrorCode.CITIZEN_ALREADY_APPROVED if the citizen is already approved
      */
     fun approveCitizen(id: UUID, approvedBy: UUID): CitizenResponse
+    
+    /**
+     * Updates an existing citizen record in the system.
+     *
+     * @param id The unique identifier of the citizen to update
+     * @param updateCitizenDto The data for updating the citizen
+     * @return The updated citizen as a response DTO
+     * @throws CitizenException.CitizenErrorCode.CITIZEN_NOT_FOUND if the citizen doesn't exist
+     * @throws CitizenException if there are validation errors or duplicate data
+     */
+    fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto): CitizenResponse
     
     /**
      * Soft deletes a citizen record.

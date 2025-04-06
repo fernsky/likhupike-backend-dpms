@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.citizen.service.impl
 
 import np.sthaniya.dpis.citizen.dto.management.CreateCitizenDto
+import np.sthaniya.dpis.citizen.dto.management.UpdateCitizenDto
 import np.sthaniya.dpis.citizen.domain.entity.Address
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
 import np.sthaniya.dpis.citizen.exception.CitizenException
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -149,6 +151,83 @@ class CitizenManagementServiceImpl(
         citizen.isDeleted = true
         citizen.deletedAt = LocalDateTime.now()
         citizen.deletedBy = deletedBy
+
+        val savedCitizen = citizenRepository.save(citizen)
+        return citizenMapper.toResponse(savedCitizen)
+    }
+
+    @Transactional
+    override fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto): CitizenResponse {
+        // Find the existing citizen
+        val citizen = citizenRepository.findById(id).orElseThrow {
+            throw CitizenException(
+                CitizenErrorCode.CITIZEN_NOT_FOUND,
+                i18nMessageService.getMessage("citizen.error.not_found", arrayOf(id))
+            )
+        }
+
+        // Validate citizenship number if provided and changed
+        updateCitizenDto.citizenshipNumber?.let { citizenshipNumber ->
+            if (citizen.citizenshipNumber != citizenshipNumber &&
+                citizenRepository.existsByCitizenshipNumber(citizenshipNumber)) {
+                throw CitizenException(
+                    CitizenErrorCode.DUPLICATE_CITIZENSHIP_NUMBER,
+                    i18nMessageService.getMessage("citizen.error.duplicate_citizenship", arrayOf(citizenshipNumber))
+                )
+            }
+
+            // Validate citizenship certificate data
+            if (citizenshipNumber.isNotBlank() &&
+                (citizen.citizenshipIssuedDate == null && updateCitizenDto.citizenshipIssuedDate == null) ||
+                ((citizen.citizenshipIssuedOffice.isNullOrBlank() && updateCitizenDto.citizenshipIssuedOffice.isNullOrBlank()))) {
+                throw CitizenException(
+                    CitizenErrorCode.INVALID_CITIZENSHIP_DATA,
+                    i18nMessageService.getMessage("citizen.error.invalid_citizenship_data")
+                )
+            }
+        }
+
+        // Update fields if provided
+        updateCitizenDto.name?.let { citizen.name = it }
+        updateCitizenDto.nameDevnagari?.let { citizen.nameDevnagari = it }
+        updateCitizenDto.citizenshipNumber?.let { citizen.citizenshipNumber = it }
+        updateCitizenDto.citizenshipIssuedDate?.let { citizen.citizenshipIssuedDate = it }
+        updateCitizenDto.citizenshipIssuedOffice?.let { citizen.citizenshipIssuedOffice = it }
+        updateCitizenDto.email?.let { citizen.email = it }
+        updateCitizenDto.phoneNumber?.let { citizen.phoneNumber = it }
+        updateCitizenDto.fatherName?.let { citizen.fatherName = it }
+        updateCitizenDto.grandfatherName?.let { citizen.grandfatherName = it }
+        updateCitizenDto.spouseName?.let { citizen.spouseName = it }
+
+        // Handle password if provided
+        updateCitizenDto.password?.let { password ->
+            citizen.setPassword(passwordEncoder.encode(password))
+        }
+
+        // Update approval status if specified
+        updateCitizenDto.isApproved?.let { isApproved ->
+            if (isApproved && !citizen.isApproved) {
+                citizen.isApproved = true
+                citizen.approvedAt = LocalDateTime.now()
+                citizen.approvedBy = updateCitizenDto.updatedBy ?: securityService.getCurrentUser().id
+            }
+        }
+
+        // Validate and map permanent address if provided
+        updateCitizenDto.permanentAddress?.let { addressDto ->
+            val validatedAddress = addressValidationService.validateAddress(addressDto)
+            citizen.permanentAddress = validatedAddress.toAddress()
+        }
+
+        // Validate and map temporary address if provided
+        updateCitizenDto.temporaryAddress?.let { addressDto ->
+            val validatedAddress = addressValidationService.validateAddress(addressDto)
+            citizen.temporaryAddress = validatedAddress.toAddress()
+        }
+
+        // Update modification tracking fields
+        citizen.updatedAt = Instant.now()
+        updateCitizenDto.updatedBy?.let { citizen.updatedBy = it }
 
         val savedCitizen = citizenRepository.save(citizen)
         return citizenMapper.toResponse(savedCitizen)
