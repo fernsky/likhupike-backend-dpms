@@ -26,9 +26,12 @@ class CitizenException(
         CitizenErrorCode.DUPLICATE_CITIZENSHIP_NUMBER,
         CitizenErrorCode.DUPLICATE_EMAIL,
         CitizenErrorCode.CITIZEN_ALREADY_APPROVED,
-        CitizenErrorCode.CITIZEN_ALREADY_DELETED -> HttpStatus.CONFLICT
+        CitizenErrorCode.CITIZEN_ALREADY_DELETED,
+        CitizenErrorCode.CITIZEN_ALREADY_REGISTERED -> HttpStatus.CONFLICT
         CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
-        CitizenErrorCode.DOCUMENT_TOO_LARGE -> HttpStatus.BAD_REQUEST
+        CitizenErrorCode.DOCUMENT_TOO_LARGE,
+        CitizenErrorCode.SELF_REGISTRATION_DISABLED,
+        CitizenErrorCode.REGISTRATION_TOKEN_EXPIRED -> HttpStatus.BAD_REQUEST
         CitizenErrorCode.DOCUMENT_UPLOAD_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR
         else -> HttpStatus.BAD_REQUEST
     },
@@ -120,6 +123,30 @@ class CitizenException(
             override val code = "CIT_014"
             override val defaultMessage = "Document upload failed due to server error"
             override val i18nKey = "error.citizen.document_upload_failed"
+        },
+
+        CITIZEN_ALREADY_REGISTERED {
+            override val code = "CIT_015"
+            override val defaultMessage = "Citizen with this citizenship number is already registered"
+            override val i18nKey = "error.citizen.already_registered"
+        },
+
+        SELF_REGISTRATION_DISABLED {
+            override val code = "CIT_016"
+            override val defaultMessage = "Self-registration is currently disabled"
+            override val i18nKey = "error.citizen.self_registration_disabled"
+        },
+
+        REGISTRATION_TOKEN_EXPIRED {
+            override val code = "CIT_017"
+            override val defaultMessage = "Registration verification token has expired"
+            override val i18nKey = "error.citizen.registration_token_expired"
+        },
+
+        INVALID_REGISTRATION_TOKEN {
+            override val code = "CIT_018"
+            override val defaultMessage = "Invalid registration verification token"
+            override val i18nKey = "error.citizen.invalid_registration_token"
         }
     }
 }
