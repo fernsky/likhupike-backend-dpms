@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import np.sthaniya.dpis.citizen.dto.shared.AddressResponse
 import java.time.LocalDate
 import java.time.Instant
-import java.time.LocalDateTime
 import java.util.UUID
 
 /**
@@ -100,9 +99,9 @@ data class CitizenResponse(
     
     @Schema(
         description = "When the citizen record was approved",
-        example = "2023-03-15T14:30:00"
+        example = "2023-03-15T14:30:00Z"
     )
-    val approvedAt: LocalDateTime?,
+    val approvedAt: Instant?,
     
     @Schema(
         description = "ID of the administrator who approved this record",
@@ -112,13 +111,13 @@ data class CitizenResponse(
     
     @Schema(
         description = "When the citizen record was created",
-        example = "2023-03-10T09:15:00"
+        example = "2023-03-10T09:15:00Z"
     )
     val createdAt: Instant,
     
     @Schema(
         description = "When the citizen record was last updated",
-        example = "2023-03-15T14:30:00"
+        example = "2023-03-15T14:30:00Z"
     )
     val updatedAt: Instant?
 )
