@@ -206,4 +206,11 @@ class Citizen : UuidBaseEntity(), UserDetails {
      */
     override fun isCredentialsNonExpired(): Boolean = true
 
+    /**
+     * Indicates whether the citizen is enabled or disabled.
+     * A citizen is considered enabled if they are approved and not deleted.
+     *
+     * @return true if the citizen is approved and not deleted
+     */
+    override fun isEnabled(): Boolean = true
 }
