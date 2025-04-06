@@ -87,7 +87,6 @@ interface WardService {
      * @throws WardNotFoundException if ward not found
      * @throws InvalidWardOperationException if user doesn't have access
      */
-    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun validateWardExists(
         wardNumber: Int,

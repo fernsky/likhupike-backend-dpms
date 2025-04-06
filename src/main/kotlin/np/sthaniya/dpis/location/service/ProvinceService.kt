@@ -73,7 +73,6 @@ interface ProvinceService {
      * Validates province existence
      * @throws ProvinceNotFoundException if province not found
      */
-    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun validateProvinceExists(code: String)
 }

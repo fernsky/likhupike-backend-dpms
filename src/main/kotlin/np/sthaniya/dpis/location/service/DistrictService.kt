@@ -44,7 +44,6 @@ interface DistrictService {
         size: Int,
     ): Page<DistrictResponse>
 
-    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun validateDistrictExists(code: String)
 

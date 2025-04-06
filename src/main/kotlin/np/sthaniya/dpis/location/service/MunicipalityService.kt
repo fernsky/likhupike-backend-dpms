@@ -39,7 +39,6 @@ interface MunicipalityService {
     @Transactional(readOnly = true)
     fun getMunicipalitiesByType(type: MunicipalityType): List<MunicipalityResponse>
 
-    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun validateMunicipalityExists(code: String)
 
