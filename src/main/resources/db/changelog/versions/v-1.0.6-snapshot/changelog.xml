@@ -5,4 +5,11 @@
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <include file="01-citizens-table.xml" relativeToChangelogFile="true"/>
+
+    <!-- New permission changelogs -->
+    <include file="02-user-permissions-data-update.xml" relativeToChangelogFile="true"/>
+    <include file="03-citizen-permissions-data.xml" relativeToChangelogFile="true"/>
+    <include file="04-system-permissions-data.xml" relativeToChangelogFile="true"/>
+    <include file="05-system-administrator-with-new-permissions.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>
