@@ -30,6 +30,8 @@ spring:
           connectiontimeout: 5000
           writetimeout: 5000
         debug: ${MAIL_DEBUG:true}
+  main:
+    allow-bean-definition-overriding: true
 
 app:
   admin:

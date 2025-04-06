@@ -6,21 +6,20 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Import
-import org.springframework.context.annotation.ComponentScan
+import org.springframework.data.web.config.EnableSpringDataWebSupport
 
 /**
  * Main application class for the Digital Profile Information System (DPIS).
  *
  * This class serves as the entry point for the Spring Boot application and provides:
- * - Configuration properties support via [EnableConfigurationProperties]
- * - JSON configuration via [JacksonConfig]
+ * - Configuration properties support via [EnableSpringDataWebSupport]
  * - Component scanning for the application package
  */
 @SpringBootApplication
 @EnableConfigurationProperties(AdminConfig::class)
 @Import(JacksonConfig::class)
-@ComponentScan(basePackages = ["np.sthaniya.dpis"])
-class dpisApplication
+@EnableSpringDataWebSupport
+class DpisApplication
 
 /**
  * Application entry point that starts the Spring Boot application.
@@ -28,7 +27,7 @@ class dpisApplication
  * @param args Command line arguments passed to the application
  */
 fun main(args: Array<String>) {
-    runApplication<dpisApplication>(*args)
+    runApplication<DpisApplication>(*args)
 }
 
 
