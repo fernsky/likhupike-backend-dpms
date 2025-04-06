@@ -2,8 +2,13 @@ package np.sthaniya.dpis.citizen.repository.impl
 
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.Predicate
+import np.sthaniya.dpis.citizen.domain.entity.Address
 import np.sthaniya.dpis.citizen.domain.entity.Citizen
 import np.sthaniya.dpis.citizen.repository.CitizenRepositoryCustom
+import np.sthaniya.dpis.location.domain.District
+import np.sthaniya.dpis.location.domain.Municipality
+import np.sthaniya.dpis.location.domain.Province
+import np.sthaniya.dpis.location.domain.Ward
 import java.util.Optional
 import java.util.UUID
 
@@ -79,11 +84,8 @@ class CitizenRepositoryImpl(
      * Finds citizens by address with partial matching for both
      * permanent and temporary addresses.
      *
-     * This implementation searches across all address fields:
-     * - Province
-     * - District
-     * - Municipality 
-     * - Street Address
+     * Updated to work with the Province, District, Municipality, and Ward
+     * entities rather than string fields.
      *
      * @param addressPart Part of the address to search for
      * @return List of citizens matching the address pattern
@@ -99,30 +101,32 @@ class CitizenRepositoryImpl(
         // Create predicates for both permanent and temporary addresses
         val predicates = mutableListOf<Predicate>()
         
-        // Permanent address fields
+        // Permanent address fields - searching entity names
+        val permanentAddressPath = root.get<Address>("permanentAddress")
+        
         predicates.add(
-            cb.like(cb.lower(root.get<String>("permanentAddress").get<String>("province")), addressLike)
+            cb.like(cb.lower(permanentAddressPath.get<Province>("province").get<String>("name")), addressLike)
         )
         predicates.add(
-            cb.like(cb.lower(root.get<String>("permanentAddress").get<String>("district")), addressLike)
+            cb.like(cb.lower(permanentAddressPath.get<District>("district").get<String>("name")), addressLike)
         )
         predicates.add(
-            cb.like(cb.lower(root.get<String>("permanentAddress").get<String>("municipality")), addressLike)
+            cb.like(cb.lower(permanentAddressPath.get<Municipality>("municipality").get<String>("name")), addressLike)
         )
         
         // Street address might be null, so handle it separately
         predicates.add(
             cb.and(
-                cb.isNotNull(root.get<String>("permanentAddress").get<String>("streetAddress")),
+                cb.isNotNull(permanentAddressPath.get<String>("streetAddress")),
                 cb.like(
-                    cb.lower(root.get<String>("permanentAddress").get<String>("streetAddress")), 
+                    cb.lower(permanentAddressPath.get<String>("streetAddress")), 
                     addressLike
                 )
             )
         )
         
         // Temporary address fields (these might be null, so handle accordingly)
-        val tempAddressPath = root.get<String>("temporaryAddress")
+        val tempAddressPath = root.get<Address>("temporaryAddress")
         
         // Check if temporary address exists before comparing
         val tempAddressNotNull = cb.isNotNull(tempAddressPath)
@@ -130,19 +134,19 @@ class CitizenRepositoryImpl(
         predicates.add(
             cb.and(
                 tempAddressNotNull,
-                cb.like(cb.lower(tempAddressPath.get<String>("province")), addressLike)
+                cb.like(cb.lower(tempAddressPath.get<Province>("province").get<String>("name")), addressLike)
             )
         )
         predicates.add(
             cb.and(
                 tempAddressNotNull,
-                cb.like(cb.lower(tempAddressPath.get<String>("district")), addressLike)
+                cb.like(cb.lower(tempAddressPath.get<District>("district").get<String>("name")), addressLike)
             )
         )
         predicates.add(
             cb.and(
                 tempAddressNotNull,
-                cb.like(cb.lower(tempAddressPath.get<String>("municipality")), addressLike)
+                cb.like(cb.lower(tempAddressPath.get<Municipality>("municipality").get<String>("name")), addressLike)
             )
         )
         

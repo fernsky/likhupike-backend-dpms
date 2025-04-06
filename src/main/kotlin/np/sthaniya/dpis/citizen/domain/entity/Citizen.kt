@@ -1,34 +1,36 @@
 package np.sthaniya.dpis.citizen.domain.entity
 
 import jakarta.persistence.*
-import np.sthaniya.dpis.auth.domain.entity.User
+import np.sthaniya.dpis.common.entity.UuidBaseEntity
 import java.time.LocalDate
+import java.util.UUID
 
 /**
  * Represents a citizen in the Digital Profile Information System.
  * 
- * This entity extends the [User] class to provide additional citizen-specific information
- * like personal details, address, family information, and document references.
+ * This entity contains citizen-specific information like personal details,
+ * address, family information, and document references.
  *
  * Features:
  * - Complete citizen profile with personal details
  * - Citizenship document information
- * - Structured address information using embedded Address entities with proper foreign key relationships
+ * - Structured address information using embedded Address entities
  * - Family information
  * - Document storage references for photos and citizenship certificates
  * 
- * This implementation uses JPA inheritance with a JOINED strategy,
- * creating a separate citizens table linked to the users table.
+ * This implementation is now fully decoupled from the User entity system
+ * and stands as its own independent entity.
  */
 @Entity
 @Table(
     name = "citizens",
     indexes = [
-        Index(name = "idx_citizens_citizenship_number", columnList = "citizenship_number")
+        Index(name = "idx_citizens_citizenship_number", columnList = "citizenship_number"),
+        Index(name = "idx_citizens_email", columnList = "email"),
+        Index(name = "idx_citizens_phone_number", columnList = "phone_number")
     ]
 )
-@DiscriminatorValue("CITIZEN")
-class Citizen : User() {
+class Citizen : UuidBaseEntity() {
 
     @Column(name = "name", nullable = false)
     var name: String? = null
@@ -44,6 +46,21 @@ class Citizen : User() {
 
     @Column(name = "citizenship_issued_office", nullable = false)
     var citizenshipIssuedOffice: String? = null
+
+    @Column(nullable = false, unique = true)
+    var email: String? = null
+    
+    @Column(name = "phone_number")
+    var phoneNumber: String? = null
+    
+    @Column(name = "is_deleted", nullable = false)
+    var isDeleted: Boolean = false
+    
+    @Column(name = "deleted_at")
+    var deletedAt: LocalDate? = null
+    
+    @Column(name = "deleted_by")
+    var deletedBy: UUID? = null
 
     @Embedded
     @AttributeOverrides(

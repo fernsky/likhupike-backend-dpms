@@ -42,4 +42,12 @@ interface CitizenRepository :
      * @return true if the citizenship number exists, false otherwise
      */
     fun existsByCitizenshipNumber(citizenshipNumber: String): Boolean
+    
+    /**
+     * Checks if an email address already exists in the system.
+     *
+     * @param email The email address to check
+     * @return true if the email exists, false otherwise
+     */
+    fun existsByEmail(email: String): Boolean
 }

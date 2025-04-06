@@ -4,6 +4,6 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <include file="01-update-users-for-inheritance.xml" relativeToChangelogFile="true"/>
+    <include file="01-update-users-with-phone-number.xml" relativeToChangelogFile="true"/>
     <include file="02-citizens-table.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

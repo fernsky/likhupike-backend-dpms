@@ -10,13 +10,13 @@ import java.time.LocalDateTime
 import java.util.*
 
 /**
- * Represents a user entity in the Digital Profile Information System.
+ * Represents a system user entity in the Digital Profile Information System.
  * 
  * This entity implements Spring Security's [UserDetails] interface for authentication and authorization.
  * Users can be either ward-level or system-level users, with different permissions and access levels.
  * The entity includes audit fields for tracking user approval and deletion status.
  *
- * This class uses JPA inheritance and can be extended by specific user types like Citizen.
+ * This class is now fully decoupled from the Citizen entity.
  *
  * @property email The unique email address of the user, used as the username for authentication
  * @property password The encrypted password of the user
@@ -38,9 +38,6 @@ import java.util.*
         Index(name = "idx_users_email", columnList = "email")
     ],
 )
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "user_type")
-@DiscriminatorValue("USER")
 class User :
     UuidBaseEntity(),
     UserDetails {

@@ -3,19 +3,24 @@
     xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet author="trilochan" id="02-citizens-table-create">
+    <changeSet author="trilochan" id="02-citizens-table-create-independent">
         <preConditions onFail="MARK_RAN">
-            <tableExists tableName="users"/>
             <not>
                 <tableExists tableName="citizens"/>
             </not>
         </preConditions>
         
-        <comment>Create citizens table for User inheritance with structured address fields</comment>
+        <comment>Create independent citizens table with foreign key relationships to location tables</comment>
         
         <createTable tableName="citizens">
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="citizens_pkey"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
             </column>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
@@ -32,34 +37,68 @@
             <column name="citizenship_issued_office" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <!-- Permanent Address Fields -->
-            <column name="permanent_province" type="VARCHAR(100)">
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_citizens_email"/>
+            </column>
+            <column name="phone_number" type="VARCHAR(20)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="is_deleted" type="BOOLEAN" defaultValueBoolean="false">
                 <constraints nullable="false"/>
             </column>
-            <column name="permanent_district" type="VARCHAR(100)">
-                <constraints nullable="false"/>
+            <column name="deleted_at" type="DATE">
+                <constraints nullable="true"/>
             </column>
-            <column name="permanent_municipality" type="VARCHAR(100)">
-                <constraints nullable="false"/>
+            <column name="deleted_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            
+            <!-- Permanent Address Fields with Foreign Keys -->
+            <column name="permanent_province_code" type="VARCHAR(36)">
+                <constraints nullable="false" 
+                    foreignKeyName="fk_citizens_perm_province" 
+                    references="provinces(code)"/>
+            </column>
+            <column name="permanent_district_code" type="VARCHAR(36)">
+                <constraints nullable="false" 
+                    foreignKeyName="fk_citizens_perm_district" 
+                    references="districts(code)"/>
+            </column>
+            <column name="permanent_municipality_code" type="VARCHAR(36)">
+                <constraints nullable="false" 
+                    foreignKeyName="fk_citizens_perm_municipality" 
+                    references="municipalities(code)"/>
             </column>
             <column name="permanent_ward_number" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permanent_ward_municipality_code" type="VARCHAR(36)">
                 <constraints nullable="false"/>
             </column>
             <column name="permanent_street_address" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
             
-            <!-- Temporary Address Fields -->
-            <column name="temporary_province" type="VARCHAR(100)">
-                <constraints nullable="true"/>
+            <!-- Temporary Address Fields with Foreign Keys -->
+            <column name="temporary_province_code" type="VARCHAR(36)">
+                <constraints nullable="true" 
+                    foreignKeyName="fk_citizens_temp_province" 
+                    references="provinces(code)"/>
             </column>
-            <column name="temporary_district" type="VARCHAR(100)">
-                <constraints nullable="true"/>
+            <column name="temporary_district_code" type="VARCHAR(36)">
+                <constraints nullable="true" 
+                    foreignKeyName="fk_citizens_temp_district" 
+                    references="districts(code)"/>
             </column>
-            <column name="temporary_municipality" type="VARCHAR(100)">
-                <constraints nullable="true"/>
+            <column name="temporary_municipality_code" type="VARCHAR(36)">
+                <constraints nullable="true" 
+                    foreignKeyName="fk_citizens_temp_municipality" 
+                    references="municipalities(code)"/>
             </column>
             <column name="temporary_ward_number" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="temporary_ward_municipality_code" type="VARCHAR(36)">
                 <constraints nullable="true"/>
             </column>
             <column name="temporary_street_address" type="VARCHAR(255)">
@@ -86,18 +125,51 @@
             </column>
         </createTable>
 
-        <!-- Add foreign key constraint to users table -->
+        <!-- Add foreign key constraint for permanent ward -->
         <addForeignKeyConstraint 
-            baseTableName="citizens"
-            baseColumnNames="id"
-            constraintName="fk_citizens_users"
-            referencedTableName="users"
-            referencedColumnNames="id"
-            onDelete="CASCADE"/>
+            constraintName="fk_citizens_perm_ward" 
+            baseTableName="citizens" 
+            baseColumnNames="permanent_ward_number,permanent_ward_municipality_code" 
+            referencedTableName="wards" 
+            referencedColumnNames="ward_number,municipality_code"/>
+            
+        <!-- Add foreign key constraint for temporary ward -->
+        <addForeignKeyConstraint 
+            constraintName="fk_citizens_temp_ward" 
+            baseTableName="citizens" 
+            baseColumnNames="temporary_ward_number,temporary_ward_municipality_code" 
+            referencedTableName="wards" 
+            referencedColumnNames="ward_number,municipality_code"/>
 
-        <!-- Add index for citizenship number searches -->
+        <!-- Add indices for efficient searching -->
         <createIndex indexName="idx_citizens_citizenship_number" tableName="citizens">
             <column name="citizenship_number"/>
         </createIndex>
+        
+        <createIndex indexName="idx_citizens_email" tableName="citizens">
+            <column name="email"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_citizens_phone_number" tableName="citizens">
+            <column name="phone_number"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_citizens_perm_province" tableName="citizens">
+            <column name="permanent_province_code"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_citizens_perm_district" tableName="citizens">
+            <column name="permanent_district_code"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_citizens_perm_municipality" tableName="citizens">
+            <column name="permanent_municipality_code"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_citizens_perm_ward" tableName="citizens">
+            <column name="permanent_ward_number"/>
+            <column name="permanent_ward_municipality_code"/>
+        </createIndex>
     </changeSet>
+    
 </databaseChangeLog>
