@@ -73,6 +73,11 @@ jwt:
   expiration: 24 # hours
   refresh-expiration: 168 # 7 days in hours
 
+citizen-jwt:
+  secret-key: ${CITIZEN_JWT_SECRET:464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EG11E36FD39} # Change in production
+  expiration: 1 # hours
+  refresh-expiration: 168 # hours (1 week)
+
 springdoc:
   api-docs:
     enabled: ${SWAGGER_ENABLED:false}
