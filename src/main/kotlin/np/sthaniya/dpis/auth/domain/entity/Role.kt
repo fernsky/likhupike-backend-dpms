@@ -85,7 +85,7 @@ class Role(
      * @return Set of all permissions
      */
     fun getPermissions(): Set<Permission> =
-        rolePermissions.map { it.permission }.toSet()
+        rolePermissions?.mapNotNull { it?.permission }?.toSet() ?: emptySet()
 
     /**
      * Clears all permissions from the role.

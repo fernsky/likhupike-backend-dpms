@@ -91,21 +91,27 @@ class User :
         val authorities = mutableSetOf<SimpleGrantedAuthority>()
         
         // Add direct permissions
-        permissions.forEach { 
-            authorities.add(SimpleGrantedAuthority(it.permission.getAuthority())) 
+        permissions.forEach { userPermission -> 
+            userPermission.permission?.let { 
+                authorities.add(SimpleGrantedAuthority(it.getAuthority())) 
+            }
         }
         
         // Add role authorities
-        roles.forEach { 
-            authorities.add(SimpleGrantedAuthority(it.role.getAuthority()))
+        roles.forEach { userRole -> 
+            userRole.role?.let {
+                authorities.add(SimpleGrantedAuthority(it.getAuthority()))
+            }
         }
         
         // Add permissions from roles (these won't override direct permissions)
         roles.forEach { userRole ->
-            userRole.role.getPermissions().forEach { permission ->
-                // Only add if not already directly assigned
-                if (!hasPermission(permission.type)) {
-                    authorities.add(SimpleGrantedAuthority(permission.getAuthority()))
+            userRole.role?.let { role ->
+                role.getPermissions().forEach { permission ->
+                    // Only add if not already directly assigned
+                    if (permission.type != null && !hasPermission(permission.type)) {
+                        authorities.add(SimpleGrantedAuthority(permission.getAuthority()))
+                    }
                 }
             }
         }
