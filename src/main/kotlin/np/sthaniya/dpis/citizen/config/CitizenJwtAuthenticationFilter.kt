@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.citizen.config
 
 import jakarta.servlet.FilterChain
+import np.sthaniya.dpis.citizen.service.CitizenUserDetailsService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import np.sthaniya.dpis.citizen.exception.CitizenAuthException
@@ -9,7 +10,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -20,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter
  * It's responsible for:
  * - Extracting JWT tokens from the Authorization header
  * - Validating tokens using [CitizenJwtService]
- * - Loading citizen details using [UserDetailsService]
+ * - Loading citizen details using [CitizenUserDetailsService]
  * - Setting up the Spring Security context for authenticated citizens
  *
  * Filter Chain Process:
@@ -40,7 +40,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Configuration
 class CitizenJwtAuthenticationFilter(
     private val citizenJwtService: CitizenJwtService,
-    private val userDetailsService: UserDetailsService,
+    private val citizenUserDetailsService: CitizenUserDetailsService,
     private val citizenRouteRegistry: CitizenRouteRegistry
 ) : OncePerRequestFilter() {
 
@@ -135,14 +135,13 @@ class CitizenJwtAuthenticationFilter(
         val citizenEmail = citizenJwtService.extractUsername(jwt)
 
         if (citizenEmail != null && SecurityContextHolder.getContext().authentication == null) {
-            val citizenDetails = userDetailsService.loadUserByUsername(citizenEmail)
+            val citizenDetails = citizenUserDetailsService.loadUserByUsername(citizenEmail)
             if (citizenJwtService.isTokenValid(jwt, citizenDetails)) {
-                val authToken =
-                    UsernamePasswordAuthenticationToken(
-                        citizenDetails,
-                        null,
-                        citizenDetails.authorities,
-                    )
+                val authToken = UsernamePasswordAuthenticationToken(
+                    citizenDetails,
+                    null,
+                    citizenDetails.authorities
+                )
                 authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
                 SecurityContextHolder.getContext().authentication = authToken
             } else {
