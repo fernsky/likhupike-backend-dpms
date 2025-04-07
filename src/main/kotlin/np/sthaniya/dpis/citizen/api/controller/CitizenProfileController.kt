@@ -28,7 +28,7 @@ import java.util.UUID
  * Provides endpoints for citizens to register and manage their own profiles.
  */
 @Tag(name = "Citizen Profile", description = "APIs for citizen self-registration and profile management")
-@RequestMapping("/api/v1/citizens")
+@RequestMapping("/api/v1/citizen-profile")
 interface CitizenProfileController {
 
     /**

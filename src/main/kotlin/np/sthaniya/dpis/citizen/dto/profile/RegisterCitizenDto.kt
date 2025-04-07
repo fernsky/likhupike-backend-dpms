@@ -88,6 +88,7 @@ data class RegisterCitizenDto(
         description = "Email address for the citizen",
         example = "hari.sharma@example.com"
     )
+    @field:NotBlank(message = "Email is required")
     @field:Email(message = "Please provide a valid email address")
     val email: String,
     

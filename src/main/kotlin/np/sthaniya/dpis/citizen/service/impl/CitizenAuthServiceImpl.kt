@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.beans.factory.annotation.Qualifier
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -33,7 +34,7 @@ class CitizenAuthServiceImpl(
     private val citizenService: CitizenService,
     private val passwordEncoder: PasswordEncoder,
     private val citizenJwtService: CitizenJwtService,
-    private val authenticationManager: AuthenticationManager,
+    @Qualifier("citizenAuthenticationManager") private val authenticationManager: AuthenticationManager,
     private val emailService: EmailService,
     private val otpRepository: CitizenPasswordResetOtpRepository
 ) : CitizenAuthService {

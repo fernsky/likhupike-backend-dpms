@@ -6,9 +6,12 @@ import np.sthaniya.dpis.common.config.RouteRegistry
 import np.sthaniya.dpis.common.filter.RateLimitFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpMethod
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.AuthenticationProvider
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -133,6 +136,18 @@ class SecurityConfig(
             .addFilterAfter(jwtAuthenticationFilter, rateLimitFilter::class.java)
 
         return http.build()
+    }
+
+    /**
+     * Provides the main AuthenticationManager bean for the application.
+     *
+     * @param config The authentication configuration
+     * @return The configured AuthenticationManager
+     */
+    @Bean
+    @Primary  // Mark this as the primary AuthenticationManager
+    fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager {
+        return config.authenticationManager
     }
 
     /**
