@@ -8,10 +8,11 @@ import np.sthaniya.dpis.citizen.dto.response.DocumentUploadResponse
 import np.sthaniya.dpis.citizen.exception.CitizenException
 import np.sthaniya.dpis.citizen.exception.CitizenException.CitizenErrorCode
 import np.sthaniya.dpis.citizen.domain.entity.Citizen
+import np.sthaniya.dpis.citizen.domain.entity.CitizenState
+import np.sthaniya.dpis.citizen.domain.entity.DocumentState
 import np.sthaniya.dpis.citizen.mapper.CitizenMapper
 import np.sthaniya.dpis.citizen.repository.CitizenRepository
 import np.sthaniya.dpis.citizen.service.CitizenProfileService
-import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.common.service.SecurityService
 import np.sthaniya.dpis.common.storage.DocumentStorageService
 import org.slf4j.LoggerFactory
@@ -32,10 +33,9 @@ class CitizenProfileServiceImpl(
     private val citizenMapper: CitizenMapper,
     private val documentStorageService: DocumentStorageService,
     private val securityService: SecurityService,
-    private val i18nMessageService: I18nMessageService
 ) : CitizenProfileService {
 
-    private val logger = LoggerFactory.getLogger(CitizenProfileServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     companion object {
         const val PHOTOS_FOLDER = "citizens/profiles/photos"
@@ -51,10 +51,6 @@ class CitizenProfileServiceImpl(
 
     /**
      * Registers a new citizen in the system through self-registration.
-     * 
-     * @param registerCitizenDto Data for citizen self-registration
-     * @return The created citizen profile as a response DTO
-     * @throws CitizenException if validation fails or citizen already exists
      */
     @Transactional
     override fun registerCitizen(registerCitizenDto: RegisterCitizenDto): CitizenResponse {
@@ -102,6 +98,11 @@ class CitizenProfileServiceImpl(
             email = registerCitizenDto.email
             phoneNumber = registerCitizenDto.phoneNumber
             setPassword(passwordEncoder.encode(registerCitizenDto.password))
+            
+            // Set initial state to pending registration
+            state = CitizenState.PENDING_REGISTRATION
+            stateUpdatedAt = Instant.now()
+            
             isApproved = false // Self-registered citizens require approval
         }
         
@@ -115,10 +116,6 @@ class CitizenProfileServiceImpl(
     
     /**
      * Retrieves the profile of a logged-in citizen.
-     * 
-     * @param citizenId The ID of the logged-in citizen
-     * @return The citizen's profile data
-     * @throws CitizenException.CitizenErrorCode.CITIZEN_NOT_FOUND if the citizen doesn't exist
      */
     @Transactional(readOnly = true)
     override fun getMyProfile(citizenId: UUID): CitizenResponse {
@@ -128,12 +125,7 @@ class CitizenProfileServiceImpl(
     }
     
     /**
-     * Updates the profile of a logged-in citizen using a dedicated DTO.
-     * 
-     * @param citizenId The ID of the logged-in citizen
-     * @param updateProfileDto The DTO with fields to update
-     * @return The updated citizen profile
-     * @throws CitizenException.CitizenErrorCode.CITIZEN_NOT_FOUND if the citizen doesn't exist
+     * Updates the profile of a logged-in citizen.
      */
     @Transactional
     override fun updateMyProfile(citizenId: UUID, updateProfileDto: UpdateProfileDto): CitizenResponse {
@@ -157,7 +149,6 @@ class CitizenProfileServiceImpl(
             citizen.phoneNumber = phoneNumber
         }
         
-
         citizen.updatedAt = Instant.now()
         
         val savedCitizen = citizenRepository.save(citizen)
@@ -166,212 +157,64 @@ class CitizenProfileServiceImpl(
     }
     
     /**
-     * Uploads or replaces a citizen's photo.
-     *
-     * @param citizenId The ID of the logged-in citizen
-     * @param photo The photo file to upload
-     * @return Details about the uploaded photo
+     * Uploads a citizen's photo.
      */
     @Transactional
     override fun uploadMyPhoto(citizenId: UUID, photo: MultipartFile): DocumentUploadResponse {
         logger.info("Uploading photo for citizen ID: $citizenId")
-
-        if (photo.size > MAX_PHOTO_SIZE_BYTES) {
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_TOO_LARGE,
-                "The photo ${photo.originalFilename} exceeds the maximum allowed size of ${MAX_PHOTO_SIZE_BYTES / (1024 * 1024)}MB"
-            )
-        }
-
-        val contentType = photo.contentType
-        if (contentType.isNullOrBlank() || !ALLOWED_PHOTO_TYPES.contains(contentType)) {
-            throw CitizenException(
-                CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
-                "The photo ${photo.originalFilename} is not in an acceptable format. Allowed formats: ${ALLOWED_PHOTO_TYPES.joinToString(", ")}"
-            )
-        }
-
-        val citizen = getCitizenEntity(citizenId)
-
-        try {
-            citizen.photoKey?.let { oldKey ->
-                if (documentStorageService.documentExists(oldKey)) {
-                    documentStorageService.deleteDocument(oldKey)
-                    logger.debug("Deleted previous photo with key: $oldKey")
-                }
+        return uploadDocument(
+            citizenId, 
+            photo, 
+            PHOTOS_FOLDER, 
+            MAX_PHOTO_SIZE_BYTES, 
+            ALLOWED_PHOTO_TYPES,
+            DocumentUploadHandler { citizen, storageKey ->
+                citizen.photoKey = storageKey
+                citizen.photoState = DocumentState.AWAITING_REVIEW
             }
-
-            val fileExtension = getFileExtension(photo.originalFilename)
-            val storageKey = documentStorageService.storeDocument(
-                file = photo,
-                folder = PHOTOS_FOLDER,
-                fileName = "${citizenId}${fileExtension}"
-            )
-
-            citizen.photoKey = storageKey
-            citizen.updatedAt = Instant.now()
-
-            citizenRepository.save(citizen)
-
-            val url = documentStorageService.getDocumentUrl(storageKey)
-            logger.debug("Photo uploaded successfully for citizen ID: $citizenId")
-
-            return DocumentUploadResponse(
-                storageKey = storageKey,
-                originalFilename = photo.originalFilename ?: "unknown",
-                contentType = contentType,
-                size = photo.size,
-                url = url
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to upload photo for citizen with ID: $citizenId", e)
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_UPLOAD_FAILED,
-                "Document upload failed: ${e.message}"
-            )
-        }
+        )
     }
     
     /**
-     * Uploads or replaces the front page of a citizen's citizenship certificate.
-     *
-     * @param citizenId The ID of the logged-in citizen
-     * @param document The document file to upload
-     * @return Details about the uploaded document
+     * Uploads the front page of a citizen's citizenship certificate.
      */
     @Transactional
     override fun uploadMyCitizenshipFront(citizenId: UUID, document: MultipartFile): DocumentUploadResponse {
         logger.info("Uploading citizenship front page for citizen ID: $citizenId")
-
-        if (document.size > MAX_DOCUMENT_SIZE_BYTES) {
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_TOO_LARGE,
-                "The file ${document.originalFilename} exceeds the maximum allowed size of ${MAX_DOCUMENT_SIZE_BYTES / (1024 * 1024)}MB"
-            )
-        }
-
-        val contentType = document.contentType
-        if (contentType.isNullOrBlank() || !ALLOWED_DOCUMENT_TYPES.contains(contentType)) {
-            throw CitizenException(
-                CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
-                "The file ${document.originalFilename} is not in an acceptable format. Allowed formats: ${ALLOWED_DOCUMENT_TYPES.joinToString(", ")}"
-            )
-        }
-
-        val citizen = getCitizenEntity(citizenId)
-
-        try {
-            citizen.citizenshipFrontKey?.let { oldKey ->
-                if (documentStorageService.documentExists(oldKey)) {
-                    documentStorageService.deleteDocument(oldKey)
-                    logger.debug("Deleted previous citizenship front with key: $oldKey")
-                }
+        return uploadDocument(
+            citizenId, 
+            document, 
+            CITIZENSHIP_FRONT_FOLDER, 
+            MAX_DOCUMENT_SIZE_BYTES, 
+            ALLOWED_DOCUMENT_TYPES,
+            DocumentUploadHandler { citizen, storageKey ->
+                citizen.citizenshipFrontKey = storageKey
+                citizen.citizenshipFrontState = DocumentState.AWAITING_REVIEW
             }
-
-            val fileExtension = getFileExtension(document.originalFilename)
-            val storageKey = documentStorageService.storeDocument(
-                file = document,
-                folder = CITIZENSHIP_FRONT_FOLDER,
-                fileName = "${citizenId}${fileExtension}"
-            )
-
-            citizen.citizenshipFrontKey = storageKey
-            citizen.updatedAt = Instant.now()
-
-            citizenRepository.save(citizen)
-
-            val url = documentStorageService.getDocumentUrl(storageKey)
-            logger.debug("Citizenship front page uploaded successfully for citizen ID: $citizenId")
-
-            return DocumentUploadResponse(
-                storageKey = storageKey,
-                originalFilename = document.originalFilename ?: "unknown",
-                contentType = contentType,
-                size = document.size,
-                url = url
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to upload citizenship front for citizen with ID: $citizenId", e)
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_UPLOAD_FAILED,
-                "Document upload failed: ${e.message}"
-            )
-        }
+        )
     }
     
     /**
-     * Uploads or replaces the back page of a citizen's citizenship certificate.
-     *
-     * @param citizenId The ID of the logged-in citizen
-     * @param document The document file to upload
-     * @return Details about the uploaded document
+     * Uploads the back page of a citizen's citizenship certificate.
      */
     @Transactional
     override fun uploadMyCitizenshipBack(citizenId: UUID, document: MultipartFile): DocumentUploadResponse {
         logger.info("Uploading citizenship back page for citizen ID: $citizenId")
-
-        if (document.size > MAX_DOCUMENT_SIZE_BYTES) {
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_TOO_LARGE,
-                "The file ${document.originalFilename} exceeds the maximum allowed size of ${MAX_DOCUMENT_SIZE_BYTES / (1024 * 1024)}MB"
-            )
-        }
-
-        val contentType = document.contentType
-        if (contentType.isNullOrBlank() || !ALLOWED_DOCUMENT_TYPES.contains(contentType)) {
-            throw CitizenException(
-                CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
-                "The file ${document.originalFilename} is not in an acceptable format. Allowed formats: ${ALLOWED_DOCUMENT_TYPES.joinToString(", ")}"
-            )
-        }
-
-        val citizen = getCitizenEntity(citizenId)
-
-        try {
-            citizen.citizenshipBackKey?.let { oldKey ->
-                if (documentStorageService.documentExists(oldKey)) {
-                    documentStorageService.deleteDocument(oldKey)
-                    logger.debug("Deleted previous citizenship back with key: $oldKey")
-                }
+        return uploadDocument(
+            citizenId, 
+            document, 
+            CITIZENSHIP_BACK_FOLDER, 
+            MAX_DOCUMENT_SIZE_BYTES, 
+            ALLOWED_DOCUMENT_TYPES,
+            DocumentUploadHandler { citizen, storageKey ->
+                citizen.citizenshipBackKey = storageKey
+                citizen.citizenshipBackState = DocumentState.AWAITING_REVIEW
             }
-
-            val fileExtension = getFileExtension(document.originalFilename)
-            val storageKey = documentStorageService.storeDocument(
-                file = document,
-                folder = CITIZENSHIP_BACK_FOLDER,
-                fileName = "${citizenId}${fileExtension}"
-            )
-
-            citizen.citizenshipBackKey = storageKey
-            citizen.updatedAt = Instant.now()
-
-            citizenRepository.save(citizen)
-
-            val url = documentStorageService.getDocumentUrl(storageKey)
-            logger.debug("Citizenship back page uploaded successfully for citizen ID: $citizenId")
-
-            return DocumentUploadResponse(
-                storageKey = storageKey,
-                originalFilename = document.originalFilename ?: "unknown",
-                contentType = contentType,
-                size = document.size,
-                url = url
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to upload citizenship back for citizen with ID: $citizenId", e)
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_UPLOAD_FAILED,
-                "Document upload failed: ${e.message}"
-            )
-        }
+        )
     }
     
     /**
-     * Changes the password for a logged-in citizen using a dedicated DTO.
-     * 
-     * @param citizenId The ID of the logged-in citizen
-     * @param changePasswordDto The DTO containing current and new passwords
-     * @return The updated citizen profile
+     * Changes the password for a logged-in citizen.
      */
     @Transactional
     override fun changeMyPassword(citizenId: UUID, changePasswordDto: ChangePasswordDto): CitizenResponse {
@@ -397,11 +240,104 @@ class CitizenProfileServiceImpl(
     }
     
     /**
+     * Helper functional interface for document upload handlers
+     */
+    private fun interface DocumentUploadHandler {
+        fun updateCitizen(citizen: Citizen, storageKey: String)
+    }
+    
+    /**
+     * Generic document upload method to avoid code duplication
+     */
+    private fun uploadDocument(
+        citizenId: UUID,
+        file: MultipartFile,
+        folder: String,
+        maxSize: Long,
+        allowedTypes: Set<String>,
+        documentHandler: DocumentUploadHandler
+    ): DocumentUploadResponse {
+        if (file.size > maxSize) {
+            throw CitizenException(
+                CitizenErrorCode.DOCUMENT_TOO_LARGE,
+                "The file ${file.originalFilename} exceeds the maximum allowed size of ${maxSize / (1024 * 1024)}MB"
+            )
+        }
+
+        val contentType = file.contentType
+        if (contentType.isNullOrBlank() || !allowedTypes.contains(contentType)) {
+            throw CitizenException(
+                CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
+                "The file ${file.originalFilename} is not in an acceptable format. Allowed formats: ${allowedTypes.joinToString(", ")}"
+            )
+        }
+
+        val citizen = getCitizenEntity(citizenId)
+
+        try {
+            // Delete old document if exists (depends on which document we're uploading)
+            when (folder) {
+                PHOTOS_FOLDER -> {
+                    citizen.photoKey?.let { oldKey ->
+                        if (documentStorageService.documentExists(oldKey)) {
+                            documentStorageService.deleteDocument(oldKey)
+                            logger.debug("Deleted previous photo with key: $oldKey")
+                        }
+                    }
+                }
+                CITIZENSHIP_FRONT_FOLDER -> {
+                    citizen.citizenshipFrontKey?.let { oldKey ->
+                        if (documentStorageService.documentExists(oldKey)) {
+                            documentStorageService.deleteDocument(oldKey)
+                            logger.debug("Deleted previous citizenship front with key: $oldKey")
+                        }
+                    }
+                }
+                CITIZENSHIP_BACK_FOLDER -> {
+                    citizen.citizenshipBackKey?.let { oldKey ->
+                        if (documentStorageService.documentExists(oldKey)) {
+                            documentStorageService.deleteDocument(oldKey)
+                            logger.debug("Deleted previous citizenship back with key: $oldKey")
+                        }
+                    }
+                }
+            }
+
+            val fileExtension = getFileExtension(file.originalFilename)
+            val storageKey = documentStorageService.storeDocument(
+                file = file,
+                folder = folder,
+                fileName = "${citizenId}${fileExtension}"
+            )
+
+            // Update the appropriate field based on which document we're uploading
+            documentHandler.updateCitizen(citizen, storageKey)
+            
+            citizen.updatedAt = Instant.now()
+
+            citizenRepository.save(citizen)
+
+            val url = documentStorageService.getDocumentUrl(storageKey)
+            logger.debug("Document uploaded successfully for citizen ID: $citizenId")
+
+            return DocumentUploadResponse(
+                storageKey = storageKey,
+                originalFilename = file.originalFilename ?: "unknown",
+                contentType = contentType,
+                size = file.size,
+                url = url
+            )
+        } catch (e: Exception) {
+            logger.error("Failed to upload document for citizen with ID: $citizenId", e)
+            throw CitizenException(
+                CitizenErrorCode.DOCUMENT_UPLOAD_FAILED,
+                "Document upload failed: ${e.message}"
+            )
+        }
+    }
+    
+    /**
      * Helper method to get a citizen entity by ID
-     * 
-     * @param citizenId ID of the citizen to retrieve
-     * @return The citizen entity
-     * @throws CitizenException.CitizenErrorCode.CITIZEN_NOT_FOUND if the citizen doesn't exist
      */
     private fun getCitizenEntity(citizenId: UUID): Citizen {
         logger.debug("Fetching citizen entity with ID: $citizenId")
