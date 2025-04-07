@@ -1,35 +1,41 @@
 package np.sthaniya.dpis.citizen.repository.impl
 
 import jakarta.persistence.EntityManager
-import jakarta.persistence.criteria.Predicate
-import np.sthaniya.dpis.citizen.domain.entity.Address
 import np.sthaniya.dpis.citizen.domain.entity.Citizen
+import np.sthaniya.dpis.citizen.domain.entity.CitizenState
+import np.sthaniya.dpis.citizen.domain.entity.DocumentState
+import np.sthaniya.dpis.citizen.dto.projection.CitizenProjection
+import np.sthaniya.dpis.citizen.dto.projection.CitizenProjectionImpl
 import np.sthaniya.dpis.citizen.repository.CitizenRepositoryCustom
-import np.sthaniya.dpis.location.domain.District
-import np.sthaniya.dpis.location.domain.Municipality
-import np.sthaniya.dpis.location.domain.Province
-import np.sthaniya.dpis.location.domain.Ward
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.domain.Specification
 import java.util.Optional
 import java.util.UUID
 
 /**
  * Implementation of custom repository operations for Citizen entities.
  *
- * This class provides:
- * - Custom address search functionality
- * - Optimized document-related queries
- * - Name search functionality
+ * This class delegates to specialized repository implementations for different
+ * types of operations to maintain a clean separation of concerns and keep
+ * the code maintainable.
  *
  * Features:
- * - Complex address search across multiple embedded fields
- * - Criteria API based implementations
- * - Efficient fetch strategies for document relationships
+ * - Delegates to specialized search repository for name and address searches
+ * - Delegates to specialized state repository for state-related queries
+ * - Maintains clear separation of concerns
  *
  * @property entityManager JPA EntityManager for query execution
  */
 class CitizenRepositoryImpl(
     private val entityManager: EntityManager
 ) : CitizenRepositoryCustom {
+
+    // Specialized repository implementations for different types of operations
+    private val searchRepository = CitizenSearchRepositoryImpl(entityManager)
+    private val stateRepository = CitizenStateRepositoryImpl(entityManager)
+    private val projectionRepository = CitizenProjectionRepositoryImpl(entityManager)
 
     /**
      * Finds a citizen by ID and eagerly loads related document storage keys.
@@ -38,21 +44,7 @@ class CitizenRepositoryImpl(
      * @return An Optional containing the citizen with document information if found
      */
     override fun findByIdWithDocuments(id: UUID): Optional<Citizen> {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(Citizen::class.java)
-        val root = query.from(Citizen::class.java)
-        
-        query.where(
-            cb.and(
-                cb.equal(root.get<UUID>("id"), id),
-                cb.equal(root.get<Boolean>("isDeleted"), false)
-            )
-        )
-
-        return entityManager.createQuery(query)
-            .resultList
-            .firstOrNull()
-            .let { Optional.ofNullable(it) }
+        return searchRepository.findByIdWithDocuments(id)
     }
     
     /**
@@ -62,113 +54,89 @@ class CitizenRepositoryImpl(
      * @return List of citizens matching the name pattern
      */
     override fun searchByNameContaining(namePart: String): List<Citizen> {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(Citizen::class.java)
-        val root = query.from(Citizen::class.java)
-        
-        // Case-insensitive like comparison
-        val nameLike = "%${namePart.lowercase()}%"
-        val predicate = cb.like(cb.lower(root.get("name")), nameLike)
-        
-        query.where(
-            cb.and(
-                predicate,
-                cb.equal(root.get<Boolean>("isDeleted"), false)
-            )
-        )
-        
-        return entityManager.createQuery(query).resultList
+        return searchRepository.searchByNameContaining(namePart)
     }
     
     /**
      * Finds citizens by address with partial matching for both
      * permanent and temporary addresses.
      *
-     * Updated to work with the Province, District, Municipality, and Ward
-     * entities rather than string fields.
-     *
      * @param addressPart Part of the address to search for
      * @return List of citizens matching the address pattern
      */
     override fun findByAddressContaining(addressPart: String): List<Citizen> {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(Citizen::class.java)
-        val root = query.from(Citizen::class.java)
-        
-        // Case-insensitive like comparison
-        val addressLike = "%${addressPart.lowercase()}%"
-        
-        // Create predicates for both permanent and temporary addresses
-        val predicates = mutableListOf<Predicate>()
-        
-        // Permanent address fields - searching entity names
-        val permanentAddressPath = root.get<Address>("permanentAddress")
-        
-        predicates.add(
-            cb.like(cb.lower(permanentAddressPath.get<Province>("province").get<String>("name")), addressLike)
-        )
-        predicates.add(
-            cb.like(cb.lower(permanentAddressPath.get<District>("district").get<String>("name")), addressLike)
-        )
-        predicates.add(
-            cb.like(cb.lower(permanentAddressPath.get<Municipality>("municipality").get<String>("name")), addressLike)
-        )
-        
-        // Street address might be null, so handle it separately
-        predicates.add(
-            cb.and(
-                cb.isNotNull(permanentAddressPath.get<String>("streetAddress")),
-                cb.like(
-                    cb.lower(permanentAddressPath.get<String>("streetAddress")), 
-                    addressLike
-                )
-            )
-        )
-        
-        // Temporary address fields (these might be null, so handle accordingly)
-        val tempAddressPath = root.get<Address>("temporaryAddress")
-        
-        // Check if temporary address exists before comparing
-        val tempAddressNotNull = cb.isNotNull(tempAddressPath)
-        
-        predicates.add(
-            cb.and(
-                tempAddressNotNull,
-                cb.like(cb.lower(tempAddressPath.get<Province>("province").get<String>("name")), addressLike)
-            )
-        )
-        predicates.add(
-            cb.and(
-                tempAddressNotNull,
-                cb.like(cb.lower(tempAddressPath.get<District>("district").get<String>("name")), addressLike)
-            )
-        )
-        predicates.add(
-            cb.and(
-                tempAddressNotNull,
-                cb.like(cb.lower(tempAddressPath.get<Municipality>("municipality").get<String>("name")), addressLike)
-            )
-        )
-        
-        // Street address in temporary address might be null
-        predicates.add(
-            cb.and(
-                tempAddressNotNull,
-                cb.isNotNull(tempAddressPath.get<String>("streetAddress")),
-                cb.like(cb.lower(tempAddressPath.get<String>("streetAddress")), addressLike)
-            )
-        )
-        
-        // Combine all predicates with OR
-        query.where(
-            cb.and(
-                // At least one of the address fields should match
-                cb.or(*predicates.toTypedArray()),
-                // User should not be deleted
-                cb.equal(root.get<Boolean>("isDeleted"), false)
-            )
-        )
-        
-        return entityManager.createQuery(query).resultList
+        return searchRepository.findByAddressContaining(addressPart)
+    }
+    
+    /**
+     * Finds citizens by their current state in the verification workflow.
+     *
+     * @param state The state to filter by
+     * @param pageable Pagination information
+     * @return Page of citizens in the specified state
+     */
+    override fun findByState(state: CitizenState, pageable: Pageable): Page<Citizen> {
+        return stateRepository.findByState(state, pageable)
+    }
+    
+    /**
+     * Finds citizens who need action from administrators.
+     * This includes those in PENDING_REGISTRATION and ACTION_REQUIRED states.
+     *
+     * @param pageable Pagination information
+     * @return Page of citizens requiring administrator action
+     */
+    override fun findCitizensRequiringAction(pageable: Pageable): Page<Citizen> {
+        return stateRepository.findCitizensRequiringAction(pageable)
+    }
+    
+    /**
+     * Finds citizens with missing or rejected documents.
+     *
+     * @param documentState The document state to filter by (e.g., NOT_UPLOADED, REJECTED_BLURRY)
+     * @param pageable Pagination information
+     * @return Page of citizens with documents in the specified state
+     */
+    override fun findByDocumentState(documentState: DocumentState, pageable: Pageable): Page<Citizen> {
+        return stateRepository.findByDocumentState(documentState, pageable)
+    }
+    
+    /**
+     * Finds citizens with specific issues in their documents, using a note keyword search.
+     *
+     * @param noteKeyword Keyword to search for in document state notes
+     * @param pageable Pagination information
+     * @return Page of citizens with matching document state notes
+     */
+    override fun findByDocumentStateNote(noteKeyword: String, pageable: Pageable): Page<Citizen> {
+        return stateRepository.findByDocumentStateNote(noteKeyword, pageable)
+    }
+    
+    /**
+     * Finds all citizens that match the given specification and returns them as projections
+     * with only the requested fields included.
+     *
+     * @param spec Specification to filter citizens
+     * @param pageable Pagination information
+     * @param columns Set of column names to include in the projection
+     * @return Page of citizen projections with only the requested fields
+     */
+    override fun findAllWithProjection(
+        spec: Specification<Citizen>,
+        pageable: Pageable,
+        columns: Set<String>
+    ): Page<CitizenProjection> {
+        return projectionRepository.findAllWithProjection(spec, pageable, columns)
+    }
+    
+    /**
+     * Counts the number of citizens that match the given specification.
+     * Uses distinct count when necessary (e.g., when joining related entities).
+     *
+     * @param spec Specification to filter citizens
+     * @return Count of matching citizens
+     */
+    override fun countDistinct(spec: Specification<Citizen>): Long {
+        return projectionRepository.countDistinct(spec)
     }
 }
