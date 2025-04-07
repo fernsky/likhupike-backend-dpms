@@ -3,12 +3,14 @@ package np.sthaniya.dpis.auth.security
 import jakarta.servlet.http.HttpServletRequest
 import np.sthaniya.dpis.auth.config.JwtAuthenticationFilter
 import np.sthaniya.dpis.common.config.RouteRegistry
+import np.sthaniya.dpis.citizen.config.CitizenRouteRegistry
 import np.sthaniya.dpis.common.filter.RateLimitFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpMethod
+import org.springframework.core.annotation.Order
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
@@ -66,6 +68,7 @@ class SecurityConfig(
     private val authenticationProvider: AuthenticationProvider,
     private val customAuthenticationEntryPoint: CustomAuthenticationEntryPoint,
     private val routeRegistry: RouteRegistry,
+    private val citizenRouteRegistry: CitizenRouteRegistry,
     private val permissionEvaluator: CustomPermissionEvaluator,
     private val env: Environment
 ) {
@@ -88,6 +91,7 @@ class SecurityConfig(
      * @return Configured SecurityFilterChain
      */
     @Bean
+    @Order(1)
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         val swaggerEnabled = env.getProperty("springdoc.swagger-ui.enabled", Boolean::class.java, false)
 
@@ -105,17 +109,30 @@ class SecurityConfig(
                         "/swagger-ui.html"
                     ).permitAll()
                 }
-
+                // Permit all public endpoints
                 it.requestMatchers(
                     createRequestMatcher { request ->
                         routeRegistry.isPublicRoute(request.servletPath, HttpMethod.valueOf(request.method))
                     }
                 ).permitAll()
+                // Permit all public citizen endpoints
+                it.requestMatchers(
+                    createRequestMatcher { request ->
+                        citizenRouteRegistry.isPublicRoute(request.servletPath, HttpMethod.valueOf(request.method))
+                    }
+                ).permitAll()
+                // Permit all valid routes
                 it.requestMatchers(
                     createRequestMatcher { request ->
                         routeRegistry.isValidRoute(request.servletPath, HttpMethod.valueOf(request.method))
                     }
                 ).authenticated()
+                // Permit all valid citizen routes
+                it.requestMatchers(
+                    createRequestMatcher { request ->
+                        citizenRouteRegistry.isCitizenRoute(request.servletPath, HttpMethod.valueOf(request.method))
+                    }
+                ).permitAll()
                 it.anyRequest()
                     .denyAll() // Change from permitAll to denyAll to return 403 for unregistered routes
             }

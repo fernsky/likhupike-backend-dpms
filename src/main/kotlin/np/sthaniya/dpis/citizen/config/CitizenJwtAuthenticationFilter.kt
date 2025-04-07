@@ -67,26 +67,30 @@ class CitizenJwtAuthenticationFilter(
     ) {
         try {
             // info request info
-            logger.info("Processing request: " + request.servletPath)
+            logger.debug("Processing request: " + request.servletPath)
 
             val authHeader = request.getHeader("Authorization")
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                logger.info("No Bearer token found in request")
+                logger.debug("No Bearer token found in request")
                 filterChain.doFilter(request, response)
                 return
             }
 
             val jwt = authHeader.substring(7)
-            logger.info("JWT token extracted from request")
+            logger.debug("JWT token extracted from request")
 
             // Skip processing if this is not a citizen API path
             if (!isCitizenApiPath(request.servletPath)) {
-                logger.info("Not a citizen API path: " + request.servletPath)
+                logger.debug("Not a citizen API path: " + request.servletPath)
                 filterChain.doFilter(request, response)
                 return
             }
 
-            logger.info("Identified as citizen API path: " + request.servletPath)
+            // For citizen paths, clear any existing authentication to ensure proper processing
+            // This is the critical fix
+            SecurityContextHolder.clearContext()
+
+            logger.debug("Identified as citizen API path: " + request.servletPath)
 
             try {
                 processCitizenJwtAuthentication(jwt, request)
@@ -146,32 +150,32 @@ class CitizenJwtAuthenticationFilter(
         request: HttpServletRequest,
     ) {
         // Use direct string concatenation for logger messages
-        logger.info("Processing citizen JWT authentication for request: " + request.servletPath)
+        logger.debug("Processing citizen JWT authentication for request: " + request.servletPath)
 
         val citizenEmail = citizenJwtService.extractUsername(jwt)
 
         // For null values, use appropriate handling
         if (citizenEmail != null) {
-            logger.info("Extracted email from JWT: " + citizenEmail)
+            logger.debug("Extracted email from JWT: " + citizenEmail)
         } else {
-            logger.info("No email extracted from JWT")
+            logger.debug("No email extracted from JWT")
         }
 
         if (citizenEmail != null && SecurityContextHolder.getContext().authentication == null) {
-            logger.info("Loading citizen details for email: " + citizenEmail)
+            logger.debug("Loading citizen details for email: " + citizenEmail)
 
             try {
                 val citizenDetails = citizenUserDetailsService.loadUserByUsername(citizenEmail)
-                logger.info("Citizen details loaded successfully: class=" + citizenDetails.javaClass.name)
+                logger.debug("Citizen details loaded successfully: class=" + citizenDetails.javaClass.name)
 
                 if (citizenJwtService.isTokenValid(jwt, citizenDetails)) {
-                    logger.info("JWT token is valid for citizen: " + citizenEmail)
+                    logger.debug("JWT token is valid for citizen: " + citizenEmail)
 
                     // Log the class and interfaces of the citizenDetails object
-                    logger.info("Citizen details class: " + citizenDetails.javaClass.name)
+                    logger.debug("Citizen details class: " + citizenDetails.javaClass.name)
 
                     val interfaces = citizenDetails.javaClass.interfaces.joinToString { it.name }
-                    logger.info("Citizen details interfaces: " + interfaces)
+                    logger.debug("Citizen details interfaces: " + interfaces)
 
                     // Create authentication token
                     val authToken = UsernamePasswordAuthenticationToken(
@@ -182,14 +186,14 @@ class CitizenJwtAuthenticationFilter(
 
                     val principalClass = authToken.principal.javaClass.name
                     val authorities = authToken.authorities.joinToString { it.authority }
-                    logger.info("Created authentication token: principal=" + principalClass + ", authorities=" + authorities)
+                    logger.debug("Created authentication token: principal=" + principalClass + ", authorities=" + authorities)
 
                     // Set authentication details
                     authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
 
                     // Set security context
                     SecurityContextHolder.getContext().authentication = authToken
-                    logger.info("Citizen authentication successful for: " + citizenEmail)
+                    logger.debug("Citizen authentication successful for: " + citizenEmail)
                 } else {
                     logger.warn("Invalid JWT token for citizen: " + citizenEmail)
                     throw CitizenAuthException.JwtAuthenticationException("Invalid citizen JWT token")
@@ -201,7 +205,7 @@ class CitizenJwtAuthenticationFilter(
             }
         } else {
             val hasAuth = SecurityContextHolder.getContext().authentication != null
-            logger.info("Skipping authentication - email present: " + (citizenEmail != null) + ", existing auth: " + hasAuth)
+            logger.debug("Skipping authentication - email present: " + (citizenEmail != null) + ", existing auth: " + hasAuth)
         }
     }
 }
