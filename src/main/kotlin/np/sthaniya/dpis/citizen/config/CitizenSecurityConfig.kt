@@ -108,13 +108,13 @@ class CitizenSecurityConfig(
     /**
      * Configures the authentication provider for citizen authentication.
      */
-    @Bean
-    fun citizenAuthenticationProvider(): AuthenticationProvider {
-        val authProvider = DaoAuthenticationProvider()
-        authProvider.setUserDetailsService(citizenUserDetailsService)
-        authProvider.setPasswordEncoder(passwordEncoder)
-        return authProvider
-    }
+    // @Bean
+    // fun citizenAuthenticationProvider(): AuthenticationProvider {
+    //     val authProvider = DaoAuthenticationProvider()
+    //     authProvider.setUserDetailsService(citizenUserDetailsService)
+    //     authProvider.setPasswordEncoder(passwordEncoder)
+    //     return authProvider
+    // }
 
     /**
      * Provides the AuthenticationManager for citizen authentication.
@@ -122,8 +122,8 @@ class CitizenSecurityConfig(
      * @param config The authentication configuration
      * @return The configured AuthenticationManager
      */
-    @Bean(name = ["citizenAuthenticationManager"])  // Give it a specific name to avoid conflicts
-    fun citizenAuthenticationManager(config: AuthenticationConfiguration): AuthenticationManager {
-        return config.authenticationManager
-    }
+    // @Bean(name = ["citizenAuthenticationManager"])  // Give it a specific name to avoid conflicts
+    // fun citizenAuthenticationManager(config: AuthenticationConfiguration): AuthenticationManager {
+    //     return config.authenticationManager
+    // }
 }

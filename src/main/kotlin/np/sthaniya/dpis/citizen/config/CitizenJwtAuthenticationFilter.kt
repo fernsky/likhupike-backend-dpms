@@ -1,11 +1,13 @@
 package np.sthaniya.dpis.citizen.config
 
+import np.sthaniya.dpis.citizen.domain.entity.Citizen
 import jakarta.servlet.FilterChain
 import np.sthaniya.dpis.citizen.service.CitizenUserDetailsService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import np.sthaniya.dpis.citizen.exception.CitizenAuthException
 import np.sthaniya.dpis.citizen.security.CitizenJwtService
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -44,6 +46,8 @@ class CitizenJwtAuthenticationFilter(
     private val citizenRouteRegistry: CitizenRouteRegistry
 ) : OncePerRequestFilter() {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     /**
      * Main filter method that processes each HTTP request exactly once.
      *
@@ -62,19 +66,27 @@ class CitizenJwtAuthenticationFilter(
         filterChain: FilterChain,
     ) {
         try {
+            // info request info
+            logger.info("Processing request: " + request.servletPath)
+
             val authHeader = request.getHeader("Authorization")
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                logger.info("No Bearer token found in request")
                 filterChain.doFilter(request, response)
                 return
             }
 
             val jwt = authHeader.substring(7)
+            logger.info("JWT token extracted from request")
 
             // Skip processing if this is not a citizen API path
             if (!isCitizenApiPath(request.servletPath)) {
+                logger.info("Not a citizen API path: " + request.servletPath)
                 filterChain.doFilter(request, response)
                 return
             }
+
+            logger.info("Identified as citizen API path: " + request.servletPath)
 
             try {
                 processCitizenJwtAuthentication(jwt, request)
@@ -89,6 +101,7 @@ class CitizenJwtAuthenticationFilter(
                 )
             }
         } catch (e: CitizenAuthException.UnauthenticatedException) {
+            logger.warn("Unauthorized access attempt", e)
             SecurityContextHolder.clearContext()
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.message)
             return
@@ -132,21 +145,63 @@ class CitizenJwtAuthenticationFilter(
         jwt: String,
         request: HttpServletRequest,
     ) {
+        // Use direct string concatenation for logger messages
+        logger.info("Processing citizen JWT authentication for request: " + request.servletPath)
+
         val citizenEmail = citizenJwtService.extractUsername(jwt)
 
+        // For null values, use appropriate handling
+        if (citizenEmail != null) {
+            logger.info("Extracted email from JWT: " + citizenEmail)
+        } else {
+            logger.info("No email extracted from JWT")
+        }
+
         if (citizenEmail != null && SecurityContextHolder.getContext().authentication == null) {
-            val citizenDetails = citizenUserDetailsService.loadUserByUsername(citizenEmail)
-            if (citizenJwtService.isTokenValid(jwt, citizenDetails)) {
-                val authToken = UsernamePasswordAuthenticationToken(
-                    citizenDetails,
-                    null,
-                    citizenDetails.authorities
-                )
-                authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-                SecurityContextHolder.getContext().authentication = authToken
-            } else {
-                throw CitizenAuthException.JwtAuthenticationException("Invalid citizen JWT token")
+            logger.info("Loading citizen details for email: " + citizenEmail)
+
+            try {
+                val citizenDetails = citizenUserDetailsService.loadUserByUsername(citizenEmail)
+                logger.info("Citizen details loaded successfully: class=" + citizenDetails.javaClass.name)
+
+                if (citizenJwtService.isTokenValid(jwt, citizenDetails)) {
+                    logger.info("JWT token is valid for citizen: " + citizenEmail)
+
+                    // Log the class and interfaces of the citizenDetails object
+                    logger.info("Citizen details class: " + citizenDetails.javaClass.name)
+
+                    val interfaces = citizenDetails.javaClass.interfaces.joinToString { it.name }
+                    logger.info("Citizen details interfaces: " + interfaces)
+
+                    // Create authentication token
+                    val authToken = UsernamePasswordAuthenticationToken(
+                        (citizenDetails as Citizen).id.toString(),
+                        null,
+                        citizenDetails.authorities
+                    )
+
+                    val principalClass = authToken.principal.javaClass.name
+                    val authorities = authToken.authorities.joinToString { it.authority }
+                    logger.info("Created authentication token: principal=" + principalClass + ", authorities=" + authorities)
+
+                    // Set authentication details
+                    authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
+
+                    // Set security context
+                    SecurityContextHolder.getContext().authentication = authToken
+                    logger.info("Citizen authentication successful for: " + citizenEmail)
+                } else {
+                    logger.warn("Invalid JWT token for citizen: " + citizenEmail)
+                    throw CitizenAuthException.JwtAuthenticationException("Invalid citizen JWT token")
+                }
+            } catch (e: Exception) {
+                // For exception logging, always pass the exception as the last parameter
+                logger.error("Error during citizen authentication: " + e.message, e)
+                throw e
             }
+        } else {
+            val hasAuth = SecurityContextHolder.getContext().authentication != null
+            logger.info("Skipping authentication - email present: " + (citizenEmail != null) + ", existing auth: " + hasAuth)
         }
     }
 }
