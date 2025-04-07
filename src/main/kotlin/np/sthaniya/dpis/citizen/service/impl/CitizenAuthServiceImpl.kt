@@ -34,7 +34,6 @@ class CitizenAuthServiceImpl(
     private val citizenService: CitizenService,
     private val passwordEncoder: PasswordEncoder,
     private val citizenJwtService: CitizenJwtService,
-    @Qualifier("citizenAuthenticationManager") private val authenticationManager: AuthenticationManager,
     private val emailService: EmailService,
     private val otpRepository: CitizenPasswordResetOtpRepository
 ) : CitizenAuthService {
@@ -70,18 +69,14 @@ class CitizenAuthServiceImpl(
      * @return [CitizenAuthResponse] containing citizen details and tokens
      */
     override fun login(request: CitizenLoginRequest): CitizenAuthResponse {
-        // First find citizen but don't expose its existence yet
+        // Find citizen but don't expose its existence yet
         val citizen = citizenService.findCitizenByEmail(request.email)
             ?: throw CitizenAuthException.InvalidCredentialsException()
 
         try {
-            // Attempt password validation first without revealing citizen status
-            val auth = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken(request.email, request.password)
-            )
-
-            // If credentials are valid, then check status
-            if (!auth.isAuthenticated) {
+            // Direct password validation
+            // Doing from authentication manager conflicts with the user level 
+            if (!passwordEncoder.matches(request.password, citizen.password)) {
                 throw CitizenAuthException.InvalidCredentialsException()
             }
 
@@ -92,16 +87,10 @@ class CitizenAuthServiceImpl(
                     throw CitizenAuthException.CitizenAccountRejectedException(message)
                 }
                 CitizenState.PENDING_REGISTRATION,
-                CitizenState.ACTION_REQUIRED -> {
-                    // These states allow login but the frontend will show appropriate messages
-                    // based on the state returned in the auth response
-                }
-                CitizenState.APPROVED -> {
-                    // Normal login flow for approved citizens
-                }
+                CitizenState.ACTION_REQUIRED,
+                CitizenState.APPROVED,
                 CitizenState.UNDER_REVIEW -> {
-                    // Allow login during review, but frontend will show appropriate message
-                    // based on the state returned in the auth response
+                    // Continue with authentication
                 }
             }
 
