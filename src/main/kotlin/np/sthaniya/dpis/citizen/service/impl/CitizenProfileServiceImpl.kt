@@ -72,7 +72,7 @@ class CitizenProfileServiceImpl(
         }
         
         // Check for duplicate email if provided
-        registerCitizenDto.email?.let { email ->
+        registerCitizenDto.email.let { email ->
             if (citizenRepository.existsByEmail(email)) {
                 logger.warn("Self-registration attempt with existing email: $email")
                 throw CitizenException(
