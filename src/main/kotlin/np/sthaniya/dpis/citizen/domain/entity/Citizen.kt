@@ -23,6 +23,7 @@ import java.util.UUID
  * - Document storage references for photos and citizenship certificates
  * - Authentication support (optional password)
  * - Approval tracking
+ * - State management for verification workflow
  * 
  * This implementation is fully decoupled from the User entity system
  * and stands as its own independent entity.
@@ -33,7 +34,8 @@ import java.util.UUID
     indexes = [
         Index(name = "idx_citizens_citizenship_number", columnList = "citizenship_number"),
         Index(name = "idx_citizens_email", columnList = "email"),
-        Index(name = "idx_citizens_phone_number", columnList = "phone_number")
+        Index(name = "idx_citizens_phone_number", columnList = "phone_number"),
+        Index(name = "idx_citizens_state", columnList = "state")
     ]
 )
 class Citizen : UuidBaseEntity(), UserDetails {
@@ -61,6 +63,33 @@ class Citizen : UuidBaseEntity(), UserDetails {
     
     @Column(name = "phone_number")
     var phoneNumber: String? = null
+    
+    /**
+     * Current state of the citizen in the verification workflow.
+     * Default state is PENDING_REGISTRATION for self-registered citizens.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    var state: CitizenState = CitizenState.PENDING_REGISTRATION
+    
+    /**
+     * Optional note providing additional context about the current state.
+     * Particularly useful for ACTION_REQUIRED and REJECTED states.
+     */
+    @Column(name = "state_note", length = 500)
+    var stateNote: String? = null
+    
+    /**
+     * Timestamp when the state was last updated.
+     */
+    @Column(name = "state_updated_at")
+    var stateUpdatedAt: Instant? = null
+    
+    /**
+     * User who last updated the state.
+     */
+    @Column(name = "state_updated_by")
+    var stateUpdatedBy: UUID? = null
     
     @Column(name = "is_deleted", nullable = false)
     var isDeleted: Boolean = false
@@ -119,6 +148,19 @@ class Citizen : UuidBaseEntity(), UserDetails {
     var photoKey: String? = null
 
     /**
+     * State of the citizen's photo verification.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "photo_state")
+    var photoState: DocumentState? = null
+
+    /**
+     * Note providing context about the photo state.
+     */
+    @Column(name = "photo_state_note", length = 255)
+    var photoStateNote: String? = null
+
+    /**
      * Storage key for front side of citizenship certificate in the document storage system.
      * This references the actual file in the S3-compatible storage.
      */
@@ -126,11 +168,83 @@ class Citizen : UuidBaseEntity(), UserDetails {
     var citizenshipFrontKey: String? = null
 
     /**
+     * State of the front citizenship certificate verification.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "citizenship_front_state")
+    var citizenshipFrontState: DocumentState? = null
+
+    /**
+     * Note providing context about the front citizenship certificate state.
+     */
+    @Column(name = "citizenship_front_state_note", length = 255)
+    var citizenshipFrontStateNote: String? = null
+
+    /**
      * Storage key for back side of citizenship certificate in the document storage system.
      * This references the actual file in the S3-compatible storage.
      */
     @Column(name = "citizenship_back_key")
     var citizenshipBackKey: String? = null
+
+    /**
+     * State of the back citizenship certificate verification.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "citizenship_back_state")
+    var citizenshipBackState: DocumentState? = null
+
+    /**
+     * Note providing context about the back citizenship certificate state.
+     */
+    @Column(name = "citizenship_back_state_note", length = 255)
+    var citizenshipBackStateNote: String? = null
+
+    /**
+     * Updates the state of the citizen in the verification workflow.
+     *
+     * @param newState The new citizen state
+     * @param note Optional note providing context for the state change
+     * @param updatedBy ID of the user updating the state
+     */
+    fun updateState(newState: CitizenState, note: String? = null, updatedBy: UUID) {
+        this.state = newState
+        this.stateNote = note
+        this.stateUpdatedAt = Instant.now()
+        this.stateUpdatedBy = updatedBy
+        
+        // When approving, update approval fields
+        if (newState == CitizenState.APPROVED && !this.isApproved) {
+            this.isApproved = true
+            this.approvedAt = Instant.now()
+            this.approvedBy = updatedBy
+        }
+    }
+
+    /**
+     * Updates the state of a citizen document.
+     *
+     * @param documentType Type of document being updated (PHOTO, CITIZENSHIP_FRONT, CITIZENSHIP_BACK)
+     * @param newState The new document state
+     * @param note Optional note providing context for the state change
+     */
+    fun updateDocumentState(documentType: DocumentType, newState: DocumentState, note: String? = null) {
+        when (documentType) {
+            DocumentType.CITIZEN_PHOTO -> {
+                photoState = newState
+                photoStateNote = note
+            }
+            DocumentType.CITIZENSHIP_FRONT -> {
+                citizenshipFrontState = newState
+                citizenshipFrontStateNote = note
+            }
+            DocumentType.CITIZENSHIP_BACK -> {
+                citizenshipBackState = newState
+                citizenshipBackStateNote = note
+            }
+            else -> throw IllegalArgumentException("Unsupported document type: $documentType")
+        }
+    }
 
     /**
      * Sets a new password for the citizen.
@@ -192,7 +306,10 @@ class Citizen : UuidBaseEntity(), UserDetails {
      * Indicates whether the citizen is enabled or disabled.
      * A citizen is considered enabled if they are approved and not deleted.
      *
-     * @return true if the citizen is approved and not deleted
+     * @return true if the citizen is not deleted
      */
-    override fun isEnabled(): Boolean = true
+    // We remove isApproved check from here as it is not a part of UserDetails contract
+    // This is to ensure that the citizen can be enabled even if not approved.
+    // So that the citizens can interact with the dashboard and handle approval process requirements.
+    override fun isEnabled(): Boolean = !isDeleted
 }
