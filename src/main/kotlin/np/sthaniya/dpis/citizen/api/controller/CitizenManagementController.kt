@@ -120,7 +120,8 @@ interface CitizenManagementController {
             description = "Citizen update data",
             required = true
         )
-        @Valid @RequestBody updateCitizenDto: UpdateCitizenDto
+        @Valid @RequestBody updateCitizenDto: UpdateCitizenDto,
+        @CurrentUserId currentUserId: UUID
     ): ResponseEntity<DpisApiResponse<CitizenResponse>>
 
     /**

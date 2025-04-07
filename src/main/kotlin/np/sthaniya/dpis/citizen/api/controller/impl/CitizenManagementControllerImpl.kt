@@ -59,10 +59,10 @@ class CitizenManagementControllerImpl(
      * @param updateCitizenDto The data for updating the citizen
      * @return HTTP 200 OK with the updated citizen data
      */
-    override fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto): ResponseEntity<ApiResponse<CitizenResponse>> {
+    override fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto, currentUserId: UUID): ResponseEntity<ApiResponse<CitizenResponse>> {
         logger.info("Updating citizen with ID: $id")
         
-        val updatedCitizen = citizenManagementService.updateCitizen(id, updateCitizenDto)
+        val updatedCitizen = citizenManagementService.updateCitizen(id, updateCitizenDto, currentUserId)
         
         logger.info("Successfully updated citizen with ID: $id")
         
