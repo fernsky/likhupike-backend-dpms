@@ -50,7 +50,7 @@ interface CitizenManagementService {
      * @throws CitizenException.CitizenErrorCode.CITIZEN_NOT_FOUND if the citizen doesn't exist
      * @throws CitizenException if there are validation errors or duplicate data
      */
-    fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto): CitizenResponse
+    fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto, updatedBy: UUID): CitizenResponse
     
     /**
      * Soft deletes a citizen record.

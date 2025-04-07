@@ -2,13 +2,14 @@ package np.sthaniya.dpis.citizen.service.impl
 
 import np.sthaniya.dpis.citizen.dto.management.CreateCitizenDto
 import np.sthaniya.dpis.citizen.dto.management.UpdateCitizenDto
-import np.sthaniya.dpis.citizen.domain.entity.Address
+import np.sthaniya.dpis.citizen.domain.entity.Citizen
+import np.sthaniya.dpis.citizen.domain.entity.CitizenState
+import np.sthaniya.dpis.citizen.domain.entity.DocumentState
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
 import np.sthaniya.dpis.citizen.dto.response.DocumentUploadResponse
 import np.sthaniya.dpis.citizen.exception.CitizenException
 import np.sthaniya.dpis.citizen.exception.CitizenException.CitizenErrorCode
 import np.sthaniya.dpis.citizen.mapper.CitizenMapper
-import np.sthaniya.dpis.citizen.domain.entity.Citizen
 import np.sthaniya.dpis.citizen.repository.CitizenRepository
 import np.sthaniya.dpis.citizen.service.CitizenManagementService
 import np.sthaniya.dpis.location.service.AddressValidationService
@@ -20,7 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.time.LocalDateTime
 import java.time.Instant
 import java.util.UUID
 
@@ -35,7 +35,7 @@ class CitizenManagementServiceImpl(
     private val i18nMessageService: I18nMessageService
 ) : CitizenManagementService {
 
-    private val logger = LoggerFactory.getLogger(CitizenManagementServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     companion object {
         const val PHOTOS_FOLDER = "citizens/photos"
@@ -51,6 +51,7 @@ class CitizenManagementServiceImpl(
 
     @Transactional
     override fun createCitizen(createCitizenDto: CreateCitizenDto): CitizenResponse {
+        // Validate citizenship number uniqueness
         createCitizenDto.citizenshipNumber?.let { citizenshipNumber ->
             if (citizenRepository.existsByCitizenshipNumber(citizenshipNumber)) {
                 throw CitizenException(
@@ -59,12 +60,23 @@ class CitizenManagementServiceImpl(
                 )
             }
 
+            // Validate citizenship data completeness
             if (citizenshipNumber.isNotBlank() &&
                 (createCitizenDto.citizenshipIssuedDate == null ||
                  createCitizenDto.citizenshipIssuedOffice.isNullOrBlank())) {
                 throw CitizenException(
                     CitizenErrorCode.INVALID_CITIZENSHIP_DATA,
                     "Citizenship details are incomplete. Please provide both issue date and issuing office"
+                )
+            }
+        }
+
+        // Validate email uniqueness
+        createCitizenDto.email?.let { email ->
+            if (email.isNotBlank() && citizenRepository.existsByEmail(email)) {
+                throw CitizenException(
+                    CitizenErrorCode.DUPLICATE_EMAIL,
+                    "Email $email is already registered to another citizen"
                 )
             }
         }
@@ -80,18 +92,24 @@ class CitizenManagementServiceImpl(
             fatherName = createCitizenDto.fatherName
             grandfatherName = createCitizenDto.grandfatherName
             spouseName = createCitizenDto.spouseName
+            
+            // Set initial state
+            state = if (createCitizenDto.isApproved) CitizenState.APPROVED else CitizenState.UNDER_REVIEW
         }
 
+        // Set password if provided
         createCitizenDto.password?.let { password ->
             citizen.setPassword(passwordEncoder.encode(password))
         }
 
+        // Handle approval if specified
         if (createCitizenDto.isApproved) {
             citizen.isApproved = true
             citizen.approvedAt = Instant.now()
             citizen.approvedBy = createCitizenDto.approvedBy ?: securityService.getCurrentUser().id
         }
 
+        // Process addresses
         createCitizenDto.permanentAddress?.let { addressDto ->
             val validatedAddress = addressValidationService.validateAddress(addressDto)
             citizen.permanentAddress = validatedAddress.toAddress()
@@ -103,28 +121,22 @@ class CitizenManagementServiceImpl(
         }
 
         val savedCitizen = citizenRepository.save(citizen)
+        logger.info("Created new citizen: ${savedCitizen.id}")
+        
         return citizenMapper.toResponse(savedCitizen)
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     override fun getCitizenById(id: UUID): CitizenResponse {
-        val citizen = citizenRepository.findById(id).orElseThrow {
-            throw CitizenException(
-                CitizenErrorCode.CITIZEN_NOT_FOUND,
-                "Citizen with ID $id not found"
-            )
-        }
+        val citizen = getCitizenEntity(id)
         return citizenMapper.toResponse(citizen)
     }
 
     @Transactional
     override fun approveCitizen(id: UUID, approvedBy: UUID): CitizenResponse {
-        val citizen = citizenRepository.findById(id).orElseThrow {
-            throw CitizenException(
-                CitizenErrorCode.CITIZEN_NOT_FOUND,
-                "Citizen with ID $id not found"
-            )
-        }
+        logger.info("Approving citizen with ID: $id by user: $approvedBy")
+        
+        val citizen = getCitizenEntity(id)
 
         if (citizen.isApproved) {
             throw CitizenException(
@@ -133,22 +145,25 @@ class CitizenManagementServiceImpl(
             )
         }
 
+        // Set approval flags
         citizen.isApproved = true
         citizen.approvedAt = Instant.now()
         citizen.approvedBy = approvedBy
+        
+        // Update state to APPROVED
+        citizen.updateState(CitizenState.APPROVED, "Approved by administrator", approvedBy)
 
         val savedCitizen = citizenRepository.save(citizen)
+        logger.info("Successfully approved citizen with ID: $id")
+        
         return citizenMapper.toResponse(savedCitizen)
     }
 
     @Transactional
     override fun deleteCitizen(id: UUID, deletedBy: UUID): CitizenResponse {
-        val citizen = citizenRepository.findById(id).orElseThrow {
-            throw CitizenException(
-                CitizenErrorCode.CITIZEN_NOT_FOUND,
-                "Citizen with ID $id not found"
-            )
-        }
+        logger.info("Deleting citizen with ID: $id by user: $deletedBy")
+        
+        val citizen = getCitizenEntity(id)
 
         if (citizen.isDeleted) {
             throw CitizenException(
@@ -162,18 +177,18 @@ class CitizenManagementServiceImpl(
         citizen.deletedBy = deletedBy
 
         val savedCitizen = citizenRepository.save(citizen)
+        logger.info("Successfully deleted citizen with ID: $id")
+        
         return citizenMapper.toResponse(savedCitizen)
     }
 
     @Transactional
-    override fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto): CitizenResponse {
-        val citizen = citizenRepository.findById(id).orElseThrow {
-            throw CitizenException(
-                CitizenErrorCode.CITIZEN_NOT_FOUND,
-                "Citizen with ID $id not found"
-            )
-        }
+    override fun updateCitizen(id: UUID, updateCitizenDto: UpdateCitizenDto, updatedBy: UUID): CitizenResponse {
+        logger.info("Updating citizen with ID: $id")
+        
+        val citizen = getCitizenEntity(id)
 
+        // Check for citizenship number uniqueness if changed
         updateCitizenDto.citizenshipNumber?.let { citizenshipNumber ->
             if (citizen.citizenshipNumber != citizenshipNumber &&
                 citizenRepository.existsByCitizenshipNumber(citizenshipNumber)) {
@@ -183,6 +198,7 @@ class CitizenManagementServiceImpl(
                 )
             }
 
+            // Validate citizenship data completeness
             if (citizenshipNumber.isNotBlank() &&
                 (citizen.citizenshipIssuedDate == null && updateCitizenDto.citizenshipIssuedDate == null) ||
                 ((citizen.citizenshipIssuedOffice.isNullOrBlank() && updateCitizenDto.citizenshipIssuedOffice.isNullOrBlank()))) {
@@ -193,6 +209,19 @@ class CitizenManagementServiceImpl(
             }
         }
 
+        // Check for email uniqueness if changed
+        updateCitizenDto.email?.let { email ->
+            if (citizen.email != email && 
+                email.isNotBlank() && 
+                citizenRepository.existsByEmail(email)) {
+                throw CitizenException(
+                    CitizenErrorCode.DUPLICATE_EMAIL,
+                    "Email $email is already registered to another citizen"
+                )
+            }
+        }
+
+        // Update fields selectively
         updateCitizenDto.name?.let { citizen.name = it }
         updateCitizenDto.nameDevnagari?.let { citizen.nameDevnagari = it }
         updateCitizenDto.citizenshipNumber?.let { citizen.citizenshipNumber = it }
@@ -204,18 +233,28 @@ class CitizenManagementServiceImpl(
         updateCitizenDto.grandfatherName?.let { citizen.grandfatherName = it }
         updateCitizenDto.spouseName?.let { citizen.spouseName = it }
 
+        // Set password if provided
         updateCitizenDto.password?.let { password ->
             citizen.setPassword(passwordEncoder.encode(password))
         }
 
+        // Handle approval if specified
         updateCitizenDto.isApproved?.let { isApproved ->
             if (isApproved && !citizen.isApproved) {
                 citizen.isApproved = true
                 citizen.approvedAt = Instant.now()
-                citizen.approvedBy = updateCitizenDto.updatedBy ?: securityService.getCurrentUser().id
+                citizen.approvedBy = updatedBy
+                
+                // Update state to APPROVED
+                citizen.updateState(
+                    CitizenState.APPROVED, 
+                    "Approved during update", 
+                    updatedBy
+                )
             }
         }
 
+        // Process addresses
         updateCitizenDto.permanentAddress?.let { addressDto ->
             val validatedAddress = addressValidationService.validateAddress(addressDto)
             citizen.permanentAddress = validatedAddress.toAddress()
@@ -230,166 +269,137 @@ class CitizenManagementServiceImpl(
         updateCitizenDto.updatedBy?.let { citizen.updatedBy = it }
 
         val savedCitizen = citizenRepository.save(citizen)
+        logger.info("Successfully updated citizen with ID: $id")
+        
         return citizenMapper.toResponse(savedCitizen)
     }
 
     @Transactional
     override fun uploadCitizenPhoto(id: UUID, photo: MultipartFile, updatedBy: UUID): DocumentUploadResponse {
         logger.info("Uploading photo for citizen ID: $id")
-
-        if (photo.size > MAX_PHOTO_SIZE_BYTES) {
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_TOO_LARGE,
-                "The file ${photo.originalFilename} exceeds the maximum allowed size of ${MAX_PHOTO_SIZE_BYTES / (1024 * 1024)}MB"
-            )
-        }
-
-        val contentType = photo.contentType
-        if (contentType.isNullOrBlank() || !ALLOWED_PHOTO_TYPES.contains(contentType)) {
-            throw CitizenException(
-                CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
-                "The file ${photo.originalFilename} is not in an acceptable format. Allowed formats: ${ALLOWED_PHOTO_TYPES.joinToString(", ")}"
-            )
-        }
-
-        val citizen = getCitizenEntity(id)
-
-        try {
-            citizen.photoKey?.let { oldKey ->
-                if (documentStorageService.documentExists(oldKey)) {
-                    documentStorageService.deleteDocument(oldKey)
-                    logger.debug("Deleted previous photo with key: $oldKey")
-                }
-            }
-
-            val fileExtension = getFileExtension(photo.originalFilename)
-            val storageKey = documentStorageService.storeDocument(
-                file = photo,
-                folder = PHOTOS_FOLDER,
-                fileName = "${id}${fileExtension}"
-            )
-
-            citizen.photoKey = storageKey
-            citizen.updatedAt = Instant.now()
-            citizen.updatedBy = updatedBy
-
-            citizenRepository.save(citizen)
-
-            val url = documentStorageService.getDocumentUrl(storageKey)
-
-            return DocumentUploadResponse(
-                storageKey = storageKey,
-                originalFilename = photo.originalFilename ?: "unknown",
-                contentType = contentType,
-                size = photo.size,
-                url = url
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to upload photo for citizen with ID: $id", e)
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_UPLOAD_FAILED,
-                "Document upload failed: ${e.message}"
-            )
-        }
+        return uploadDocument(
+            id,
+            photo,
+            PHOTOS_FOLDER,
+            MAX_PHOTO_SIZE_BYTES,
+            ALLOWED_PHOTO_TYPES,
+            DocumentUploadHandler { citizen, storageKey ->
+                citizen.photoKey = storageKey
+                citizen.photoState = DocumentState.AWAITING_REVIEW
+            },
+            updatedBy
+        )
     }
 
     @Transactional
     override fun uploadCitizenshipFront(id: UUID, document: MultipartFile, updatedBy: UUID): DocumentUploadResponse {
         logger.info("Uploading citizenship front page for citizen ID: $id")
-
-        if (document.size > MAX_DOCUMENT_SIZE_BYTES) {
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_TOO_LARGE,
-                "The file ${document.originalFilename} exceeds the maximum allowed size of ${MAX_DOCUMENT_SIZE_BYTES / (1024 * 1024)}MB"
-            )
-        }
-
-        val contentType = document.contentType
-        if (contentType.isNullOrBlank() || !ALLOWED_DOCUMENT_TYPES.contains(contentType)) {
-            throw CitizenException(
-                CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
-                "The file ${document.originalFilename} is not in an acceptable format. Allowed formats: ${ALLOWED_DOCUMENT_TYPES.joinToString(", ")}"
-            )
-        }
-
-        val citizen = getCitizenEntity(id)
-
-        try {
-            citizen.citizenshipFrontKey?.let { oldKey ->
-                if (documentStorageService.documentExists(oldKey)) {
-                    documentStorageService.deleteDocument(oldKey)
-                    logger.debug("Deleted previous citizenship front with key: $oldKey")
-                }
-            }
-
-            val fileExtension = getFileExtension(document.originalFilename)
-            val storageKey = documentStorageService.storeDocument(
-                file = document,
-                folder = CITIZENSHIP_FRONT_FOLDER,
-                fileName = "${id}${fileExtension}"
-            )
-
-            citizen.citizenshipFrontKey = storageKey
-            citizen.updatedAt = Instant.now()
-            citizen.updatedBy = updatedBy
-
-            citizenRepository.save(citizen)
-
-            val url = documentStorageService.getDocumentUrl(storageKey)
-
-            return DocumentUploadResponse(
-                storageKey = storageKey,
-                originalFilename = document.originalFilename ?: "unknown",
-                contentType = contentType,
-                size = document.size,
-                url = url
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to upload citizenship front for citizen with ID: $id", e)
-            throw CitizenException(
-                CitizenErrorCode.DOCUMENT_UPLOAD_FAILED,
-                "Document upload failed: ${e.message}"
-            )
-        }
+        return uploadDocument(
+            id,
+            document,
+            CITIZENSHIP_FRONT_FOLDER,
+            MAX_DOCUMENT_SIZE_BYTES,
+            ALLOWED_DOCUMENT_TYPES,
+            DocumentUploadHandler { citizen, storageKey ->
+                citizen.citizenshipFrontKey = storageKey
+                citizen.citizenshipFrontState = DocumentState.AWAITING_REVIEW
+            },
+            updatedBy
+        )
     }
 
     @Transactional
     override fun uploadCitizenshipBack(id: UUID, document: MultipartFile, updatedBy: UUID): DocumentUploadResponse {
         logger.info("Uploading citizenship back page for citizen ID: $id")
+        return uploadDocument(
+            id,
+            document,
+            CITIZENSHIP_BACK_FOLDER,
+            MAX_DOCUMENT_SIZE_BYTES,
+            ALLOWED_DOCUMENT_TYPES,
+            DocumentUploadHandler { citizen, storageKey ->
+                citizen.citizenshipBackKey = storageKey
+                citizen.citizenshipBackState = DocumentState.AWAITING_REVIEW
+            },
+            updatedBy
+        )
+    }
 
-        if (document.size > MAX_DOCUMENT_SIZE_BYTES) {
+    /**
+     * Helper functional interface for document upload handlers
+     */
+    private fun interface DocumentUploadHandler {
+        fun updateCitizen(citizen: Citizen, storageKey: String)
+    }
+
+    /**
+     * Generic document upload method to avoid code duplication
+     */
+    private fun uploadDocument(
+        id: UUID,
+        file: MultipartFile,
+        folder: String,
+        maxSize: Long,
+        allowedTypes: Set<String>,
+        documentHandler: DocumentUploadHandler,
+        updatedBy: UUID
+    ): DocumentUploadResponse {
+        if (file.size > maxSize) {
             throw CitizenException(
                 CitizenErrorCode.DOCUMENT_TOO_LARGE,
-                "The file ${document.originalFilename} exceeds the maximum allowed size of ${MAX_DOCUMENT_SIZE_BYTES / (1024 * 1024)}MB"
+                "The file ${file.originalFilename} exceeds the maximum allowed size of ${maxSize / (1024 * 1024)}MB"
             )
         }
 
-        val contentType = document.contentType
-        if (contentType.isNullOrBlank() || !ALLOWED_DOCUMENT_TYPES.contains(contentType)) {
+        val contentType = file.contentType
+        if (contentType.isNullOrBlank() || !allowedTypes.contains(contentType)) {
             throw CitizenException(
                 CitizenErrorCode.INVALID_DOCUMENT_FORMAT,
-                "The file ${document.originalFilename} is not in an acceptable format. Allowed formats: ${ALLOWED_DOCUMENT_TYPES.joinToString(", ")}"
+                "The file ${file.originalFilename} is not in an acceptable format. Allowed formats: ${allowedTypes.joinToString(", ")}"
             )
         }
 
         val citizen = getCitizenEntity(id)
 
         try {
-            citizen.citizenshipBackKey?.let { oldKey ->
-                if (documentStorageService.documentExists(oldKey)) {
-                    documentStorageService.deleteDocument(oldKey)
-                    logger.debug("Deleted previous citizenship back with key: $oldKey")
+            // Delete old document if exists (depends on which document we're uploading)
+            when (folder) {
+                PHOTOS_FOLDER -> {
+                    citizen.photoKey?.let { oldKey ->
+                        if (documentStorageService.documentExists(oldKey)) {
+                            documentStorageService.deleteDocument(oldKey)
+                            logger.debug("Deleted previous photo with key: $oldKey")
+                        }
+                    }
+                }
+                CITIZENSHIP_FRONT_FOLDER -> {
+                    citizen.citizenshipFrontKey?.let { oldKey ->
+                        if (documentStorageService.documentExists(oldKey)) {
+                            documentStorageService.deleteDocument(oldKey)
+                            logger.debug("Deleted previous citizenship front with key: $oldKey")
+                        }
+                    }
+                }
+                CITIZENSHIP_BACK_FOLDER -> {
+                    citizen.citizenshipBackKey?.let { oldKey ->
+                        if (documentStorageService.documentExists(oldKey)) {
+                            documentStorageService.deleteDocument(oldKey)
+                            logger.debug("Deleted previous citizenship back with key: $oldKey")
+                        }
+                    }
                 }
             }
 
-            val fileExtension = getFileExtension(document.originalFilename)
+            val fileExtension = getFileExtension(file.originalFilename)
             val storageKey = documentStorageService.storeDocument(
-                file = document,
-                folder = CITIZENSHIP_BACK_FOLDER,
+                file = file,
+                folder = folder,
                 fileName = "${id}${fileExtension}"
             )
 
-            citizen.citizenshipBackKey = storageKey
+            // Update the appropriate field based on which document we're uploading
+            documentHandler.updateCitizen(citizen, storageKey)
+            
             citizen.updatedAt = Instant.now()
             citizen.updatedBy = updatedBy
 
@@ -399,13 +409,13 @@ class CitizenManagementServiceImpl(
 
             return DocumentUploadResponse(
                 storageKey = storageKey,
-                originalFilename = document.originalFilename ?: "unknown",
+                originalFilename = file.originalFilename ?: "unknown",
                 contentType = contentType,
-                size = document.size,
+                size = file.size,
                 url = url
             )
         } catch (e: Exception) {
-            logger.error("Failed to upload citizenship back for citizen with ID: $id", e)
+            logger.error("Failed to upload document for citizen with ID: $id", e)
             throw CitizenException(
                 CitizenErrorCode.DOCUMENT_UPLOAD_FAILED,
                 "Document upload failed: ${e.message}"
@@ -422,6 +432,7 @@ class CitizenManagementServiceImpl(
             ""
         }
     }
+    
     private fun getCitizenEntity(id: UUID): Citizen {
         logger.debug("Fetching citizen entity with ID: $id")
         val citizen = citizenRepository.findById(id).orElseThrow {
