@@ -34,6 +34,9 @@ class CitizenException(
         CitizenErrorCode.SELF_REGISTRATION_DISABLED,
         CitizenErrorCode.REGISTRATION_TOKEN_EXPIRED -> HttpStatus.BAD_REQUEST
         CitizenErrorCode.DOCUMENT_UPLOAD_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR
+        CitizenErrorCode.INVALID_STATE_TRANSITION,
+        CitizenErrorCode.INVALID_DOCUMENT_TYPE,
+        CitizenErrorCode.DOCUMENT_NOT_FOUND -> HttpStatus.BAD_REQUEST
         else -> HttpStatus.BAD_REQUEST
     },
     metadata = metadata
@@ -154,6 +157,23 @@ class CitizenException(
             override val code = "CIT_019"
             override val defaultMessage = "Requested page does not exist"
             override val i18nKey = "error.citizen.page_not_found"
+        },
+        DOCUMENT_NOT_FOUND {
+            override val code = "CIT_020"
+            override val defaultMessage = "Document not found"
+            override val i18nKey = "error.citizen.document_not_found"
+        },
+
+        INVALID_DOCUMENT_TYPE {
+            override val code = "CIT_021"
+            override val defaultMessage = "Invalid document type"
+            override val i18nKey = "error.citizen.invalid_document_type"
+        },
+
+        INVALID_STATE_TRANSITION {
+            override val code = "CIT_022"
+            override val defaultMessage = "Invalid state transition for citizen record"
+            override val i18nKey = "error.citizen.invalid_state_transition"
         }
     }
 }
