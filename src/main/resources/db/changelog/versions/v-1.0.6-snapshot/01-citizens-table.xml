@@ -49,10 +49,25 @@
             <column name="phone_number" type="VARCHAR(20)">
                 <constraints nullable="true"/>
             </column>
+            
+            <!-- New State Management Fields -->
+            <column name="state" type="VARCHAR(50)" defaultValue="PENDING_REGISTRATION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state_note" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="state_updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="state_updated_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            
             <column name="is_deleted" type="BOOLEAN" defaultValueBoolean="false">
                 <constraints nullable="false"/>
             </column>
-            <column name="deleted_at" type="DATE">
+            <column name="deleted_at" type="TIMESTAMP WITH TIME ZONE">
                 <constraints nullable="true"/>
             </column>
             <column name="deleted_by" type="UUID">
@@ -129,13 +144,35 @@
             <column name="spouse_name" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
+            
+            <!-- Document fields -->
             <column name="photo_key" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
+            <column name="photo_state" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="photo_state_note" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            
             <column name="citizenship_front_key" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
+            <column name="citizenship_front_state" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="citizenship_front_state_note" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            
             <column name="citizenship_back_key" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="citizenship_back_state" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="citizenship_back_state_note" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
         </createTable>
@@ -171,6 +208,10 @@
         
         <createIndex indexName="idx_citizens_is_approved" tableName="citizens">
             <column name="is_approved"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_citizens_state" tableName="citizens">
+            <column name="state"/>
         </createIndex>
     </changeSet>
 </databaseChangeLog>
