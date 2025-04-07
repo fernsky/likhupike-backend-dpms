@@ -22,7 +22,8 @@ class CitizenException(
     errorCode = errorCode,
     message = message,
     status = when (errorCode) {
-        CitizenErrorCode.CITIZEN_NOT_FOUND -> HttpStatus.NOT_FOUND
+        CitizenErrorCode.CITIZEN_NOT_FOUND,
+        CitizenErrorCode.PAGE_NOT_FOUND -> HttpStatus.NOT_FOUND
         CitizenErrorCode.DUPLICATE_CITIZENSHIP_NUMBER,
         CitizenErrorCode.DUPLICATE_EMAIL,
         CitizenErrorCode.CITIZEN_ALREADY_APPROVED,
@@ -147,6 +148,12 @@ class CitizenException(
             override val code = "CIT_018"
             override val defaultMessage = "Invalid registration verification token"
             override val i18nKey = "error.citizen.invalid_registration_token"
+        },
+        
+        PAGE_NOT_FOUND {
+            override val code = "CIT_019"
+            override val defaultMessage = "Requested page does not exist"
+            override val i18nKey = "error.citizen.page_not_found"
         }
     }
 }
