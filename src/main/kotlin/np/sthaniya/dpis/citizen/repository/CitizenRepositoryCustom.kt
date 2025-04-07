@@ -11,10 +11,13 @@ import java.util.Optional
 import java.util.UUID
 
 /**
- * Custom repository interface for specialized Citizen entity operations.
+ * Custom repository interface for Citizen entities.
+ *
+ * This interface defines custom repository operations that cannot be easily
+ * expressed using Spring Data JPA query methods.
  */
 interface CitizenRepositoryCustom {
-    
+
     /**
      * Finds a citizen by ID and eagerly loads related document storage keys.
      *
@@ -22,7 +25,7 @@ interface CitizenRepositoryCustom {
      * @return An Optional containing the citizen with document information if found
      */
     fun findByIdWithDocuments(id: UUID): Optional<Citizen>
-    
+
     /**
      * Searches for citizens by name with partial matching.
      *
@@ -30,7 +33,7 @@ interface CitizenRepositoryCustom {
      * @return List of citizens matching the name pattern
      */
     fun searchByNameContaining(namePart: String): List<Citizen>
-    
+
     /**
      * Finds citizens by address with partial matching for both
      * permanent and temporary addresses.
@@ -39,7 +42,7 @@ interface CitizenRepositoryCustom {
      * @return List of citizens matching the address pattern
      */
     fun findByAddressContaining(addressPart: String): List<Citizen>
-    
+
     /**
      * Finds citizens by their current state in the verification workflow.
      *
@@ -48,7 +51,7 @@ interface CitizenRepositoryCustom {
      * @return Page of citizens in the specified state
      */
     fun findByState(state: CitizenState, pageable: Pageable): Page<Citizen>
-    
+
     /**
      * Finds citizens who need action from administrators.
      * This includes those in PENDING_REGISTRATION and ACTION_REQUIRED states.
@@ -57,7 +60,7 @@ interface CitizenRepositoryCustom {
      * @return Page of citizens requiring administrator action
      */
     fun findCitizensRequiringAction(pageable: Pageable): Page<Citizen>
-    
+
     /**
      * Finds citizens with missing or rejected documents.
      *
@@ -66,7 +69,7 @@ interface CitizenRepositoryCustom {
      * @return Page of citizens with documents in the specified state
      */
     fun findByDocumentState(documentState: DocumentState, pageable: Pageable): Page<Citizen>
-    
+
     /**
      * Finds citizens with specific issues in their documents, using a note keyword search.
      *
@@ -75,7 +78,7 @@ interface CitizenRepositoryCustom {
      * @return Page of citizens with matching document state notes
      */
     fun findByDocumentStateNote(noteKeyword: String, pageable: Pageable): Page<Citizen>
-    
+
     /**
      * Finds all citizens that match the given specification and returns them as projections
      * with only the requested fields included.
@@ -90,7 +93,7 @@ interface CitizenRepositoryCustom {
         pageable: Pageable,
         columns: Set<String>
     ): Page<CitizenProjection>
-    
+
     /**
      * Counts the number of citizens that match the given specification.
      * Uses distinct count when necessary (e.g., when joining related entities).
