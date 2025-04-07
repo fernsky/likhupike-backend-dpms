@@ -77,6 +77,12 @@ interface CitizenJwtService {
      * Creates a pre-expired token for testing.
      */
     fun generateExpiredToken(citizen: Citizen): String
+    
+    /**
+     * Extracts all claims from a token.
+     * Used by the CurrentCitizenIdResolver.
+     */
+    fun extractAllClaims(token: String): io.jsonwebtoken.Claims?
 }
 
 /**

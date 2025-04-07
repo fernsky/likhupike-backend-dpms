@@ -247,7 +247,7 @@ class CitizenJwtServiceImpl(
      * - Expired token
      * - Invalid claim format
      */
-    private fun extractAllClaims(token: String): Claims? =
+    override fun extractAllClaims(token: String): Claims? =
         try {
             Jwts.parser()
                 .verifyWith(key)
