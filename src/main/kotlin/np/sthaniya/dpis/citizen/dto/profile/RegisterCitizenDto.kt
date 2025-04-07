@@ -8,6 +8,9 @@ import java.time.LocalDate
 /**
  * Data transfer object for citizen self-registration.
  * Contains the essential fields required for a citizen to register in the system.
+ * 
+ * When a citizen registers through this process, their account will be created in 
+ * the PENDING_REGISTRATION state and require verification by an administrator.
  */
 @Schema(
     description = "Request payload for citizen self-registration",
@@ -86,7 +89,7 @@ data class RegisterCitizenDto(
         example = "hari.sharma@example.com"
     )
     @field:Email(message = "Please provide a valid email address")
-    val email: String? = null,
+    val email: String,
     
     @Schema(
         description = "Phone number",
