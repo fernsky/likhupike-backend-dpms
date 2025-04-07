@@ -1,0 +1,101 @@
+=== Key Components
+
+The Citizen Management System consists of several key components that work together to enable secure and efficient management of citizen records and verification processes.
+
+==== Registration and Identity Management
+
+* **Dual Registration Flows**
+** Self-registration by citizens
+** Administrative registration by authorized system users
+* **Core Identity Information**
+** Name (English and Devanagari)
+** Citizenship details (number, issue date, issuing office)
+** Email and phone number
+** Profile photo
+** Contact information
+* **Address Management**
+** Permanent address
+** Temporary address
+* **Family Information**
+** Father's name
+** Grandfather's name
+** Spouse's name
+
+==== Document Management
+
+* **Citizen Photo**
+** Upload/update functionality
+** Validation and rejection workflows
+** Version tracking
+* **Citizenship Certificate Management**
+** Front page upload and management
+** Back page upload and management
+** Validation checks
+** Rejection workflows with specific reasons
+* **Document Versioning**
+** Tracking changes to uploaded documents
+** Change history for uploaded documents
+** Document status tracking
+
+==== State Management System
+
+* **Registration States**
+** Pending Registration - Initial state for new self-registered citizens
+** Under Review - Citizen data being verified by administrator
+** Action Required - Issues identified that require citizen action
+** Rejected - Registration that failed verification
+** Approved - Fully verified and approved citizen
+* **Document Verification States**
+** Not Uploaded - Document has not been submitted
+** Awaiting Review - Document uploaded but not yet verified
+** Rejected - Document failed verification with specific reason
+** Approved - Document passed verification
+* **Action Required Causes**
+** Name mismatch between English and Devanagari
+** Citizenship details inconsistency
+** Blurry or unclear documents
+** Document information mismatch
+** Unsuitable photo
+** Other administrative concerns
+
+==== Profile Update Workflows
+
+* **Field Update Management**
+** Critical field updates requiring verification
+** Non-critical field updates without verification
+** Document-based verification for critical updates
+* **Update Request States**
+** Pending - Update request submitted but not processed
+** Reviewing - Administrator evaluating the update request
+** Action Required - Additional information needed
+** Rejected - Update request denied
+** Approved - Update request approved and applied
+
+==== Authentication and Security
+
+* **Citizen Authentication**
+** Email/password authentication
+** Email verification
+** Phone verification via OTP
+** Password management
+* **Security Controls**
+** Account locking for suspicious activity
+** Multi-factor authentication options
+** User session management
+** Audit logging of security events
+
+==== Administrative Tools
+
+* **Citizen Record Management**
+** Search and filter capabilities
+** Batch operations
+** Audit trail of changes
+* **Approval Workflows**
+** Queue management for pending approvals
+** Workload distribution
+** Verification checklists
+* **Reporting and Analytics**
+** Registration statistics
+** Verification success rates
+** Processing time metrics
+** Rejection reason analysis

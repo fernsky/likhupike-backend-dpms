@@ -1,0 +1,15 @@
+== Citizen Management System
+
+The Citizen Management System is a comprehensive component of the Digital Profile Information System designed to handle citizen registration, verification, authentication, and profile management. It offers robust citizen identity management with built-in approval workflows and document verification processes.
+
+include::citizen-management/background.adoc[leveloffset=+1]
+
+include::citizen-management/components.adoc[leveloffset=+1]
+
+include::citizen-management/data-model.adoc[leveloffset=+1]
+
+include::citizen-management/user-stories.adoc[leveloffset=+1]
+
+include::citizen-management/integrations.adoc[leveloffset=+1]
+
+include::citizen-management/technical.adoc[leveloffset=+1]

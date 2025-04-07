@@ -1,0 +1,434 @@
+=== User Stories and Process Flows
+
+This section outlines key user stories and process flows for the citizen management system, focusing on how different user roles interact with the system during registration, verification, and profile management.
+
+==== User Roles
+
+* *Citizen*: Individual who interacts with the system to register and manage their digital profile
+* *Profile Verification Officer*: Government official responsible for verifying citizen registration and documents
+* *System Administrator*: Technical staff who manages the system configuration and user accounts
+
+==== Key User Stories
+
+===== Citizen
+
+. *Self-Registration*
++
+As a Citizen, I need to register myself in the system so that I can access digital municipal services.
+
+. *Upload Identification Documents*
++
+As a Citizen, I need to upload my citizenship certificate and photo so that my identity can be verified.
+
+. *Update Profile Information*
++
+As a Citizen, I need to update my profile information when details change so that my records remain accurate.
+
+. *Check Verification Status*
++
+As a Citizen, I need to check the status of my registration verification so that I know when I can begin accessing services.
+
+. *Respond to Action Required Notices*
++
+As a Citizen, I need to respond to verification issues identified by administrators so that my registration can proceed.
+
+===== Profile Verification Officer
+
+. *Review Citizen Registrations*
++
+As a Profile Verification Officer, I need to review pending citizen registrations to verify their identity and approve or reject them.
+
+. *Verify Uploaded Documents*
++
+As a Profile Verification Officer, I need to verify uploaded citizenship certificates and photos to confirm they're valid and legible.
+
+. *Request Additional Information*
++
+As a Profile Verification Officer, I need to request additional information or corrected documents from citizens when verification issues arise.
+
+. *Process Update Requests*
++
+As a Profile Verification Officer, I need to process profile update requests for critical fields to maintain data accuracy.
+
+. *Approve Citizen Registration*
++
+As a Profile Verification Officer, I need to approve verified citizen registrations so they can access municipal services.
+
+===== System Administrator
+
+. *Create Citizen Records*
++
+As a System Administrator, I need to create citizen records for individuals who cannot self-register so they can be included in the system.
+
+. *Manage Verification Officers*
++
+As a System Administrator, I need to assign and manage verification officers so that registration verification can proceed efficiently.
+
+. *Configure System Parameters*
++
+As a System Administrator, I need to configure system parameters like verification requirements and document types so the system meets current policies.
+
+. *Generate Verification Reports*
++
+As a System Administrator, I need to generate reports on verification activities and issues to monitor system effectiveness.
+
+==== Process Flows
+
+===== Citizen Self-Registration Flow
+
+[plantuml]
+----
+@startuml
+|Citizen|
+start
+:Fill registration form with basic details;
+:Submit registration;
+|System|
+:Validate form data;
+if (Data valid?) then (yes)
+  :Create citizen record with PENDING_REGISTRATION state;
+  :Generate confirmation email/SMS;
+  |Citizen|
+  :Receive confirmation with instructions;
+  :Upload required documents\n(Photo, Citizenship front/back);
+  |System|
+  :Store documents;
+  :Change state to UNDER_REVIEW;
+  :Notify verification officers of pending review;
+  |Profile Verification Officer|
+  :Review citizen details and documents;
+  if (All information correct?) then (yes)
+    if (All documents valid?) then (yes)
+      :Approve citizen registration;
+      |System|
+      :Update citizen state to APPROVED;
+      :Enable full system access;
+      :Send approval notification;
+      |Citizen|
+      :Receive approval notification;
+      :Access full system features;
+    else (no)
+      :Mark specific document issues;
+      :Change state to ACTION_REQUIRED;
+      |System|
+      :Send notification about document issues;
+      |Citizen|
+      :Receive document issue notification;
+      :Upload corrected documents;
+      note right: Loop back to document review
+    endif
+  else (no)
+    :Note specific information issues;
+    :Change state to ACTION_REQUIRED;
+    |System|
+    :Send notification about information issues;
+    |Citizen|
+    :Receive information issue notification;
+    :Update information;
+    note right: Loop back to information review
+  endif
+else (no)
+  |System|
+  :Return validation errors;
+  |Citizen|
+  :Correct data and resubmit;
+endif
+stop
+@enduml
+----
+
+===== System User-Created Citizen Registration Flow
+
+[plantuml]
+----
+@startuml
+|Profile Verification Officer|
+start
+:Select "Create Citizen" feature;
+:Enter citizen basic information;
+:Upload any available documents;
+|System|
+:Validate entered data;
+if (Data valid?) then (yes)
+  :Create citizen record;
+  if (Marked as pre-approved?) then (yes)
+    :Set state to APPROVED;
+    :Generate temporary credentials;
+    :Send notification to citizen;
+    |Citizen|
+    :Receive account notification;
+    :Set password and complete profile;
+  else (no)
+    :Set state to UNDER_REVIEW;
+    :Notify citizen of pending account;
+    |Citizen|
+    :Receive account notification;
+    :Upload required documents\n(if not already uploaded);
+    |System|
+    :Notify verification officers of pending review;
+    |Profile Verification Officer|
+    :Review citizen details and documents;
+    if (All information correct and documents valid?) then (yes)
+      :Approve citizen registration;
+      |System|
+      :Update citizen state to APPROVED;
+      :Send approval notification;
+      |Citizen|
+      :Receive approval notification;
+      :Complete profile setup;
+    else (no)
+      :Note specific issues;
+      :Change state to ACTION_REQUIRED;
+      |System|
+      :Send notification about issues;
+      |Citizen|
+      :Address issues;
+      note right: Loop back to review
+    endif
+  endif
+else (no)
+  |System|
+  :Return validation errors;
+  |Profile Verification Officer|
+  :Correct data and resubmit;
+endif
+stop
+@enduml
+----
+
+===== Document Verification Flow
+
+[plantuml]
+----
+@startuml
+|Citizen|
+start
+:Upload document\n(Photo, Citizenship front/back);
+|System|
+:Validate file format and size;
+if (Valid format and size?) then (yes)
+  :Store document with AWAITING_REVIEW state;
+  :Notify verification officers;
+  |Profile Verification Officer|
+  :Review uploaded document;
+  if (Document clear and legible?) then (yes)
+    if (Document matches citizen information?) then (yes)
+      :Approve document;
+      |System|
+      :Update document state to APPROVED;
+      :Update verification progress;
+      if (All required documents verified?) then (yes)
+        :Mark document verification complete;
+        |Profile Verification Officer|
+        :Proceed with overall citizen approval;
+      endif
+    else (no)
+      :Reject document with REJECTED_MISMATCH state;
+      :Add notes about mismatch;
+      |System|
+      :Update document state;
+      :Send rejection notification;
+      |Citizen|
+      :Receive mismatch notification;
+      :Upload correct document;
+      note right: Loop back to document review
+    endif
+  else (no)
+    :Reject document with REJECTED_BLURRY state;
+    :Add notes about quality issues;
+    |System|
+    :Update document state;
+    :Send rejection notification;
+    |Citizen|
+    :Receive quality issue notification;
+    :Upload better quality document;
+    note right: Loop back to document review
+  endif
+else (no)
+  :Return format/size error;
+  |Citizen|
+  :Address file issues and reupload;
+endif
+stop
+@enduml
+----
+
+===== Citizen Profile Update Flow
+
+[plantuml]
+----
+@startuml
+|Citizen|
+start
+:Request profile information update;
+if (Critical field update?) then (yes)
+  :Upload supporting documents;
+  |System|
+  :Create update request with PENDING state;
+  :Notify verification officers;
+  |Profile Verification Officer|
+  :Review update request and documents;
+  if (Valid update with proper documentation?) then (yes)
+    :Approve update request;
+    |System|
+    :Apply changes to citizen profile;
+    :Set request state to APPROVED;
+    :Notify citizen of approval;
+    |Citizen|
+    :Receive update approval notification;
+  else (no)
+    :Reject update or request changes;
+    :Set request state to ACTION_REQUIRED or REJECTED;
+    |System|
+    :Notify citizen of issues;
+    |Citizen|
+    :Receive update issues notification;
+    :Address issues and resubmit if needed;
+    note right: Loop back to review
+  endif
+else (no)
+  |System|
+  :Validate update data;
+  if (Valid data?) then (yes)
+    :Apply changes immediately;
+    :Log update in history;
+    |Citizen|
+    :See updated profile;
+  else (no)
+    :Return validation errors;
+    |Citizen|
+    :Correct errors and resubmit;
+  endif
+endif
+stop
+@enduml
+----
+
+==== Edge Cases and Special Scenarios
+
+===== Handling Name Mismatch Between English and Devanagari
+
+[plantuml]
+----
+@startuml
+|Profile Verification Officer|
+start
+:Review citizen registration;
+:Notice name mismatch between\nEnglish and Devanagari fields;
+:Set state to ACTION_REQUIRED;
+:Add specific note about name mismatch;
+|System|
+:Send notification to citizen;
+|Citizen|
+:Receive name mismatch notification;
+:Update name fields to match semantically;
+:Resubmit information;
+|Profile Verification Officer|
+:Review updated names;
+if (Names now match semantically?) then (yes)
+  :Continue verification process;
+else (no)
+  :Reject with detailed explanation;
+  :Request citizen to visit office in person;
+  |System|
+  :Set state to REJECTED;
+  :Send rejection notification;
+endif
+stop
+@enduml
+----
+
+===== Handling Citizenship Certificate Issues
+
+[plantuml]
+----
+@startuml
+|Profile Verification Officer|
+start
+:Review uploaded citizenship documents;
+if (Both front and back uploaded?) then (yes)
+  if (Both clearly legible?) then (yes)
+    if (Citizenship details match form data?) then (yes)
+      if (Front and back match each other?) then (yes)
+        :Approve citizenship documents;
+      else (no)
+        :Set document state to REJECTED_MISMATCH;
+        :Add note "Front and back do not match";
+      endif
+    else (no)
+      :Set document state to REJECTED_MISMATCH;
+      :Add note "Details don't match registration information";
+    endif
+  else (no)
+    :Set document state to REJECTED_BLURRY;
+    :Add note "Document not clearly legible";
+  endif
+else (no)
+  :Set state to ACTION_REQUIRED;
+  :Add note "Missing front or back of citizenship";
+endif
+|System|
+:Send notification to citizen;
+:Track document verification attempt;
+stop
+@enduml
+----
+
+==== System Use Case Diagram
+
+[plantuml]
+----
+@startuml
+left to right direction
+actor "Citizen" as CIT
+actor "Profile Verification Officer" as PVO
+actor "System Administrator" as SA
+
+rectangle "Citizen Management System" {
+  usecase "Register Self" as UC1
+  usecase "Upload Documents" as UC2
+  usecase "Update Profile" as UC3
+  usecase "Check Status" as UC4
+  usecase "Respond to Issues" as UC5
+
+  usecase "Review Registrations" as UC6
+  usecase "Verify Documents" as UC7
+  usecase "Request Information" as UC8
+  usecase "Approve Citizens" as UC9
+  usecase "Process Update Requests" as UC10
+
+  usecase "Create Citizen Records" as UC11
+  usecase "Manage Verification Staff" as UC12
+  usecase "Configure System" as UC13
+  usecase "Generate Reports" as UC14
+  usecase "Handle Special Cases" as UC15
+}
+
+CIT --> UC1
+CIT --> UC2
+CIT --> UC3
+CIT --> UC4
+CIT --> UC5
+
+PVO --> UC6
+PVO --> UC7
+PVO --> UC8
+PVO --> UC9
+PVO --> UC10
+PVO --> UC15
+
+SA --> UC11
+SA --> UC12
+SA --> UC13
+SA --> UC14
+SA --> UC15
+
+UC1 ..> UC2 : includes
+UC6 ..> UC7 : includes
+UC6 ..> UC8 : includes
+UC6 ..> UC9 : includes
+UC10 ..> UC7 : includes
+@enduml
+----
+
+These user stories and flow diagrams describe both the typical scenarios and edge cases that the Citizen Management System must handle to support proper verification and approval of citizen records in Nepal's municipal context.

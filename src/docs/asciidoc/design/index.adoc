@@ -5,3 +5,5 @@ include::overview.adoc[leveloffset=+1]
 include::user-authentication.adoc[leveloffset=+1]
 
 include::land-management.adoc[leveloffset=+1]
+
+include::citizen-management.adoc[leveloffset=+1]

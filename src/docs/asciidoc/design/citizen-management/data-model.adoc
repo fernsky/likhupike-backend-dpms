@@ -1,0 +1,168 @@
+=== Data Model
+
+The Citizen Management System's data model is designed to accurately represent citizen identity information, document management, and state tracking throughout the verification and approval process.
+
+The model centers around the Citizen entity which stores personal and contact details. Associated entities like CitizenDocument manage uploaded identification documents, while CitizenVerification tracks the verification status and approval process for each citizen.
+
+==== Entity Relationship Diagram
+
+[plantuml]
+----
+@startuml
+entity Citizen {
+  * id : UUID
+  * name : String
+  * nameDevnagari : String
+  * citizenshipNumber : String
+  * citizenshipIssuedDate : Date
+  * citizenshipIssuedOffice : String
+  * email : String
+  * phoneNumber : String
+  * password : String
+  * state : CitizenState
+  * isApproved : Boolean
+  * approvedBy : UUID
+  * approvedAt : Timestamp
+  * isDeleted : Boolean
+  * deletedBy : UUID
+  * deletedAt : Timestamp
+}
+
+entity Address {
+  * provinceCode : String
+  * districtCode : String
+  * municipalityCode : String
+  * wardNumber : Integer
+  * wardMunicipalityCode : String
+  * streetAddress : String
+}
+
+entity CitizenDocument {
+  * id : UUID
+  * citizenId : UUID
+  * documentType : DocumentType
+  * documentKey : String
+  * originalFilename : String
+  * contentType : String
+  * fileSize : Long
+  * uploadedAt : Timestamp
+  * uploadedBy : UUID
+  * state : DocumentState
+  * stateUpdatedAt : Timestamp
+  * stateUpdatedBy : UUID
+  * stateNote : String
+  * version : Integer
+}
+
+entity CitizenVerification {
+  * id : UUID
+  * citizenId : UUID
+  * verificationType : VerificationType
+  * state : VerificationState
+  * stateNote : String
+  * requiredAction : String
+  * initiatedAt : Timestamp
+  * updatedAt : Timestamp
+  * updatedBy : UUID
+  * completedAt : Timestamp
+}
+
+entity CitizenUpdateRequest {
+  * id : UUID
+  * citizenId : UUID
+  * requestType : UpdateRequestType
+  * requestData : JsonObject
+  * state : UpdateRequestState
+  * stateNote : String
+  * requestedAt : Timestamp
+  * requestedBy : UUID
+  * updatedAt : Timestamp
+  * updatedBy : UUID
+  * completedAt : Timestamp
+}
+
+entity VerificationComment {
+  * id : UUID
+  * verificationId : UUID
+  * comment : String
+  * createdAt : Timestamp
+  * createdBy : UUID
+}
+
+Citizen ||--o{ CitizenDocument : has
+Citizen ||--o{ CitizenVerification : undergoes
+Citizen ||--o{ CitizenUpdateRequest : requests
+
+Citizen ||--|{ Address : "has permanent"
+Citizen ||--|{ Address : "has temporary"
+
+CitizenVerification ||--o{ VerificationComment : contains
+@enduml
+----
+
+==== Key Entities
+
+===== Core Entities
+* **Citizen**: The central entity containing personal details, contact information, and authentication data
+* **Address**: Embedded entity for structured address information (permanent and temporary)
+* **CitizenDocument**: Manages uploaded documents including photo, citizenship certificate front and back
+* **CitizenVerification**: Tracks verification processes for citizen registration and updates
+* **CitizenUpdateRequest**: Manages requests to update citizen information and tracks approval workflows
+* **VerificationComment**: Stores comments related to verification processes
+
+==== Enumerations
+
+===== CitizenState
+The state of a citizen record in the system:
+* `PENDING_REGISTRATION` - Initial state for self-registered citizens
+* `UNDER_REVIEW` - Being verified by administrators
+* `ACTION_REQUIRED` - Issues that need to be addressed by the citizen
+* `REJECTED` - Failed verification
+* `APPROVED` - Fully verified and approved
+
+===== DocumentType
+Types of documents that can be uploaded:
+* `CITIZEN_PHOTO` - Citizen's profile photograph
+* `CITIZENSHIP_FRONT` - Front side of citizenship certificate
+* `CITIZENSHIP_BACK` - Back side of citizenship certificate
+* `SUPPORTING_DOCUMENT` - Additional document for verification purposes
+
+===== DocumentState
+The verification state of an uploaded document:
+* `AWAITING_REVIEW` - Uploaded but not yet verified
+* `REJECTED_BLURRY` - Rejected due to poor image quality
+* `REJECTED_UNSUITABLE` - Rejected due to unsuitable content
+* `REJECTED_MISMATCH` - Information doesn't match other records
+* `APPROVED` - Document has passed verification
+
+===== VerificationType
+Types of verification processes:
+* `INITIAL_REGISTRATION` - Verification of new citizen registration
+* `NAME_UPDATE` - Verification for name change request
+* `CITIZENSHIP_UPDATE` - Verification for citizenship details update
+* `ADDRESS_UPDATE` - Verification for address change
+
+===== VerificationState
+The state of a verification process:
+* `PENDING` - Verification not yet started
+* `IN_PROGRESS` - Verification underway
+* `ACTION_REQUIRED` - Additional information needed from citizen
+* `REJECTED` - Verification failed
+* `APPROVED` - Verification successful
+
+===== UpdateRequestType
+Types of update requests:
+* `NAME_UPDATE` - Request to update name
+* `NAME_DEVNAGARI_UPDATE` - Request to update Devanagari name
+* `CITIZENSHIP_UPDATE` - Request to update citizenship details
+* `ADDRESS_UPDATE` - Request to update address
+* `CONTACT_UPDATE` - Request to update contact information
+* `DOCUMENT_UPDATE` - Request to update documents
+
+===== UpdateRequestState
+The state of an update request:
+* `PENDING` - Request submitted but not yet reviewed
+* `REVIEWING` - Under administrator review
+* `ACTION_REQUIRED` - Requires additional information from citizen
+* `REJECTED` - Update request rejected
+* `APPROVED` - Update request approved and applied
