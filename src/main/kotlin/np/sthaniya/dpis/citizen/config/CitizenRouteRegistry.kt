@@ -93,9 +93,9 @@ class CitizenRouteRegistry {
         // Profile management endpoints
         register("/api/v1/citizen-profile/me", HttpMethod.GET, false)
         register("/api/v1/citizen-profile/me", HttpMethod.PUT, false)
-        register("/api/v1/citizen-profile/upload/photo", HttpMethod.POST, false)
-        register("/api/v1/citizen-profile/upload/citizenship-front", HttpMethod.POST, false)
-        register("/api/v1/citizen-profile/upload/citizenship-back", HttpMethod.POST, false)
+        register("/api/v1/citizen-profile/me/photo", HttpMethod.POST, false)
+        register("/api/v1/citizen-profile/me/citizenship/front", HttpMethod.POST, false)
+        register("/api/v1/citizen-profile/me/citizenship/back", HttpMethod.POST, false)
         
         // Global options for CORS
         register("/**", HttpMethod.OPTIONS, true)
