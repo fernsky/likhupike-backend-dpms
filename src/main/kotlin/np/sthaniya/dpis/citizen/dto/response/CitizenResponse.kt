@@ -110,9 +110,9 @@ data class CitizenResponse(
     val approvedBy: UUID?,
     
     @Schema(
-        description = "Documents associated with the citizen (photo and citizenship documents)",
+        description = "Documents associated with the citizen (photo and citizenship documents) with their verification states",
     )
-    val documents: DocumentUrlResponse,
+    val documents: CitizenDocumentsResponse,
     
     @Schema(
         description = "When the citizen record was created",

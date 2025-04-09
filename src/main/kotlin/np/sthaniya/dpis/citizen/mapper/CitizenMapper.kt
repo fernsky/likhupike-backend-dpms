@@ -1,15 +1,14 @@
 package np.sthaniya.dpis.citizen.mapper
 
 import np.sthaniya.dpis.citizen.domain.entity.Address
+import np.sthaniya.dpis.citizen.dto.response.CitizenDocumentsResponse
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
-import np.sthaniya.dpis.citizen.dto.response.DocumentUrlResponse
+import np.sthaniya.dpis.citizen.dto.response.DocumentDetailsResponse
 import np.sthaniya.dpis.citizen.dto.shared.AddressResponse
 import np.sthaniya.dpis.citizen.domain.entity.Citizen
 import np.sthaniya.dpis.common.storage.DocumentStorageService
 import org.springframework.stereotype.Component
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.UUID
 
 /**
@@ -27,11 +26,34 @@ class CitizenMapper(
      * @return A CitizenResponse DTO with all relevant citizen data
      */
     fun toResponse(citizen: Citizen): CitizenResponse {
-        // Generate document URLs if storage keys exist
-        val documents = DocumentUrlResponse(
-            photo = citizen.photoKey?.let { documentStorageService.getDocumentUrl(it) },
-            citizenshipFront = citizen.citizenshipFrontKey?.let { documentStorageService.getDocumentUrl(it) },
-            citizenshipBack = citizen.citizenshipBackKey?.let { documentStorageService.getDocumentUrl(it) }
+        // Generate document details with URLs, states, and notes
+        val documents = CitizenDocumentsResponse(
+            photo = citizen.photoKey?.let {
+                DocumentDetailsResponse(
+                    url = documentStorageService.getDocumentUrl(it),
+                    state = citizen.photoState,
+                    note = citizen.photoStateNote,
+                    uploadedAt = null // Update if you add upload timestamp to Citizen entity
+                )
+            },
+            
+            citizenshipFront = citizen.citizenshipFrontKey?.let {
+                DocumentDetailsResponse(
+                    url = documentStorageService.getDocumentUrl(it),
+                    state = citizen.citizenshipFrontState,
+                    note = citizen.citizenshipFrontStateNote,
+                    uploadedAt = null // Update if you add upload timestamp to Citizen entity
+                )
+            },
+            
+            citizenshipBack = citizen.citizenshipBackKey?.let {
+                DocumentDetailsResponse(
+                    url = documentStorageService.getDocumentUrl(it),
+                    state = citizen.citizenshipBackState,
+                    note = citizen.citizenshipBackStateNote,
+                    uploadedAt = null // Update if you add upload timestamp to Citizen entity
+                )
+            }
         )
 
         return CitizenResponse(
