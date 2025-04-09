@@ -56,16 +56,6 @@ class CitizenProfileServiceImpl(
     override fun registerCitizen(registerCitizenDto: RegisterCitizenDto): CitizenResponse {
         logger.info("Processing new citizen self-registration request")
         
-        // Check if citizen with the same citizenship number already exists
-        registerCitizenDto.citizenshipNumber.let { citizenshipNumber ->
-            if (citizenRepository.existsByCitizenshipNumber(citizenshipNumber)) {
-                logger.warn("Self-registration attempt with existing citizenship number: $citizenshipNumber")
-                throw CitizenException(
-                    CitizenErrorCode.CITIZEN_ALREADY_REGISTERED,
-                    "Citizen with citizenship number $citizenshipNumber is already registered"
-                )
-            }
-        }
         
         // Check for duplicate email if provided
         registerCitizenDto.email.let { email ->
@@ -74,6 +64,17 @@ class CitizenProfileServiceImpl(
                 throw CitizenException(
                     CitizenErrorCode.DUPLICATE_EMAIL,
                     "Email is already registered to another citizen"
+                )
+            }
+        }
+
+        // Check if citizen with the same citizenship number already exists
+        registerCitizenDto.citizenshipNumber.let { citizenshipNumber ->
+            if (citizenRepository.existsByCitizenshipNumber(citizenshipNumber)) {
+                logger.warn("Self-registration attempt with existing citizenship number: $citizenshipNumber")
+                throw CitizenException(
+                    CitizenErrorCode.CITIZEN_ALREADY_REGISTERED,
+                    "Citizen with citizenship number $citizenshipNumber is already registered"
                 )
             }
         }
