@@ -54,9 +54,8 @@ interface CitizenSearchController {
         ]
     )
     @PreAuthorize("hasAuthority('PERMISSION_VIEW_CITIZEN')")
-    @PostMapping(
+    @GetMapping(
         path = ["/search"],
-        consumes = [MediaType.APPLICATION_JSON_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun searchCitizens(
@@ -64,6 +63,6 @@ interface CitizenSearchController {
             description = "Search criteria",
             required = true
         )
-        @Valid @RequestBody criteria: CitizenSearchCriteria
+        @Valid criteria: CitizenSearchCriteria
     ): ResponseEntity<DpisApiResponse<List<CitizenProjection>>>
 }
