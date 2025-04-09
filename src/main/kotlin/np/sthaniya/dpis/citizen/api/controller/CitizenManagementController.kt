@@ -300,7 +300,7 @@ interface CitizenManagementController {
             required = true,
             schema = Schema(type = "string", format = "binary")
         )
-        @RequestParam("photo") photo: MultipartFile,
+        @RequestParam("file") photo: MultipartFile,
         
         @CurrentUserId currentUserId: UUID
     ): ResponseEntity<DpisApiResponse<DocumentUploadResponse>>
@@ -353,7 +353,7 @@ interface CitizenManagementController {
             required = true,
             schema = Schema(type = "string", format = "binary")
         )
-        @RequestParam("document") document: MultipartFile,
+        @RequestParam("file") document: MultipartFile,
         
         @CurrentUserId currentUserId: UUID
     ): ResponseEntity<DpisApiResponse<DocumentUploadResponse>>
@@ -406,7 +406,7 @@ interface CitizenManagementController {
             required = true,
             schema = Schema(type = "string", format = "binary")
         )
-        @RequestParam("document") document: MultipartFile,
+        @RequestParam("file") document: MultipartFile,
         
         @CurrentUserId currentUserId: UUID
     ): ResponseEntity<DpisApiResponse<DocumentUploadResponse>>

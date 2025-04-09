@@ -152,7 +152,7 @@ class Citizen : UuidBaseEntity(), UserDetails {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "photo_state")
-    var photoState: DocumentState? = null
+    var photoState: DocumentState = DocumentState.NOT_UPLOADED
 
     /**
      * Note providing context about the photo state.
@@ -172,7 +172,7 @@ class Citizen : UuidBaseEntity(), UserDetails {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "citizenship_front_state")
-    var citizenshipFrontState: DocumentState? = null
+    var citizenshipFrontState: DocumentState = DocumentState.NOT_UPLOADED
 
     /**
      * Note providing context about the front citizenship certificate state.
@@ -192,7 +192,7 @@ class Citizen : UuidBaseEntity(), UserDetails {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "citizenship_back_state")
-    var citizenshipBackState: DocumentState? = null
+    var citizenshipBackState: DocumentState = DocumentState.NOT_UPLOADED
 
     /**
      * Note providing context about the back citizenship certificate state.
