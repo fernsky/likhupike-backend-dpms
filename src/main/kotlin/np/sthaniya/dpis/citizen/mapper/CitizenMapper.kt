@@ -2,8 +2,10 @@ package np.sthaniya.dpis.citizen.mapper
 
 import np.sthaniya.dpis.citizen.domain.entity.Address
 import np.sthaniya.dpis.citizen.dto.response.CitizenResponse
+import np.sthaniya.dpis.citizen.dto.response.DocumentUrlResponse
 import np.sthaniya.dpis.citizen.dto.shared.AddressResponse
 import np.sthaniya.dpis.citizen.domain.entity.Citizen
+import np.sthaniya.dpis.common.storage.DocumentStorageService
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.LocalDateTime
@@ -14,7 +16,9 @@ import java.util.UUID
  * Mapper component for converting between Citizen entities and DTOs.
  */
 @Component
-class CitizenMapper {
+class CitizenMapper(
+    private val documentStorageService: DocumentStorageService
+) {
     
     /**
      * Maps a Citizen entity to a CitizenResponse DTO.
@@ -23,7 +27,12 @@ class CitizenMapper {
      * @return A CitizenResponse DTO with all relevant citizen data
      */
     fun toResponse(citizen: Citizen): CitizenResponse {
-       
+        // Generate document URLs if storage keys exist
+        val documents = DocumentUrlResponse(
+            photo = citizen.photoKey?.let { documentStorageService.getDocumentUrl(it) },
+            citizenshipFront = citizen.citizenshipFrontKey?.let { documentStorageService.getDocumentUrl(it) },
+            citizenshipBack = citizen.citizenshipBackKey?.let { documentStorageService.getDocumentUrl(it) }
+        )
 
         return CitizenResponse(
             id = citizen.id ?: UUID.randomUUID(), // Provide a default in case id is null
@@ -42,6 +51,7 @@ class CitizenMapper {
             isApproved = citizen.isApproved,
             approvedAt = citizen.approvedAt,
             approvedBy = citizen.approvedBy,
+            documents = documents,
             createdAt = citizen.createdAt,
             updatedAt = citizen.updatedAt
         )
