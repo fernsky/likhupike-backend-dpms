@@ -7,16 +7,19 @@ import np.sthaniya.dpis.common.config.StorageProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 
 /**
  * Configuration for MinIO S3-compatible storage client.
  * 
  * Sets up the MinIO client bean and ensures the required bucket exists.
+ * This configuration is only active in non-test environments.
  *
  * @property storageProperties Configuration properties for storage
  */
 @Configuration
 @EnableConfigurationProperties(StorageProperties::class)
+@Profile("!test") // Exclude from test profile
 class MinioConfig(
     private val storageProperties: StorageProperties
 ) {
