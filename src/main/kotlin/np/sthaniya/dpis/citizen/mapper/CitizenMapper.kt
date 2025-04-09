@@ -70,9 +70,17 @@ class CitizenMapper(
             fatherName = citizen.fatherName,
             grandfatherName = citizen.grandfatherName,
             spouseName = citizen.spouseName,
+            
+            // Add state-related fields
+            state = citizen.state,
+            stateNote = citizen.stateNote,
+            stateUpdatedAt = citizen.stateUpdatedAt,
+            stateUpdatedBy = citizen.stateUpdatedBy,
+            
+            // Add approval-related fields
             isApproved = citizen.isApproved,
             approvedAt = citizen.approvedAt,
-            approvedBy = citizen.approvedBy,
+        
             documents = documents,
             createdAt = citizen.createdAt,
             updatedAt = citizen.updatedAt

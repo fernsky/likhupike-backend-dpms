@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.citizen.dto.response
 
 import io.swagger.v3.oas.annotations.media.Schema
+import np.sthaniya.dpis.citizen.domain.entity.CitizenState
 import np.sthaniya.dpis.citizen.dto.shared.AddressResponse
 import java.time.LocalDate
 import java.time.Instant
@@ -92,6 +93,31 @@ data class CitizenResponse(
     val spouseName: String?,
     
     @Schema(
+        description = "Current state of citizen in the verification workflow",
+        example = "APPROVED",
+        enumAsRef = true
+    )
+    val state: CitizenState,
+    
+    @Schema(
+        description = "Optional note about the current state",
+        example = "Missing contact information"
+    )
+    val stateNote: String?,
+    
+    @Schema(
+        description = "When the state was last updated",
+        example = "2023-03-14T10:30:00Z"
+    )
+    val stateUpdatedAt: Instant?,
+    
+    @Schema(
+        description = "ID of the administrator who last updated the state",
+        example = "550e8400-e29b-41d4-a716-446655440000"
+    )
+    val stateUpdatedBy: UUID?,
+    
+    @Schema(
         description = "Whether the citizen record has been approved",
         example = "true"
     )
@@ -102,12 +128,6 @@ data class CitizenResponse(
         example = "2023-03-15T14:30:00Z"
     )
     val approvedAt: Instant?,
-    
-    @Schema(
-        description = "ID of the administrator who approved this record",
-        example = "550e8400-e29b-41d4-a716-446655440000"
-    )
-    val approvedBy: UUID?,
     
     @Schema(
         description = "Documents associated with the citizen (photo and citizenship documents) with their verification states",
