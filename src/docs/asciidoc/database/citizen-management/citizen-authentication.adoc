@@ -14,37 +14,37 @@ Passwords in the citizen table are stored using the following approach:
 This table manages one-time passwords for secure password resets.
 
 .Table: citizen_password_reset_otps
-[cols="2,2,1,4",options="header"]
+[cols="2,2,1,4", options="header"]
 |===
-|Column Name |Data Type |Nullable |Description
-|`id` |`UUID` |`false` |Primary key
-|`email` |`VARCHAR(255)` |`false` |Foreign key to citizens table email
-|`otp` |`VARCHAR(6)` |`false` |6-digit one-time password
-|`expires_at` |`TIMESTAMP WITHOUT TIME ZONE` |`false` |Expiration timestamp (15 minutes)
-|`is_used` |`BOOLEAN` |`false` |Flag indicating if OTP has been used
-|`attempts` |`INTEGER` |`false` |Count of failed verification attempts
-|`created_at` |`TIMESTAMP WITH TIME ZONE` |`false` |Record creation timestamp
-|`created_by` |`UUID` |`true` |Reference to creating user or system process
-|`updated_at` |`TIMESTAMP WITH TIME ZONE` |`false` |Last update timestamp
-|`updated_by` |`UUID` |`true` |Reference to last updating user
-|`version` |`BIGINT` |`true` |Optimistic locking version number
+| Column Name                   | Data Type                 | Nullable | Description
+| `id`                          | `UUID`                    | `false`  | Primary key
+| `email`                       | `VARCHAR(255)`            | `false`  | Foreign key to citizens table email
+| `otp`                         | `VARCHAR(6)`              | `false`  | 6-digit one-time password
+| `expires_at`                  | `TIMESTAMP WITHOUT TIME ZONE` | `false` | Expiration timestamp (15 minutes)
+| `is_used`                     | `BOOLEAN`                 | `false`  | Flag indicating if OTP has been used
+| `attempts`                    | `INTEGER`                 | `false`  | Count of failed verification attempts
+| `created_at`                  | `TIMESTAMP WITH TIME ZONE` | `false` | Record creation timestamp
+| `created_by`                  | `UUID`                    | `true`   | Reference to creating user or system process
+| `updated_at`                  | `TIMESTAMP WITH TIME ZONE` | `false` | Last update timestamp
+| `updated_by`                  | `UUID`                    | `true`   | Reference to last updating user
+| `version`                     | `BIGINT`                  | `true`   | Optimistic locking version number
 |===
 
 .Indexes
-[cols="2,2,1",options="header"]
+[cols="2,2,1", options="header"]
 |===
-|Name |Columns |Type
-|`citizen_password_reset_otps_pkey` |`id` |Primary Key
-|`idx_citizen_password_reset_otps_email` |`email` |Non-unique
-|`idx_citizen_password_reset_otps_otp` |`otp` |Non-unique
-|`idx_citizen_password_reset_otps_expires_at` |`expires_at` |Non-unique
+| Name                                   | Columns                  | Type
+| `citizen_password_reset_otps_pkey`     | `id`                     | Primary Key
+| `idx_citizen_password_reset_otps_email` | `email`                 | Non-unique
+| `idx_citizen_password_reset_otps_otp`   | `otp`                   | Non-unique
+| `idx_citizen_password_reset_otps_expires_at` | `expires_at`       | Non-unique
 |===
 
 .Foreign Keys
-[cols="2,2,2",options="header"]
+[cols="2,2,2", options="header"]
 |===
-|Constraint Name |Local Column(s) |References
-|`fk_citizen_password_reset_otps_citizens` |`email` |`citizens(email)`
+| Constraint Name                        | Local Column(s)          | References
+| `fk_citizen_password_reset_otps_citizens` | `email`              | `citizens(email)`
 |===
 
 ===== Security Implementation

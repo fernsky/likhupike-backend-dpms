@@ -1,0 +1,67 @@
+=== Land Domain
+
+==== `LandUse`
+Classification of land according to its usage type with area statistics.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `landType`   | Type of land use (reference to LandType)
+| `area`       | Area covered by this land use type in square kilometers
+| `percentage` | Percentage of total area represented by this land use type
+|===
+
+==== `LandType`
+Enumeration of different types of land usage categories.
+
+[cols="1,3", options="header"]
+|===
+| Value                                         | Description
+| `AGRICULTURAL_LAND`                           | Land used for farming and agricultural activities
+| `RESIDENTIAL_LAND`                            | Land used for housing and residential purposes
+| `COMMERCIAL_LAND`                             | Land used for business and commercial activities
+| `INDUSTRIAL_LAND`                             | Land used for industrial activities and manufacturing
+| `MINING_AND_MINERAL_AREAS`                    | Land used for mining and extraction of minerals
+| `FOREST_AREAS`                                | Land covered by forests and woodlands
+| `RIVERS_LAKES_AND_WETLANDS`                   | Land covered by water bodies and wetlands
+| `PUBLIC_USE_AREAS`                            | Land used for public facilities and services
+| `CULTURAL_AND_ARCHAEOLOGICAL_IMPORTANCE_AREAS`| Land with cultural or archaeological significance
+| `OTHER_GOVERNMENT_DESIGNATED_AREAS`           | Land designated for other governmental purposes
+|===
+
+==== `LandSlope`
+Categorization of land by slope degree with usage information.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `slopeClassByDegree` | Classification of slope by degree (reference to SlopeClassByDegree)
+| `useCase`            | Description of suitable use cases for this slope category
+| `area`               | Area covered by this slope category in square kilometers
+| `percentage`         | Percentage of total area represented by this slope category
+|===
+
+==== `SlopeClassByDegree`
+Enumeration of land slope categories by degree measurement.
+
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `FLAT_0_5`          | Flat land with slope between 0-5 degrees
+| `GENTLE_6_15`       | Gently sloping land with slope between 6-15 degrees
+| `MODERATE_16_25`    | Moderately sloping land with slope between 16-25 degrees
+| `STEEP_26_35`       | Steep land with slope between 26-35 degrees
+| `VERY_STEEP_36_60`  | Very steep land with slope between 36-60 degrees
+| `EXTREME_61_PLUS`   | Extremely steep land with slope greater than 61 degrees
+|===
+
+==== `LandAspect`
+Classification of land by directional orientation with area statistics.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `aspectType` | Directional orientation of the land (N, NE, E, SE, S, SW, W, NW)
+| `area`       | Area covered by this aspect in square kilometers
+| `percentage` | Percentage of total area represented by this aspect
+|===

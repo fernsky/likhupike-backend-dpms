@@ -2,70 +2,70 @@
 The citizens table stores all personal information and reference data for citizens registered in the system.
 
 .Table: citizens
-[cols="2,2,1,4",options="header"]
+[cols="2,2,1,4", options="header"]
 |===
-|Column Name |Data Type |Nullable |Description
-|`id` |`UUID` |`false` |Primary key for citizen identification
-|`name` |`VARCHAR(255)` |`false` |Citizen's full name in Latin script
-|`name_devnagari` |`VARCHAR(255)` |`true` |Citizen's full name in Devanagari script
-|`citizenship_number` |`VARCHAR(50)` |`true` |Unique citizenship certificate number
-|`citizenship_issued_date` |`DATE` |`true` |Date when citizenship certificate was issued
-|`citizenship_issued_office` |`VARCHAR(255)` |`true` |Office that issued the citizenship certificate
-|`email` |`VARCHAR(255)` |`true` |Unique email address for communication and authentication
-|`password` |`VARCHAR(255)` |`true` |Encrypted password hash for authentication
-|`phone_number` |`VARCHAR(20)` |`true` |Contact phone number
+| Column Name                      | Data Type                 | Nullable | Description
+| `id`                             | `UUID`                    | `false`  | Primary key for citizen identification
+| `name`                           | `VARCHAR(255)`            | `false`  | Citizen's full name in Latin script
+| `name_devnagari`                 | `VARCHAR(255)`            | `true`   | Citizen's full name in Devanagari script
+| `citizenship_number`             | `VARCHAR(50)`             | `true`   | Unique citizenship certificate number
+| `citizenship_issued_date`        | `DATE`                    | `true`   | Date when citizenship certificate was issued
+| `citizenship_issued_office`      | `VARCHAR(255)`            | `true`   | Office that issued the citizenship certificate
+| `email`                          | `VARCHAR(255)`            | `true`   | Unique email address for communication and authentication
+| `password`                       | `VARCHAR(255)`            | `true`   | Encrypted password hash for authentication
+| `phone_number`                   | `VARCHAR(20)`             | `true`   | Contact phone number
 
-|`permanent_province_code` |`VARCHAR(36)` |`true` |Foreign key to provinces table for permanent address
-|`permanent_district_code` |`VARCHAR(36)` |`true` |Foreign key to districts table for permanent address
-|`permanent_municipality_code` |`VARCHAR(36)` |`true` |Foreign key to municipalities table for permanent address
-|`permanent_ward_number` |`INTEGER` |`true` |Ward number for permanent address
-|`permanent_ward_municipality_code` |`VARCHAR(36)` |`true` |Municipality code for permanent address ward
-|`permanent_street_address` |`VARCHAR(255)` |`true` |Street address for permanent residence
+| `permanent_province_code`        | `VARCHAR(36)`             | `true`   | Foreign key to provinces table for permanent address
+| `permanent_district_code`        | `VARCHAR(36)`             | `true`   | Foreign key to districts table for permanent address
+| `permanent_municipality_code`    | `VARCHAR(36)`             | `true`   | Foreign key to municipalities table for permanent address
+| `permanent_ward_number`          | `INTEGER`                 | `true`   | Ward number for permanent address
+| `permanent_ward_municipality_code` | `VARCHAR(36)`           | `true`   | Municipality code for permanent address ward
+| `permanent_street_address`       | `VARCHAR(255)`            | `true`   | Street address for permanent residence
 
-|`temporary_province_code` |`VARCHAR(36)` |`true` |Foreign key to provinces table for temporary address
-|`temporary_district_code` |`VARCHAR(36)` |`true` |Foreign key to districts table for temporary address
-|`temporary_municipality_code` |`VARCHAR(36)` |`true` |Foreign key to municipalities table for temporary address
-|`temporary_ward_number` |`INTEGER` |`true` |Ward number for temporary address
-|`temporary_ward_municipality_code` |`VARCHAR(36)` |`true` |Municipality code for temporary address ward
-|`temporary_street_address` |`VARCHAR(255)` |`true` |Street address for temporary residence
+| `temporary_province_code`        | `VARCHAR(36)`             | `true`   | Foreign key to provinces table for temporary address
+| `temporary_district_code`        | `VARCHAR(36)`             | `true`   | Foreign key to districts table for temporary address
+| `temporary_municipality_code`    | `VARCHAR(36)`             | `true`   | Foreign key to municipalities table for temporary address
+| `temporary_ward_number`          | `INTEGER`                 | `true`   | Ward number for temporary address
+| `temporary_ward_municipality_code` | `VARCHAR(36)`           | `true`   | Municipality code for temporary address ward
+| `temporary_street_address`       | `VARCHAR(255)`            | `true`   | Street address for temporary residence
 
-|`father_name` |`VARCHAR(255)` |`true` |Citizen's father's name
-|`grandfather_name` |`VARCHAR(255)` |`true` |Citizen's grandfather's name
-|`spouse_name` |`VARCHAR(255)` |`true` |Citizen's spouse's name
+| `father_name`                    | `VARCHAR(255)`            | `true`   | Citizen's father's name
+| `grandfather_name`               | `VARCHAR(255)`            | `true`   | Citizen's grandfather's name
+| `spouse_name`                    | `VARCHAR(255)`            | `true`   | Citizen's spouse's name
 
-|`created_at` |`TIMESTAMP WITH TIME ZONE` |`false` |Record creation timestamp
-|`created_by` |`UUID` |`true` |Reference to creating user or system process
-|`updated_at` |`TIMESTAMP WITH TIME ZONE` |`false` |Last update timestamp
-|`updated_by` |`UUID` |`true` |Reference to last updating user
-|`version` |`BIGINT` |`true` |Optimistic locking version number
+| `created_at`                     | `TIMESTAMP WITH TIME ZONE` | `false`  | Record creation timestamp
+| `created_by`                     | `UUID`                    | `true`   | Reference to creating user or system process
+| `updated_at`                     | `TIMESTAMP WITH TIME ZONE` | `false`  | Last update timestamp
+| `updated_by`                     | `UUID`                    | `true`   | Reference to last updating user
+| `version`                        | `BIGINT`                  | `true`   | Optimistic locking version number
 |===
 
 .Indexes
-[cols="2,2,1",options="header"]
+[cols="2,2,1", options="header"]
 |===
-|Name |Columns |Type
-|`citizens_pkey` |`id` |Primary Key
-|`uk_citizens_citizenship_number` |`citizenship_number` |Unique
-|`uk_citizens_email` |`email` |Unique
-|`idx_citizens_citizenship_number` |`citizenship_number` |Non-unique
-|`idx_citizens_email` |`email` |Non-unique
-|`idx_citizens_phone_number` |`phone_number` |Non-unique
-|`idx_citizens_is_approved` |`is_approved` |Non-unique
-|`idx_citizens_state` |`state` |Non-unique
+| Name                           | Columns                   | Type
+| `citizens_pkey`                | `id`                      | Primary Key
+| `uk_citizens_citizenship_number` | `citizenship_number`      | Unique
+| `uk_citizens_email`            | `email`                   | Unique
+| `idx_citizens_citizenship_number` | `citizenship_number`    | Non-unique
+| `idx_citizens_email`           | `email`                   | Non-unique
+| `idx_citizens_phone_number`    | `phone_number`            | Non-unique
+| `idx_citizens_is_approved`     | `is_approved`             | Non-unique
+| `idx_citizens_state`           | `state`                   | Non-unique
 |===
 
 .Foreign Keys
-[cols="2,2,2",options="header"]
+[cols="2,2,2", options="header"]
 |===
-|Constraint Name |Local Column(s) |References
-|`fk_citizens_perm_province` |`permanent_province_code` |`provinces(code)`
-|`fk_citizens_perm_district` |`permanent_district_code` |`districts(code)`
-|`fk_citizens_perm_municipality` |`permanent_municipality_code` |`municipalities(code)`
-|`fk_citizens_perm_ward` |`permanent_ward_number, permanent_ward_municipality_code` |`wards(ward_number, municipality_code)`
-|`fk_citizens_temp_province` |`temporary_province_code` |`provinces(code)`
-|`fk_citizens_temp_district` |`temporary_district_code` |`districts(code)`
-|`fk_citizens_temp_municipality` |`temporary_municipality_code` |`municipalities(code)`
-|`fk_citizens_temp_ward` |`temporary_ward_number, temporary_ward_municipality_code` |`wards(ward_number, municipality_code)`
+| Constraint Name                | Local Column(s)            | References
+| `fk_citizens_perm_province`    | `permanent_province_code`  | `provinces(code)`
+| `fk_citizens_perm_district`    | `permanent_district_code`  | `districts(code)`
+| `fk_citizens_perm_municipality` | `permanent_municipality_code` | `municipalities(code)`
+| `fk_citizens_perm_ward`        | `permanent_ward_number, permanent_ward_municipality_code` | `wards(ward_number, municipality_code)`
+| `fk_citizens_temp_province`    | `temporary_province_code`  | `provinces(code)`
+| `fk_citizens_temp_district`    | `temporary_district_code`  | `districts(code)`
+| `fk_citizens_temp_municipality` | `temporary_municipality_code` | `municipalities(code)`
+| `fk_citizens_temp_ward`        | `temporary_ward_number, temporary_ward_municipality_code` | `wards(ward_number, municipality_code)`
 |===
 
 ==== Design Considerations

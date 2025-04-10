@@ -1,0 +1,273 @@
+=== Internationalization Domain
+
+==== `Language`
+Represents a language supported by the system.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `code`            | ISO 639-1/639-2 language code (e.g., 'en', 'ne')
+| `name`            | Name of the language in English (e.g., 'English', 'Nepali')
+| `nativeName`      | Name of the language in its native form (e.g., 'English', 'नेपाली')
+| `isRightToLeft`   | Whether the language is written right-to-left
+| `isActive`        | Whether the language is currently active in the system
+| `isDefault`       | Whether this is the default fallback language
+| `sortOrder`       | Order to display this language in language pickers
+|===
+
+==== `Locale`
+Represents a specific regional/cultural setting, combining language and region.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `code`            | ISO locale code (e.g., 'en-US', 'ne-NP')
+| `language`        | Reference to the Language entity
+| `region`          | ISO 3166-1 region code (e.g., 'US', 'NP')
+| `name`            | Display name of the locale (e.g., 'English (United States)', 'Nepali (Nepal)')
+| `dateFormat`      | Default date format for this locale
+| `timeFormat`      | Default time format for this locale
+| `numberFormat`    | Default number format (decimal separator, etc.)
+| `currencyCode`    | ISO 4217 currency code (e.g., 'USD', 'NPR')
+| `currencySymbol`  | Currency symbol (e.g., '$', 'रू')
+| `isActive`        | Whether the locale is currently active
+| `isDefault`       | Whether this is the default locale for its language
+|===
+
+==== `TranslationKey`
+Represents a unique identifier for a translatable piece of content.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `key`             | Unique identifier for this translation string
+| `description`     | Optional description of the key's purpose for translators
+| `context`         | Optional contextual information to aid accurate translation
+| `module`          | System module this key belongs to (e.g., 'citizen', 'admin')
+| `fieldType`       | Type of content this represents (reference to FieldType)
+| `maxLength`       | Maximum allowed length for translations (if applicable)
+| `screenshotUrl`   | Optional URL to screenshot showing UI context
+| `isCore`          | Whether this is a core system string (vs. user-created content)
+| `created`         | When this key was first added to the system
+| `lastUsed`        | When this key was last accessed in the application
+|===
+
+==== `Translation`
+Represents the localized content for a specific translation key in a specific locale.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `translationKey`     | Reference to the TranslationKey entity
+| `locale`             | Reference to the Locale entity
+| `content`            | The translated text content
+| `isReviewed`         | Whether this translation has been reviewed for quality
+| `reviewedBy`         | User who reviewed this translation
+| `reviewDate`         | When this translation was reviewed
+| `machineTranslated`  | Whether this was created via machine translation
+| `createdBy`          | User who created this translation
+| `updatedBy`          | User who last updated this translation
+| `version`            | Version number for tracking changes
+| `status`             | Current workflow status (draft, published, etc.)
+|===
+
+==== `ContentEntity`
+Represents a localizable content entity in the system.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `entityType`      | Type of entity (e.g., 'Page', 'Article', 'Product')
+| `entityId`        | ID of the entity in its original table
+| `defaultLocale`   | Default locale for this content entity
+| `createdDate`     | When this content entity was created
+| `lastUpdated`     | When this content entity was last updated
+| `status`          | Publication status (draft, published, archived)
+|===
+
+==== `LocalizedContent`
+Represents localized versions of a content entity's fields.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `contentEntity`   | Reference to the ContentEntity
+| `locale`          | Reference to the Locale entity
+| `fieldName`       | Name of the field being localized
+| `content`         | The localized content
+| `status`          | Status of this localized content (draft, approved, published)
+| `seoTitle`        | Localized SEO title for this content
+| `seoDescription`  | Localized SEO meta description
+| `seoKeywords`     | Localized SEO keywords
+| `slugUrl`         | Localized URL slug for this content
+| `version`         | Version number for tracking changes
+| `createdBy`       | User who created this localized content
+| `reviewedBy`      | User who reviewed this localized content
+|===
+
+==== `TranslationImport`
+Represents a batch import of translations.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `importDate`        | When the import occurred
+| `importSource`      | Source of the translations (file, API, etc.)
+| `locale`            | Reference to the target Locale
+| `importedBy`        | User who performed the import
+| `keysImported`      | Count of keys imported
+| `keysUpdated`       | Count of keys updated
+| `keysSkipped`       | Count of keys skipped
+| `validationErrors`  | Count of validation errors encountered
+| `status`            | Status of the import (completed, failed, etc.)
+|===
+
+==== `LocaleContentDefault`
+Defines which locale to use as a fallback when content is missing in a requested locale.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `locale`             | Reference to the Locale entity
+| `fallbackLocale`     | Primary fallback locale to try first
+| `secondaryFallback`  | Secondary fallback locale to try next
+| `finalFallback`      | Final fallback locale (typically system default)
+| `contentType`        | Type of content this fallback rule applies to (or null for all)
+|===
+
+==== `FieldType`
+Enumeration of content field types used for internationalization.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `UI_ELEMENT`       | User interface element (button, label, menu item)
+| `UI_MESSAGE`       | System message (error, confirmation, notification)
+| `PAGE_TITLE`       | Title of a page or screen
+| `PARAGRAPH`        | Multi-sentence content paragraph
+| `SHORT_TEXT`       | Brief text content (phrase, short sentence)
+| `RICH_TEXT`        | HTML or markdown formatted content
+| `SEO_TITLE`        | Search engine optimization title
+| `SEO_DESCRIPTION`  | Search engine optimization description
+| `SEO_KEYWORDS`     | Search engine optimization keywords
+| `EMAIL_SUBJECT`    | Email subject line
+| `EMAIL_BODY`       | Email message body
+| `NOTIFICATION`     | System notification message
+| `REPORT_TEXT`      | Text appearing in reports
+| `API_MESSAGE`      | Message returned by API endpoints
+| `HELP_TEXT`        | Contextual help or hint text
+| `LEGAL_TEXT`       | Legal terms, privacy policy, etc.
+| `DOCUMENT_CONTENT` | Official document template text
+| `SMS_MESSAGE`      | Text message content
+| `ENTITY_NAME`      | Name of a business entity/concept
+| `CATEGORY_NAME`    | Name of a category or classification
+|===
+
+==== `TranslationWorkflow`
+Manages the workflow status of translations in progress.
+
+[cols="1,3", options="header"]
+|===
+| Field                   | Description
+| `translation`           | Reference to the Translation entity
+| `status`                | Current workflow status
+| `assignedTo`            | User assigned to work on this translation
+| `requestedBy`           | User who requested this translation
+| `requestDate`           | When translation was requested
+| `deadline`              | Due date for completion
+| `priority`              | Priority level (high, medium, low)
+| `comments`              | Notes or comments about the translation
+| `reviewRequired`        | Whether this translation requires review
+| `assignedReviewer`      | User assigned to review this translation
+|===
+
+==== `TranslationWorkflowStatus`
+Enumeration of possible workflow statuses for translations.
+
+[cols="1,3", options="header"]
+|===
+| Value            | Description
+| `PENDING`        | Translation is pending work
+| `IN_PROGRESS`    | Translation is actively being worked on
+| `NEEDS_REVIEW`   | Translation is complete but needs review
+| `REVIEW_FAILED`  | Translation failed review and needs rework
+| `APPROVED`       | Translation has been reviewed and approved
+| `PUBLISHED`      | Translation is published and active in the system
+| `DEPRECATED`     | Translation is no longer in use
+|===
+
+==== `TranslationMemory`
+Provides translation suggestions based on previous translations.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `sourceLocale`   | Source locale of the original text
+| `targetLocale`   | Target locale of the translated text
+| `sourceText`     | Original text content
+| `targetText`     | Translated text content
+| `context`        | Context where this translation was used
+| `lastUsed`       | When this translation was last used
+| `useCount`       | How many times this translation has been used
+| `quality`        | Quality score for this translation memory entry
+|===
+
+==== `LocalizedResource`
+Represents non-text resources that need localization (images, audio, etc.).
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `resourceType`   | Type of resource (image, audio, video, document)
+| `resourceKey`    | Key identifying the resource purpose
+| `locale`         | Reference to the Locale entity
+| `resourceUrl`    | URL or path to the localized resource
+| `description`    | Description of the resource for management purposes
+| `altText`        | Accessibility alternative text for the resource
+| `createdBy`      | User who created this resource
+| `updatedBy`      | User who last updated this resource
+|===
+
+==== `PluralRule`
+Defines language-specific plural rules for handling quantities.
+
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `language`         | Reference to the Language entity
+| `pluralCategory`   | Plural category (zero, one, two, few, many, other)
+| `ruleExpression`   | CLDR expression defining when this rule applies
+| `description`      | Human-readable description of when this rule applies
+| `exampleNumbers`   | Example numbers that trigger this plural form
+|===
+
+==== `TranslationMessage`
+Represents a complex message that may include variables and plural forms.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `translationKey`    | Reference to the TranslationKey entity
+| `locale`            | Reference to the Locale entity
+| `messageFormat`     | ICU message format string with placeholders
+| `hasPlurals`        | Whether this message includes plural forms
+| `hasVariables`      | Whether this message includes variables
+| `variablesList`     | List of variable names used in the message
+| `examples`          | Example values to show translators for context
+|===
+
+==== `LocalizationConfig`
+System-wide configuration for internationalization behavior.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `defaultLocale`            | System-wide default locale
+| `fallbackStrategy`         | How to handle missing translations (use default, keep key, etc.)
+| `enableMachineTranslation` | Whether to use machine translation for missing content
+| `enforceTranslationReview` | Whether translations require review before publication
+| `cacheStrategy`            | How to cache translations for performance
+| `messageFormatLib`         | Library used for message formatting (ICU, gettext, etc.)
+| `translationMemoryEnabled` | Whether to use translation memory for suggestions
+| `missingTranslationAction` | Action to take on missing translations (log, notify, etc.)
+|===

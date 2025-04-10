@@ -1,0 +1,286 @@
+=== Economics Domain
+
+==== `WardAgeGenderWiseEconomicallyActivePopulation`
+Entity that tracks economically active population by ward, age group, and gender.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the population is recorded
+| `ageGroup`   | Age group category of the population
+| `gender`     | Gender of the population
+| `population` | Number of people in this category
+|===
+
+==== `EconomicallyActiveAgeGroup`
+Enumeration of age groups used for economic activity classification.
+
+[cols="1,3", options="header"]
+|===
+| Value         | Description
+| `AGE_0_TO_14` | Children (0-14 years): Pre-working age population
+| `AGE_15_TO_59`| Working age population (15-59 years): Primary labor force
+| `AGE_60_PLUS` | Elderly (60+ years): Post-working age population
+|===
+
+==== `WardWiseMajorOccupation`
+Entity that tracks major occupations by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the occupation is recorded
+| `occupation` | Type of occupation
+| `population` | Number of people in this occupation category
+|===
+
+==== `OccupationType`
+Enumeration of occupation types used for population classification.
+
+[cols="1,3", options="header"]
+|===
+| Value                   | Description
+| `GOVERNMENTAL_JOB`      | Government jobs (सरकारी नोकरी / जागिर)
+| `NON_GOVERNMENTAL_JOB`  | Non-government jobs (गैरसरकारी नोकरी / जागिर)
+| `LABOUR`                | Labor/wage work (ज्याला/ मजदुरी)
+| `FOREIGN_EMPLOYMENT`    | Foreign employment (वैदेशिक रोजगारी)
+| `BUSINESS`              | Business (व्यापार)
+| `OTHER_EMPLOYMENT`      | Other employment (अन्य रोजगारी)
+| `STUDENT`               | Student (विद्यार्थी)
+| `HOUSEHOLDER`           | Householder (गृहणी)
+| `OTHER_UNEMPLOYMENT`    | Other unemployment (अन्य बेरोजगार)
+| `INDUSTRY`              | Industry, trade, agriculture (उद्योग, व्यापार, कृषि)
+| `ANIMAL_HUSBANDRY`      | Animal husbandry (पशुपालन)
+| `OTHER_SELF_EMPLOYMENT` | Other self-employment (अन्य स्वरोजगार)
+|===
+
+==== `WardTimeWiseHouseholdChores`
+Entity that tracks time spent on household chores by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `timeSpent`  | Time category spent on household chores
+| `population` | Number of people in this time category
+|===
+
+==== `TimeSpentType`
+Enumeration of time categories used for household chores classification.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `LESS_THAN_1_HOUR`   | Less than 1 hour spent on household chores
+| `HOURS_1_TO_3`       | 1-3 hours spent on household chores
+| `HOURS_4_TO_6`       | 4-6 hours spent on household chores
+| `HOURS_7_TO_9`       | 7-9 hours spent on household chores
+| `HOURS_10_TO_12`     | 10-12 hours spent on household chores
+| `MORE_THAN_12_HOURS` | More than 12 hours spent on household chores
+|===
+
+==== `WardWiseHouseholdIncomeSource`
+Entity that tracks household income sources by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `ward`         | The ward where the data is recorded
+| `incomeSource` | Source of income (reference to IncomeSourceType)
+| `households`   | Number of households with this income source
+|===
+
+==== `IncomeSourceType`
+Enumeration of income source types used for household income classification.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `JOB`                | Employment/Job (नोकरी/जागिर)
+| `AGRICULTURE`        | Agriculture (कृषि)
+| `BUSINESS`           | Business/Commerce (व्यापार व्यवसाय)
+| `INDUSTRY`           | Industry (उद्योग)
+| `FOREIGN_EMPLOYMENT` | Foreign Employment (वैदेशिक रोजगारी)
+| `LABOUR`             | Wage/Day Labor (ज्याला मजदुरी)
+| `OTHER`              | Other sources (अन्य)
+|===
+
+==== `WardWiseRemittanceExpenses`
+Entity that tracks how households spend remittance money by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `ward`              | The ward where the data is recorded
+| `remittanceExpense` | Type of expense (reference to RemittanceExpenseType)
+| `households`        | Number of households with this expense type
+|===
+
+==== `RemittanceExpenseType`
+Enumeration of remittance expense types used for classifying how remittance funds are spent.
+
+[cols="1,3", options="header"]
+|===
+| Value                  | Description
+| `EDUCATION`            | Expenses on education (शिक्षामा खर्च गरेको)
+| `HEALTH`               | Expenses on healthcare (स्वास्थ्य उपचारमा खर्च)
+| `HOUSEHOLD_USE`        | Household consumption (घरायसी उपभोग)
+| `FESTIVALS`            | Weddings/ceremonies/festivals (विवाह/ब्रतबन्ध/चाडबाड मनाएको)
+| `LOAN_PAYMENT`         | Debt repayment (ऋण तिरेको)
+| `LOANED_OTHERS`        | Loans given to others (अरुलाई ऋण दिएको)
+| `SAVING`               | Savings (बचत गरेको)
+| `HOUSE_CONSTRUCTION`   | House construction (घर बनाएको)
+| `LAND_OWNERSHIP`       | Land purchase (जग्गा किनेको)
+| `JEWELRY_PURCHASE`     | Jewelry purchase (गरगहना खरिद गरेको)
+| `GOODS_PURCHASE`       | Livestock/goods purchase (वस्तुभाउ खरिद गरेको)
+| `BUSINESS_INVESTMENT`  | Business investment (व्यापार/व्यवसायमा लगानी गरेको)
+| `OTHER`                | Other expenses (अन्य)
+| `UNKNOWN`              | Unknown (थाहा छैन)
+|===
+
+==== `WardWiseAnnualIncomeSustenance`
+Entity that tracks how many months households can sustain themselves on their annual income.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `ward`            | The ward where the data is recorded
+| `monthsSustained` | Number of months household can sustain on annual income (reference to MonthsSustainedType)
+| `households`      | Number of households in this category
+|===
+
+==== `MonthsSustainedType`
+Enumeration of months sustained types used for annual income sustenance classification.
+
+[cols="1,3", options="header"]
+|===
+| Value                 | Description
+| `UPTO_THREE_MONTHS`   | Up to 3 months of sustenance (३ महिना सम्म)
+| `THREE_TO_SIX_MONTHS` | 3-6 months of sustenance (३ देखि ६ महिना)
+| `SIX_TO_NINE_MONTHS`  | 6-9 months of sustenance (६ देखि ९ महिना)
+| `TWELVE_MONTHS`       | Year-round sustenance (बर्षैभरी)
+|===
+
+==== `WardWiseHouseholdsOnLoan`
+Entity that tracks number of households with active loans by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `households` | Number of households with active loans
+|===
+
+==== `WardWiseHouseholdsLoanUse`
+Entity that tracks purposes for which households have taken loans by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `loanUse`    | Purpose of loan (reference to LoanUseType)
+| `households` | Number of households with loans for this purpose
+|===
+
+==== `LoanUseType`
+Enumeration of loan use types describing the purpose for which households have taken loans.
+
+[cols="1,3", options="header"]
+|===
+| Value                  | Description
+| `BUSINESS_INDUSTRY`    | For business/industry (व्यापार/उद्योग व्यवसायको लागि)
+| `AGRICULTURAL_BUSINESS`| For agricultural business (कृषि व्यवसायको लागि)
+| `REAL_ESTATE`          | For building houses/buying land (घर बनाउन/जग्गा जमिन किन्न)
+| `SOCIAL_FUNCTIONING`   | For birth/death/marriage/ceremonies (जन्म/मृत्यु/विवाह/व्रतबन्धको लागि)
+| `FESTIVAL`             | For celebrating festivals (चाडपर्व मनाउन)
+| `MEDICINAL`            | For medical treatment (औषधी उपचारको लागि)
+| `EDUCATIONAL`          | For educational fees and materials (शैक्षिक शुल्क तिर्न तथा शैक्षिक सामाग्री किन्न)
+| `HOUSE_USE`            | For household consumption (घरायसी उपभोग गर्न)
+| `SEND_FAMILY_ABROAD`   | To send family members abroad (परिवारका सदस्यलाई विदेश पठाउन)
+| `OTHER`                | For other purposes (अन्य प्रयोजनका लागि)
+|===
+
+==== `WardWiseTrainedPopulation`
+Entity that tracks population with specialized skills or training by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `ward`              | The ward where the data is recorded
+| `trainedPopulation` | Number of people with specialized skills or training
+|===
+
+==== `WardWiseMajorSkills`
+Entity that tracks specific skills present in the population by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `skill`      | Type of skill (reference to SkillType)
+| `population` | Number of people with this skill
+|===
+
+==== `SkillType`
+Enumeration of skill types used for population classification.
+
+[cols="1,3", options="header"]
+|===
+| Value                             | Description
+| `TEACHING_RELATED`                | Teaching related (शिक्षण शिकाई सम्बन्धी)
+| `PHOTOGRAPHY_RELATED`             | Audio-visual and photography related (श्रव्यदृष्य तथा फोटोग्राफी सम्बन्धी)
+| `HANDICRAFT_RELATED`              | Handicraft/art related (हस्तकला / चित्रकला सम्बन्धी)
+| `MUSIC_DRAMA_RELATED`             | Music, drama and artistry (गीत, संगीत, नाटक तथा कलाकारिता)
+| `STONEWORK_WOODWORK`              | Sculpture, stone art, wood art (मूर्तिकला, प्रस्तरकला, काष्ठकला)
+| `CARPENTERY_RELATED`              | Carpentry related (सिकर्मी, डकर्मी सम्बन्धी)
+| `PLUMBING`                        | Plumbing related (प्लम्बिङ सम्बन्धी)
+| `HUMAN_HEALTH_RELATED`            | Human health related (मानव स्वास्थ्यसँग सम्बन्धी)
+| `ANIMAL_HEALTH_RELATED`           | Veterinary and animal health related (पशुचिकित्सा तथा पशुस्वास्थ्य सम्बन्धी)
+| `ELECTRICITY_INSTALLMENT_RELATED` | Electrical installation related (बिजुली जडान सम्बन्धी)
+| `HOTEL_RESTAURANT_RELATED`        | Hotel and restaurant related (होटल तथा रेष्टुरेन्ट सम्बन्धी)
+| `AGRICULTURE_RELATED`             | Agriculture, animal husbandry, fish farming, beekeeping (कृषि, पशुपालन, माछापालन, मौरी पालन सम्बन्धी)
+| `PRINTING_RELATED`                | Printing related (छपाई सम्बन्धी)
+| `DRIVING_RELATED`                 | Driving related (सवारी चालक सम्बन्धी)
+| `MECHANICS_RELATED`               | Mechanics related (यान्त्रिक (मेकानिक्स) सम्बन्धी)
+| `FURNITURE_RELATED`               | Furniture making related (फर्निचर बनाउने सम्बन्धी)
+| `SHOEMAKING_RELATED`              | Shoe making (जुत्ता चप्पल बनाउने)
+| `SEWING_RELATED`                  | Clothing making/sewing (पोशाक बनाउने / सिउने)
+| `JWELLERY_MAKING_RELATED`         | Jewelry making/repair (गरगहना बनाउने / मर्मत गर्ने)
+| `BEUATICIAN_RELATED`              | Hair styling/beauty related (केश सजावट / श्रृंगार सम्बन्धी)
+| `SELF_PROTECTION_RELATED`         | Self-protection/physical fitness (आत्मसुरक्षा सम्बन्धी / शारीरिक सुगठन)
+| `LAND_SURVEY_RELATED`             | Land surveying related (जमिनको सर्भेक्षण सम्बन्धी)
+| `COMPUTER_SCIENCE_RELATED`        | Computer science related (कम्प्युटर विज्ञान सम्बन्धी)
+| `ENGINEERING_DESIGN_RELATED`      | Engineering design related (इन्जिनियरिङ डिजाईन सम्बन्धी)
+| `RADIO_TELEVISION_ELECTRICAL_REPAIR` | Radio, TV, mobile and other electrical repairs (रेडियो, टेलिभिजन, मोबाईल, तथा अन्य ईलेक्ट्रिक बस्तुको मर्मत)
+| `LITERARY_CREATION_RELATED`       | Literary creation related (साहित्य श्रृजना सम्बन्धी)
+| `OTHER`                           | Other skills (अन्य)
+| `NONE`                            | No special skills/expertise (विशेष सीप / दक्षता नभएको)
+|===
+
+==== `ExportedProducts`
+Entity that tracks products exported from the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `productName`  | Name of the product exported from the municipality
+|===
+
+==== `ImportedProducts`
+Entity that tracks products imported into the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `productName`  | Name of the product imported into the municipality
+|===
+
+==== `WardWiseHouseholdLandPosessions`
+Entity that tracks land ownership by households per ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `households` | Number of households possessing land
+|===

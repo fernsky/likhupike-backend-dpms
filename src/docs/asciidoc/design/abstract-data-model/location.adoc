@@ -1,0 +1,40 @@
+=== Location Domain
+
+==== `Municipality`
+Administrative division representing a municipal corporation or rural municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field                    | Description
+| `province`               | Province to which the municipality belongs
+| `district`               | District to which the municipality belongs
+| `rightmostLatitude`      | Easternmost latitude coordinate of the municipality boundary
+| `leftmostLatitude`       | Westernmost latitude coordinate of the municipality boundary
+| `bottommostLongitude`    | Southernmost longitude coordinate of the municipality boundary
+| `topmostLongitude`       | Northernmost longitude coordinate of the municipality boundary
+| `lowestAltitude`         | Lowest elevation point within the municipality (meters above sea level)
+| `highestAltitude`        | Highest elevation point within the municipality (meters above sea level)
+| `areaInSquareKilometers` | Total land area of the municipality in square kilometers
+|===
+
+==== `Ward`
+Smallest administrative division within a municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field                     | Description
+| `number`                  | Ward number within the municipality
+| `area`                    | Area of the ward in square kilometers
+| `formingLocalBody`        | Previous local body that formed this ward (before restructuring)
+| `formingConstituentWards` | Previous ward numbers that were combined to form this ward
+|===
+
+==== `MajorSettlementAreas`
+Significant population centers or settlements within a ward.
+
+[cols="1,3", options="header"]
+|===
+| Field  | Description
+| `ward` | Ward to which this settlement belongs
+| `name` | Name of the settlement area
+|===

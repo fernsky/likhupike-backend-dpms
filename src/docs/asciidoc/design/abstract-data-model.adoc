@@ -1,72 +1,17 @@
 == Abstract Data Model
 
-[cols="1,2,2", options="header"]
-|===
-|Entity |Description |Fields
+This section defines the abstract data model for the Digital Profile Information System (DPIS).
+The model is organized by domains with detailed entity definitions.
 
-|`Municipality` 
-|Administrative division representing a municipal corporation or rural municipality.
-|`province`, `district`, `rightmostLatitude`, `leftmostLatitude`, `bottommostLongitude`, `topmostLongitude`, `lowestAltitude`, `highestAltitude`, `areaInSquareKilometers`
+include::abstract-data-model/location.adoc[]
 
-|`Ward`
-|Smallest administrative division within a municipality.
-|`number`, `area`, `formingLocalBody`, `formingConstituentWards`
+include::abstract-data-model/land.adoc[]
 
-|`MajorSettlementAreas`
-|Significant population centers or settlements within a ward.
-|`ward`, `name`
+include::abstract-data-model/demographics.adoc[]
 
-|`LandUse`
-|Classification of land according to its usage type with area statistics.
-|`landType`, `area`, `percentage`
+include::abstract-data-model/economics.adoc[]
 
-|`LandType`
-|Enumeration of different types of land usage categories.
-|`AGRICULTURAL_LAND`, `RESIDENTIAL_LAND`, `COMMERCIAL_LAND`, `INDUSTRIAL_LAND`, `MINING_AND_MINERAL_AREAS`, `FOREST_AREAS`, `RIVERS_LAKES_AND_WETLANDS`, `PUBLIC_USE_AREAS`, `CULTURAL_AND_ARCHAEOLOGICAL_IMPORTANCE_AREAS`, `OTHER_GOVERNMENT_DESIGNATED_AREAS`
+include::abstract-data-model/institutions.adoc[]
 
-|`LandSlope`
-|Categorization of land by slope degree with usage information.
-|`slopeClassByDegree`, `useCase`, `area`, `percentage`
-
-|`SlopeClassByDegree`
-|Enumeration of land slope categories by degree measurement.
-|`FLAT_0_5`, `GENTLE_6_15`, `MODERATE_16_25`, `STEEP_26_35`, `VERY_STEEP_36_60`, `EXTREME_61_PLUS`
-
-|`LandAspect`
-|Classification of land by directional orientation with area statistics.
-|`aspectType`, `area`, `percentage`
-
-|`DemographicSummary`
-|Comprehensive demographic statistics for an administrative area.
-|`totalPopulation`, `populationMale`, `populationFemale`, `populationOther`, `populationAbsenteeTotal`, `populationMaleAbsentee`, `populationFemaleAbsentee`, `populationOtherAbsentee`, `sexRatio`, `totalHouseholds`, `averageHouseholdSize`, `populationDensity`, `population0To14`, `population15To59`, `population60AndAbove`, `growthRate`, `literacyRateAbove15`, `literacyRate15To24`
-
-|`WardTimeSeriesPopulation`
-|Historical population data for a ward across multiple time periods.
-|`year`, `ward`, `totalPopulation`, `populationMale`, `populationFemale`, `populationOther`, `totalHouseholds`, `averageHouseholdSize`, `sexRatio`
-
-|`WardWiseDeomgraphicSummary`
-|Demographic summary statistics specific to a ward.
-|`ward`, `totalPopulation`, `populationMale`, `populationFemale`, `populationOther`, `totalHouseholds`, `averageHouseholdSize`, `sexRatio`
-
-|`WardAgeWisePopulation`
-|Population statistics for a ward broken down by age groups and gender.
-|`ward`, `ageGroup`, `gender`, `population`
-
-|`WardAgeWisePopulationAgeGroup`
-|Enumeration of age group categories used for demographic analysis.
-|`AGE_0_4`, `AGE_5_9`, `AGE_10_14`, `AGE_15_19`, `AGE_20_24`, `AGE_25_29`, `AGE_30_34`, `AGE_35_39`, `AGE_40_44`, `AGE_45_49`, `AGE_50_54`, `AGE_55_59`, `AGE_60_64`, `AGE_65_69`, `AGE_70_74`, `AGE_75_AND_ABOVE`
-
-|`Gender`
-|Enumeration of gender categories used for demographic classification.
-|`MALE`, `FEMALE`, `OTHER`
-
-|`WardWiseCastePopulation`
-|Population statistics for a ward broken down by caste or ethnicity.
-|`ward`, `casteType`, `population`
-
-|`CasteType`
-|Enumeration of caste and ethnic groups for demographic classification.
-|`CHETTRI`, `BRAHMAN_HILL`, `LIMBU`, `SHERPA`, `TAMANG`, `RAI`, `MAGAR`, `THARU`, `NEWAR`, `KAMI`, `MUSALMAN`, `YADAV`, `GURUNG`, `DAMAI`, `THAKURI`, `SARKI`, `TELI`, `CHAMAR`, `KOIRI`, `MUSHAR`, `KURMI`, `SANYASI`, `DHANUK`, `DUSADH`, `MALLAHA`, `KEWAT`, `KATHBANIYA`, `BRAHMAN_TERAI`, `KALWAR`, `KANU`, `KUMAL`, `GHARTI`, `HAJAM`, `RAJBANSHI`, `DHOBI`, `TATMA`, `LOHAR`, `KHATWE`, `SUNDI`, `DANUWAR`, `HALUWAI`, `MAJHI`, `BARAI`, `BIN`, `NUNIA`, `CHEPANG`, `SONAR`, `KUMHAR`, `SUNUWAR`, `BANTAR`, `KAHAR`, `SATAR`, `MARWADI`, `KAYASTHA`, `RAJPUT`, `BADI`, `JHANGAD`, `GANGAI`, `LODH`, `BADHAI`, `THAMI`, `KULUNG`, `BENGALI`, `GADERI`, `DHIMAL`, `YAKHHA`, `GHALE`, `TAJPURIYA`, `KHAWAS`, `DARAI`, `MAALI`, `DHUNIYA`, `PAHARI`, `RAAJDHOB`, `BHOTE`, `DOM`, `THAKALI`, `KORI`, `CHATYAL`, `HYOLMO`, `BOTE`, `RAJBHAR`, `BARAM`, `PUNJABI`, `NACHIRING`, `YAMPHU`, `GAINE`, `CHAMLING`, `AATHPAHARIYA`, `JIREL`, `DURA`, `SARBARIYA`, `MECHE`, `BANTAWA`, `RAJI`, `DOLPO`, `HALAKHOR`, `BYASI`, `AMAT`, `THULUNG`, `LEPCHA`, `PATTHARKATTA`, `MEWAHANG`, `BAHING`, `NATUWA`, `HAYU`, `DHANKAR`, `LHOPA`, `MUNDA`, `DEV`, `DHANDI`, `KAMAR`, `KISAN`, `SAMPANG`, `KOCHE`, `LHOMI`, `KHALING`, `TOPKEGOLA`, `CHIDIMAR`, `WALUNG`, `LOHARUNG`, `KALAR`, `RAUTE`, `NURANG`, `KUSUNDA`, `RANATHARU`, `BHUMIHAR`, `FOREIGN`, `OTHER`
-|===
-
+include::abstract-data-model/internationalization.adoc[]
 

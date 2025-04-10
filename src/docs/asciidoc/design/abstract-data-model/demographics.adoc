@@ -1,0 +1,374 @@
+=== Demographics Domain
+
+==== `DemographicSummary`
+Comprehensive demographic statistics for an administrative area.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `totalPopulation`          | Total number of people residing in the area
+| `populationMale`           | Number of male residents
+| `populationFemale`         | Number of female residents
+| `populationOther`          | Number of residents with other gender identities
+| `populationAbsenteeTotal`  | Total number of people registered but not currently residing in the area
+| `populationMaleAbsentee`   | Number of male absentee residents
+| `populationFemaleAbsentee` | Number of female absentee residents
+| `populationOtherAbsentee`  | Number of other gender absentee residents
+| `sexRatio`                 | Ratio of males to females (typically per 100 females)
+| `totalHouseholds`          | Total number of households in the area
+| `averageHouseholdSize`     | Average number of people per household
+| `populationDensity`        | Number of people per square kilometer
+| `population0To14`          | Population in age group 0-14 years
+| `population15To59`         | Population in age group 15-59 years
+| `population60AndAbove`     | Population in age group 60 years and above
+| `growthRate`               | Annual population growth rate (percentage)
+| `literacyRateAbove15`      | Literacy rate for population above 15 years (percentage)
+| `literacyRate15To24`       | Literacy rate for population between 15-24 years (percentage)
+|===
+
+==== `WardTimeSeriesPopulation`
+Historical population data for a ward across multiple time periods.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `year`                 | Year of the population data
+| `ward`                 | Reference to the ward entity
+| `totalPopulation`      | Total population in the ward for the specified year
+| `populationMale`       | Male population in the ward for the specified year
+| `populationFemale`     | Female population in the ward for the specified year
+| `populationOther`      | Other gender population in the ward for the specified year
+| `totalHouseholds`      | Number of households in the ward for the specified year
+| `averageHouseholdSize` | Average household size in the ward for the specified year
+| `sexRatio`             | Sex ratio in the ward for the specified year
+|===
+
+==== `WardWiseDeomgraphicSummary`
+Demographic summary statistics specific to a ward.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `ward`                 | Reference to the ward entity
+| `totalPopulation`      | Total population in the ward
+| `populationMale`       | Male population in the ward
+| `populationFemale`     | Female population in the ward
+| `populationOther`      | Other gender population in the ward
+| `totalHouseholds`      | Number of households in the ward
+| `averageHouseholdSize` | Average household size in the ward
+| `sexRatio`             | Sex ratio in the ward
+|===
+
+==== `WardAgeWisePopulation`
+Population statistics for a ward broken down by age groups and gender.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `ageGroup`   | Age group category (reference to WardAgeWisePopulationAgeGroup)
+| `gender`     | Gender category (reference to Gender)
+| `population` | Number of people in the specified ward, age group, and gender
+|===
+
+==== `WardAgeWisePopulationAgeGroup`
+Enumeration of age group categories used for demographic analysis.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `AGE_0_4`          | Ages 0 to 4 years
+| `AGE_5_9`          | Ages 5 to 9 years
+| `AGE_10_14`        | Ages 10 to 14 years
+| `AGE_15_19`        | Ages 15 to 19 years
+| `AGE_20_24`        | Ages 20 to 24 years
+| `AGE_25_29`        | Ages 25 to 29 years
+| `AGE_30_34`        | Ages 30 to 34 years
+| `AGE_35_39`        | Ages 35 to 39 years
+| `AGE_40_44`        | Ages 40 to 44 years
+| `AGE_45_49`        | Ages 45 to 49 years
+| `AGE_50_54`        | Ages 50 to 54 years
+| `AGE_55_59`        | Ages 55 to 59 years
+| `AGE_60_64`        | Ages 60 to 64 years
+| `AGE_65_69`        | Ages 65 to 69 years
+| `AGE_70_74`        | Ages 70 to 74 years
+| `AGE_75_AND_ABOVE` | Ages 75 years and above
+|===
+
+==== `Gender`
+Enumeration of gender categories used for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value     | Description
+| `MALE`    | Male gender identity
+| `FEMALE`  | Female gender identity
+| `OTHER`   | Other gender identities
+|===
+
+==== `WardWiseCastePopulation`
+Population statistics for a ward broken down by caste or ethnicity.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `casteType`  | Caste or ethnic group (reference to CasteType)
+| `population` | Number of people belonging to the specified caste in the ward
+|===
+
+==== `CasteType`
+Enumeration of caste and ethnic groups for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `CHETTRI`       | Chhetri ethnic group
+| `BRAHMAN_HILL`  | Hill Brahman ethnic group
+| `LIMBU`         | Limbu ethnic group
+| `SHERPA`        | Sherpa ethnic group
+| `TAMANG`        | Tamang ethnic group
+| `RAI`           | Rai ethnic group
+| `MAGAR`         | Magar ethnic group
+| `THARU`         | Tharu ethnic group
+| `NEWAR`         | Newar ethnic group
+| `KAMI`          | Kami ethnic group
+| [various others]| Other castes and ethnic groups as per Nepal's demographic classification
+|===
+
+==== `WardWiseMotherTongue`
+Population statistics for a ward broken down by primary language spoken.
+
+[cols="1,3", options="header"]
+|===
+| Field         | Description
+| `ward`        | Reference to the ward entity
+| `languageType`| Language category (reference to LanguageType)
+| `population`  | Number of people speaking the specified language in the ward
+|===
+
+==== `LanguageType`
+Enumeration of language categories used for linguistic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value      | Description
+| `NEPALI`   | Nepali language
+| `LIMBU`    | Limbu language
+| `RAI`      | Rai language
+| `HINDI`    | Hindi language
+| `NEWARI`   | Newari language
+| `SHERPA`   | Sherpa language
+| `TAMANG`   | Tamang language
+| `MAITHILI` | Maithili language
+| [various others] | Other languages spoken in Nepal
+|===
+
+==== `WardWiseReligion`
+Population statistics for a ward broken down by religious affiliation.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `ward`         | Reference to the ward entity
+| `religionType` | Religion category (reference to ReligionType)
+| `population`   | Number of people practicing the specified religion in the ward
+|===
+
+==== `ReligionType`
+Enumeration of religion categories used for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value      | Description
+| `HINDU`    | Hindu religion
+| `BUDDHIST` | Buddhist religion
+| `KIRANT`   | Kirant religion
+| `CHRISTIAN`| Christian religion
+| `ISLAM`    | Islam religion
+| `NATURE`   | Nature worship
+| `BON`      | Bon religion
+| `JAIN`     | Jain religion
+| `BAHAI`    | Baha'i religion
+| `SIKH`     | Sikh religion
+| `OTHER`    | Other religions
+|===
+
+==== `WardWiseHouseHeadGender`
+Statistics on the gender of household heads by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `gender`     | Gender of the household head (reference to Gender)
+| `population` | Number of households with this gender as head
+|===
+
+==== `AgeWiseMaritalStatus`
+Population statistics broken down by age group and marital status.
+
+[cols="1,3", options="header"]
+|===
+| Field           | Description
+| `ageGroup`      | Age group category (reference to MaritalStatusAgeGroup)
+| `maritalStatus` | Marital status category (reference to MaritalStatus)
+| `population`    | Number of people in this age group with this marital status
+|===
+
+==== `MaritalStatusAgeGroup`
+Enumeration of age group categories used for marital status analysis.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `AGE_BELOW_15`     | Ages below 15 years
+| `AGE_15_19`        | Ages 15 to 19 years
+| `AGE_20_24`        | Ages 20 to 24 years
+| `AGE_25_29`        | Ages 25 to 29 years
+| `AGE_30_34`        | Ages 30 to 34 years
+| `AGE_35_39`        | Ages 35 to 39 years
+| `AGE_40_44`        | Ages 40 to 44 years
+| `AGE_45_49`        | Ages 45 to 49 years
+| `AGE_50_54`        | Ages 50 to 54 years
+| `AGE_55_59`        | Ages 55 to 59 years
+| `AGE_60_64`        | Ages 60 to 64 years
+| `AGE_65_69`        | Ages 65 to 69 years
+| `AGE_70_74`        | Ages 70 to 74 years
+| `AGE_75_AND_ABOVE` | Ages 75 years and above
+|===
+
+==== `MaritalStatus`
+Enumeration of marital status categories used for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `UNMARRIED`     | Unmarried/single (विवाह नभएको)
+| `ONE_MARRIAGE`  | Married once (एक विवाह)
+| `MULTI_MARRIAGE`| Multiple marriages (बहुविवाह)
+| `REMARRIAGE`    | Remarried (पुनर्विवाह)
+| `WIDOWED`       | Widowed (विधुर/विधवा)
+| `DIVORCED`      | Divorced (पारपाचुके)
+| `SEPARATED`     | Separated (छुट्टिएको)
+|===
+
+==== `WardAgeGenderWiseMarriedAge`
+Statistics on the age at which people got married, broken down by ward, current age group, and gender.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `ageGroup`   | Age group category at which marriage occurred (reference to MarriedAgeGroup)
+| `gender`     | Gender category (reference to Gender)
+| `population` | Number of people in this demographic category
+|===
+
+==== `MarriedAgeGroup`
+Enumeration of age group categories at which marriage occurred.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `AGE_BELOW_15`     | Married before age 15
+| `AGE_15_19`        | Married between ages 15-19
+| `AGE_20_24`        | Married between ages 20-24
+| `AGE_25_29`        | Married between ages 25-29
+| `AGE_30_34`        | Married between ages 30-34
+| `AGE_35_39`        | Married between ages 35-39
+| `AGE_40_AND_ABOVE` | Married at age 40 or above
+|===
+
+==== `WardAgeGenderWiseAbsentee`
+Statistics on absentee population by ward, gender, and age group.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `gender`     | Gender category (reference to Gender)
+| `ageGroup`   | Age group category (reference to AbsenteeAgeGroup)
+| `population` | Number of absentee people in this demographic category
+|===
+
+==== `AbsenteeAgeGroup`
+Enumeration of age group categories used for absentee population analysis.
+
+[cols="1,3", options="header"]
+|===
+| Value             | Description
+| `AGE_0_4`         | Ages 0 to 4 years
+| `AGE_5_9`         | Ages 5 to 9 years
+| `AGE_10_14`       | Ages 10 to 14 years
+| `AGE_15_19`       | Ages 15 to 19 years
+| `AGE_20_24`       | Ages 20 to 24 years
+| `AGE_25_29`       | Ages 25 to 29 years
+| `AGE_30_34`       | Ages 30 to 34 years
+| `AGE_35_39`       | Ages 35 to 39 years
+| `AGE_40_44`       | Ages 40 to 44 years
+| `AGE_45_49`       | Ages 45 to 49 years
+| `AGE_50_AND_ABOVE`| Ages 50 years and above
+|===
+
+==== `WardWiseAbsenteeEducationalLevel`
+Statistics on educational attainment of absentee population by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `ward`             | Reference to the ward entity
+| `educationalLevel` | Educational level category
+| `population`       | Number of absentee people with this educational level
+|===
+
+==== `WardWiseAbsenteeAbsenceReason`
+Statistics on reasons for absence by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `cause`      | Reason for absence (reference to AbsenceReason)
+| `population` | Number of absentee people with this reason
+|===
+
+==== `AbsenceReason`
+Enumeration of reasons for population absence used in demographic tracking.
+
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `BUSINESS`          | Business or entrepreneurship (व्यापार/व्यवसाय)
+| `PRIVATE_JOB`       | Private sector employment (निजी नोकरी)
+| `GOVERNMENTAL_JOB`  | Government employment (सरकारी जागिर)
+| `STUDY`             | Education or training (अध्ययन/तालिम)
+| `WORK`              | Seeking employment (काम/जागिरको खोजी)
+| `DEPENDENT`         | Dependent on others (आश्रित)
+| `CONFLICT`          | Conflict-related displacement (द्वन्द्व)
+| `OTHER`             | Other reasons (अन्य)
+| `UNKNOWN`           | Unknown reason (थाहा छैन)
+|===
+
+==== `WardWiseAbsenteeLocation`
+Statistics on where absentee population is located by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `location`   | Location category (reference to LocationType)
+| `population` | Number of absentee people in this location
+|===
+
+==== `LocationType`
+Enumeration of location types for tracking where absent population members are located.
+
+[cols="1,3", options="header"]
+|===
+| Value                                   | Description
+| `ANOTHER_DISTRICT`                      | Another district in Nepal (नेपालको अर्को जिल्ला)
+| `ANOTHER_MUNICIPALITY_IN_SAME_DISTRICT` | Another municipality in the same district (यही जिल्लाको अर्को स्थानीय तह)
+| `ANOTHER_COUNTRY`                       | Foreign country (बिदेश)
+| `UNKNOWN`                               | Unknown location (थाहा छैन)
+|===

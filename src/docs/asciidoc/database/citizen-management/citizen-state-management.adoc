@@ -5,21 +5,21 @@ The system implements a state management workflow for citizens, tracking their v
 ===== State Fields in Citizens Table
 
 .State Management Columns
-[cols="2,2,1,4",options="header"]
+[cols="2,2,1,4", options="header"]
 |===
-|Column Name |Data Type |Nullable |Description
-|`state` |`VARCHAR(50)` |`false` |Current state in the verification workflow
-|`state_note` |`VARCHAR(500)` |`true` |Optional note explaining current state
-|`state_updated_at` |`TIMESTAMP WITH TIME ZONE` |`true` |Timestamp when state was last updated
-|`state_updated_by` |`UUID` |`true` |User who last updated the state
+| Column Name                   | Data Type                 | Nullable | Description
+| `state`                       | `VARCHAR(50)`             | `false`  | Current state in the verification workflow
+| `state_note`                  | `VARCHAR(500)`            | `true`   | Optional note explaining current state
+| `state_updated_at`            | `TIMESTAMP WITH TIME ZONE` | `true`  | Timestamp when state was last updated
+| `state_updated_by`            | `UUID`                    | `true`   | User who last updated the state
 
-|`is_deleted` |`BOOLEAN` |`false` |Soft deletion flag
-|`deleted_at` |`TIMESTAMP WITH TIME ZONE` |`true` |Soft deletion timestamp
-|`deleted_by` |`UUID` |`true` |User who performed the deletion
+| `is_deleted`                  | `BOOLEAN`                 | `false`  | Soft deletion flag
+| `deleted_at`                  | `TIMESTAMP WITH TIME ZONE` | `true`  | Soft deletion timestamp
+| `deleted_by`                  | `UUID`                    | `true`   | User who performed the deletion
 
-|`is_approved` |`BOOLEAN` |`false` |Approval status flag
-|`approved_at` |`TIMESTAMP WITH TIME ZONE` |`true` |Approval timestamp
-|`approved_by` |`UUID` |`true` |User who approved the citizen
+| `is_approved`                 | `BOOLEAN`                 | `false`  | Approval status flag
+| `approved_at`                 | `TIMESTAMP WITH TIME ZONE` | `true`  | Approval timestamp
+| `approved_by`                 | `UUID`                    | `true`   | User who approved the citizen
 |===
 
 ===== State Enumeration
@@ -34,14 +34,14 @@ The `state` column accepts the following values:
 ===== State Transition Rules
 
 .Valid State Transitions
-[cols="2,3",options="header"]
+[cols="2,3", options="header"]
 |===
-|Current State |Allowed Next States
-|`PENDING_REGISTRATION` |`UNDER_REVIEW`, `ACTION_REQUIRED`, `APPROVED`, `REJECTED`
-|`UNDER_REVIEW` |`ACTION_REQUIRED`, `APPROVED`, `REJECTED`
-|`ACTION_REQUIRED` |`UNDER_REVIEW`, `APPROVED`, `REJECTED`
-|`REJECTED` |`UNDER_REVIEW`, `ACTION_REQUIRED`
-|`APPROVED` |`ACTION_REQUIRED`, `REJECTED`
+| Current State                | Allowed Next States
+| `PENDING_REGISTRATION`       | `UNDER_REVIEW`, `ACTION_REQUIRED`, `APPROVED`, `REJECTED`
+| `UNDER_REVIEW`               | `ACTION_REQUIRED`, `APPROVED`, `REJECTED`
+| `ACTION_REQUIRED`            | `UNDER_REVIEW`, `APPROVED`, `REJECTED`
+| `REJECTED`                   | `UNDER_REVIEW`, `ACTION_REQUIRED`
+| `APPROVED`                   | `ACTION_REQUIRED`, `REJECTED`
 |===
 
 ===== Approval Workflow

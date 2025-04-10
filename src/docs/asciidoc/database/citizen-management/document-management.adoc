@@ -5,20 +5,20 @@ The citizen management system handles document storage and verification workflow
 ===== Document Fields in Citizens Table
 
 .Document Management Columns
-[cols="2,2,1,4",options="header"]
+[cols="2,2,1,4", options="header"]
 |===
-|Column Name |Data Type |Nullable |Description
-|`photo_key` |`VARCHAR(255)` |`true` |Storage key for citizen's photo
-|`photo_state` |`VARCHAR(50)` |`true` |Verification state of photo
-|`photo_state_note` |`VARCHAR(255)` |`true` |Note about photo verification
+| Column Name                      | Data Type                 | Nullable | Description
+| `photo_key`                      | `VARCHAR(255)`            | `true`   | Storage key for citizen's photo
+| `photo_state`                    | `VARCHAR(50)`             | `true`   | Verification state of photo
+| `photo_state_note`               | `VARCHAR(255)`            | `true`   | Note about photo verification
 
-|`citizenship_front_key` |`VARCHAR(255)` |`true` |Storage key for citizenship certificate front
-|`citizenship_front_state` |`VARCHAR(50)` |`true` |Verification state of citizenship front
-|`citizenship_front_state_note` |`VARCHAR(255)` |`true` |Note about citizenship front verification
+| `citizenship_front_key`          | `VARCHAR(255)`            | `true`   | Storage key for citizenship certificate front
+| `citizenship_front_state`        | `VARCHAR(50)`             | `true`   | Verification state of citizenship front
+| `citizenship_front_state_note`   | `VARCHAR(255)`            | `true`   | Note about citizenship front verification
 
-|`citizenship_back_key` |`VARCHAR(255)` |`true` |Storage key for citizenship certificate back
-|`citizenship_back_state` |`VARCHAR(50)` |`true` |Verification state of citizenship back
-|`citizenship_back_state_note` |`VARCHAR(255)` |`true` |Note about citizenship back verification
+| `citizenship_back_key`           | `VARCHAR(255)`            | `true`   | Storage key for citizenship certificate back
+| `citizenship_back_state`         | `VARCHAR(50)`             | `true`   | Verification state of citizenship back
+| `citizenship_back_state_note`    | `VARCHAR(255)`            | `true`   | Note about citizenship back verification
 |===
 
 ===== Document State Enumeration
@@ -44,12 +44,12 @@ Document files are not stored directly in the database. Instead:
 ===== File Format Constraints
 
 .File Format Constraints by Document Type
-[cols="2,2,2",options="header"]
+[cols="2,2,2", options="header"]
 |===
-|Document Type |Allowed Formats |Maximum Size
-|Citizen Photo |JPEG, PNG |5 MB
-|Citizenship Certificate (Front) |JPEG, PNG, PDF |10 MB
-|Citizenship Certificate (Back) |JPEG, PNG, PDF |10 MB
+| Document Type                    | Allowed Formats          | Maximum Size
+| Citizen Photo                    | JPEG, PNG                | 5 MB
+| Citizenship Certificate (Front)  | JPEG, PNG, PDF           | 10 MB
+| Citizenship Certificate (Back)   | JPEG, PNG, PDF           | 10 MB
 |===
 
 ===== Document Workflow

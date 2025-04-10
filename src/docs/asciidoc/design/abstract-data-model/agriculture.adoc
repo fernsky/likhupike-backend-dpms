@@ -1,0 +1,338 @@
+=== Agriculture Domain
+
+==== `WardWiseHouseholdAgriculturalInvolvement`
+Entity that tracks number of households involved in agriculture by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `households` | Number of households involved in agriculture
+|===
+
+==== `MajorAgriculturalCrops`
+Entity that tracks major crops grown in the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field      | Description
+| `cropType` | Type of crop (reference to CropType)
+| `cropName` | Specific name of the crop
+|===
+
+==== `CropType`
+Enumeration of crop types used for agricultural classification.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `FOOD_CROP`          | Staple food crops (e.g., rice, wheat, maize, millet)
+| `CASH_CROP`          | Commercial crops grown for sale (e.g., tea, coffee, sugarcane)
+| `SPICE_CROP`         | Crops grown for spices (e.g., cardamom, ginger, turmeric)
+| `OIL_SEEDS_CROP`     | Crops grown for oil extraction (e.g., mustard, sunflower, soybean)
+| `PULSE_CROP`         | Legume crops (e.g., lentils, chickpeas, black gram)
+| `VEGETABLE_CROP`     | Various vegetable crops (e.g., potato, tomato, cauliflower)
+| `FRUITS_CROP`        | Fruit cultivation (e.g., mango, banana, citrus)
+| `BEE_KEEPING`        | Cultivation of bees for honey production
+| `APICULTURE`         | Scientific bee farming for honey and other bee products
+| `MUSHROOM_FARMING`   | Cultivation of edible mushrooms
+| `MEDICINAL_HERBS`    | Cultivation of medicinal plants and herbs
+| `FLORICULTURE`       | Flower cultivation for commercial purposes
+| `AGROFORESTRY`       | Combined tree and crop cultivation
+| `OTHER`              | Other agricultural activities not classified above
+|===
+
+==== `WardWisePacketArea`
+Entity that tracks pocket areas for agricultural production by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field           | Description
+| `ward`          | The ward where the pocket area is located
+| `location`      | Specific location within the ward
+| `itemsProduced` | Items primarily produced in this pocket area
+|===
+
+==== `WardWiseAgriculturalLandPossession`
+Entity that tracks agricultural land distribution by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `landArea`   | Land area category (reference to LandAreaType)
+| `households` | Number of households with this land area
+|===
+
+==== `LandAreaType`
+Enumeration of land area categories for agricultural land classification.
+
+[cols="1,3", options="header"]
+|===
+| Value                 | Description
+| `HECTARE_01_05`       | 0.1-0.5 hectares of land
+| `HECTARE_05_1`        | 0.5-1 hectares of land
+| `HECTARE_1_2`         | 1-2 hectares of land
+| `HECTARE_2_5`         | 2-5 hectares of land
+| `HECTARE_5_10`        | 5-10 hectares of land
+| `HECTARE_10_AND_ABOVE`| 10+ hectares of land
+|===
+
+==== `WardWiseAnimalHusbandry`
+Entity that tracks number of households involved in animal husbandry by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `households` | Number of households involved in animal husbandry
+|===
+
+==== `WardWiseIrrigatedArea`
+Entity that tracks irrigated agricultural area by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `ward`              | The ward where the data is recorded
+| `totalIrrigatedArea`| Total area with irrigation facilities in hectares
+|===
+
+==== `CropDetails`
+Entity that tracks detailed information about specific crops.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `cropType`             | Type of crop (reference to CropType)
+| `cropSubType`          | Specific sub-type of crop
+| `cultivatingHouseholds`| Number of households cultivating this crop
+| `sellingHouseholds`    | Number of households selling this crop
+| `productionQuantity`   | Total production quantity
+| `salesQuantity`        | Quantity sold
+| `salesRevenue`         | Revenue generated from sales
+|===
+
+==== `FoodCropType`
+Enumeration of specific food crop types.
+
+[cols="1,3", options="header"]
+|===
+| Value             | Description
+| `CHAITE_PADDY`    | Spring rice (चैते धान)
+| `BARSE_PADDY`     | Monsoon rice (बर्षे धान)
+| `CORN`            | Corn/Maize (मकै)
+| `WHEAT`           | Wheat (गहुँ)
+| `MILLET`          | Millet (कोदो)
+| `BARLEY`          | Barley (जौ)
+| `PHAPAR`          | Buckwheat (फापर)
+| `JUNELO`          | Finger millet (जुनेलो)
+| `KAGUNO`          | Foxtail millet (कागुनो)
+| `OTHER_FOOD_CROP` | Other food crops (अन्य खद्यान्नबाली)
+|===
+
+==== `FruitCropType`
+Enumeration of specific fruit crop types.
+
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `MANGO`             | Mango (आँप)
+| `JACKFRUIT`         | Jackfruit (रुखकटहर)
+| `LITCHI`            | Litchi (लिची)
+| `BANANA`            | Banana (केरा)
+| `LEMON`             | Lemon (कागती)
+| `ORANGE`            | Orange (सुन्तला)
+| `NIBUWA`            | Citron (निबुवा)
+| `SWEET_ORANGE`      | Sweet orange (जुनार)
+| `SWEET_LEMON`       | Sweet lemon (मौसम)
+| `JYAMIR`            | Mandarin (ज्यामिर)
+| `POMELO`            | Pomelo (भोगटे)
+| `PINEAPPLE`         | Pineapple (भूईकटहर)
+| `PAPAYA`            | Papaya (मेवा)
+| `AVOCADO`           | Avocado (एभोकाडो)
+| `KIWI`              | Kiwi (किवी)
+| `GUAVA`             | Guava (अम्बा)
+| `PLUM`              | Plum (आरुबखडा)
+| `PEACH`             | Peach (आरु)
+| `PEAR`              | Pear (नासपाती)
+| `POMEGRANATE`       | Pomegranate (अनार)
+| `WALNUT`            | Walnut (ओखर)
+| `JAPANESE_PERSIMMON` | Japanese persimmon (हलुवावेद)
+| `HOG_PLUM`          | Hog plum (लप्सी)
+|===
+
+==== `OilSeedCropType`
+Enumeration of specific oil seed crop types.
+
+[cols="1,3", options="header"]
+|===
+| Value            | Description
+| `MUSTARD`        | Mustard (तोरी/सरसोँ)
+| `FLAX`           | Flax (आलस)
+| `SUNFLOWER`      | Sunflower (सूर्यमूखी)
+| `OTHER_OIL_SEED` | Other oil seeds (अन्य तेलबाली - जैतुन, रायो, etc.)
+|===
+
+==== `DiseasesAtCrops`
+Entity that tracks diseases and pests affecting crop categories.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `cropType`       | Type of crop (reference to CropType)
+| `primaryDiseases`| Main diseases affecting this crop type
+| `primaryPests`   | Main pests affecting this crop type
+|===
+
+==== `DiseaseAtSubCrops`
+Entity that tracks diseases and pests affecting specific crop subtypes.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `cropType`       | Type of crop (reference to CropType)
+| `cropSubType`    | Specific sub-type of crop
+| `primaryPests`   | Main pests affecting this crop subtype
+| `primaryDiseases`| Main diseases affecting this crop subtype
+|===
+
+==== `WardWiseAnimals`
+Entity that tracks animal ownership and sales by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `ward`             | The ward where the data is recorded
+| `animalType`       | Type of animal (reference to AnimalType)
+| `households`       | Number of households owning this animal type
+| `sellingHouseholds`| Number of households selling this animal type
+| `totalSales`       | Total sales value generated from this animal type
+|===
+
+==== `AnimalType`
+Enumeration of animal types used for livestock classification.
+
+[cols="1,3", options="header"]
+|===
+| Value          | Description
+| `HYBRID_COW`   | Improved cattle breed (ऊन्नत गाई)
+| `LOCAL_COW`    | Local cattle breed (लोकल गाई)
+| `BUFFALO`      | Buffalo/male buffalo (भैंसी/राँगा)
+| `GOAT`         | Sheep/goat/mountain goat (भेडा/बाख्रा/च्याङ्ग्र)
+| `PIG`          | Pig/hog (बंगुर/सुंगुर)
+| `HORSE`        | Horse/mule/donkey (घोडा/खच्चर/गधा)
+| `OTHER_ANIMAL` | Other livestock (अन्य पशु)
+| `BROILER_HEN`  | Broiler chicken (ब्रोईलर कुखुरा)
+| `LAYERS_HEN`   | Layer chicken (लेयर्स कुखूरा)
+| `LOCAL_HEN`    | Local chicken (लोकल कुखुरा)
+| `DUCK`         | Duck (हाँस)
+| `KALIJ`        | Kalij pheasant (कालिज)
+| `TURKEY`       | Turkey (टर्की)
+| `OTHER_BIRD`   | Other poultry (अन्य पन्छी)
+|===
+
+==== `AnimalProducts`
+Entity that tracks production and sales of animal products.
+
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `animalProductType`| Type of animal product (reference to AnimalProductType)
+| `unit`             | Unit of measurement (reference to UnitType)
+| `households`       | Number of households producing this product
+| `quantityProduced` | Total quantity produced
+| `quanittySold`     | Quantity sold
+| `salesRevenue`     | Revenue generated from sales
+|===
+
+==== `AnimalProductType`
+Enumeration of animal product types used for livestock output classification.
+
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `MILK`          | Milk (दुध)
+| `MILK_PRODUCT`  | Milk products like ghee, cheese, butter (दुधजन्य वस्तु (ध्यू, चिज, मखन आदि))
+| `EGG`           | Eggs (अण्डा)
+| `MEAT`          | Meat (मासु)
+| `OTHER`         | Other animal products (अन्य)
+|===
+
+==== `UnitType`
+Enumeration of unit types used for measuring animal products.
+
+[cols="1,3", options="header"]
+|===
+| Value      | Description
+| `LITRE`    | Liquid measurement (लिटर)
+| `KILOGRAM` | Weight measurement (किलो)
+| `COUNT`    | Count/piece (गोटा)
+| `OTHER`    | Other units (अन्य)
+|===
+
+==== `FarmersGroup`
+Entity that tracks registered farmers' groups.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `registrationDate`| Date when the group was registered
+| `groupName`      | Name of the farmers' group
+| `ward`           | Ward where the group is registered
+| `address`        | Detailed address of the group
+| `point`          | Geographical coordinates of the group
+| `polygon`        | Geographical boundary of the group
+|===
+
+==== `AgricultureTechnicians`
+Entity that tracks agricultural technicians serving the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `position`   | Position/role of the technician (reference to TechnicianPosition)
+| `name`       | Name of the technician
+| `phoneNumber`| Contact phone number of the technician
+|===
+
+==== `TechnicianPosition`
+Enumeration of agricultural technician position types.
+
+[cols="1,3", options="header"]
+|===
+| Value                      | Description
+| `AGRICULTURAL_TECHNICIAN`  | Agricultural Technician (कृषि प्राविधिक) - General agri support and crop management
+| `SOIL_SCIENTIST`           | Soil Expert/Scientist (माटो विज्ञ) - Soil testing and fertility management
+| `LIVESTOCK_TECHNICIAN`     | Animal Service Technician (पशु सेवा प्राविधिक) - Animal health and breeding support
+| `AGRICULTURE_ASSISTANT`    | Agriculture Assistant (कृषि सहायक) - Field work and planting assistance
+| `LIVESTOCK_ASSISTANT`      | Livestock Assistant (पशु सहायक) - Basic animal care and feeding
+| `VETERINARY_TECHNICIAN`    | Veterinary Technician/Para-vet (पशु प्राविधिक) - Clinical animal care
+| `AGRICULTURE_OFFICER`      | Agriculture Officer (कृषि अधिकृत) - Program leadership and planning
+| `LIVESTOCK_OFFICER`        | Livestock Development Officer (पशु सेवा अधिकृत) - Animal husbandry programs
+| `SEED_TECHNOLOGIST`        | Seed Technologist (बीउ बिजन विज्ञ) - Seed quality and certification
+| `CROP_SPECIALIST`          | Crop Specialist (बाली विज्ञ) - Crop optimization
+| `HORTICULTURE_TECHNICIAN`  | Horticulture Technician (बागवानी प्राविधिक) - Fruits and vegetables
+| `MACHINERY_TECHNICIAN`     | Agricultural Machinery Technician (कृषि यान्त्रिक प्राविधिक) - Equipment maintenance
+| `FISHERIES_TECHNICIAN`     | Fisheries Technician (मत्स्य प्राविधिक) - Aquaculture support
+| `AGRICULTURAL_RESEARCHER`  | Agricultural Researcher (कृषि अनुसन्धानकर्ता) - Research work
+| `AGRICULTURAL_CONSULTANT`  | Agricultural Advisor/Consultant (कृषि परामर्शदाता) - Expert consultancy
+|===
+
+==== `AgriculturalProductCollectionCenters`
+Entity that tracks collection centers for agricultural products.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `name`         | Name of the collection center
+| `address`      | Address of the collection center
+| `headWard`     | Main ward where the center is located
+| `area`         | Physical area of the collection center
+| `transaction`  | Transaction volume handled by the center
+| `income`       | Income generated by the center
+| `majorProducts`| Main agricultural products handled
+| `majorMarkets` | Main markets where products are sent
+| `point`        | Geographical coordinates of the center
+| `polygon`      | Geographical boundary of the center
+|===
