@@ -1,5 +1,6 @@
 package np.sthaniya.dpis.citizen.domain.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import np.sthaniya.dpis.location.domain.District
 import np.sthaniya.dpis.location.domain.Municipality
@@ -55,8 +56,9 @@ class Address {
     @Column(name = "street_address")
     var streetAddress: String? = null
 
-    // Transient relationships for convenient access
+    // Transient relationships for convenient access, but with JsonIgnore to prevent infinite recursion
     @Transient
+    @JsonIgnore
     var province: Province? = null
         get() = if (provinceCode != null) {
             Province().apply { code = provinceCode!! }
@@ -67,6 +69,7 @@ class Address {
         }
 
     @Transient
+    @JsonIgnore
     var district: District? = null
         get() = if (districtCode != null) {
             District().apply { code = districtCode!! }
@@ -77,6 +80,7 @@ class Address {
         }
 
     @Transient
+    @JsonIgnore
     var municipality: Municipality? = null
         get() = if (municipalityCode != null) {
             Municipality().apply { code = municipalityCode!! }
@@ -87,6 +91,7 @@ class Address {
         }
 
     @Transient
+    @JsonIgnore
     var ward: Ward? = null
         get() = if (wardNumber != null && wardMunicipalityCode != null) {
             Ward().apply { 
@@ -101,6 +106,13 @@ class Address {
             wardNumber = value?.wardNumber
             wardMunicipalityCode = value?.municipality?.code
         }
+        
+    // For serialization, provide non-recursive versions of location data
+    fun getProvinceCode(): String? = provinceCode
+    fun getDistrictCode(): String? = districtCode
+    fun getMunicipalityCode(): String? = municipalityCode
+    fun getWardNumber(): Int? = wardNumber
+    fun getWardMunicipalityCode(): String? = wardMunicipalityCode
 
     // No-arg constructor required for JPA
     constructor()

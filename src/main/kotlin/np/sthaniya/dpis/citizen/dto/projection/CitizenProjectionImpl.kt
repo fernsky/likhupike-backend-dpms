@@ -5,6 +5,10 @@ import np.sthaniya.dpis.citizen.domain.entity.Address
 import np.sthaniya.dpis.citizen.domain.entity.Citizen
 import np.sthaniya.dpis.citizen.domain.entity.CitizenState
 import np.sthaniya.dpis.citizen.domain.entity.DocumentState
+import np.sthaniya.dpis.location.domain.District
+import np.sthaniya.dpis.location.domain.Municipality
+import np.sthaniya.dpis.location.domain.Province
+import np.sthaniya.dpis.location.domain.Ward
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
@@ -37,6 +41,106 @@ class CitizenProjectionImpl(
     private val fields = mutableMapOf<String, Any?>()
 
     init {
+        // Handle address fields to avoid infinite recursion
+        if ("permanentAddress" in includedFields) {
+            citizen.permanentAddress?.let { address ->
+                // Create a simplified copy of the address without circular references
+                val simplifiedAddress = Address().apply {
+                    streetAddress = address.streetAddress
+                    
+                    // Set province with minimal data
+                    if (address.province != null) {
+                        province = Province().apply {
+                            code = address.province?.code
+                            name = address.province?.name
+                        }
+                    }
+                    
+                    // Set district with minimal data
+                    if (address.district != null) {
+                        district = District().apply {
+                            code = address.district?.code
+                            name = address.district?.name
+                        }
+                    }
+                    
+                    // Set municipality with minimal data
+                    if (address.municipality != null) {
+                        municipality = Municipality().apply {
+                            code = address.municipality?.code
+                            name = address.municipality?.name
+                        }
+                    }
+                    
+                    // Set ward with minimal data
+                    if (address.ward != null) {
+                        val simplifiedMunicipality = Municipality().apply {
+                            code = address.ward?.municipality?.code
+                            name = address.ward?.municipality?.name
+                        }
+                        
+                        ward = Ward().apply {
+                            wardNumber = address.ward?.wardNumber ?: 0
+                            municipality = simplifiedMunicipality
+                        }
+                    }
+                }
+                fields["permanentAddress"] = simplifiedAddress
+            } ?: run { 
+                fields["permanentAddress"] = null 
+            }
+        }
+        
+        if ("temporaryAddress" in includedFields) {
+            citizen.temporaryAddress?.let { address ->
+                // Create a simplified copy of the address without circular references
+                val simplifiedAddress = Address().apply {
+                    streetAddress = address.streetAddress
+                    
+                    // Set province with minimal data
+                    if (address.province != null) {
+                        province = Province().apply {
+                            code = address.province?.code
+                            name = address.province?.name
+                        }
+                    }
+                    
+                    // Set district with minimal data
+                    if (address.district != null) {
+                        district = District().apply {
+                            code = address.district?.code
+                            name = address.district?.name
+                        }
+                    }
+                    
+                    // Set municipality with minimal data
+                    if (address.municipality != null) {
+                        municipality = Municipality().apply {
+                            code = address.municipality?.code
+                            name = address.municipality?.name
+                        }
+                    }
+                    
+                    // Set ward with minimal data
+                    if (address.ward != null) {
+                        val simplifiedMunicipality = Municipality().apply {
+                            code = address.ward?.municipality?.code
+                            name = address.ward?.municipality?.name
+                        }
+                        
+                        ward = Ward().apply {
+                            wardNumber = address.ward?.wardNumber ?: 0
+                            municipality = simplifiedMunicipality
+                        }
+                    }
+                }
+                fields["temporaryAddress"] = simplifiedAddress
+            } ?: run { 
+                fields["temporaryAddress"] = null 
+            }
+        }
+        
+        // All other fields can be processed normally
         if ("id" in includedFields) fields["id"] = citizen.id
         if ("name" in includedFields) fields["name"] = citizen.name
         if ("nameDevnagari" in includedFields) fields["nameDevnagari"] = citizen.nameDevnagari
