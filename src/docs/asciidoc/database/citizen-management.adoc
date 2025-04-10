@@ -1,0 +1,15 @@
+== Citizen Management System
+
+=== Core Citizen Schema
+include::citizen-management/citizen-schema.adoc[leveloffset=+1]
+
+=== Citizen Authentication
+include::citizen-management/citizen-authentication.adoc[leveloffset=+1]
+
+=== Citizen State Management
+include::citizen-management/citizen-state-management.adoc[leveloffset=+1]
+
+=== Document Management
+include::citizen-management/document-management.adoc[leveloffset=+1]
+
+<<<

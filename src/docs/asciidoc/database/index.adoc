@@ -1,4 +1,5 @@
 include::introduction.adoc[]
 include::user-management.adoc[]
+include::citizen-management.adoc[]
 include::authentication.adoc[]
 include::authorization.adoc[]

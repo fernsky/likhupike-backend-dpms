@@ -1,0 +1,62 @@
+==== Document Management
+
+The citizen management system handles document storage and verification workflow.
+
+===== Document Fields in Citizens Table
+
+.Document Management Columns
+[cols="2,2,1,4",options="header"]
+|===
+|Column Name |Data Type |Nullable |Description
+|`photo_key` |`VARCHAR(255)` |`true` |Storage key for citizen's photo
+|`photo_state` |`VARCHAR(50)` |`true` |Verification state of photo
+|`photo_state_note` |`VARCHAR(255)` |`true` |Note about photo verification
+
+|`citizenship_front_key` |`VARCHAR(255)` |`true` |Storage key for citizenship certificate front
+|`citizenship_front_state` |`VARCHAR(50)` |`true` |Verification state of citizenship front
+|`citizenship_front_state_note` |`VARCHAR(255)` |`true` |Note about citizenship front verification
+
+|`citizenship_back_key` |`VARCHAR(255)` |`true` |Storage key for citizenship certificate back
+|`citizenship_back_state` |`VARCHAR(50)` |`true` |Verification state of citizenship back
+|`citizenship_back_state_note` |`VARCHAR(255)` |`true` |Note about citizenship back verification
+|===
+
+===== Document State Enumeration
+Each document has a state field that accepts the following values:
+
+* `NOT_UPLOADED`: Document has not been uploaded yet
+* `AWAITING_REVIEW`: Document has been uploaded and is waiting for review
+* `REJECTED_BLURRY`: Document rejected because it is too blurry or unclear
+* `REJECTED_UNSUITABLE`: Document rejected because it is unsuitable
+* `REJECTED_MISMATCH`: Document rejected because it doesn't match other information
+* `REJECTED_INCONSISTENT`: Document rejected because it doesn't match other documents
+* `APPROVED`: Document has been approved
+
+===== Storage Implementation
+
+Document files are not stored directly in the database. Instead:
+
+* Files are stored in an S3-compatible object storage (MinIO)
+* The database stores only the storage key (path reference)
+* Storage paths follow the pattern `citizens/{document_type}/{citizen_id}{extension}`
+* Document access is controlled through presigned URLs with expiration
+
+===== File Format Constraints
+
+.File Format Constraints by Document Type
+[cols="2,2,2",options="header"]
+|===
+|Document Type |Allowed Formats |Maximum Size
+|Citizen Photo |JPEG, PNG |5 MB
+|Citizenship Certificate (Front) |JPEG, PNG, PDF |10 MB
+|Citizenship Certificate (Back) |JPEG, PNG, PDF |10 MB
+|===
+
+===== Document Workflow
+
+* Initial document state is `NOT_UPLOADED`
+* When uploaded by citizen, state changes to `AWAITING_REVIEW`
+* Admin review changes state to either a rejection state with note or `APPROVED`
+* Document state changes are independent of citizen state
+* Documents can be resubmitted after rejection
+* Document state changes are tracked with timestamps and user IDs

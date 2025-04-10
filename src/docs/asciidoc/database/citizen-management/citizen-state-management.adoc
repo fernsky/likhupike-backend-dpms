@@ -1,0 +1,60 @@
+==== Citizen State Management
+
+The system implements a state management workflow for citizens, tracking their verification status.
+
+===== State Fields in Citizens Table
+
+.State Management Columns
+[cols="2,2,1,4",options="header"]
+|===
+|Column Name |Data Type |Nullable |Description
+|`state` |`VARCHAR(50)` |`false` |Current state in the verification workflow
+|`state_note` |`VARCHAR(500)` |`true` |Optional note explaining current state
+|`state_updated_at` |`TIMESTAMP WITH TIME ZONE` |`true` |Timestamp when state was last updated
+|`state_updated_by` |`UUID` |`true` |User who last updated the state
+
+|`is_deleted` |`BOOLEAN` |`false` |Soft deletion flag
+|`deleted_at` |`TIMESTAMP WITH TIME ZONE` |`true` |Soft deletion timestamp
+|`deleted_by` |`UUID` |`true` |User who performed the deletion
+
+|`is_approved` |`BOOLEAN` |`false` |Approval status flag
+|`approved_at` |`TIMESTAMP WITH TIME ZONE` |`true` |Approval timestamp
+|`approved_by` |`UUID` |`true` |User who approved the citizen
+|===
+
+===== State Enumeration
+The `state` column accepts the following values:
+
+* `PENDING_REGISTRATION`: Initial state for newly self-registered citizens
+* `UNDER_REVIEW`: Citizen registration is being reviewed by an administrator
+* `ACTION_REQUIRED`: Issues exist that require citizen action
+* `REJECTED`: Registration has been rejected
+* `APPROVED`: Registration has been fully verified and approved
+
+===== State Transition Rules
+
+.Valid State Transitions
+[cols="2,3",options="header"]
+|===
+|Current State |Allowed Next States
+|`PENDING_REGISTRATION` |`UNDER_REVIEW`, `ACTION_REQUIRED`, `APPROVED`, `REJECTED`
+|`UNDER_REVIEW` |`ACTION_REQUIRED`, `APPROVED`, `REJECTED`
+|`ACTION_REQUIRED` |`UNDER_REVIEW`, `APPROVED`, `REJECTED`
+|`REJECTED` |`UNDER_REVIEW`, `ACTION_REQUIRED`
+|`APPROVED` |`ACTION_REQUIRED`, `REJECTED`
+|===
+
+===== Approval Workflow
+
+* Self-registered citizens begin in `PENDING_REGISTRATION` state and require explicit approval
+* Administrator-created citizens can be immediately approved at creation
+* Approval sets `is_approved = true` and updates approval audit fields
+* Approval is separate from state transitions for independent tracking purposes
+* Rejected citizens have `is_approved = false` but can be resubmitted for approval
+
+===== Deletion Behavior
+
+* Citizen records are never physically deleted
+* Deletion is implemented via `is_deleted` flag
+* Deleted citizens cannot authenticate but maintain full data history
+* Deletion audit tracks the time and user who performed the deletion
