@@ -1,0 +1,287 @@
+==== Municipality
+
+- province
+- district
+- rightmostLatitude
+- leftmostLatitude
+- bottommostLongitude
+- topmostLongitude
+- lowestAltitude
+- highestAltitude
+- areaInSquareKilometers
+
+
+
+==== Ward
+
+- number
+- area
+- formingLocalBody
+- formingConstituentWards
+
+==== MajorSettlementAreas
+
+- ward
+- name
+
+=== LandUse
+
+- landType
+- area
+- percentage
+
+==== LandType
+
+- AGRICULTURAL_LAND
+- RESIDENTIAL_LAND
+- COMMERCIAL_LAND
+- INDUSTRIAL_LAND
+- MINING_AND_MINERAL_AREAS
+- FOREST_AREAS
+- RIVERS_LAKES_AND_WETLANDS
+- PUBLIC_USE_AREAS
+- CULTURAL_AND_ARCHAEOLOGICAL_IMPORTANCE_AREAS
+- OTHER_GOVERNMENT_DESIGNATED_AREAS
+
+
+=== LandSlope
+
+- slopeClassByDegree
+- useCase
+- area
+- percentage
+
+==== SlopeClassByDegree
+
+- FLAT_0_5
+- GENTLE_6_15
+- MODERATE_16_25
+- STEEP_26_35
+- VERY_STEEP_36_60
+- EXTREME_61_PLUS
+
+
+=== LandAspect
+
+- aspectType
+- area
+- percentage
+
+
+=== DemographicSummary
+
+- totalPopulation
+- populationMale
+- populationFemale
+- populationOther
+- populationAbsenteeTotal
+- populationMaleAbsentee
+- populationFemaleAbsentee
+- populationOtherAbsentee
+- sexRatio
+- totalHouseholds
+- averageHouseholdSize
+- populationDensity
+- population0To14
+- population15To59
+- population60AndAbove
+- growthRate
+- literacyRateAbove15
+- literacyRate15To24
+
+
+=== WardTimeSeriesPopulation
+
+- year
+- ward
+- totalPopulation
+- populationMale
+- populationFemale
+- populationOther
+- totalHouseholds
+- averageHouseholdSize
+- sexRatio
+
+=== WardWiseDeomgraphicSummary
+
+- ward
+- totalPopulation
+- populationMale
+- populationFemale
+- populationOther
+- totalHouseholds
+- averageHouseholdSize
+- sexRatio
+
+=== WardAgeWisePopulation
+
+- ward
+- ageGroup
+- gender
+- population
+
+==== WardAgeWisePopulationAgeGroup
+
+- AGE_0_4
+- AGE_5_9
+- AGE_10_14
+- AGE_15_19
+- AGE_20_24
+- AGE_25_29
+- AGE_30_34
+- AGE_35_39
+- AGE_40_44
+- AGE_45_49
+- AGE_50_54
+- AGE_55_59
+- AGE_60_64
+- AGE_65_69
+- AGE_70_74
+- AGE_75_AND_ABOVE
+
+==== Gender
+
+- MALE
+- FEMALE
+- OTHER
+
+
+=== WardWiseCastePopulation
+
+- ward
+- casteType
+- population
+
+==== CasteType
+
+- CHETTRI
+- BRAHMAN_HILL
+- LIMBU
+- SHERPA
+- TAMANG
+- RAI
+- MAGAR
+- THARU
+- NEWAR
+- KAMI
+- MUSALMAN
+- YADAV
+- GURUNG
+- DAMAI
+- THAKURI
+- SARKI
+- TELI
+- CHAMAR
+- KOIRI
+- MUSHAR
+- KURMI
+- SANYASI
+- DHANUK
+- DUSADH
+- MALLAHA
+- KEWAT
+- KATHBANIYA
+- BRAHMAN_TERAI
+- KALWAR
+- KANU
+- KUMAL
+- GHARTI
+- HAJAM
+- RAJBANSHI
+- DHOBI
+- TATMA
+- LOHAR
+- KHATWE
+- SUNDI
+- DANUWAR
+- HALUWAI
+- MAJHI
+- BARAI
+- BIN
+- NUNIA
+- CHEPANG
+- SONAR
+- KUMHAR
+- SUNUWAR
+- BANTAR
+- KAHAR
+- SATAR
+- MARWADI
+- KAYASTHA
+- RAJPUT
+- BADI
+- JHANGAD
+- GANGAI
+- LODH
+- BADHAI
+- THAMI
+- KULUNG
+- BENGALI
+- GADERI
+- DHIMAL
+- YAKHHA
+- GHALE
+- TAJPURIYA
+- KHAWAS
+- DARAI
+- MAALI
+- DHUNIYA
+- PAHARI
+- RAAJDHOB
+- BHOTE
+- DOM
+- THAKALI
+- KORI
+- CHATYAL
+- HYOLMO
+- BOTE
+- RAJBHAR
+- BARAM
+- PUNJABI
+- NACHIRING
+- YAMPHU
+- GAINE
+- CHAMLING
+- AATHPAHARIYA
+- JIREL
+- DURA
+- SARBARIYA
+- MECHE
+- BANTAWA
+- RAJI
+- DOLPO
+- HALAKHOR
+- BYASI
+- AMAT
+- THULUNG
+- LEPCHA
+- PATTHARKATTA
+- MEWAHANG
+- BAHING
+- NATUWA
+- HAYU
+- DHANKAR
+- LHOPA
+- MUNDA
+- DEV
+- DHANDI
+- KAMAR
+- KISAN
+- SAMPANG
+- KOCHE
+- LHOMI
+- KHALING
+- TOPKEGOLA
+- CHIDIMAR
+- WALUNG
+- LOHARUNG
+- KALAR
+- RAUTE
+- NURANG
+- KUSUNDA
+- RANATHARU
+- BHUMIHAR
+- FOREIGN
+- OTHER
+
+
