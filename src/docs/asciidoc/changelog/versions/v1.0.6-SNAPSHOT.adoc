@@ -1,0 +1,46 @@
+==== v1.0.6-SNAPSHOT (2025-05-01)
+
+*Author:* Trilochan Bhusal
+
+*Citizen Management System Implementation*
+
+* Created full-featured citizen domain model with state machine workflow
+* Implemented comprehensive RESTful API for citizen management:
+  ** Created `CitizenProfileController` for citizen self-service operations
+  ** Created `CitizenManagementController` for administrative citizen management
+  ** Created `CitizenStateController` for state workflow management
+  ** Created `CitizenSearchController` for advanced filtering capabilities
+  ** Created `CitizenAuthController` for authentication operations
+* Created service layer with specialized implementations:
+  ** `CitizenProfileServiceImpl` - Self-service profile management
+  ** `CitizenManagementServiceImpl` - Administrative operations
+  ** `CitizenStateServiceImpl` - State transition management
+  ** `CitizenAuthServiceImpl` - Authentication and token handling
+  ** `CitizenUserDetailsService` - Spring Security integration
+* Added document state management system:
+  ** Implemented document verification workflow
+  ** Added support for upload/management of:
+    *** Citizen photos
+    *** Citizenship certificate (front)
+    *** Citizenship certificate (back)
+  ** Created validation system for document formats and sizes
+* Added secure storage integration:
+  ** Implemented `DocumentStorageService` with S3-compatible storage
+  ** Added storage security and access control
+  ** Implemented document access URL generation
+* Enhanced security infrastructure:
+  ** Implemented role-based access control for citizen operations
+  ** Added PreAuthorize annotations for method-level security
+  ** Created JWT-based authentication for citizens
+  ** Implemented password reset with OTP capabilities
+* Added comprehensive error handling:
+  ** Created domain-specific exceptions
+  ** Added validation for citizenship document consistency
+* Created DB schema extensions:
+  ** Added citizen state tracking with audit fields
+  ** Added document state tracking with notes
+  ** Added `citizen_password_reset_otps` table for secure password resets
+* Added detailed OpenAPI documentation:
+  ** Added full Swagger annotations for all endpoints
+  ** Documented security requirements
+  ** Added response status documentation

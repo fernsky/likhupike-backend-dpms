@@ -1,0 +1,12 @@
+==== v1.0.3-SNAPSHOT (2025-04-04)
+
+*Author:* Trilochan Bhusal
+
+*Role-Based Access Control Implementation*
+
+* Created `roles` table for storing system roles
+* Created `role_permissions` junction table to link roles with permissions
+* Created `user_roles` junction table to assign roles to users
+* Added predefined roles (SYSTEM_ADMINISTRATOR, LAND_RECORDS_OFFICER, LAND_SURVEYOR, LAND_OWNER, PUBLIC_USER)
+* Assigned default permissions to roles based on system requirements
+* Enhanced user security model with role inheritance

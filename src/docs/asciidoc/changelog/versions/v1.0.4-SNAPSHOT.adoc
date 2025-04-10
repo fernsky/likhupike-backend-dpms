@@ -1,0 +1,13 @@
+==== v1.0.4-SNAPSHOT (2025-04-04)
+
+*Author:* Trilochan Bhusal
+
+*Citizen Entity Implementation*
+
+* Modified `users` table to support inheritance
+* Added `user_type` discriminator column to users table
+* Created `citizens` table extending the users table
+* Added fields for citizen personal information
+* Added support for document storage references (photo and citizenship)
+* Created indexes for efficient citizen lookups
+* Updated Entity-Relationship model with inheritance

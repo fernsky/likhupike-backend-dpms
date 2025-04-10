@@ -1,0 +1,8 @@
+==== v0.0.1-SNAPSHOT (2025-03)
+
+*Author:* Trilochan Bhusal
+
+*Initial version: Added Spring Session management*
+
+* Created `spring_session` table with indexes
+* Created `spring_session_attributes` table

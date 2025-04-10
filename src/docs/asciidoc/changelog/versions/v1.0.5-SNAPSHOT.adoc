@@ -1,0 +1,16 @@
+==== v1.0.5-SNAPSHOT (2025-04-04)
+
+*Author:* Trilochan Bhusal
+
+*Location Entity Implementation*
+
+* Implemented hierarchical location domain model with Province, District, Municipality, and Ward entities
+* Created geospatial data structures with proper relationships between administrative divisions
+* Added support for GIS data with Polygon geometry fields using JTS/PostGIS integration
+* Implemented proper primary key strategy: string-based codes for Province/District/Municipality
+* Created composite key for Ward entity using WardId class (wardNumber + municipalityCode)
+* Added bidirectional relationships between location entities with proper cascade behavior
+* Implemented specialized repository interfaces with geospatial query capabilities
+* Optimized location entity queries with appropriate indexes for administrative hierarchies
+* Added support for proximity-based location searches using spatial functions
+* Implemented dynamic projection system for flexible location entity responses

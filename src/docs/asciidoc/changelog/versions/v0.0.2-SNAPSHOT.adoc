@@ -1,0 +1,10 @@
+==== v0.0.2-SNAPSHOT (2025-03)
+
+*Author:* Trilochan Bhusal
+
+*Core User Management Implementation*
+
+* Created `users` table with audit fields
+* Created `permissions` table
+* Created `user_permissions` junction table
+* Added initial permission types (*CREATE_USER*, *APPROVE_USER*)

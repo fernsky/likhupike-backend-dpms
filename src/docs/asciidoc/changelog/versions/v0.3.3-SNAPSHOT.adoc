@@ -1,0 +1,8 @@
+==== v0.3.3-SNAPSHOT (2025-03)
+
+*Author:* Trilochan Bhusal
+
+*Schema Improvements*
+
+* Modified `users.deleted_by` column from `VARCHAR` to `UUID`
+* Improved data type consistency for user references

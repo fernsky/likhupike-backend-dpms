@@ -1,0 +1,9 @@
+==== v0.3.1-SNAPSHOT (2025-03)
+
+*Author:* Trilochan Bhusal
+
+*Password Reset System*
+
+* Added `password_reset_otps` table
+* Implemented OTP-based password reset functionality
+* Added indexes for efficient OTP lookups

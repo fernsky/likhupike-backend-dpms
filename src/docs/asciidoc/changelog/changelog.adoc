@@ -1,134 +1,23 @@
 == Changelog
-This chapter documents the evolution of the DPIS database schema, tracking all significant changes and improvements made to the system's data structure.
 
-=== Version Numbering
-The versioning follows the pattern:
+This document tracks the evolution of the DPIS database schema.
 
-* Major version: Significant architectural changes
-* Minor version: New features or tables
-* Patch version: Bug fixes and minor improvements
-* SNAPSHOT: Development versions
+=== Version History
 
-=== Change Categories
-The history tracks several types of changes:
+include::versions/v1.0.6-SNAPSHOT.adoc[]
 
-* Schema modifications
-* Table creation/modification
-* Index optimizations
-* Data type improvements
+include::versions/v1.0.5-SNAPSHOT.adoc[]
 
-=== Historical Timeline
-Below is the comprehensive timeline of all database changes:
+include::versions/v1.0.4-SNAPSHOT.adoc[]
 
-[cols="2,1,2,4a",options="header"]
-|===
-|Version |Date |Author |Changes
+include::versions/v1.0.3-SNAPSHOT.adoc[]
 
-|`v1.0.5-SNAPSHOT` |2025-04-04 |Trilochan Bhusal |* Location Entity Implementation
-* Implemented hierarchical location domain model with Province, District, Municipality, and Ward entities
-* Created geospatial data structures with proper relationships between administrative divisions
-* Added support for GIS data with Polygon geometry fields using JTS/PostGIS integration
-* Implemented proper primary key strategy: string-based codes for Province/District/Municipality
-* Created composite key for Ward entity using WardId class (wardNumber + municipalityCode)
-* Added bidirectional relationships between location entities with proper cascade behavior
-* Implemented specialized repository interfaces with geospatial query capabilities
-* Optimized location entity queries with appropriate indexes for administrative hierarchies
-* Added support for proximity-based location searches using spatial functions
-* Implemented dynamic projection system for flexible location entity responses
+include::versions/v1.0.1.adoc[]
 
-|`v1.0.4-SNAPSHOT` |2025-04-04 |Trilochan Bhusal |* Citizen Entity Implementation
-* Modified `users` table to support inheritance
-* Added `user_type` discriminator column to users table
-* Created `citizens` table extending the users table
-* Added fields for citizen personal information
-* Added support for document storage references (photo and citizenship)
-* Created indexes for efficient citizen lookups
-* Updated Entity-Relationship model with inheritance
+include::versions/v0.3.3-SNAPSHOT.adoc[]
 
-|`v1.0.3-SNAPSHOT` |2025-04-04 |Trilochan Bhusal |* Role-Based Access Control Implementation
-* Created `roles` table for storing system roles
-* Created `role_permissions` junction table to link roles with permissions  
-* Created `user_roles` junction table to assign roles to users
-* Added predefined roles (SYSTEM_ADMINISTRATOR, LAND_RECORDS_OFFICER, LAND_SURVEYOR, LAND_OWNER, PUBLIC_USER)
-* Assigned default permissions to roles based on system requirements
-* Enhanced user security model with role inheritance
+include::versions/v0.3.1-SNAPSHOT.adoc[]
 
-|`v1.0.1` |2025-03 |Trilochan Bhusal |* Initial Documentation Release
-* Comprehensive database schema documentation
-* Added detailed table descriptions
-* Included design considerations
-* Rate limiting and security features using `bucket4j`
+include::versions/v0.0.2-SNAPSHOT.adoc[]
 
-|`v0.3.3-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Schema Improvements
-* Modified `users.deleted_by` column from `VARCHAR` to `UUID`
-* Improved data type consistency for user references
-
-|`v0.3.1-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Password Reset System
-* Added `password_reset_otps` table
-* Implemented OTP-based password reset functionality
-* Added indexes for efficient OTP lookups
-
-|`v0.0.2-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Core User Management Implementation
-* Created `users` table with audit fields
-* Created `permissions` table
-* Created `user_permissions` junction table
-* Added initial permission types (*CREATE_USER*, *APPROVE_USER*)
-
-|`v0.0.1-SNAPSHOT` |2025-03 |Trilochan Bhusal |* Initial version: Added Spring Session management
-* Created `spring_session` table with indexes
-* Created `spring_session_attributes` table
-|===
-
-=== Summary of Major Changes
-
-==== Initial Setup (`v0.0.1-SNAPSHOT`)
-Focus on session management implementation with Spring Session integration.
-
-==== Core Features (`v0.0.2-SNAPSHOT`)
-Introduction of fundamental user management capabilities.
-
-==== Security Enhancements (`v0.3.x-SNAPSHOT`)
-Multiple releases focusing on security features and data consistency.
-
-==== Production Release (`v1.0.1-SNAPSHOT`)
-First stable release with complete documentation.
-
-==== Role-Based Access Control (`v1.0.3-SNAPSHOT`)
-Implementation of comprehensive role system with hierarchical permissions:
-
-* Roles represent specific positions in the system (e.g., LAND_RECORDS_OFFICER)
-* Users can be assigned multiple roles
-* Users retain direct permissions that override role-based permissions
-* Permissions can be assigned to roles to create permission groups
-* Effective permissions combine both direct and role-derived permissions
-* Spring Security integration for both role and permission-based authorization
-
-==== Citizen Entity Implementation (`v1.0.4-SNAPSHOT`)
-Extended the user system to support citizen profiles:
-
-* Implemented JPA inheritance between User and Citizen entities
-* Added support for storing citizen personal information
-* Created storage system for citizen documents and photos
-* Integrated with S3-compatible storage (MinIO) for document management
-* Added unique constraints and indexes for efficient citizen lookups
-* Enhanced entity model to support user specialization
-
-==== Location Entity Improvements (`v1.0.5-SNAPSHOT`)
-Significant refactoring of the location domain entities to improve data integrity and query performance:
-
-* Fixed critical entity identification issues:
-  * Implemented proper primary key handling in all location entities
-  * Updated Province and District entities to use code field as primary key
-  * Municipality entity now uses code as natural primary key
-  * Ward entity now uses composite key (wardNumber + municipalityCode) with proper @IdClass implementation
-* Standardized data access patterns:
-  * Removed JPA metamodel dependencies in favor of string-based property access
-  * Refactored specification implementation for consistent query building
-  * Enhanced repository implementations with comprehensive documentation
-* Performance optimizations:
-  * Improved geo-spatial search capabilities
-  * Added proper join handling in complex queries
-  * Optimized count queries for paginated results
-* Added comprehensive KDoc documentation across all components
-
-<<<
+include::versions/v0.0.1-SNAPSHOT.adoc[]

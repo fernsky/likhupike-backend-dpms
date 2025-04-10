@@ -1,0 +1,10 @@
+==== v1.0.1 (2025-03)
+
+*Author:* Trilochan Bhusal
+
+*Initial Documentation Release*
+
+* Comprehensive database schema documentation
+* Added detailed table descriptions
+* Included design considerations
+* Rate limiting and security features using `bucket4j`
