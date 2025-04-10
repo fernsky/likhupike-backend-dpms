@@ -27,6 +27,10 @@ include::api/index.adoc[leveloffset=+1]
 
 include::database/index.adoc[leveloffset=+1]
 
+== Abstract Data Model
+
+include::design/abstract-data-model.adoc[leveloffset=+1]
+
 == Developer Guidelines
 
 // include::development/index.adoc[leveloffset=+1]
