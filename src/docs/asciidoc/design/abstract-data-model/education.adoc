@@ -1,216 +1,269 @@
 === Education Domain
 
-==== EducationalInstitutions
+==== `EducationalInstitutions`
+Represents educational facilities within the municipality.
 
-- name
-- location
-- ward
-- point
-- polygon
-- contactNumbers
-- principalName
-- principalContactNumber
-- type
-- isPublic
-- totalBoys
-- totalGirls
-- totalTeachers
+[cols="1,3", options="header"]
+|===
+| Field                   | Description
+| `name`                  | Name of the educational institution
+| `location`              | Location description of the institution
+| `ward`                  | Ward where the institution is located
+| `point`                 | Geographic point location (longitude, latitude)
+| `polygon`               | Geographic boundary of the institution premises
+| `contactNumbers`        | Contact phone numbers for the institution
+| `principalName`         | Name of the principal or head of the institution
+| `principalContactNumber`| Contact number for the principal
+| `type`                  | Type of educational institution (reference to EducationalInstitutionType)
+| `isPublic`              | Whether the institution is public (true) or private (false)
+| `totalBoys`             | Total number of male students enrolled
+| `totalGirls`            | Total number of female students enrolled
+| `totalTeachers`         | Total number of teaching staff
+|===
 
-==== EducationalInstitutionType
+==== `EducationalInstitutionType`
+Enumeration of different types of educational institutions.
 
-[source,java]
-----
-public enum EducationalInstitutionType {
-    PRIMARY_SCHOOL,                // Grades 1–5
-    LOWER_SECONDARY_SCHOOL,        // Grades 6–8
-    SECONDARY_SCHOOL,              // Grades 9–10
-    HIGHER_SECONDARY_SCHOOL,       // Grades 11–12 (also known as +2)
-    MADHYAMIK_VIDYALAYA,           // Alternate term for Secondary/High School (commonly used in Nepali)
-    MADARSA,                       // Islamic religious school
-    GUMBA,                         // Buddhist monastic school
-    COLLEGE,                       // General term for higher secondary or bachelor level
-    UNIVERSITY,                    // Tertiary education offering bachelor's and above
-    VOCATIONAL_TRAINING_CENTER,   // Skill-based training
-    POLYTECHNIC_INSTITUTE,        // Technical education
-    TECHNICAL_SCHOOL,             // Focus on practical/technical subjects
-    PRESCHOOL,                    // Montessori / Early Childhood Development (ECD)
-    OPEN_SCHOOL,                  // For non-formal education
-    SPECIAL_EDUCATION_SCHOOL,     // For students with disabilities
-    COACHING_CENTER,              // Private tuition and entrance prep institutions
-    TEACHER_TRAINING_CENTER       // For training educators
-}
-----
+[cols="1,3", options="header"]
+|===
+| Value                      | Description
+| `PRIMARY_SCHOOL`           | Grades 1–5
+| `LOWER_SECONDARY_SCHOOL`   | Grades 6–8
+| `SECONDARY_SCHOOL`         | Grades 9–10
+| `HIGHER_SECONDARY_SCHOOL`  | Grades 11–12 (also known as +2)
+| `MADHYAMIK_VIDYALAYA`      | Alternate term for Secondary/High School (commonly used in Nepali)
+| `MADARSA`                  | Islamic religious school
+| `GUMBA`                    | Buddhist monastic school
+| `COLLEGE`                  | General term for higher secondary or bachelor level
+| `UNIVERSITY`               | Tertiary education offering bachelor's and above
+| `VOCATIONAL_TRAINING_CENTER`| Skill-based training
+| `POLYTECHNIC_INSTITUTE`    | Technical education
+| `TECHNICAL_SCHOOL`         | Focus on practical/technical subjects
+| `PRESCHOOL`                | Montessori / Early Childhood Development (ECD)
+| `OPEN_SCHOOL`              | For non-formal education
+| `SPECIAL_EDUCATION_SCHOOL` | For students with disabilities
+| `COACHING_CENTER`          | Private tuition and entrance prep institutions
+| `TEACHER_TRAINING_CENTER`  | For training educators
+|===
 
-==== StudentDetails
+==== `StudentDetails`
+Base entity for student enrollment statistics.
 
-- institutionName
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `institutionName`   | Name of the educational institution
+|===
 
-===== StudentEnrollmentCaste extends StudentDetails
+==== `StudentEnrollmentCaste`
+Statistics on student enrollment by caste or ethnicity.
 
-- caste
-- gender
-- students
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `caste`      | Caste or ethnic group (reference to CasteType)
+| `gender`     | Gender category (reference to StudentGenderType)
+| `students`   | Number of students in this demographic category
+|===
 
-===== CasteType
+==== `CasteType`
+Enumeration of caste categories used for student enrollment statistics.
 
-- BRAHMIN_CHETRIYA
-- DALIT
-- JANJHATI
-- OTHER
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `BRAHMIN_CHETRIYA`  | Brahmin and Chhetri castes
+| `DALIT`             | Dalit castes
+| `JANJHATI`          | Indigenous ethnic groups
+| `OTHER`             | Other castes and ethnic groups
+|===
 
-===== StudentGenderType
+==== `StudentGenderType`
+Enumeration of gender categories used for student statistics.
 
-- BOY
-- GIRL
+[cols="1,3", options="header"]
+|===
+| Value  | Description
+| `BOY`  | Male student
+| `GIRL` | Female student
+|===
 
-===== StudentEnrollmentSchoolLeave extends StudentDetails
+==== `StudentEnrollmentSchoolLeave`
+Statistics on students leaving school.
 
-- gender
-- students
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `gender`     | Gender of students (reference to StudentGenderType)
+| `students`   | Number of students who left school
+|===
 
-===== StudentNewEnrollment extends StudentDetails
+==== `StudentNewEnrollment`
+Statistics on newly enrolled students.
 
-- gender
-- students
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `gender`     | Gender of students (reference to StudentGenderType)
+| `students`   | Number of newly enrolled students
+|===
 
-===== StudentRepeatingStudents extends StudentDetails
+==== `StudentRepeatingStudents`
+Statistics on students repeating grades.
 
-- gender
-- students
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `gender`     | Gender of students (reference to StudentGenderType)
+| `students`   | Number of students repeating grades
+|===
 
-===== StudentPassedStudents extends StudentDetails
+==== `StudentPassedStudents`
+Statistics on students who passed exams.
 
-- gender
-- students
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `gender`     | Gender of students (reference to StudentGenderType)
+| `students`   | Number of students who passed exams
+|===
 
-===== WardWiseLiteracyStatus
+==== `WardWiseLiteracyStatus`
+Statistics on literacy rates by ward.
 
-- ward
-- literayType
-- population
+[cols="1,3", options="header"]
+|===
+| Field         | Description
+| `ward`        | Reference to the ward entity
+| `literacyType`| Type of literacy status (reference to LiteracyType)
+| `population`  | Number of people with this literacy status
+|===
 
-===== LiteracyType
+==== `LiteracyType`
+Enumeration of literacy status categories.
 
-[source,java]
-----
-public enum LiteracyType {
-    BOTH_READING_AND_WRITING,   // पढ्न लेख्न जानेको
-    READING_ONLY,               // पढ्न मात्र जानेको
-    ILLITERATE                  // पढ्न लेख्न नजानेका
-}
-----
+[cols="1,3", options="header"]
+|===
+| Value                   | Description
+| `BOTH_READING_AND_WRITING` | Can both read and write (पढ्न लेख्न जानेको)
+| `READING_ONLY`          | Can read but not write (पढ्न मात्र जानेको)
+| `ILLITERATE`            | Cannot read or write (पढ्न लेख्न नजानेका)
+|===
 
-===== WardWiseEducationalLevel
+==== `WardWiseEducationalLevel`
+Statistics on educational attainment by ward.
 
-- ward
-- educationLevelType
-- population
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `ward`              | Reference to the ward entity
+| `educationLevelType`| Education level (reference to EducationalLevelType)
+| `population`        | Number of people with this education level
+|===
 
-===== EducationalLevelType
+==== `EducationalLevelType`
+Enumeration of educational attainment levels.
 
-public enum EducationalLevelType {
-    CHILD_DEVELOPMENT_CENTER,    // बालविकास केन्द्र / मंटेस्वोरी
-    NURSERY,                     // नर्सरी/केजी
-    GRADE_1,                     // कक्षा १
-    GRADE_2,                     // कक्षा २
-    GRADE_3,                     // कक्षा ३
-    GRADE_4,                     // कक्षा ४
-    GRADE_5,                     // कक्षा ५
-    GRADE_6,                     // कक्षा ६
-    GRADE_7,                     // कक्षा ७
-    GRADE_8,                     // कक्षा ८
-    GRADE_9,                     // कक्षा ९
-    GRADE_10,                    // कक्षा १०
-    SLC_LEVEL,                   // एसईई/एसएलसी/सो सरह
-    CLASS_12_LEVEL,              // कक्षा १२ वा PCL वा सो सरह
-    BACHELOR_LEVEL,              // स्नातक वा सो सरह
-    MASTERS_LEVEL,               // स्नातकोत्तर वा सो सरह
-    PHD_LEVEL,                   // पीएचडी वा सो सरह
-    OTHER,                       // अन्य
-    INFORMAL_EDUCATION,          // अनौपचारिक शिक्षा
-    EDUCATED,                    // साक्षर
-    UNKNOWN                      // थाहा नभएको
-}
+[cols="1,3", options="header"]
+|===
+| Value                   | Description
+| `CHILD_DEVELOPMENT_CENTER` | Early childhood center/Montessori (बालविकास केन्द्र / मंटेस्वोरी)
+| `NURSERY`               | Nursery/Kindergarten (नर्सरी/केजी)
+| `GRADE_1`               | Class 1 (कक्षा १)
+| `GRADE_2`               | Class 2 (कक्षा २)
+| `GRADE_3`               | Class 3 (कक्षा ३)
+| `GRADE_4`               | Class 4 (कक्षा ४)
+| `GRADE_5`               | Class 5 (कक्षा ५)
+| `GRADE_6`               | Class 6 (कक्षा ६)
+| `GRADE_7`               | Class 7 (कक्षा ७)
+| `GRADE_8`               | Class 8 (कक्षा ८)
+| `GRADE_9`               | Class 9 (कक्षा ९)
+| `GRADE_10`              | Class 10 (कक्षा १०)
+| `SLC_LEVEL`             | SLC/SEE level (एसईई/एसएलसी/सो सरह)
+| `CLASS_12_LEVEL`        | Class 12 or PCL level (कक्षा १२ वा PCL वा सो सरह)
+| `BACHELOR_LEVEL`        | Bachelor's degree (स्नातक वा सो सरह)
+| `MASTERS_LEVEL`         | Master's degree (स्नातकोत्तर वा सो सरह)
+| `PHD_LEVEL`             | Doctorate (पीएचडी वा सो सरह)
+| `OTHER`                 | Other educational qualifications (अन्य)
+| `INFORMAL_EDUCATION`    | Informal education (अनौपचारिक शिक्षा)
+| `EDUCATED`              | Generally literate (साक्षर)
+| `UNKNOWN`               | Unknown education level (थाहा नभएको)
+|===
 
-===== WardWiseMajorSubject
+==== `WardWiseMajorSubject`
+Statistics on fields of study by ward.
 
-- ward
-- subjectType
-- population
+[cols="1,3", options="header"]
+|===
+| Field         | Description
+| `ward`        | Reference to the ward entity
+| `subjectType` | Field of study (reference to MajorSubjectType)
+| `population`  | Number of people studying in this field
+|===
 
-===== MajorSubjectType
+==== `MajorSubjectType`
+Enumeration of major fields of study.
 
-public enum MajorSubjectType {
-    ENGLISH("अंग्रेजी"),
-    ECONOMICS("अर्थशास्त्र"),
-    ENGINEERING("इन्जिनियरङ्गि"),
-    HISTORY("इतिहास"),
-    HOME_ECONOMICS("गृहविज्ञान"),
-    RURAL_DEVELOPMENT("ग्रामीण विकास"),
-    MEDICINE("चिकित्सा"),
-    POPULATION_STUDY("जनसंख्या अध्ययन"),
-    BIOLOGY("जीवशास्त्र"),
-    STATISTICS("तथ्यांकशास्त्र"),
-    NEPALI("नेपाली"),
-    TOURISM("पर्यटन"),
-    GEOGRAPHY("भूगोल"),
-    PHYSICS("भौतिकशास्त्र"),
-    PSYCHOLOGY("मनोविज्ञान"),
-    HUMANITIES("मानविकी"),
-    CHEMISTRY("रसायनशास्त्र"),
-    POLITICAL_SCIENCE("राजनीतिकशास्त्र"),
-    FORESTRY_AND_AGRICULTURE("वन, कृषि तथा पशुविज्ञान"),
-    BOTANY("वनस्पतिशास्त्र"),
-    COMMERCE("वाणिज्य"),
-    SCIENCE("विज्ञान"),
-    MANAGEMENT("व्यवस्थापन"),
-    EDUCATION("शिक्षा"),
-    EDUCATIONAL_SCIENCE("शिक्षाशास्त्र"),
-    SANSKRIT("संस्कृत"),
-    ARTS("संस्कृति"),
-    SOCIAL_SCIENCES("समाजशास्त्र"),
-    INFORMATION_TECHNOLOGY("सूचना प्रविधि"),
-    HINDI("हिन्दी"),
-    OTHER("अन्य");
+[cols="1,3", options="header"]
+|===
+| Value                   | Description
+| `ENGLISH`               | English (अंग्रेजी)
+| `ECONOMICS`             | Economics (अर्थशास्त्र)
+| `ENGINEERING`           | Engineering (इन्जिनियरङ्गि)
+| `HISTORY`               | History (इतिहास)
+| `HOME_ECONOMICS`        | Home Economics (गृहविज्ञान)
+| `RURAL_DEVELOPMENT`     | Rural Development (ग्रामीण विकास)
+| `MEDICINE`              | Medicine (चिकित्सा)
+| `POPULATION_STUDY`      | Population Studies (जनसंख्या अध्ययन)
+| `BIOLOGY`               | Biology (जीवशास्त्र)
+| `STATISTICS`            | Statistics (तथ्यांकशास्त्र)
+| `NEPALI`                | Nepali (नेपाली)
+| `TOURISM`               | Tourism (पर्यटन)
+| `GEOGRAPHY`             | Geography (भूगोल)
+| `PHYSICS`               | Physics (भौतिकशास्त्र)
+| `PSYCHOLOGY`            | Psychology (मनोविज्ञान)
+| `HUMANITIES`            | Humanities (मानविकी)
+| `CHEMISTRY`             | Chemistry (रसायनशास्त्र)
+| `POLITICAL_SCIENCE`     | Political Science (राजनीतिकशास्त्र)
+| `FORESTRY_AND_AGRICULTURE` | Forestry and Agriculture (वन, कृषि तथा पशुविज्ञान)
+| `BOTANY`                | Botany (वनस्पतिशास्त्र)
+| `COMMERCE`              | Commerce (वाणिज्य)
+| `SCIENCE`               | Science (विज्ञान)
+| `MANAGEMENT`            | Management (व्यवस्थापन)
+| `EDUCATION`             | Education (शिक्षा)
+| `EDUCATIONAL_SCIENCE`   | Educational Science (शिक्षाशास्त्र)
+| `SANSKRIT`              | Sanskrit (संस्कृत)
+| `ARTS`                  | Arts (संस्कृति)
+| `SOCIAL_SCIENCES`       | Social Sciences (समाजशास्त्र)
+| `INFORMATION_TECHNOLOGY` | Information Technology (सूचना प्रविधि)
+| `HINDI`                 | Hindi (हिन्दी)
+| `OTHER`                 | Other subjects (अन्य)
+|===
 
-    private final String nepaliName;
+==== `WardWiseSchoolDropout`
+Statistics on school dropout rates by ward.
 
-    MajorSubjectType(String nepaliName) {
-        this.nepaliName = nepaliName;
-    }
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `cause`      | Reason for dropping out (reference to SchoolDropoutCauseType)
+| `population` | Number of people who dropped out for this reason
+|===
 
-    public String getNepaliName() {
-        return nepaliName;
-    }
-}
+==== `SchoolDropoutCauseType`
+Enumeration of reasons for school dropout.
 
-===== WardWiseSchoolDropout
-
-- ward
-- cause
-- population
-
-
-===== SchoolDropoutCauseType
-
-public enum SchoolDropoutCauseType {
-    BUSINESS("व्यापार/व्यवसाय"),
-    PRIVATE_JOB("निजी नोकरी"),
-    GOVERNMENTAL_JOB("सरकारी जागिर"),
-    STUDY("अध्ययन/तालिम"),
-    WORK("काम/जागिरको खोजी"),
-    DEPENDENT("आश्रित"),
-    CONFLICT("द्वन्द्व"),
-    OTHER("अन्य"),
-    UNKNOWN("थाहा छैन");
-
-    private final String nepaliName;
-
-    SchoolDropoutCauseType(String nepaliName) {
-        this.nepaliName = nepaliName;
-    }
-
-    public String getNepaliName() {
-        return nepaliName;
-    }
-}
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `BUSINESS`          | Business or entrepreneurship (व्यापार/व्यवसाय)
+| `PRIVATE_JOB`       | Private sector employment (निजी नोकरी)
+| `GOVERNMENTAL_JOB`  | Government employment (सरकारी जागिर)
+| `STUDY`             | Focus on different studies (अध्ययन/तालिम)
+| `WORK`              | Seeking employment (काम/जागिरको खोजी)
+| `DEPENDENT`         | Dependent on others (आश्रित)
+| `CONFLICT`          | Conflict-related reasons (द्वन्द्व)
+| `OTHER`             | Other reasons (अन्य)
+| `UNKNOWN`           | Unknown reason (थाहा छैन)
+|===
