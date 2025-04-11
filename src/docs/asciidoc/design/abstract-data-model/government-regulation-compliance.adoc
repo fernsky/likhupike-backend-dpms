@@ -1,0 +1,335 @@
+
+==== `GovernmentRegulationCompliance`
+Tracks entity compliance with specific government regulations and policies.
+
+[cols="1,3", options="header"]
+|===
+| Field                    | Description
+| `regulationType`         | Type of regulation (reference to RegulationType)
+| `regulationReference`    | Official reference number or ID of the regulation
+| `complianceStatus`       | Current compliance status (COMPLIANT, NON_COMPLIANT, EXEMPTED, IN_PROGRESS)
+| `complianceVerifiedAt`   | Date when compliance was last verified
+| `complianceVerifiedBy`   | Official who verified the compliance
+| `expiryDate`             | When current compliance certification expires
+| `exemptionReason`        | Reason if entity is exempted from this regulation
+| `remediationPlan`        | Action plan for non-compliant entities
+| `evidenceDocumentKeys`   | Storage keys for compliance evidence documents
+| `auditHistory`           | Historical record of compliance audits
+|===
+
+==== `RegulationType`
+Enumeration of government regulation types applicable to entities.
+
+[cols="1,3", options="header"]
+|===
+| Value                   | Description
+| `DATA_PRIVACY`          | Personal data protection regulations
+| `INFORMATION_SECURITY`  | Information security standards
+| `ACCESSIBILITY`         | Digital accessibility requirements
+| `FINANCIAL_COMPLIANCE`  | Financial reporting and audit requirements
+| `ENVIRONMENTAL`         | Environmental impact regulations
+| `PROCUREMENT`           | Public procurement rules
+| `ADMINISTRATIVE`        | Administrative procedure requirements
+| `REGULATORY_REPORTING`  | Mandatory reporting to regulatory bodies
+| `RECORD_RETENTION`      | Records management and retention policies
+| `DISASTER_RECOVERY`     | Business continuity and disaster recovery
+| `TRANSPARENCY`          | Open government and transparency rules
+| `SERVICE_STANDARD`      | Service delivery standards compliance
+|===
+
+==== `SecurityClassification`
+Interface for entities requiring government security classification.
+
+[source,kotlin]
+----
+interface SecurityClassification {
+    fun getClassificationLevel(): ClassificationLevel
+    fun getClassificationAuthority(): String
+    fun getClassificationDate(): LocalDateTime
+    fun getDowngradeDate(): LocalDateTime?
+    fun getDowngradeAuthorizedBy(): String?
+    fun getAccessControlRequirements(): List<String>
+    fun requiresSecurityClearance(): Boolean
+}
+----
+
+==== `ClassificationLevel`
+Enumeration of security classification levels for government data.
+
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `UNCLASSIFIED`      | Information that can be freely disclosed
+| `INTERNAL_USE_ONLY` | Information for internal government use
+| `SENSITIVE`         | Information requiring careful handling
+| `CONFIDENTIAL`      | Information whose disclosure could harm government interests
+| `RESTRICTED`        | Information with significant security implications
+| `SECRET`            | Information whose disclosure would cause serious damage
+| `TOP_SECRET`        | Information with the highest security implications
+|===
+
+==== `GovernmentHierarchyAware`
+Interface for entities that integrate with government administrative hierarchy.
+
+[source,kotlin]
+----
+interface GovernmentHierarchyAware {
+    fun getFederalMinistry(): String?
+    fun getProvincialMinistry(): String?
+    fun getDepartment(): String?
+    fun getDivision(): String?
+    fun getSection(): String?
+    fun getHierarchyPath(): String
+    fun getVerticalReportingChain(): List<String>
+    fun getHorizontalCoordinationUnits(): List<String>
+}
+----
+
+==== `DisasterRecoveryMetadata`
+Component for critical government entities requiring disaster recovery provisions.
+
+[cols="1,3", options="header"]
+|===
+| Field                        | Description
+| `criticalityLevel`           | Business criticality level (HIGH, MEDIUM, LOW)
+| `recoveryTimeObjective`      | Maximum acceptable downtime
+| `recoveryPointObjective`     | Maximum acceptable data loss period
+| `backupFrequency`            | How often data is backed up
+| `backupRetentionPeriod`      | How long backups are retained
+| `alternateProcessingLocation`| Geographic location for disaster recovery operations
+| `lastRecoveryTest`           | When disaster recovery capability was last tested
+| `continuityPlanDocumentKey`  | Reference to continuity plan document
+| `emergencyContactInfo`       | Emergency contact information for the responsible team
+|===
+
+==== `OfficialDocument`
+Represents government and official documents with their processing status.
+
+[cols="1,3", options="header"]
+|===
+| Field                     | Description
+| `documentType`            | Type of official document
+| `documentNumber`          | Unique identifier/reference number
+| `issuingAuthority`        | Government entity that issued the document
+| `issueDate`               | Date the document was issued
+| `expiryDate`              | Date the document expires (if applicable)
+| `documentStatus`          | Current status (DRAFT, ACTIVE, EXPIRED, REVOKED, etc.)
+| `documentOwner`           | Entity responsible for the document
+| `securityClassification`  | Security classification level
+| `digitalSignature`        | Digital signature information
+| `verificationCode`        | Code for verifying document authenticity
+| `amendmentHistory`        | History of document amendments
+| `relatedDocuments`        | References to related official documents
+| `storageKey`              | Storage key for the document file
+| `revocationReason`        | Reason if document was revoked
+|===
+
+==== `DigitalIdentity`
+Component for integration with the national digital identity system.
+
+[cols="1,3", options="header"]
+|===
+| Field                    | Description
+| `nationalIdNumber`       | National ID number
+| `nationalIdType`         | Type of national ID (CITIZENSHIP, PASSPORT, etc.)
+| `digitalIdentityId`      | Digital identity system identifier
+| `identityVerified`       | Whether identity has been verified
+| `verificationMethod`     | Method used for identity verification
+| `verificationDate`       | When identity was verified
+| `verificationAuthority`  | Authority that performed verification
+| `biometricVerified`      | Whether biometric verification was performed
+| `authenticationLevel`    | Level of authentication (LOW, MEDIUM, HIGH)
+| `federatedIdentities`    | Linked identities from other systems
+|===
+
+==== `AccessibilityCompliance`
+Component for tracking digital accessibility compliance for inclusive government services.
+
+[cols="1,3", options="header"]
+|===
+| Field                        | Description
+| `wcagLevel`                  | WCAG compliance level (A, AA, AAA)
+| `lastAccessibilityAudit`     | When accessibility was last audited
+| `accessibilityScore`         | Numerical score from accessibility evaluation
+| `accessibilityIssuesCount`   | Number of outstanding accessibility issues
+| `remediationPlan`            | Plan to address accessibility issues
+| `assistiveTechnologiesTested`| Assistive technologies tested for compatibility
+| `accessibilityStatementKey`  | Reference to accessibility statement document
+| `accessibilityContact`       | Contact for accessibility issues
+|===
+
+==== `LanguageSupport`
+Component tracking native language support for digital inclusion.
+
+[cols="1,3", options="header"]
+|===
+| Field                        | Description
+| `supportedNepaliVariants`    | Nepali language variants supported
+| `supportedIndigenousLanguages`| Indigenous languages supported
+| `translationCompleteness`    | Percentage of content translated
+| `translationVerified`        | Whether translations have been verified
+| `localScriptSupport`         | Whether native scripts are properly rendered
+| `fontAvailability`           | Whether required fonts are available
+| `directionSupportLevel`      | Support for right-to-left and other text directions
+| `keyboardLayoutSupport`      | Supported keyboard input methods
+|===
+
+==== `GeographicalJurisdiction`
+Component for defining geographical jurisdiction of government services and entities.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `administrativeLevel`      | Level of administration (FEDERAL, PROVINCIAL, LOCAL)
+| `federalJurisdiction`      | Whether entity has federal jurisdiction
+| `provincialJurisdictions`  | Provinces under jurisdiction
+| `districtJurisdictions`    | Districts under jurisdiction
+| `municipalJurisdictions`   | Municipalities under jurisdiction
+| `wardJurisdictions`        | Wards under jurisdiction
+| `jurisdictionBoundary`     | Geographical boundary of jurisdiction
+| `populationServed`         | Estimated population within jurisdiction
+| `jurisdictionCode`         | Official code for this jurisdiction
+|===
+
+==== `GovernmentProgramParticipation`
+Tracks entity participation in specific government programs and initiatives.
+
+[cols="1,3", options="header"]
+|===
+| Field                     | Description
+| `programCode`             | Unique identifier for the government program
+| `programName`             | Name of the government program
+| `participationStatus`     | Current participation status
+| `enrollmentDate`          | When entity enrolled in the program
+| `benefitEligibility`      | Entity's eligibility for program benefits
+| `benefitsReceived`        | Benefits received from the program
+| `complianceStatus`        | Compliance with program requirements
+| `nextReviewDate`          | Date of next program participation review
+| `programContactPerson`    | Contact person for the program
+| `historicalParticipation` | Record of past program participation
+|===
+
+==== `ITSystemRequirements`
+Defines specific IT system requirements for government entities.
+
+[cols="1,3", options="header"]
+|===
+| Field                     | Description
+| `minAvailabilityPercent`  | Required system uptime percentage
+| `disasterRecoveryTier`    | Disaster recovery capability level
+| `securityClearanceNeeded` | Security clearance required for maintenance
+| `interoperabilityLevel`   | Required level of interoperability
+| `apiComplianceRequired`   | Whether must comply with government API standards
+| `dataRetentionPeriod`     | Mandatory data retention period
+| `dataBackupFrequency`     | Required backup frequency
+| `penetrationTestFrequency`| Required security testing frequency
+| `certificationRequired`   | Required security/quality certifications
+| `maxAcceptableResponseTime`| Maximum acceptable system response time
+|===
+
+==== `RemoteAccessibility`
+Component for tracking services available through remote channels.
+
+[cols="1,3", options="header"]
+|===
+| Field                     | Description
+| `mobileAppSupport`        | Whether service is available via mobile app
+| `smsServiceSupport`       | Whether service is accessible via SMS
+| `ussdServiceSupport`      | Whether service is accessible via USSD codes
+| `internetRequirement`     | Minimum internet speed required
+| `offlineCapabilities`     | Features available without internet
+| `lowBandwidthMode`        | Whether service has low-bandwidth mode
+| `mobileFriendlinessScore` | Score for mobile usability
+| `multichannelServiceDelivery`| Channels through which service is delivered
+| `serviceUptimeTarget`     | Target service availability percentage
+|===
+
+==== `OpenGovernmentData`
+Component for entities that publish open government data.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `datasetIdentifier`  | Unique identifier for the dataset
+| `datasetTitle`       | Human-readable title for the dataset
+| `datasetDescription` | Description of the dataset contents
+| `updateFrequency`    | How often the dataset is updated
+| `lastUpdated`        | When the dataset was last updated
+| `dataFormats`        | Available data formats (CSV, JSON, XML, etc.)
+| `license`            | License under which data is published
+| `accessEndpoint`     | URL or API endpoint for accessing the data
+| `datasetCustodian`   | Entity responsible for maintaining the dataset
+| `qualityMetrics`     | Data quality metrics
+| `metadataSchema`     | Schema used for dataset metadata
+|===
+
+==== `ServiceLevelAgreement`
+Defines service level agreements for government services.
+
+[cols="1,3", options="header"]
+|===
+| Field                    | Description
+| `serviceCode`            | Unique code for the service
+| `serviceCategory`        | Category of service
+| `responseTimeTarget`     | Target response time for service requests
+| `resolutionTimeTarget`   | Target resolution time for service requests
+| `availabilityTarget`     | Target service availability percentage
+| `operatingHours`         | Service operating hours
+| `supportChannels`        | Available support channels
+| `escalationPath`         | Path for escalating service issues
+| `performanceMetrics`     | Key performance indicators for the service
+| `reviewFrequency`        | How often SLA is reviewed
+| `serviceGuarantees`      | Specific service guarantees provided
+| `compensationPolicy`     | Policy for SLA violations
+|===
+
+==== `OfflineServiceDelivery`
+Component for tracking offline service delivery capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field                       | Description
+| `physicalServicePoints`     | Number of physical service delivery points
+| `mobileServiceUnits`        | Number of mobile service delivery units
+| `authorizedServiceAgents`   | Third-party agents authorized to deliver service
+| `serviceHours`              | Service hours at physical locations
+| `waitingTimeAverage`        | Average waiting time for in-person service
+| `accessibilityFeatures`     | Physical accessibility features
+| `geographicalCoverage`      | Geographical areas covered by offline service
+| `serviceCapacity`           | Maximum service capacity per day
+| `documentationRequired`     | Documentation required for in-person service
+| `alternateChannelAvailability`| Alternative channels if offline service unavailable
+|===
+
+==== `FiscalYearAware`
+Mixin interface for entities that track Nepal's fiscal year context.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `fiscalYear`           | Current fiscal year (e.g., 2080/81)
+| `fiscalYearStartDate`  | Start date of fiscal year
+| `fiscalYearEndDate`    | End date of fiscal year
+| `fiscalQuarter`        | Current fiscal quarter
+| `budgetCode`           | Associated budget code
+| `fiscalPeriodLocked`   | Whether fiscal period is locked for changes
+| `previousFiscalYear`   | Reference to previous fiscal year
+| `nextFiscalYear`       | Reference to next fiscal year
+|===
+
+==== `NepalGovernmentIDIssuance`
+Entity for tracking government-issued identifications.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `idType`               | Type of ID (CITIZENSHIP, VOTER, PAN, etc.)
+| `idNumber`             | Identification number
+| `issuingAuthority`     | Office that issued the ID
+| `issuingDistrict`      | District where ID was issued
+| `issueDate`            | Date when ID was issued
+| `validUntil`           | Expiration date if applicable
+| `idVerificationStatus` | Verification status of the ID
+| `digitalCopy`          | Storage key for digital copy
+| `idStatus`             | Current status (ACTIVE, REPLACED, CANCELLED, etc.)
+|===

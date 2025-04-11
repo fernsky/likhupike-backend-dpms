@@ -1,0 +1,451 @@
+=== Government Domain
+
+==== `GovernmentOffice`
+Represents an official government office or administrative unit.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `officeName`           | Official name of the government office
+| `officeCode`           | Unique code assigned to the office
+| `officeType`           | Type of office (reference to GovernmentOfficeType)
+| `administrativeLevel`  | Level of government (FEDERAL, PROVINCIAL, LOCAL)
+| `parentOffice`         | Parent office in hierarchical structure
+| `ministry`             | Ministry this office belongs to
+| `department`           | Department this office belongs to
+| `location`             | Physical location information
+| `jurisdiction`         | Geographic or functional jurisdiction
+| `headOfficial`         | Head official or officer of the office
+| `establishedDate`      | Date when the office was established
+| `budgetCode`           | Budget code for financial tracking
+| `staffCount`           | Number of staff positions
+| `contactInformation`   | Official contact details
+| `officialStamp`        | Digital representation of official stamp/seal
+| `webPresence`          | Official website and social media
+| `orgStructure`         | Organizational structure document reference
+|===
+
+==== `GovernmentOfficeType`
+Enumeration of government office types.
+
+[cols="1,3", options="header"]
+|===
+| Value                      | Description
+| `MINISTRY`                 | Government ministry at federal or provincial level
+| `DEPARTMENT`               | Departmental office under a ministry
+| `COMMISSION`               | Constitutional or statutory commission
+| `AUTHORITY`                | Regulatory or development authority
+| `BOARD`                    | Government board with specific mandate
+| `COMMITTEE`                | Standing or ad-hoc committee
+| `SECRETARIAT`              | Administrative support office for high-level bodies
+| `DIVISION_OFFICE`          | Divisional office at field level
+| `DISTRICT_OFFICE`          | District-level administrative office
+| `MUNICIPALITY_OFFICE`      | Municipal government office
+| `WARD_OFFICE`              | Ward-level government office
+| `PROJECT_OFFICE`           | Office for specific government project
+| `SERVICE_CENTER`           | Citizen service delivery center
+| `HOSPITAL`                 | Government hospital
+| `EDUCATIONAL_INSTITUTION`  | Government educational institution
+| `SECURITY_INSTITUTION`     | Security-related institution
+| `ENTERPRISE`               | State-owned enterprise
+| `TRIBUNAL`                 | Government tribunal or quasi-judicial body
+| `COURT`                    | Court within judicial system
+| `OTHER`                    | Other government institution types
+|===
+
+==== `ElectedOfficial`
+Represents an elected government official.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `position`             | Elected position title
+| `person`               | Reference to the person entity
+| `constituency`         | Electoral constituency represented
+| `administrativeUnit`   | Administrative unit represented
+| `politicalAffiliation` | Political party or independent status
+| `electionDate`         | Date when official was elected
+| `termStart`            | Start date of official term
+| `termEnd`              | End date of official term
+| `consecutiveTerms`     | Number of consecutive terms served
+| `status`               | Current status (ACTIVE, SUSPENDED, RESIGNED, etc.)
+| `responsibilities`     | Key areas of responsibility
+| `contactForConstituents`| Contact information for constituents
+| `officeHours`          | Hours available for public meetings
+| `predecessors`         | Previous officials in this position
+| `appointedCommittees`  | Committees the official serves on
+| `votingRecord`         | Reference to voting record on key issues
+|===
+
+==== `AppointedOfficial`
+Represents an appointed government official.
+
+[cols="1,3", options="header"]
+|===
+| Field                    | Description
+| `position`               | Official position title
+| `person`                 | Reference to the person entity
+| `appointingAuthority`    | Authority that made the appointment
+| `appointmentDate`        | Date of appointment
+| `termStart`              | Start date of term
+| `termEnd`                | End date of term
+| `appointmentDocument`    | Reference to appointment document
+| `appointmentBasis`       | Basis for appointment (MERIT, POLITICAL, etc.)
+| `employmentType`         | Type of employment (PERMANENT, CONTRACT, etc.)
+| `civilServiceTier`       | Tier in civil service hierarchy
+| `serviceGroup`           | Service group classification
+| `previousPositions`      | Previous government positions
+| `secondmentInformation`  | Details if appointed on secondment
+| `performanceRatings`     | Performance evaluation information
+| `specialQualifications`  | Special qualifications or certifications
+|===
+
+==== `GovernmentService`
+Represents a specific service provided by government.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `serviceName`              | Name of the government service
+| `serviceCode`              | Unique code for the service
+| `serviceCategory`          | Category of service
+| `responsibleOffice`        | Office responsible for delivering the service
+| `eligibilityCriteria`      | Who is eligible to receive the service
+| `requiredDocuments`        | Documents required to apply
+| `serviceProcess`           | Process steps to obtain the service
+| `processingTime`           | Expected processing time
+| `fees`                     | Associated fees if any
+| `serviceAvailabilityMode`  | How service can be accessed (ONLINE, OFFLINE, BOTH)
+| `onlineServiceURL`         | URL for online service
+| `serviceLevel`             | Service level guarantee
+| `legalBasis`               | Legal provisions for the service
+| `appealProcess`            | Process for appealing decisions
+| `feedbackMechanism`        | How citizens can provide feedback
+| `availabilityHours`        | Hours when service is available
+| `accessibilityFeatures`    | Features for ensuring accessibility
+|===
+
+==== `GovernmentForm`
+Represents an official form used in government processes.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `formName`                 | Name of the form
+| `formCode`                 | Unique code for the form
+| `version`                  | Current version of the form
+| `issuingAuthority`         | Authority that issues the form
+| `purpose`                  | Purpose/usage of the form
+| `associatedServices`       | Services this form is used for
+| `requiredAttachments`      | Documents that must be attached
+| `formTemplate`             | Template storage reference
+| `instructionsUrl`          | URL with instructions for completion
+| `validFrom`                | Date from which form is valid
+| `validUntil`               | Date until which form is valid
+| `previousVersions`         | References to previous versions
+| `languages`                | Languages in which form is available
+| `isDigitized`              | Whether form can be submitted electronically
+| `averageCompletionTime`    | Estimated time to complete the form
+| `mandatoryFields`          | Fields that must be completed
+| `submissionAuthorization`  | Who is authorized to submit this form
+|===
+
+==== `GovernmentProgram`
+Represents a government program or initiative.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `programName`              | Name of the program
+| `programCode`              | Unique identifier for the program
+| `programType`              | Type of program (WELFARE, DEVELOPMENT, PROMOTIONAL, etc.)
+| `implementingAgency`       | Agency responsible for implementation
+| `budget`                   | Allocated budget
+| `startDate`                | Start date of the program
+| `endDate`                  | End date of the program (if applicable)
+| `targetBeneficiaries`      | Intended beneficiaries of the program
+| `geographicalCoverage`     | Areas covered by the program
+| `objectives`               | Key objectives of the program
+| `performanceIndicators`    | Metrics for measuring success
+| `legalFramework`           | Legal basis for the program
+| `fundingSources`           | Sources of program funding
+| `contactInformation`       | Program contact details
+| `applicationProcess`       | Process for applying to the program
+| `selectionCriteria`        | Criteria for selecting beneficiaries
+| `currentStatus`            | Current implementation status
+|===
+
+==== `PublicProcurement`
+Represents a government procurement process.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `procurementId`            | Unique identifier for the procurement
+| `title`                    | Title of the procurement
+| `procurementType`          | Type of procurement (GOODS, SERVICES, WORKS)
+| `procurementMethod`        | Method used (OPEN_BIDDING, DIRECT, LIMITED, etc.)
+| `procuringEntity`          | Entity conducting the procurement
+| `estimatedValue`           | Estimated financial value
+| `actualContract`           | Awarded contract value
+| `announcementDate`         | Date when procurement was announced
+| `submissionDeadline`       | Deadline for bid submission
+| `openingDate`              | Date for bid opening
+| `awardDate`                | Date when contract was awarded
+| `awardedTo`                | Entity awarded the contract
+| `competingBidders`         | Number of participating bidders
+| `evaluationCriteria`       | Criteria used for evaluation
+| `contractDuration`         | Duration of the awarded contract
+| `statusUpdates`            | Timeline of status changes
+| `appealInformation`        | Process for procurement appeals
+|===
+
+==== `LocalGovernmentProject`
+Represents a development project implemented by local government.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `projectName`              | Name of the project
+| `projectCode`              | Unique identifier code
+| `sector`                   | Development sector of the project
+| `implementingWards`        | Wards where project is implemented
+| `budget`                   | Total budget allocation
+| `fiscalYear`               | Fiscal year(s) of implementation
+| `startDate`                | Project start date
+| `targetCompletionDate`     | Planned completion date
+| `actualCompletionDate`     | Actual completion date
+| `implementationMethod`     | How project is implemented (CONTRACT, USER_COMMITTEE, etc.)
+| `contractor`               | Contracted entity if applicable
+| `userCommittee`            | User committee if applicable
+| `beneficiaries`            | Number of intended beneficiaries
+| `progressStatus`           | Current implementation status
+| `physicalProgress`         | Physical progress percentage
+| `financialProgress`        | Financial expenditure percentage
+| `challenges`               | Implementation challenges faced
+| `monitoringReports`        | References to monitoring reports
+|===
+
+==== `CitizenFeedback`
+Represents feedback from citizens on government services or projects.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `referenceType`            | Type of entity feedback relates to (SERVICE, PROJECT, OFFICE, etc.)
+| `referenceId`              | ID of the entity feedback relates to
+| `citizen`                  | Reference to citizen providing feedback
+| `feedbackDate`             | Date feedback was submitted
+| `feedbackChannel`          | Channel through which feedback was received
+| `satisfactionLevel`        | Satisfaction rating (1-5 scale)
+| `feedbackText`             | Textual feedback content
+| `mediaAttachments`         | Any attached photos/videos
+| `category`                 | Category of feedback (SUGGESTION, COMPLAINT, APPRECIATION)
+| `status`                   | Processing status of the feedback
+| `responseRequired`         | Whether citizen requested a response
+| `respondedDate`            | Date when feedback was responded to
+| `respondedBy`              | Official who responded
+| `responseText`             | Text of the official response
+| `resultingActions`         | Actions taken as a result of feedback
+| `isAnonymous`              | Whether feedback was submitted anonymously
+| `isPublic`                 | Whether feedback is publicly visible
+|===
+
+==== `PublicNotice`
+Represents an official notice issued by government.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `noticeTitle`              | Title of the notice
+| `noticeType`               | Type of notice
+| `issuingAuthority`         | Authority issuing the notice
+| `publicationDate`          | Date of publication
+| `effectiveDate`            | Date when notice takes effect
+| `expiryDate`               | Date when notice expires
+| `noticeContent`            | Content of the notice
+| `attachments`              | Related documents
+| `targetAudience`           | Intended audience for the notice
+| `geographicalScope`        | Geographic areas the notice applies to
+| `legalReference`           | Legal basis for the notice
+| `contactForInquiries`      | Contact for questions about the notice
+| `publicationChannels`      | Channels where notice was published
+| `importance`               | Priority/importance level
+| `acknowledgmentRequired`   | Whether acknowledgment is required
+| `languages`                | Languages in which notice is available
+| `isDigitallySigned`        | Whether notice has digital signature
+|===
+
+==== `FiscalYear`
+Represents a Nepali fiscal year for financial tracking.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `fiscalYearName`           | Name of fiscal year (e.g., 2080/81)
+| `startDate`                | Start date (typically Shrawan 1)
+| `endDate`                  | End date (typically Ashadh end)
+| `totalBudget`              | Total approved budget
+| `plannedRevenue`           | Planned revenue collection
+| `actualRevenue`            | Actual revenue collected
+| `plannedExpenditure`       | Planned expenditure
+| `actualExpenditure`        | Actual expenditure
+| `capitalExpenditure`       | Capital expenditure amount
+| `recurrentExpenditure`     | Recurrent expenditure amount
+| `transferPayments`         | Funds transferred to lower-level governments
+| `financialStatements`      | References to financial statement documents
+| `auditStatus`              | Status of annual audit
+| `closeoutDate`             | Date when accounts were finalized
+| `fiscalPolicies`           | Key fiscal policies for the year
+| `budgetSpeechDocument`     | Reference to budget speech document
+|===
+
+==== `VitalEventRegistration`
+Represents registration of a vital event (birth, death, marriage, etc.).
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `eventType`                | Type of vital event
+| `registrationNumber`       | Unique registration number
+| `registeredDate`           | Date of registration
+| `eventDate`                | Date when event occurred
+| `eventLocation`            | Location where event occurred
+| `registrationAuthority`    | Authority where event was registered
+| `registrationWard`         | Ward where registration took place
+| `registeredBy`             | Person who registered the event
+| `certificate`              | Reference to issued certificate
+| `primaryPerson`            | Primary person related to event (newborn, deceased, etc.)
+| `relatedPersons`           | Other persons related to the event
+| `relationship`             | Relationship between persons (for marriage, etc.)
+| `verificationStatus`       | Verification status
+| `informant`                | Person who reported the event
+| `witnesses`                | Witnesses to the event
+| `supportingDocuments`      | Supporting documents provided
+| `remarks`                  | Additional remarks or notes
+|===
+
+==== `ServiceTransaction`
+Represents a transaction for a government service.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `transactionId`            | Unique identifier for the transaction
+| `service`                  | Service being provided
+| `citizen`                  | Citizen receiving the service
+| `officialHandling`         | Government official handling the transaction
+| `office`                   | Office where transaction takes place
+| `applicationDate`          | Date of application
+| `completionDate`           | Date of completion
+| `status`                   | Current status
+| `documents`                | Documents submitted/produced
+| `fees`                     | Fees paid
+| `paymentMethod`            | Method of payment
+| `receiptNumber`            | Receipt number for payment
+| `deliveryMethod`           | How service output was delivered
+| `processingTime`           | Time taken to process
+| `satisfaction`             | Citizen satisfaction rating
+| `authenticationMethod`     | How citizen was authenticated
+| `comments`                 | Additional comments or notes
+|===
+
+==== `BudgetAllocation`
+Represents budget allocation to a specific entity or purpose.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `fiscalYear`               | Fiscal year of the budget
+| `budgetHead`               | Budget heading code
+| `lineItem`                 | Specific budget line item
+| `allocatedTo`              | Entity receiving allocation
+| `allocatedBy`              | Authority making allocation
+| `allocationAmount`         | Amount allocated
+| `allocationDate`           | Date of allocation
+| `purpose`                  | Purpose of allocation
+| `spendingAuthority`        | Who can authorize expenditure
+| `transferHistory`          | Record of fund transfers
+| `expenditureToDate`        | Amount spent to date
+| `remainingBalance`         | Remaining balance
+| `freezeStatus`             | Whether funds are frozen
+| `reappropriationHistory`   | History of budget reappropriations
+| `performanceTargets`       | Targets linked to this budget
+| `capitalOrRecurrent`       | Whether capital or recurrent expenditure
+| `fundingSource`            | Source of funds (INTERNAL, EXTERNAL, etc.)
+|===
+
+==== `ElectionData`
+Represents data from an election.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `electionType`             | Type of election
+| `electionDate`             | Date of the election
+| `constituency`             | Electoral constituency
+| `ward`                     | Ward (for local elections)
+| `registeredVoters`         | Number of registered voters
+| `voterTurnout`             | Percentage of voters who participated
+| `validVotes`               | Number of valid votes cast
+| `invalidVotes`             | Number of invalid votes
+| `candidates`               | List of candidates
+| `electionResults`          | Results of the election
+| `winningCandidate`         | Candidate who won
+| `marginOfVictory`          | Winning margin
+| `electionObservers`        | Organizations observing the election
+| `disputeStatus`            | Status of any election disputes
+| `certificationDate`        | Date results were certified
+| `pollingStations`          | Polling stations in the constituency
+| `electronicVotingUsed`     | Whether electronic voting was used
+|===
+
+==== `LocalGovernmentAct`
+Represents a legal act/regulation passed by local government.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `actName`                  | Name of the act or regulation
+| `actType`                  | Type of legislation
+| `approvalDate`             | Date of approval
+| `effectiveDate`            | Date act comes into effect
+| `endorsingBody`            | Body that endorsed the act
+| `scope`                    | Scope of application
+| `replacesAct`              | Previous act this replaces
+| `mainProvisions`           | Key provisions of the act
+| `penalties`                | Penalties for non-compliance
+| `implementingAuthorities`  | Authorities responsible for implementation
+| `publicationDate`          | Date of official publication
+| `publicationReference`     | Reference in official gazette
+| `amendmentHistory`         | History of amendments
+| `judicialReviewStatus`     | Status of any judicial review
+| `draftingCommittee`        | Committee that drafted the act
+| `consultationProcess`      | Public consultation process undertaken
+| `interpretationAuthority`  | Authority for official interpretation
+|===
+
+==== `GovernmentCommittee`
+Represents an official committee formed by government.
+
+[cols="1,3", options="header"]
+|===
+| Field                      | Description
+| `committeeName`            | Name of the committee
+| `committeeType`            | Type of committee
+| `formingAuthority`         | Authority that formed the committee
+| `formationDate`            | Date when committee was formed
+| `mandate`                  | Official mandate and scope
+| `members`                  | Committee members
+| `chairperson`              | Committee chairperson
+| `secretary`                | Committee secretary
+| `duration`                 | Intended duration of committee
+| `meetingFrequency`         | How often committee meets
+| `reportingTo`              | Entity committee reports to
+| `keyResponsibilities`      | Main responsibilities
+| `recommendationPowers`     | Whether committee can make binding decisions
+| `budget`                   | Budget allocated to committee
+| `meetingMinutes`           | References to meeting minutes
+| `reports`                  | Reports produced by committee
+| `status`                   | Current status of committee
+|===
