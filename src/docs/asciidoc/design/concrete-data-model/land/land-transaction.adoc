@@ -9,8 +9,11 @@ Land Transaction represents the transfer, sale, mortgage, lease, or other transa
 @startuml
 ' Core models
 abstract class ApprovableEntity
+abstract class WorkflowEntity
 interface HistoryViewable
 interface WebhookTriggerable
+interface BatchProcessable
+interface CustomValidatable
 
 ' LandTransaction implementation
 class LandTransaction {
@@ -19,6 +22,21 @@ class LandTransaction {
   +ReviewState reviewState
   +LocalDateTime approvedAt
   +UUID approvedBy
+  +String reviewNote
+  +UUID currentAssignee
+  +Integer escalationLevel
+  +LocalDate dueDate
+  
+  ' From WorkflowEntity
+  +String workflowDefinitionId
+  +String workflowInstanceId
+  +String currentState
+  +List<String> previousStates
+  +List<String> nextPossibleStates
+  +LocalDateTime stateEnteredAt
+  +LocalDate stateDeadline
+  +List<UUID> activeTaskIds
+  +Integer workflowPriority
   
   ' LandTransaction-specific
   +UUID parcelId
@@ -55,6 +73,18 @@ class LandTransaction {
   +Boolean taxPaid
   +UUID paymentId
   +List<UUID> feeIds
+  
+  ' Webhook capabilities
+  +List<WebhookRegistration> webhookRegistrations
+  
+  ' Batch processing capabilities
+  +String batchId
+  +Integer batchSequence
+  +BatchProcessStatus batchStatus
+  
+  ' Validation capabilities
+  +List<ValidationRule> validationRules
+  +ValidationStatus validationStatus
   
   ' Implementation methods...
 }
@@ -103,17 +133,37 @@ enum PartyType {
   FOREIGN_ENTITY
 }
 
+enum BatchProcessStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  PARTIAL
+}
+
+enum ValidationStatus {
+  NOT_VALIDATED
+  VALIDATION_PASSED
+  VALIDATION_FAILED
+  VALIDATION_WARNING
+}
+
 ' Inheritance relationships
-ApprovableEntity <|-- LandTransaction
+ApprovableEntity <|-- WorkflowEntity
+WorkflowEntity <|-- LandTransaction
 
 ' Interface implementation
 LandTransaction ..|> HistoryViewable
 LandTransaction ..|> WebhookTriggerable
+LandTransaction ..|> BatchProcessable
+LandTransaction ..|> CustomValidatable
 
 ' Enum relationships
 LandTransaction -- TransactionType
 LandTransaction -- TransactionStatus
 LandTransaction -- PartyType
+LandTransaction -- BatchProcessStatus
+LandTransaction -- ValidationStatus
 @enduml
 ----
 
@@ -304,6 +354,656 @@ stop
 @enduml
 ----
 
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Land Transactions are used in the system:
+
+====== Standard Property Sale Transaction
+
+*Scenario:* Urban residential property sale between individual citizens
+
+[plantuml]
+----
+@startuml
+actor "Seller\nKamala Sharma" as Seller
+actor "Buyer\nRajesh Tamang" as Buyer
+participant "Land Registry\nOfficer" as Officer
+participant "LandTransaction" as Transaction
+participant "LandParcel" as Parcel
+participant "Document\nRepository" as Docs
+participant "Payment\nGateway" as Payment
+participant "Tax\nAuthority" as Tax
+
+Seller -> Officer : Initiate property sale (NPR 7,500,000)
+Buyer -> Officer : Confirm purchase intent
+Officer -> Parcel : Verify parcel details and ownership
+activate Parcel
+Officer <-- Parcel : Ownership confirmed to Kamala
+deactivate Parcel
+
+Officer -> Transaction : Create sale transaction
+activate Transaction
+Transaction -> Transaction : Set type = SALE
+Transaction -> Transaction : Set status = DRAFT
+Transaction -> Transaction : Generate transactionNumber = "TS-27854"
+Transaction -> Transaction : Record parties (Kamala as seller, Rajesh as buyer)
+Transaction -> Transaction : Set transactionAmount = 7,500,000 NPR
+Officer <-- Transaction : Transaction created
+deactivate Transaction
+
+Seller -> Docs : Upload sale deed
+activate Docs
+Docs -> Docs : Digitize and verify deed
+Seller <-- Docs : Document accepted (ID: DOC-12345)
+deactivate Docs
+
+Buyer -> Docs : Upload proof of identity
+activate Docs
+Docs -> Docs : Verify identity document
+Buyer <-- Docs : Document accepted (ID: DOC-12346)
+deactivate Docs
+
+Officer -> Transaction : Attach documents to transaction
+activate Transaction
+Transaction -> Transaction : Add documentIds = [DOC-12345, DOC-12346]
+Transaction -> Transaction : Set status = SUBMITTED
+Officer <-- Transaction : Documents attached
+deactivate Transaction
+
+Officer -> Transaction : Calculate fees and taxes
+activate Transaction
+Transaction -> Tax : Request transfer tax calculation
+activate Tax
+Tax -> Tax : Calculate 4.5% transfer tax on property value
+Transaction <-- Tax : Tax amount = NPR 337,500
+deactivate Tax
+Transaction -> Transaction : Set taxAmount = 337,500 NPR
+Transaction -> Transaction : Calculate registry fee = NPR 15,000
+Transaction -> Transaction : Set status = PENDING_PAYMENT
+Officer <-- Transaction : Fee calculation complete
+deactivate Transaction
+
+Buyer -> Payment : Make payment (NPR 352,500)
+activate Payment
+Payment -> Payment : Process payment
+Payment -> Transaction : Record payment
+activate Transaction
+Transaction -> Transaction : Set taxPaid = true
+Transaction -> Transaction : Set paymentId = "PAY-78901"
+Transaction -> Transaction : Set status = UNDER_REVIEW
+Payment <-- Transaction : Payment recorded
+deactivate Transaction
+Buyer <-- Payment : Payment confirmation
+deactivate Payment
+
+Officer -> Transaction : Review transaction
+activate Transaction
+Transaction -> Transaction : Verify all documents complete
+Transaction -> Transaction : Verify payment received
+Transaction -> Transaction : Set reviewState = APPROVED
+Transaction -> Transaction : Set isApproved = true
+Transaction -> Transaction : Set status = APPROVED
+Officer <-- Transaction : Transaction approved
+deactivate Transaction
+
+Officer -> Transaction : Process land records update
+activate Transaction
+Transaction -> Parcel : Update ownership record
+activate Parcel
+Parcel -> Parcel : Set owner = Rajesh Tamang
+Parcel -> Parcel : Record previous owner = Kamala Sharma
+Transaction <-- Parcel : Ownership updated
+deactivate Parcel
+Transaction -> Transaction : Set status = COMPLETED
+Officer <-- Transaction : Transaction completed
+deactivate Transaction
+
+Officer -> Seller : Issue property transfer confirmation
+Officer -> Buyer : Issue new ownership certificate
+@enduml
+----
+
+*Real-World Context:*
+Kamala Sharma has owned a 3-bedroom house in Lalitpur for 15 years and is selling it to Rajesh Tamang for NPR 7,500,000. They visit the Land Revenue Office, where the officer creates a LandTransaction with type SALE. The system automatically generates a transaction number (TS-27854) and records both parties' details.
+
+Kamala submits the original property certificate and a signed sale deed, while Rajesh provides identity verification and proof of funds. The documents are digitized and linked to the transaction record. The system calculates a 4.5% transfer tax (NPR 337,500) and a registry fee (NPR 15,000).
+
+Rajesh pays the total amount through the integrated payment gateway, which automatically updates the transaction status to UNDER_REVIEW. The officer verifies all documents and payment confirmations before approving the transaction. When approved, the system automatically updates the LandParcel entity, transferring ownership from Kamala to Rajesh. The transaction triggers a WebhookTriggerable notification to the municipal tax office, updating their records with the new owner information. Each step in the process is tracked through the WorkflowEntity capabilities, ensuring proper sequencing and authorization.
+
+====== Agricultural Land Subdivision and Transfer to Children
+
+*Scenario:* Farmer subdividing agricultural land among three children
+
+[plantuml]
+----
+@startuml
+actor "Landowner\nHari Prasad" as Owner
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel\n(Parent)" as ParentParcel
+participant "Land\nSurveyor" as Surveyor
+participant "LandTransaction" as SubdivisionTx
+participant "LandParcel\n(Children)" as ChildParcels
+participant "LandTransaction" as TransferTx
+actor "Child 1\nSunil" as Child1
+actor "Child 2\nSushila" as Child2
+actor "Child 3\nSaroj" as Child3
+
+Owner -> Registry : Request land subdivision and transfer
+Registry -> ParentParcel : Verify ownership
+activate ParentParcel
+Registry <-- ParentParcel : Ownership verified (2 hectares)
+deactivate ParentParcel
+
+Registry -> Surveyor : Request field survey
+activate Surveyor
+Surveyor -> Surveyor : Conduct site measurement
+Surveyor -> Surveyor : Draft subdivision plan (3 equal parcels)
+Registry <-- Surveyor : Survey plan complete
+deactivate Surveyor
+
+Registry -> SubdivisionTx : Create subdivision transaction
+activate SubdivisionTx
+SubdivisionTx -> SubdivisionTx : Set type = SUBDIVISION
+SubdivisionTx -> SubdivisionTx : Set status = DRAFT
+SubdivisionTx -> SubdivisionTx : Link survey plan document
+Registry <-- SubdivisionTx : Subdivision transaction created
+deactivate SubdivisionTx
+
+Owner -> SubdivisionTx : Review and approve subdivision plan
+activate SubdivisionTx
+SubdivisionTx -> SubdivisionTx : Set status = SUBMITTED
+Registry <-- SubdivisionTx : Plan approved by owner
+deactivate SubdivisionTx
+
+Registry -> SubdivisionTx : Review subdivision plan
+activate SubdivisionTx
+SubdivisionTx -> SubdivisionTx : Set reviewState = APPROVED
+SubdivisionTx -> SubdivisionTx : Set status = APPROVED
+Registry <-- SubdivisionTx : Subdivision approved
+deactivate SubdivisionTx
+
+Registry -> ParentParcel : Execute subdivision
+activate ParentParcel
+ParentParcel -> ChildParcels : Create 3 child parcels 
+ParentParcel -> ParentParcel : Update status = SUBDIVIDED
+ParentParcel -> ParentParcel : Link child parcel IDs
+Registry <-- ParentParcel : Subdivision complete
+deactivate ParentParcel
+
+Registry -> SubdivisionTx : Record subdivision completion
+activate SubdivisionTx
+SubdivisionTx -> SubdivisionTx : Set status = COMPLETED
+SubdivisionTx -> SubdivisionTx : Link child parcel IDs
+Registry <-- SubdivisionTx : Transaction completed
+deactivate SubdivisionTx
+
+loop for each child (Sunil, Sushila, Saroj)
+  Registry -> TransferTx : Create gift transaction
+  activate TransferTx
+  TransferTx -> TransferTx : Set type = GIFT
+  TransferTx -> TransferTx : Set fromParty = Hari Prasad
+  TransferTx -> TransferTx : Set toParty = Child[i]
+  TransferTx -> TransferTx : Set transactionAmount = 0
+  TransferTx -> TransferTx : Set status = DRAFT
+  Registry <-- TransferTx : Gift transaction created
+  deactivate TransferTx
+  
+  Owner -> TransferTx : Sign gift declaration
+  Registry -> TransferTx : Process gift transaction
+  activate TransferTx
+  TransferTx -> TransferTx : Set status = COMPLETED
+  Registry <-- TransferTx : Gift transaction completed
+  deactivate TransferTx
+end
+
+Registry -> Owner : Issue subdivision certificate
+Registry -> Child1 : Issue ownership certificate (Parcel 1)
+Registry -> Child2 : Issue ownership certificate (Parcel 2)
+Registry -> Child3 : Issue ownership certificate (Parcel 3)
+@enduml
+----
+
+*Real-World Context:*
+Hari Prasad, a 70-year-old farmer in Chitwan, decides to divide his 2-hectare agricultural land equally among his three children—Sunil, Sushila, and Saroj. He visits the Land Registry Office to initiate the process.
+
+The system handles this complex transaction in two phases. First, a LandTransaction with type SUBDIVISION is created, which requires a field survey to establish the new boundaries. The surveyor creates three roughly equal parcels of approximately 0.67 hectares each, ensuring each has proper road access and irrigation.
+
+After approval, the system updates the parent LandParcel to status SUBDIVIDED and creates three new child LandParcel entities. These new parcels maintain a reference to the parent parcel, preserving the land history.
+
+Next, three separate gift LandTransactions are created, transferring ownership from Hari to each child. Since these are gifts within the immediate family, they qualify for reduced transfer taxes. The BatchProcessable interface allows the registry officer to process all three transfers as a group, ensuring consistency.
+
+The HistoryViewable interface maintains the complete lineage of the property, showing how the original parcel was subdivided and transferred, while the WorkflowEntity capabilities ensure that each step in the subdivision and transfer processes follows the proper sequence and receives necessary approvals.
+
+====== Land Mortgage Registration for Bank Loan
+
+*Scenario:* Homeowner mortgaging property to secure a home improvement loan
+
+[plantuml]
+----
+@startuml
+actor "Property Owner\nArjun Thapa" as Owner
+actor "Bank\nNepali Bank Ltd." as Bank
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandTransaction" as Transaction
+participant "LandRights" as Rights
+participant "Document\nRepository" as Docs
+participant "Verification\nService" as Verify
+
+Owner -> Bank : Apply for home improvement loan (NPR 2,000,000)
+Bank -> Registry : Request property verification
+Registry -> Parcel : Verify ownership and encumbrances
+activate Parcel
+Registry <-- Parcel : Ownership confirmed, no existing mortgages
+deactivate Parcel
+
+Bank -> Verify : Assess property value
+activate Verify
+Verify -> Verify : Conduct property valuation
+Bank <-- Verify : Estimated value = NPR 7,500,000
+deactivate Verify
+
+Bank -> Owner : Approve loan (NPR 2,000,000, 10 years, 12%)
+Owner -> Bank : Accept loan terms
+
+Bank -> Registry : Request mortgage registration
+Registry -> Transaction : Create mortgage transaction
+activate Transaction
+Transaction -> Transaction : Set type = MORTGAGE
+Transaction -> Transaction : Set parcelId = Arjun's parcel
+Transaction -> Transaction : Set fromPartyId = Arjun's ID
+Transaction -> Transaction : Set fromPartyType = INDIVIDUAL
+Transaction -> Transaction : Set toPartyId = Bank's ID
+Transaction -> Transaction : Set toPartyType = BANK
+Transaction -> Transaction : Set transactionAmount = 2,000,000 NPR
+Transaction -> Transaction : Set status = DRAFT
+Registry <-- Transaction : Mortgage transaction created
+deactivate Transaction
+
+Bank -> Docs : Upload loan agreement
+activate Docs
+Docs -> Docs : Digitize and index agreement
+Bank <-- Docs : Document stored (ID: DOC-45670)
+deactivate Docs
+
+Owner -> Docs : Submit property certificate
+activate Docs
+Docs -> Docs : Verify property certificate
+Owner <-- Docs : Document accepted (ID: DOC-45671)
+deactivate Docs
+
+Registry -> Transaction : Link documents to transaction
+activate Transaction
+Transaction -> Transaction : Add documentIds = [DOC-45670, DOC-45671]
+Transaction -> Transaction : Set status = SUBMITTED
+Registry <-- Transaction : Documents attached
+deactivate Transaction
+
+Registry -> Transaction : Calculate fees
+activate Transaction
+Transaction -> Transaction : Calculate mortgage registration fee (0.5%)
+Transaction -> Transaction : Set taxAmount = 10,000 NPR
+Transaction -> Transaction : Set status = PENDING_PAYMENT
+Registry <-- Transaction : Fee calculation complete
+deactivate Transaction
+
+Bank -> Transaction : Pay registration fee
+activate Transaction
+Transaction -> Transaction : Set taxPaid = true
+Transaction -> Transaction : Set status = UNDER_REVIEW
+Registry <-- Transaction : Payment recorded
+deactivate Transaction
+
+Registry -> Transaction : Approve mortgage transaction
+activate Transaction
+Transaction -> Transaction : Set isApproved = true
+Transaction -> Transaction : Set status = APPROVED
+Registry <-- Transaction : Mortgage approved
+deactivate Transaction
+
+Registry -> Rights : Create mortgage right
+activate Rights
+Rights -> Rights : Set type = MORTGAGE
+Rights -> Rights : Set beneficiaryId = Bank's ID
+Rights -> Rights : Set grantorId = Arjun's ID
+Rights -> Rights : Set effectiveFrom = currentDate
+Rights -> Rights : Set effectiveTo = currentDate + 10 years
+Rights -> Rights : Add loan conditions to description
+Registry <-- Rights : Mortgage right created
+deactivate Rights
+
+Registry -> Transaction : Complete transaction
+activate Transaction
+Transaction -> Transaction : Link rightId = new mortgage right ID
+Transaction -> Transaction : Set status = COMPLETED
+Registry <-- Transaction : Transaction completed
+deactivate Transaction
+
+Registry -> Owner : Issue mortgage registration certificate
+Registry -> Bank : Issue mortgage lien certificate
+Bank -> Owner : Disburse loan funds
+@enduml
+----
+
+*Real-World Context:*
+Arjun Thapa owns a home in Bhaktapur and wants to secure a NPR 2,000,000 loan from Nepali Bank Ltd. for home improvements. The bank initiates a property verification process through the Land Registry system, which confirms Arjun's ownership and checks for existing liens or encumbrances.
+
+After property valuation and loan approval, the bank requests a mortgage registration. The system creates a LandTransaction with type MORTGAGE, linking Arjun (INDIVIDUAL) as the from-party and the bank (BANK) as the to-party. The loan agreement and property certificate are digitized and attached to the transaction.
+
+The system calculates a 0.5% mortgage registration fee (NPR 10,000), which the bank pays as part of their service. Once approved, the system not only completes the transaction but also creates a LandRights entity with type MORTGAGE, which records the lien against the property. This right includes specific conditions: loan amount (NPR 2,000,000), term (10 years), interest rate (12%), and repayment schedule.
+
+The WebhookTriggerable interface automatically notifies the bank's loan management system when the mortgage is registered, allowing them to disburse the funds. The mortgage registration is also recorded in the property's history through the HistoryViewable interface, ensuring that any future transactions on this property will reveal the existence of this mortgage.
+
+====== Government Land Acquisition for Highway Project
+
+*Scenario:* Department of Roads acquiring portions of land parcels for highway expansion
+
+[plantuml]
+----
+@startuml
+actor "Department\nof Roads" as DoR
+participant "Land Acquisition\nOffice" as LAO
+participant "LandParcel\n(Original)" as OriginalParcel
+participant "BatchProcessingService" as Batch
+participant "LandTransaction" as Transaction
+participant "LandParcel\n(Acquired)" as AcquiredParcel
+participant "LandParcel\n(Remaining)" as RemainingParcel
+participant "Compensation\nService" as Comp
+actor "Landowner\nPrem Kumar" as Owner
+
+DoR -> LAO : Submit highway expansion plan
+LAO -> Batch : Identify affected parcels in corridor
+activate Batch
+Batch -> Batch : Query parcels along proposed route
+LAO <-- Batch : Return 75 affected parcels
+deactivate Batch
+
+LAO -> OriginalParcel : Assess acquisition impact
+activate OriginalParcel
+LAO <-- OriginalParcel : 20% of parcel affected (200 sq.m.)
+deactivate OriginalParcel
+
+LAO -> Transaction : Create expropriation transaction
+activate Transaction
+Transaction -> Transaction : Set type = EXPROPRIATION
+Transaction -> Transaction : Set fromPartyId = Owner's ID
+Transaction -> Transaction : Set toPartyId = Government ID
+Transaction -> Transaction : Set status = DRAFT
+Transaction -> Transaction : Set description = "Highway Expansion Project"
+LAO <-- Transaction : Transaction created
+deactivate Transaction
+
+LAO -> Comp : Calculate fair compensation
+activate Comp
+Comp -> Comp : Assess land market value
+Comp -> Comp : Calculate affected structure value
+Comp -> Comp : Add relocation allowance
+LAO <-- Comp : Total compensation = NPR 800,000
+deactivate Comp
+
+LAO -> Owner : Serve acquisition notice with compensation offer
+Owner -> LAO : Accept compensation offer
+
+LAO -> Transaction : Update transaction with compensation
+activate Transaction
+Transaction -> Transaction : Set transactionAmount = 800,000 NPR
+Transaction -> Transaction : Set status = APPROVED
+LAO <-- Transaction : Transaction updated
+deactivate Transaction
+
+LAO -> OriginalParcel : Process partial acquisition
+activate OriginalParcel
+OriginalParcel -> AcquiredParcel : Create acquired portion (200 sq.m.)
+OriginalParcel -> RemainingParcel : Create remaining portion (800 sq.m.)
+OriginalParcel -> OriginalParcel : Set status = SUBDIVIDED
+LAO <-- OriginalParcel : Parcels split
+deactivate OriginalParcel
+
+LAO -> Transaction : Record acquisition completion
+activate Transaction
+Transaction -> Transaction : Link original parcel, acquired parcel, remaining parcel
+Transaction -> Transaction : Set status = COMPLETED
+LAO <-- Transaction : Transaction completed
+deactivate Transaction
+
+LAO -> Comp : Process compensation payment
+activate Comp
+Comp -> Comp : Generate payment voucher
+Comp -> Comp : Record payment details
+LAO <-- Comp : Payment processed
+deactivate Comp
+
+LAO -> Owner : Issue compensation payment
+LAO -> Owner : Issue new certificate for remaining land
+LAO -> DoR : Transfer acquired land title
+@enduml
+----
+
+*Real-World Context:*
+The Department of Roads is expanding a highway in Dang district, requiring partial acquisition of 75 adjacent land parcels. The Land Acquisition Office uses the BatchProcessable interface to process these acquisitions efficiently.
+
+For Prem Kumar's 1,000 sq.m. residential property, the system identifies that 200 sq.m. (20%) will be needed for the highway. The system creates a LandTransaction with type EXPROPRIATION, which follows a specialized workflow appropriate for government acquisitions.
+
+After valuation, the system calculates compensation of NPR 800,000, accounting for land value, affected structures, and a relocation allowance. Unlike regular transactions, expropriations can proceed even without owner consent (though proper notification is required), but in this case, Prem accepts the offer.
+
+When completed, this transaction triggers a complex land division process: the original LandParcel is marked as SUBDIVIDED, and two new parcels are created—a 200 sq.m. parcel transferred to the government (AcquiredParcel) and an 800 sq.m. parcel that remains with Prem (RemainingParcel). Both maintain references to the original parcel through their parentParcelNumber field.
+
+The CustomValidatable interface applies specialized validation rules for government acquisitions, ensuring proper authorization and documentation. The transaction record maintains links to the compensation assessment, official notices, and government acquisition order through the documentIds field.
+
+====== Bulk Land Transaction Processing for Housing Development
+
+*Scenario:* Developer simultaneously transferring multiple plots to new owners in completed housing project
+
+[plantuml]
+----
+@startuml
+actor "Housing Developer\nNepal Homes Ltd." as Developer
+participant "Land Registry\nOffice" as Registry
+participant "BatchProcessingService" as Batch
+participant "LandTransaction" as BatchTx
+participant "LandParcel" as Parcels
+database "Transaction Queue" as Queue
+participant "TransactionProcessor" as Processor
+actor "New Owners\n(12 Families)" as Owners
+
+Developer -> Registry : Submit bulk transfer request for 12 plots
+Registry -> Batch : Initialize batch processing
+activate Batch
+Batch -> Batch : Generate batchId = "BT-20230524-01"
+Batch -> Batch : Validate all parcels owned by developer
+Registry <-- Batch : Batch initialized
+deactivate Batch
+
+Registry -> BatchTx : Create master transaction
+activate BatchTx
+BatchTx -> BatchTx : Set type = BULK_TRANSFER
+BatchTx -> BatchTx : Set batchId = "BT-20230524-01"
+BatchTx -> BatchTx : Set status = DRAFT
+Registry <-- BatchTx : Master transaction created
+deactivate BatchTx
+
+loop for each of 12 plots
+  Registry -> BatchTx : Create child transaction
+  activate BatchTx
+  BatchTx -> BatchTx : Set type = SALE
+  BatchTx -> BatchTx : Set parentTransactionId = master transaction ID
+  BatchTx -> BatchTx : Set fromPartyId = Developer's ID
+  BatchTx -> BatchTx : Set toPartyId = New Owner[i] ID
+  BatchTx -> BatchTx : Set batchId = "BT-20230524-01"
+  BatchTx -> BatchTx : Set batchSequence = i
+  BatchTx -> BatchTx : Set status = DRAFT
+  Registry <-- BatchTx : Child transaction created
+  deactivate BatchTx
+  
+  Registry -> BatchTx : Attach standard documents
+  activate BatchTx
+  BatchTx -> BatchTx : Add sale agreement document
+  BatchTx -> BatchTx : Add payment confirmation document
+  Registry <-- BatchTx : Documents attached
+  deactivate BatchTx
+end
+
+Registry -> Batch : Submit batch for processing
+activate Batch
+Batch -> Batch : Validate all child transactions
+Batch -> Batch : Calculate total fees (12 × NPR 35,000)
+Batch -> Batch : Set status = SUBMITTED
+Registry <-- Batch : Batch ready for payment
+deactivate Batch
+
+Developer -> Registry : Pay total fees (NPR 420,000)
+Registry -> Batch : Process payment
+activate Batch
+Batch -> Batch : Record payment for all transactions
+Batch -> Queue : Queue all transactions for processing
+Batch -> Batch : Set batchStatus = PROCESSING
+Registry <-- Batch : Payment recorded
+deactivate Batch
+
+loop for each transaction in queue
+  Queue -> Processor : Process next transaction
+  activate Processor
+  Processor -> BatchTx : Process transaction
+  activate BatchTx
+  BatchTx -> Parcels : Update ownership
+  activate Parcels
+  Parcels -> Parcels : Transfer from developer to new owner
+  BatchTx <-- Parcels : Ownership updated
+  deactivate Parcels
+  BatchTx -> BatchTx : Set status = COMPLETED
+  Processor <-- BatchTx : Transaction processed
+  deactivate BatchTx
+  Queue <-- Processor : Transaction completed
+  deactivate Processor
+end
+
+Registry -> Batch : Finalize batch processing
+activate Batch
+Batch -> Batch : Verify all transactions completed
+Batch -> Batch : Generate batch completion report
+Batch -> Batch : Set batchStatus = COMPLETED
+Registry <-- Batch : Batch completed
+deactivate Batch
+
+Registry -> Developer : Issue batch completion certificate
+Registry -> Owners : Issue individual ownership certificates
+@enduml
+----
+
+*Real-World Context:*
+Nepal Homes Ltd. has completed a residential development with 12 identical plots in Pokhara and needs to transfer ownership to 12 different buyers simultaneously. Rather than processing each sale individually, they utilize the system's BatchProcessable capabilities.
+
+The registry officer creates a master LandTransaction with type BULK_TRANSFER, which serves as a parent for 12 individual SALE transactions. Each child transaction references the master through parentTransactionId and includes a batchId for tracking purposes.
+
+Using predefined templates, standard sale documents are automatically attached to each transaction, reducing manual work. The system calculates fees for all 12 transactions (12 × NPR 35,000 = NPR 420,000), allowing a single payment to cover the entire batch.
+
+Once payment is processed, transactions enter a processing queue and are executed systematically. The BatchProcessable interface ensures atomic processing—either all transactions complete successfully, or none do. If an error occurs in any transaction, the entire batch can be rolled back.
+
+This approach saves significant time and ensures consistency across all 12 property transfers. The master transaction provides a consolidated view of the entire process, while individual transactions maintain detailed records for each property. The WorkflowEntity capabilities ensure that each transaction follows the same standardized process, while the WebhookTriggerable interface notifies external systems (such as the developer's property management system and the municipal tax office) when the batch completes.
+
+====== Lease Registration for Commercial Property
+
+*Scenario:* Shopping mall leasing retail space to clothing retailer
+
+[plantuml]
+----
+@startuml
+actor "Landlord\nKathmandu Mall" as Landlord
+actor "Tenant\nFashion House" as Tenant
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandTransaction" as Transaction
+participant "LandRights" as Rights
+participant "Document\nRepository" as Docs
+participant "Validation\nService" as Validate
+
+Landlord -> Registry : Request lease registration
+Tenant -> Registry : Confirm lease agreement
+Registry -> Parcel : Verify landlord ownership
+activate Parcel
+Registry <-- Parcel : Ownership confirmed
+deactivate Parcel
+
+Landlord -> Docs : Submit lease agreement
+activate Docs
+Docs -> Docs : Digitize 10-year lease contract
+Docs -> Docs : Extract key terms (NPR 150,000/month)
+Landlord <-- Docs : Document stored (ID: DOC-56789)
+deactivate Docs
+
+Registry -> Transaction : Create lease transaction
+activate Transaction
+Transaction -> Transaction : Set type = LEASE
+Transaction -> Transaction : Set fromPartyId = Landlord ID
+Transaction -> Transaction : Set fromPartyType = BUSINESS
+Transaction -> Transaction : Set toPartyId = Tenant ID
+Transaction -> Transaction : Set toPartyType = BUSINESS
+Transaction -> Transaction : Set transactionAmount = 18,000,000 NPR (total lease value)
+Transaction -> Transaction : Set documentIds = [DOC-56789]
+Transaction -> Transaction : Set status = DRAFT
+Registry <-- Transaction : Lease transaction created
+deactivate Transaction
+
+Registry -> Validate : Validate lease terms
+activate Validate
+Validate -> Validate : Check lease duration (10 years)
+Validate -> Validate : Verify commercial zoning compliance
+Validate -> Validate : Confirm space details (200 sq.m, 3rd floor)
+Registry <-- Validate : Validation passed
+deactivate Validate
+
+Registry -> Transaction : Process lease registration
+activate Transaction
+Transaction -> Transaction : Set status = UNDER_REVIEW
+Transaction -> Transaction : Calculate registration fee (1% of annual rent)
+Transaction -> Transaction : Set taxAmount = 18,000 NPR
+Registry <-- Transaction : Fees calculated
+deactivate Transaction
+
+Landlord -> Registry : Pay registration fee
+Registry -> Transaction : Record payment and approve
+activate Transaction
+Transaction -> Transaction : Set taxPaid = true
+Transaction -> Transaction : Set isApproved = true
+Transaction -> Transaction : Set status = APPROVED
+Registry <-- Transaction : Transaction approved
+deactivate Transaction
+
+Registry -> Rights : Create leasehold right
+activate Rights
+Rights -> Rights : Set type = LEASEHOLD
+Rights -> Rights : Set parcelId = mall property ID
+Rights -> Rights : Set beneficiaryId = Tenant ID
+Rights -> Rights : Set grantorId = Landlord ID
+Rights -> Rights : Set effectiveFrom = 2023-06-01
+Rights -> Rights : Set effectiveTo = 2033-05-31
+Rights -> Rights : Set description with lease terms
+Registry <-- Rights : Leasehold right created
+deactivate Rights
+
+Registry -> Transaction : Complete transaction
+activate Transaction
+Transaction -> Transaction : Link rightId = new leasehold right ID
+Transaction -> Transaction : Set status = COMPLETED
+Registry <-- Transaction : Transaction completed
+deactivate Transaction
+
+Registry -> Landlord : Issue lease registration certificate
+Registry -> Tenant : Issue leasehold certificate
+@enduml
+----
+
+*Real-World Context:*
+Kathmandu Mall is leasing a 200 sq.m. retail space on its third floor to Fashion House for a clothing store. The parties have negotiated a 10-year lease at NPR 150,000 per month with annual 5% increases.
+
+While not all leases require registration, this long-term commercial lease is registered to provide legal protection for both parties. The registry officer creates a LandTransaction with type LEASE, recording both the landlord (Kathmandu Mall) and tenant (Fashion House) as BUSINESS entities.
+
+The system's CustomValidatable interface applies specific validation rules for commercial leases, checking zoning compliance, maximum/minimum lease terms, and ensuring the lease agreement contains all legally required elements. It calculates the total lease value (NPR 18,000,000) for the first year, with the registration fee based on 1% of annual rent.
+
+Upon approval, the system creates a LandRights entity with type LEASEHOLD, which details the tenant's rights and restrictions. Unlike a sale transaction, the leasehold right has a defined duration (effectiveFrom = 2023-06-01, effectiveTo = 2033-05-31) and does not transfer actual ownership.
+
+The HistoryViewable interface ensures that the lease is visible in the property's history, while the WebhookTriggerable interface can notify relevant systems (such as the mall's property management system and the municipal business license system) about the new tenant.
+
 ===== WebhookTriggerable Implementation
 
 LandTransaction implements the WebhookTriggerable interface:
@@ -431,160 +1131,123 @@ deactivate History
 @enduml
 ----
 
-===== Transaction Processing Workflow
+===== BatchProcessable Implementation
+
+LandTransaction implements the BatchProcessable interface for efficient bulk processing:
 
 [plantuml]
 ----
 @startuml
-participant "WorkflowService" as Service
-participant "LandTransaction" as Transaction
-participant "WorkflowEngine" as Workflow
-participant "TransactionDocumentService" as Documents
-participant "NotificationService" as Notifications
+participant "BatchService" as Service
+participant "LandTransaction\nimplements BatchProcessable" as Transaction
+participant "ValidationService" as Validation
+participant "EntityManager" as EM
+participant "EventPublisher" as Events
 
-Service -> Transaction : processTransaction()
+Service -> Transaction : validateBatchOperation(BULK_TRANSFER)
 activate Transaction
 
-Transaction -> Transaction : getCurrentState()
-Transaction -> Workflow : determineNextSteps(transaction)
-activate Workflow
-Transaction <-- Workflow : nextSteps
-deactivate Workflow
+Transaction -> Validation : validateBulkTransactions(transactions)
+activate Validation
+Validation -> Validation : checkConsistentTransactionType()
+Validation -> Validation : verifyAllParcelsExist()
+Validation -> Validation : verifyOwnershipRights()
+Validation -> Validation : checkFeeCalculationEligibility()
+Transaction <-- Validation : validationResults
+deactivate Validation
 
-loop for each step in nextSteps
-  alt Document Verification Step
-    Transaction -> Documents : verifyDocuments(documentIds)
-    activate Documents
-    Transaction <-- Documents : verificationResults
-    deactivate Documents
-    
-    Transaction -> Transaction : updateDocumentVerificationStatus(verificationResults)
-    
-    alt All Documents Verified
-      Transaction -> Transaction : advanceToNextStage()
-    else Missing Documents
-      Transaction -> Transaction : requestAdditionalDocuments()
-      Transaction -> Notifications : notifyRequiredDocuments(initiatorId)
-      activate Notifications
-      Transaction <-- Notifications : notificationSent
-      deactivate Notifications
-    end
-  
-  else Fee Calculation Step
-    Transaction -> Transaction : calculateTransactionFees()
-    Transaction -> Transaction : createPaymentRequests()
-    Transaction -> Transaction : setStatus(PENDING_PAYMENT)
-    Transaction -> Notifications : notifyPaymentRequired(parties)
-    activate Notifications
-    Transaction <-- Notifications : notificationSent
-    deactivate Notifications
-  
-  else Legal Compliance Step
-    Transaction -> Transaction : performLegalChecks()
-    Transaction -> Transaction : recordComplianceResults()
-    
-    alt Compliance Issues
-      Transaction -> Transaction : flagComplianceIssue()
-      Transaction -> Transaction : setStatus(ON_HOLD)
-      Transaction -> Notifications : notifyComplianceIssue(officerId)
-      activate Notifications
-      Transaction <-- Notifications : notificationSent
-      deactivate Notifications
-    else Compliance Passed
-      Transaction -> Transaction : markComplianceApproved()
-    end
-  
-  else Registry Update Step
-    Transaction -> Transaction : prepareRegistryUpdates()
-    Transaction -> Transaction : scheduleRegistryChanges()
-    Transaction -> Transaction : setStatus(REGISTRY_PROCESSING)
-  end
+Service <-- Transaction : batchValidationResult
+deactivate Transaction
+
+Service -> Transaction : processBatch(items, BULK_TRANSFER)
+activate Transaction
+
+Transaction -> Transaction : createMasterTransaction()
+Transaction -> Transaction : assignBatchIdToAllTransactions()
+
+loop for each transaction in batch
+  Transaction -> Transaction : setProcessingSequence(i)
+  Transaction -> EM : saveTransaction(transaction)
 end
 
-Transaction -> Transaction : updateCompletionProgress()
-Transaction -> Workflow : recordWorkflowProgress(transaction)
-activate Workflow
-Transaction <-- Workflow : workflowUpdated
-deactivate Workflow
+Transaction -> Events : publishBatchProcessingStartedEvent()
 
-Service <-- Transaction : processingResult
+Service <-- Transaction : batchInitiationResult
 deactivate Transaction
+
+Service -> Transaction : getAvailableBatchOperations()
+activate Transaction
+Service <-- Transaction : [BULK_TRANSFER, BULK_MORTGAGE_REGISTRATION, BULK_LEASE_REGISTRATION]
+deactivate Transaction
+
+Service -> Transaction : estimateBatchProcessingTime(12, BULK_TRANSFER)
+activate Transaction
+Transaction -> Transaction : calculateBaseProcessingTime()
+Transaction -> Transaction : adjustForComplexity()
+Transaction -> Transaction : factorInSystemLoad()
+Service <-- Transaction : Duration.ofMinutes(45)
+deactivate Transaction
+
 @enduml
 ----
 
-===== Multi-Party Transaction Management
+===== CustomValidatable Implementation
+
+LandTransaction implements the CustomValidatable interface for complex validation:
 
 [plantuml]
 ----
 @startuml
 participant "TransactionService" as Service
-participant "LandTransaction" as Transaction
-participant "PartySignatureService" as Signatures
-participant "ConsentTracker" as Consent
-participant "DomainEventPublisher" as Events
+participant "LandTransaction\nimplements CustomValidatable" as Transaction
+participant "ValidationRuleEngine" as Rules
+participant "TransactionValidator" as Validator
+participant "ValidationRepository" as Repo
 
-Service -> Transaction : addPartyToTransaction(partyId, partyRole)
+Service -> Transaction : validate()
 activate Transaction
 
-Transaction -> Transaction : validatePartyAddition(partyId, partyRole)
-Transaction -> Transaction : addPartyToTransaction(partyId, partyRole)
-Transaction -> Transaction : createSignatureRequirement(partyId)
+Transaction -> Transaction : getValidationRules()
+activate Transaction
+Transaction -> Repo : findRulesByEntityType("LandTransaction")
+activate Repo
+Transaction <-- Repo : standardRules
+deactivate Repo
 
-Service <-- Transaction : partyAdded
+Transaction -> Transaction : addTransactionTypeRules()
+Transaction -> Transaction : getTransactionTypeValidator()
+Transaction <-- Transaction : rules
 deactivate Transaction
 
-Service -> Transaction : requestPartyConsent(partyId)
-activate Transaction
+Transaction -> Rules : executeRules(rules, transaction)
+activate Rules
+Rules -> Rules : executeRequiredFieldRules()
+Rules -> Rules : executeEntityRelationshipRules()
+Rules -> Rules : executeBusinessLogicRules()
+Transaction <-- Rules : ruleResults
+deactivate Rules
 
-Transaction -> Signatures : createSignatureRequest(partyId, transaction)
-activate Signatures
-Transaction <-- Signatures : signatureRequest
-deactivate Signatures
-
-Transaction -> Consent : trackConsentRequest(partyId, transaction)
-activate Consent
-Transaction <-- Consent : consentRequest
-deactivate Consent
-
-Service <-- Transaction : consentRequested
-deactivate Transaction
-
-Service -> Transaction : recordPartyConsent(partyId, consentType, consentProof)
-activate Transaction
-
-Transaction -> Signatures : verifySignature(partyId, consentProof)
-activate Signatures
-Transaction <-- Signatures : signatureValid
-deactivate Signatures
-
-Transaction -> Consent : recordConsent(partyId, consentType, timestamp)
-activate Consent
-Transaction <-- Consent : consentRecorded
-deactivate Consent
-
-Transaction -> Transaction : updatePartyStatus(partyId, CONSENTED)
-Transaction -> Events : publish(PartyConsentRecordedEvent)
-
-Service <-- Transaction : consentRecorded
-deactivate Transaction
-
-Service -> Transaction : checkAllPartiesConsented()
-activate Transaction
-
-Transaction -> Transaction : getRequiredParties()
-Transaction -> Consent : checkAllPartiesConsented(requiredParties)
-activate Consent
-Transaction <-- Consent : allConsented
-deactivate Consent
-
-alt All Consented
-  Transaction -> Transaction : markReadyForNextStage()
-  Transaction -> Events : publish(AllPartiesConsentedEvent)
-  Service <-- Transaction : true
-else Pending Consents
-  Service <-- Transaction : false
+Transaction -> Validator : validateByTransactionType(transaction)
+activate Validator
+alt Sale Transaction
+  Validator -> Validator : validateBuyerSeller()
+  Validator -> Validator : validatePriceRange()
+else Mortgage Transaction
+  Validator -> Validator : validateLoanDetails()
+  Validator -> Validator : validateLienPriority()
+else Lease Transaction
+  Validator -> Validator : validateLeaseTerm()
+  Validator -> Validator : validateUseRestrictions()
 end
+Transaction <-- Validator : typeValidationResults
+deactivate Validator
+
+Transaction -> Transaction : combineValidationResults()
+Transaction -> Transaction : updateValidationStatus()
+
+Service <-- Transaction : validationResult
 deactivate Transaction
+
 @enduml
 ----
 

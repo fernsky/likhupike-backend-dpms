@@ -11,6 +11,8 @@ Land Survey represents the official measurement and documentation of land parcel
 abstract class ApprovableEntity
 interface HistoryViewable
 interface AccessControlled
+interface WebhookTriggerable
+interface CustomValidatable
 
 ' LandSurvey implementation
 class LandSurvey {
@@ -19,6 +21,10 @@ class LandSurvey {
   +ReviewState reviewState
   +LocalDateTime approvedAt
   +UUID approvedBy
+  +String reviewNote
+  +UUID currentAssignee
+  +Integer escalationLevel
+  +LocalDate dueDate
   
   ' LandSurvey-specific
   +UUID parcelId
@@ -55,6 +61,14 @@ class LandSurvey {
   +String certificationNumber
   +UUID supersededBysurveyId
   +UUID previousSurveyId
+  
+  ' WebhookTriggerable data
+  +List<WebhookRegistration> webhookRegistrations
+  
+  ' CustomValidatable data
+  +List<ValidationRule> validationRules
+  +ValidationStatus validationStatus
+  +LocalDateTime lastValidated
   
   ' Implementation methods...
 }
@@ -124,6 +138,8 @@ ApprovableEntity <|-- LandSurvey
 ' Interface implementation
 LandSurvey ..|> HistoryViewable
 LandSurvey ..|> AccessControlled
+LandSurvey ..|> WebhookTriggerable
+LandSurvey ..|> CustomValidatable
 
 ' Class relationships
 LandSurvey o-- "many" SurveyPoint
@@ -310,6 +326,683 @@ else Accuracy below standards
   Service <-- Survey : surveyWithAccuracyIssues
 end
 
+deactivate Survey
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Land Surveys are used in the system:
+
+====== Initial Land Registration Survey
+
+*Scenario:* Surveyor conducting initial survey for unregistered land parcel registration
+
+[plantuml]
+----
+@startuml
+actor "Landowner\nPrakash Shrestha" as Owner
+actor "Licensed Surveyor\nRam Adhikari" as Surveyor
+participant "Survey\nField Team" as Field
+participant "Survey\nOffice" as Office
+participant "LandSurvey" as Survey
+participant "LandParcel" as Parcel
+participant "Land Registry\nOffice" as Registry
+
+Owner -> Surveyor : Request initial land survey
+Surveyor -> Office : Research existing records
+activate Office
+Office -> Office : Check adjacent surveys
+Office -> Office : Check control points
+Surveyor <-- Office : No existing survey found
+deactivate Office
+
+Surveyor -> Field : Conduct field survey
+activate Field
+Field -> Field : Establish survey control points
+Field -> Field : Place boundary markers
+Field -> Field : Survey boundary points
+Field -> Field : Collect terrain data
+Field -> Field : Document natural boundaries
+Field -> Field : Document monuments placed
+Surveyor <-- Field : Field data collected
+deactivate Field
+
+Surveyor -> Office : Process survey data
+activate Office
+Office -> Office : Download & clean GPS data
+Office -> Office : Calculate precise coordinates
+Office -> Office : Calculate area (3.25 hectares)
+Office -> Office : Generate boundary description
+Office -> Office : Create survey drawing
+Surveyor <-- Office : Processed survey data
+deactivate Office
+
+Surveyor -> Survey : Create survey record
+activate Survey
+Survey -> Survey : Set type = CADASTRAL
+Survey -> Survey : Set methodType = GPS_RTK
+Survey -> Survey : Record 12 boundary points
+Survey -> Survey : Record boundary lines
+Survey -> Survey : Calculate area = 32,500 sq.m
+Survey -> Survey : Set accuracyInMeters = 0.05
+Survey -> Survey : Set surveyorId = Surveyor's ID
+Survey -> Survey : Set surveyorLicenseNumber = "NEP-S-2546"
+Surveyor <-- Survey : Survey record created
+deactivate Survey
+
+Surveyor -> Survey : Validate and certify survey
+activate Survey
+Survey -> Survey : Run boundary closure checks
+Survey -> Survey : Validate minimum point count
+Survey -> Survey : Verify control point references
+Survey -> Survey : Set status = CERTIFIED
+Survey -> Survey : Set certifiedById = Surveyor's ID
+Survey -> Survey : Set certificationDate = current date
+Surveyor <-- Survey : Survey certified
+deactivate Survey
+
+Surveyor -> Registry : Submit certified survey
+Registry -> Survey : Review survey submission
+activate Survey
+Survey -> Survey : Verify surveyor credentials
+Survey -> Survey : Verify survey methods
+Survey -> Survey : Check accuracy standards
+Survey -> Survey : Set reviewState = APPROVED
+Survey -> Survey : Set status = REGISTERED
+Registry <-- Survey : Survey approved
+deactivate Survey
+
+Registry -> Parcel : Create parcel from survey
+activate Parcel
+Parcel -> Parcel : Set boundary from survey
+Parcel -> Parcel : Set area from survey
+Parcel -> Parcel : Generate parcel number
+Registry <-- Parcel : Parcel created
+deactivate Parcel
+
+Registry -> Owner : Issue land certificate
+@enduml
+----
+
+*Real-World Context:*
+Prakash Shrestha owns ancestral land in Gorkha district with traditional boundaries but no formal survey documentation. To register his land in the digital system, he hires licensed surveyor Ram Adhikari from Nepal Survey Associates. Ram's team first researches existing surveys in the area to establish connection points, then conducts a field survey using RTK GPS equipment with centimeter-level accuracy.
+
+The survey team establishes permanent concrete markers at key boundary points and documents natural boundaries including a stream on the eastern edge. They collect 12 boundary points, establish control points for future reference, and document the terrain characteristics. After processing the data, they determine Prakash's land measures 3.25 hectares with an irregular polygon shape.
+
+The LandSurvey entity stores all technical data including GPS coordinates, accuracy metrics, control points, and boundary descriptions. The survey follows Nepal Survey Department standards for rural land, achieving 5cm accuracy. Once Ram certifies the survey, the Land Registry reviews and approves it, creating a new LandParcel entity linked to the survey data. The system generates a unique survey number (KS-GOR-2023-0142) that's referenced on Prakash's land certificate and used in all future legal documents related to this parcel.
+
+====== Boundary Dispute Resolution Survey
+
+*Scenario:* Conducting a resurvey to resolve boundary dispute between neighbors
+
+[plantuml]
+----
+@startuml
+actor "Landowner A\nSom Bahadur" as OwnerA
+actor "Landowner B\nHari Thapa" as OwnerB
+participant "Land Registry\nOffice" as Registry
+participant "Survey\nDepartment" as SurveyDept
+actor "Licensed Surveyor\nBikram KC" as Surveyor
+participant "LandDispute" as Dispute
+participant "LandSurvey\n(Original)" as OldSurvey
+participant "LandSurvey\n(New)" as NewSurvey
+participant "LandParcel A" as ParcelA
+participant "LandParcel B" as ParcelB
+
+OwnerA -> Registry : File boundary dispute claim
+Registry -> Dispute : Create dispute record
+activate Dispute
+Dispute -> Dispute : Set type = BOUNDARY
+Dispute -> Dispute : Set status = FILED
+Registry <-- Dispute : Dispute registered
+deactivate Dispute
+
+Registry -> SurveyDept : Request resolution survey
+SurveyDept -> Surveyor : Assign dispute case
+
+Surveyor -> OldSurvey : Retrieve existing surveys
+activate OldSurvey
+Surveyor <-- OldSurvey : Survey A (2010), Survey B (2012)
+deactivate OldSurvey
+
+Surveyor -> ParcelA : Retrieve parcel A details
+activate ParcelA
+Surveyor <-- ParcelA : Parcel A boundary
+deactivate ParcelA
+
+Surveyor -> ParcelB : Retrieve parcel B details
+activate ParcelB
+Surveyor <-- ParcelB : Parcel B boundary
+deactivate ParcelB
+
+Surveyor -> Surveyor : Analyze boundary discrepancy (2.3m overlap)
+
+Surveyor -> Surveyor : Conduct field verification
+Surveyor -> Surveyor : Locate original monuments
+Surveyor -> Surveyor : Verify reference points
+Surveyor -> Surveyor : Measure actual boundary points
+
+Surveyor -> NewSurvey : Create resolution survey
+activate NewSurvey
+NewSurvey -> NewSurvey : Set type = BOUNDARY
+NewSurvey -> NewSurvey : Set methodType = TOTAL_STATION
+NewSurvey -> NewSurvey : Record precise measurements
+NewSurvey -> NewSurvey : Document monument findings
+NewSurvey -> NewSurvey : Add reference to original surveys
+NewSurvey -> NewSurvey : Set surveyNotes documenting findings
+Surveyor <-- NewSurvey : Survey record created
+deactivate NewSurvey
+
+Surveyor -> Registry : Present boundary findings
+Registry -> OwnerA : Present evidence to both parties
+Registry -> OwnerB : Present evidence to both parties
+
+alt Parties Accept Findings
+  OwnerA -> Registry : Accept surveyor's boundary
+  OwnerB -> Registry : Accept surveyor's boundary
+  
+  Registry -> NewSurvey : Approve resolution survey
+  activate NewSurvey
+  NewSurvey -> NewSurvey : Set status = REGISTERED
+  Registry <-- NewSurvey : Survey approved
+  deactivate NewSurvey
+  
+  Registry -> ParcelA : Update boundary
+  activate ParcelA
+  ParcelA -> ParcelA : Set corrected boundary
+  Registry <-- ParcelA : Boundary updated
+  deactivate ParcelA
+  
+  Registry -> ParcelB : Update boundary
+  activate ParcelB
+  ParcelB -> ParcelB : Set corrected boundary
+  Registry <-- ParcelB : Boundary updated
+  deactivate ParcelB
+  
+  Registry -> Dispute : Resolve dispute
+  activate Dispute
+  Dispute -> Dispute : Set status = RESOLVED
+  Registry <-- Dispute : Dispute resolved
+  deactivate Dispute
+else Dispute Continues
+  Registry -> Dispute : Update status
+  activate Dispute
+  Dispute -> Dispute : Set status = SURVEY_COMPLETED
+  Dispute -> Dispute : Escalate to Land Tribunal
+  Registry <-- Dispute : Status updated
+  deactivate Dispute
+end
+
+Registry -> OwnerA : Issue updated certificate
+Registry -> OwnerB : Issue updated certificate
+@enduml
+----
+
+*Real-World Context:*
+Two neighbors in Dhading district, Som Bahadur and Hari Thapa, have been disputing their shared boundary for years. Som claims Hari's fence encroaches 2.5 meters onto his land, while Hari maintains he's respecting the boundary according to his land certificate. The Land Registry creates a LandDispute entity and assigns licensed surveyor Bikram KC to conduct a resolution survey.
+
+Bikram retrieves the existing LandSurvey records from 2010 (Som's land) and 2012 (Hari's land), noting they were conducted by different surveyors using different methods (traditional methods vs. total station). The inconsistency between surveys shows a potential 2.3-meter discrepancy. Using the LandSurvey entities' metadata, Bikram identifies the control points used in both original surveys.
+
+Conducting a new high-precision survey using modern total station equipment, Bikram creates a new LandSurvey entity that references both previous surveys. He discovers that one of the original concrete monuments marking the boundary was moved during road construction, leading to the discrepancy. The new survey establishes a corrected boundary line and documents all monuments and reference points with centimeter-level precision.
+
+When presented with the evidence, both parties accept the surveyor's findings. The system updates both LandParcel entities with the corrected boundary coordinates from the resolution survey. The LandDispute status is changed to RESOLVED, and both owners receive updated certificates. The CustomValidatable interface ensures the corrected boundaries maintain the correct land area calculations and proper topology with adjacent parcels.
+
+====== Land Subdivision Survey for Development
+
+*Scenario:* Surveyor subdividing urban land parcel into multiple lots for residential development
+
+[plantuml]
+----
+@startuml
+actor "Developer\nAnita Sharma" as Developer
+participant "Municipality\nPlanning Office" as Planning
+actor "Licensed Surveyor\nNabin Gurung" as Surveyor
+participant "LandParcel\n(Parent)" as ParentParcel
+participant "LandSurvey" as Survey
+participant "LandParcel\n(Children)" as ChildParcels
+participant "Land Registry\nOffice" as Registry
+
+Developer -> Planning : Submit subdivision application
+Planning -> ParentParcel : Verify parcel ownership
+activate ParentParcel
+Planning <-- ParentParcel : Ownership confirmed
+deactivate ParentParcel
+
+Planning -> Planning : Verify zoning requirements
+Planning -> Planning : Confirm minimum lot size (250 sq.m)
+Planning -> Planning : Confirm road access requirements
+Planning -> Developer : Approve subdivision concept plan
+
+Developer -> Surveyor : Hire for subdivision survey
+Surveyor -> ParentParcel : Retrieve parcel data
+activate ParentParcel
+Surveyor <-- ParentParcel : Parcel boundary (5000 sq.m)
+deactivate ParentParcel
+
+Surveyor -> Surveyor : Design subdivision
+Surveyor -> Surveyor : Create 15 residential lots
+Surveyor -> Surveyor : Design internal road network
+Surveyor -> Surveyor : Allocate utility easements
+
+Surveyor -> Survey : Create subdivision survey
+activate Survey
+Survey -> Survey : Set type = SUBDIVISION
+Survey -> Survey : Set methodType = TOTAL_STATION
+Survey -> Survey : Record all boundary points
+Survey -> Survey : Document road & utility corridors
+Survey -> Survey : Record lot corner monuments
+Survey -> Survey : Calculate individual lot areas
+Survey -> Survey : Verify minimum lot requirements
+Surveyor <-- Survey : Survey created
+deactivate Survey
+
+Surveyor -> Survey : Validate subdivision design
+activate Survey
+Survey -> Survey : Verify total area matches parent
+Survey -> Survey : Confirm road meets standards
+Survey -> Survey : Verify all lots meet area requirements
+Survey -> Survey : Check all lots have road access
+Survey -> Survey : Set status = CERTIFIED
+Surveyor <-- Survey : Survey certified
+deactivate Survey
+
+Surveyor -> Registry : Submit subdivision plan
+Registry -> Survey : Review subdivision
+activate Survey
+Survey -> Survey : Verify compliance with regulations
+Survey -> Survey : Confirm proper monumentation
+Survey -> Survey : Set reviewState = APPROVED
+Survey -> Survey : Set status = REGISTERED
+Registry <-- Survey : Survey approved
+deactivate Survey
+
+Registry -> ParentParcel : Update parent parcel
+activate ParentParcel
+ParentParcel -> ParentParcel : Set status = SUBDIVIDED
+Registry <-- ParentParcel : Parent updated
+deactivate ParentParcel
+
+Registry -> ChildParcels : Create child parcels
+activate ChildParcels
+ChildParcels -> ChildParcels : Create 15 new parcels
+ChildParcels -> ChildParcels : Assign parent reference
+ChildParcels -> ChildParcels : Set boundaries from survey
+Registry <-- ChildParcels : Child parcels created
+deactivate ChildParcels
+
+Registry -> Developer : Issue subdivision certificates
+@enduml
+----
+
+*Real-World Context:*
+Anita Sharma, a developer in Pokhara, is converting a 5,000 square meter urban parcel into a residential subdivision. After obtaining initial approval from the municipal planning office, she hires licensed surveyor Nabin Gurung to create the detailed subdivision survey and plan.
+
+Nabin accesses the existing LandParcel and creates a subdivision design following municipal regulations, which require minimum lot sizes of 250 square meters and 6-meter wide access roads. Using total station equipment, his team conducts a precise survey, creating a LandSurvey entity that documents 15 residential lots ranging from 280-350 square meters, a 950 square meter internal road network, and utility easements along the road edges.
+
+The LandSurvey entity stores detailed survey data for the parent parcel, each new lot, and infrastructure elements. Concrete monuments are placed at all lot corners and documented in the survey. The CustomValidatable interface ensures the subdivision meets all regulatory requirements, including that all lots have proper dimensions, road frontage, and that the sum of all new areas equals the original parcel area (accounting for roads).
+
+After Registry approval, the system updates the original LandParcel status to SUBDIVIDED and creates 15 new child LandParcel entities based on the survey data. Each new parcel maintains a reference to both the parent parcel and the subdivision survey. All parcels, including the roads and common areas, are properly documented with their own unique identifiers while maintaining the historical connection to the original parcel.
+
+====== Construction Survey for Infrastructure Project
+
+*Scenario:* Government highway department conducting detailed survey for road expansion project
+
+[plantuml]
+----
+@startuml
+actor "Department\nof Roads" as DoR
+participant "Land Acquisition\nOffice" as LAO
+participant "Project Survey\nTeam" as Surveyors
+participant "LandParcel\n(Multiple)" as Parcels
+participant "LandSurvey" as Survey
+participant "Affected Property\nDatabase" as APD
+participant "Compensation\nEstimation" as Comp
+
+DoR -> LAO : Initiate highway expansion survey
+LAO -> Parcels : Identify parcels in corridor
+activate Parcels
+LAO <-- Parcels : Return 85 affected parcels
+deactivate Parcels
+
+LAO -> Surveyors : Assign survey project
+Surveyors -> DoR : Review project requirements
+DoR -> Surveyors : Provide project specifications
+
+Surveyors -> Surveyors : Establish control network
+Surveyors -> Surveyors : Conduct topographic survey
+Surveyors -> Surveyors : Define road alignment
+Surveyors -> Surveyors : Identify property impacts
+
+loop for each affected parcel
+  Surveyors -> Parcels : Retrieve parcel details
+  activate Parcels
+  Surveyors <-- Parcels : Parcel boundary
+  deactivate Parcels
+  
+  Surveyors -> Surveyors : Measure affected area
+  Surveyors -> Surveyors : Document structures
+  Surveyors -> Surveyors : Record encroachments
+  Surveyors -> Surveyors : Calculate setbacks
+end
+
+Surveyors -> Survey : Create construction survey
+activate Survey
+Survey -> Survey : Set type = CONSTRUCTION
+Survey -> Survey : Set methodType = COMBINED
+Survey -> Survey : Record alignment points
+Survey -> Survey : Document terrain profile
+Survey -> Survey : Record infrastructure features
+Survey -> Survey : Document affected areas
+Surveyors <-- Survey : Survey created
+deactivate Survey
+
+Surveyors -> APD : Create affected property records
+activate APD
+APD -> APD : Record affected parcels
+APD -> APD : Document affected structures
+APD -> APD : Calculate total affected area (1.5 hectares)
+APD -> APD : Link to construction survey
+Surveyors <-- APD : Property database created
+deactivate APD
+
+Surveyors -> Comp : Estimate compensation values
+activate Comp
+Comp -> Comp : Calculate land values
+Comp -> Comp : Calculate structure values
+Comp -> Comp : Calculate crop compensation
+Comp -> Comp : Calculate livelihood impacts
+Surveyors <-- Comp : Compensation estimates
+deactivate Comp
+
+Surveyors -> DoR : Submit construction survey
+DoR -> LAO : Initiate land acquisition process
+DoR -> DoR : Finalize road design based on survey
+@enduml
+----
+
+*Real-World Context:*
+The Department of Roads is expanding the Prithvi Highway between Mugling and Narayanghat from two lanes to four lanes. The project requires detailed survey work to map the existing road, identify affected properties, and design the expanded alignment. A team of surveyors led by the department's chief surveyor conducts a comprehensive survey using multiple methods (COMBINED).
+
+The team creates a LandSurvey entity with type CONSTRUCTION, which includes detailed elevation profiles, curve calculations, and existing features along the corridor. Using RTK GPS and total station equipment, they establish an accurate control network linked to the national grid. The survey identifies 85 affected LandParcel entities along the 25-kilometer section, with a total of 1.5 hectares of private land needed for the expansion.
+
+For each affected parcel, the surveyors precisely measure the portion required for the project and document all structures, crops, and improvements within the acquisition area. The LandSurvey entity stores coordinates for all survey points and includes references to affected parcels. The survey data includes existing drainage structures, utilities, road features, and geological conditions that will affect construction.
+
+The WebhookTriggerable interface automatically notifies the compensation estimation system when the survey is completed, which then uses the survey data to calculate fair compensation for each affected landowner. The detailed survey allows for precise construction planning and minimizes potential disputes during the land acquisition process by clearly documenting existing conditions and boundaries.
+
+====== Topographic Survey for Rural Development Planning
+
+*Scenario:* Local government conducting detailed survey for integrated rural development project
+
+[plantuml]
+----
+@startuml
+actor "Rural Municipality\nOffice" as RMO
+actor "Development\nPlanning Team" as Planning
+participant "Survey\nContractor" as Surveyors
+participant "LandSurvey" as Survey
+participant "Spatial\nAnalysis Service" as Spatial
+participant "GIS\nDatabase" as GIS
+participant "Land Information\nSystem" as LIS
+
+RMO -> Planning : Commission development survey
+Planning -> Planning : Define survey requirements
+Planning -> Surveyors : Hire for topographic survey
+
+Surveyors -> Surveyors : Establish survey area (500 hectares)
+Surveyors -> Surveyors : Set up ground control points
+Surveyors -> Surveyors : Collect LiDAR & aerial imagery
+Surveyors -> Surveyors : Conduct field surveys
+
+Surveyors -> Survey : Create topographic survey
+activate Survey
+Survey -> Survey : Set type = TOPOGRAPHIC
+Survey -> Survey : Set methodType = LIDAR
+Survey -> Survey : Record elevation data
+Survey -> Survey : Map natural features
+Survey -> Survey : Document watersheds
+Survey -> Survey : Map existing infrastructure
+Survey -> Survey : Document land cover
+Surveyors <-- Survey : Survey created
+deactivate Survey
+
+Surveyors -> Spatial : Process survey data
+activate Spatial
+Spatial -> Spatial : Generate digital elevation model
+Spatial -> Spatial : Calculate slope classifications
+Spatial -> Spatial : Identify flood-prone areas
+Spatial -> Spatial : Analyze water drainage patterns
+Spatial -> Spatial : Identify suitable development areas
+Surveyors <-- Spatial : Analysis results
+deactivate Spatial
+
+Surveyors -> GIS : Create project GIS database
+activate GIS
+GIS -> GIS : Import survey data
+GIS -> GIS : Create terrain layers
+GIS -> GIS : Create land use layers
+GIS -> GIS : Create infrastructure layers
+GIS -> GIS : Create constraint layers
+Surveyors <-- GIS : GIS database created
+deactivate GIS
+
+Surveyors -> LIS : Upload to land information system
+activate LIS
+LIS -> LIS : Link to administrative boundaries
+LIS -> LIS : Connect to parcel database
+LIS -> LIS : Generate web-based 3D model
+LIS -> LIS : Setup data API for planning tools
+Surveyors <-- LIS : Data integration complete
+deactivate LIS
+
+Surveyors -> RMO : Present survey results
+RMO -> Planning : Develop integrated rural plan
+Planning -> Planning : Plan water systems
+Planning -> Planning : Design road networks
+Planning -> Planning : Define conservation areas
+Planning -> Planning : Zone development areas
+Planning -> RMO : Submit development masterplan
+@enduml
+----
+
+*Real-World Context:*
+The Dhunche Rural Municipality in Rasuwa district is planning an integrated rural development program covering 500 hectares. The municipality commissions a detailed topographic survey to serve as the foundation for planning infrastructure, agricultural improvements, and settlement expansion.
+
+The municipality's contractor creates a LandSurvey entity with type TOPOGRAPHIC using combined LIDAR and field survey methods. Helicopter-mounted LIDAR equipment collects precise elevation data with 10cm vertical accuracy, while ground teams document existing structures, water sources, trails, and other key features. The survey establishes a network of permanent control points for future reference and development activities.
+
+The resulting LandSurvey contains millions of elevation points, detailed mapping of rivers and streams, forest cover, agricultural lands, and existing settlements. The data is processed to generate slope maps, identifying areas with slopes under 15 degrees suitable for agricultural expansion and settlement, and steeper areas requiring conservation measures. Watershed analysis identifies critical water sources for protection.
+
+Using the WebhookTriggerable interface, the survey data automatically synchronizes with the national GIS database. Planning officials use the survey data to design improved irrigation systems, plan rural road networks avoiding landslide-prone slopes, identify suitable locations for community facilities, and designate conservation zones. The detailed topographic information helps optimize resource allocation and prioritize development activities based on geographical constraints and opportunities.
+
+====== As-Built Survey for Land Regularization
+
+*Scenario:* Municipality conducting as-built survey to formalize informal settlements
+
+[plantuml]
+----
+@startuml
+actor "Municipality\nUrban Office" as Municipal
+participant "Community\nRepresentatives" as Community
+actor "Survey\nTeam" as Surveyors
+participant "LandSurvey" as Survey
+participant "LandParcel" as Parcels
+participant "Document\nRegistry" as Docs
+participant "Regularization\nCommittee" as Committee
+
+Municipal -> Community : Initiate settlement formalization
+Community -> Community : Form neighborhood committee
+Community -> Community : Document resident history
+Community -> Community : Collect informal documentation
+
+Municipal -> Surveyors : Commission as-built survey
+Surveyors -> Surveyors : Establish survey boundaries
+Surveyors -> Surveyors : Map existing structures
+Surveyors -> Surveyors : Document access paths
+Surveyors -> Surveyors : Identify infrastructure
+
+loop for each occupied plot
+  Surveyors -> Surveyors : Survey actual occupation
+  Surveyors -> Surveyors : Document structure footprint
+  Surveyors -> Surveyors : Record occupant information
+  Surveyors -> Surveyors : Note duration of occupation
+end
+
+Surveyors -> Survey : Create as-built survey
+activate Survey
+Survey -> Survey : Set type = AS_BUILT
+Survey -> Survey : Set methodType = TOTAL_STATION
+Survey -> Survey : Record actual occupation boundaries
+Survey -> Survey : Document existing access ways
+Survey -> Survey : Map community facilities
+Survey -> Survey : Record encroachments
+Surveyors <-- Survey : Survey created
+deactivate Survey
+
+Surveyors -> Docs : Register informal documentation
+activate Docs
+Docs -> Docs : Register occupancy claims
+Docs -> Docs : Link to survey information
+Docs -> Docs : Classify occupancy types
+Surveyors <-- Docs : Documentation registered
+deactivate Docs
+
+Surveyors -> Committee : Present survey findings
+Committee -> Committee : Review occupation patterns
+Committee -> Committee : Apply regularization criteria
+Committee -> Committee : Adjust boundaries where needed
+Committee -> Committee : Determine eligible occupants
+
+Committee -> Parcels : Create regularized parcels
+activate Parcels
+Parcels -> Parcels : Generate 53 formal parcels
+Parcels -> Parcels : Link to as-built survey
+Parcels -> Parcels : Set special designation = "REGULARIZED"
+Committee <-- Parcels : Formalized parcels created
+deactivate Parcels
+
+Committee -> Municipal : Submit regularization plan
+Municipal -> Community : Present formalization process
+Municipal -> Municipal : Issue provisional titles
+@enduml
+----
+
+*Real-World Context:*
+The Bharatpur Municipality is formalizing an informal settlement that has existed for over 30 years on the city's eastern edge. The settlement has approximately: 50 households with no formal land titles but long-term occupation. The municipality initiates an AS_BUILT survey to document the actual situation on the ground as the first step toward regularization.
+
+The survey team works closely with community representatives to establish the settlement's boundaries and document each occupied plot. Using total station equipment and mobile GIS tools, they create a detailed LandSurvey entity containing precise boundaries of each occupied area, building footprints, common spaces, access paths, and existing infrastructure like water points and drainage.
+
+For each occupied area, the survey records not just physical boundaries but also metadata about occupants, duration of occupation, and available informal documentation. The survey identifies several instances where structures encroach on potential road alignments and areas prone to seasonal flooding that need special consideration.
+
+The Regularization Committee uses the as-built survey to create formalized LandParcel entities that balance respect for existing occupation patterns with basic urban planning principles. Where necessary, boundaries are slightly adjusted to ensure minimum access widths and safety standards. The CustomValidatable interface helps enforce these special regularization rules. The committee creates 53 formal parcels: 48 residential plots and 5 community spaces, each linked to the as-built survey that documents their historical context.
+
+The resulting formalized parcels retain their connection to the as-built survey, providing a transparent record of the regularization process and the pre-formalization reality. This historical documentation serves both administrative and legal purposes in case of future disputes or questions about the regularization process.
+
+===== WebhookTriggerable Implementation
+
+LandSurvey implements the WebhookTriggerable interface to notify connected systems:
+
+[plantuml]
+----
+@startuml
+participant "ExternalSystem" as External
+participant "WebhookService" as Service
+participant "LandSurvey\nimplements WebhookTriggerable" as Survey
+participant "WebhookRegistry" as Registry
+participant "EventPublisher" as Events
+
+External -> Service : registerWebhook(entityType="LandSurvey", event="SURVEY_REGISTERED", url)
+activate Service
+
+Service -> Survey : registerWebhook(url, "SURVEY_REGISTERED", secret)
+activate Survey
+Survey -> Registry : saveWebhookRegistration(entityId, "LandSurvey", url, event, secret)
+activate Registry
+Survey <-- Registry : registration
+deactivate Registry
+Service <-- Survey : webhookRegistration
+deactivate Survey
+
+External <-- Service : registrationConfirmation
+deactivate Service
+
+note over Survey
+  When survey is registered...
+end note
+
+Survey -> Events : publish(SurveyRegisteredEvent)
+activate Events
+Events -> Survey : triggerWebhooks("SURVEY_REGISTERED", surveyData)
+activate Survey
+
+Survey -> Registry : findWebhooksForEvent(entityId, "SURVEY_REGISTERED")
+activate Registry
+Survey <-- Registry : webhooks
+deactivate Registry
+
+loop for each webhook
+  Survey -> External : POST /webhook-endpoint (payload + signature)
+  activate External
+  External --> External : Verify signature
+  External --> External : Process survey data
+  Survey <-- External : 200 OK
+  deactivate External
+  Survey -> Registry : recordSuccessfulDelivery(webhookId)
+end
+
+Events <-- Survey
+deactivate Survey
+deactivate Events
+@enduml
+----
+
+===== CustomValidatable Implementation
+
+LandSurvey implements the CustomValidatable interface for complex validation:
+
+[plantuml]
+----
+@startuml
+participant "SurveyService" as Service
+participant "LandSurvey\nimplements CustomValidatable" as Survey
+participant "ValidationRuleEngine" as Rules
+participant "SurveyValidator" as Validator
+
+Service -> Survey : validate()
+activate Survey
+
+Survey -> Survey : getValidationRules()
+activate Survey
+Survey <-- Survey : rules
+deactivate Survey
+
+Survey -> Validator : validateByType(surveyType)
+activate Validator
+alt Cadastral Survey
+  Validator -> Validator : validateBoundaryPoints()
+  Validator -> Validator : validateClosure()
+  Validator -> Validator : validateAreaCalculation()
+else Topographic Survey
+  Validator -> Validator : validatePointDensity()
+  Validator -> Validator : validateElevationAccuracy()
+else Construction Survey
+  Validator -> Validator : validateAlignmentPoints()
+  Validator -> Validator : validateDesignStandards()
+end
+Survey <-- Validator : typeValidationResults
+deactivate Validator
+
+Survey -> Rules : executeRules(rules, survey)
+activate Rules
+Rules -> Rules : executeRequired() 
+Rules -> Rules : executeAccuracyRules()
+Rules -> Rules : executeBoundaryRules()
+Survey <-- Rules : ruleResults
+deactivate Rules
+
+Survey -> Survey : combineValidationResults()
+Survey -> Survey : setValidationStatus(result)
+
+Service <-- Survey : validationResult
 deactivate Survey
 @enduml
 ----
