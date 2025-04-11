@@ -1,0 +1,766 @@
+==== Land Survey
+
+Land Survey represents the official measurement and documentation of land parcels, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+
+' LandSurvey implementation
+class LandSurvey {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  
+  ' LandSurvey-specific
+  +UUID parcelId
+  +String surveyNumber
+  +SurveyType type
+  +SurveyStatus status
+  +LocalDate surveyDate
+  +UUID surveyorId
+  +String surveyorLicenseNumber
+  +String surveyorName
+  
+  ' Survey details
+  +UUID boundaryId
+  +Double measuredAreaInSquareMeters
+  +Double accuracyInMeters
+  +SurveyMethodType methodType
+  +String equipmentUsed
+  +List<UUID> controlPointIds
+  +String surveyNotes
+  
+  ' Survey data
+  +List<SurveyPoint> surveyPoints
+  +List<SurveyLine> boundaryLines
+  +Set<UUID> monumentIds
+  +String coordinateSystem
+  +Double elevationReference
+  +String referencePoint
+  
+  ' Administrative data
+  +UUID registrationId
+  +LocalDate registrationDate
+  +UUID certifiedById
+  +LocalDate certificationDate
+  +String certificationNumber
+  +UUID supersededBysurveyId
+  +UUID previousSurveyId
+  
+  ' Implementation methods...
+}
+
+' Supporting Classes
+class SurveyPoint {
+  +Double x
+  +Double y
+  +Double z
+  +String pointNumber
+  +PointType type
+  +String description
+  +String markerType
+  +UUID monumentId
+  +Double accuracy
+}
+
+class SurveyLine {
+  +UUID fromPointId
+  +UUID toPointId
+  +Double length
+  +String lineNumber
+  +LineType type
+  +String description
+  +Double bearing
+  +String boundaryDescription
+}
+
+' Enumerations
+enum SurveyType {
+  CADASTRAL
+  TOPOGRAPHIC
+  BOUNDARY
+  SUBDIVISION
+  AS_BUILT
+  TITLE
+  CONSTRUCTION
+  ENGINEERING
+  MONITORING
+}
+
+enum SurveyStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  CERTIFIED
+  REGISTERED
+  SUPERSEDED
+  ARCHIVED
+  REJECTED
+}
+
+enum SurveyMethodType {
+  TOTAL_STATION
+  GPS_RTK
+  GPS_STATIC
+  AERIAL_PHOTOGRAMMETRY
+  LIDAR
+  TRADITIONAL
+  COMBINED
+  DIGITIZED_FROM_MAPS
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandSurvey
+
+' Interface implementation
+LandSurvey ..|> HistoryViewable
+LandSurvey ..|> AccessControlled
+
+' Class relationships
+LandSurvey o-- "many" SurveyPoint
+LandSurvey o-- "many" SurveyLine
+
+' Enum relationships
+LandSurvey -- SurveyType
+LandSurvey -- SurveyStatus
+LandSurvey -- SurveyMethodType
+@enduml
+----
+
+===== Land Survey Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Initial Data Entry" as Initial
+  state "Field Work" as FieldWork
+  state "Data Processing" as Processing
+  state "Validation" as Validation
+  
+  [*] --> Initial
+  Initial --> FieldWork : conduct survey
+  FieldWork --> Processing : process data
+  Processing --> Validation : validate
+  Validation --> [*] : ready for submission
+  Validation --> Initial : needs revision
+}
+
+Draft --> Submitted : submit for review
+Submitted --> UnderReview : assign reviewer
+UnderReview --> Revisions : request changes
+Revisions --> Submitted : resubmit
+UnderReview --> Rejected : reject
+UnderReview --> Certified : certify
+
+Certified --> Registered : register
+Registered --> Active : activate
+
+state Active {
+  state "Valid Survey" as Valid
+  state "Reference For Others" as Reference
+  
+  [*] --> Valid
+  Valid --> Reference : use as reference
+  Reference --> Valid
+}
+
+Active --> Superseded : new survey
+Superseded --> Archived : archive
+Rejected --> Archived : archive after rejection
+Archived --> [*]
+@enduml
+----
+
+===== Survey Process
+
+[plantuml]
+----
+@startuml
+|Licensed Surveyor|
+start
+:Receive survey request;
+:Review existing documentation;
+:Create survey plan;
+
+|Field Team|
+:Establish control points;
+:Survey site boundaries;
+:Collect topographic data;
+:Document landmarks and monuments;
+
+|Survey Office|
+:Process field data;
+:Create draft survey map;
+:Calculate areas and dimensions;
+:Prepare survey report;
+
+|Licensed Surveyor|
+:Review survey results;
+:Verify survey accuracy;
+:Certify survey;
+
+|System|
+:Validate survey data;
+if (Valid?) then (yes)
+  :Create LandSurvey entity
+  extending ApprovableEntity;
+  :Set reviewState = SUBMITTED;
+else (no)
+  :Return validation errors;
+  |Survey Office|
+  :Correct survey data;
+  note right
+    Return to validation
+  end note
+endif
+
+|Land Registry Officer|
+:Review survey submission;
+:Verify surveyor credentials;
+:Check control points;
+:Verify boundary references;
+
+if (Survey Compliant?) then (yes)
+  :Approve survey;
+else (no)
+  :Return with comments;
+  |Licensed Surveyor|
+  :Address issues;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Register survey;
+:Update land parcel references;
+:Publish survey registration event;
+
+|Land Registry|
+:Issue survey certificate;
+:Archive survey documents;
+
+stop
+@enduml
+----
+
+===== Survey Data Collection
+
+[plantuml]
+----
+@startuml
+participant "SurveyService" as Service
+participant "LandSurvey" as Survey
+participant "SurveyDataCollector" as Collector
+participant "CoordinateTransformer" as Coords
+participant "AccuracyValidator" as Validator
+
+Service -> Survey : collectFieldData(surveyor, equipment)
+activate Survey
+
+Survey -> Collector : initializeDataCollection(equipment)
+activate Collector
+Survey <-- Collector : collector
+deactivate Collector
+
+Survey -> Collector : collectControlPoints()
+activate Collector
+Survey <-- Collector : controlPoints
+deactivate Collector
+
+loop for each boundary point
+  Survey -> Collector : collectBoundaryPoint()
+  activate Collector
+  
+  Collector -> Collector : recordRawMeasurements()
+  Collector -> Coords : transformToCoordinateSystem(rawData)
+  activate Coords
+  Collector <-- Coords : coordinates
+  deactivate Coords
+  
+  Survey <-- Collector : boundaryPoint
+  deactivate Collector
+  
+  Survey -> Survey : addSurveyPoint(boundaryPoint)
+end
+
+Survey -> Validator : validatePointAccuracy(points)
+activate Validator
+Survey <-- Validator : accuracyResult
+deactivate Validator
+
+alt Accuracy meets standards
+  Survey -> Survey : finalizeFieldData()
+  Survey -> Survey : calculateBoundaryLines()
+  Service <-- Survey : completedSurvey
+else Accuracy below standards
+  Survey -> Survey : flagAccuracyIssues(accuracyResult)
+  Service <-- Survey : surveyWithAccuracyIssues
+end
+
+deactivate Survey
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+LandSurvey implements the HistoryViewable interface:
+
+[plantuml]
+----
+@startuml
+participant "SurveyUI" as UI
+participant "SurveyHistoryService" as History
+participant "LandSurvey\nimplements HistoryViewable" as Survey
+participant "EntityVersionRepository" as Versions
+participant "SurveyChangeRepository" as Changes
+
+UI -> History : getSurveyHistory(surveyId)
+activate History
+
+History -> Survey : getChangeHistory()
+activate Survey
+Survey -> Changes : findByEntityTypeAndEntityId("LandSurvey", id)
+activate Changes
+Survey <-- Changes : changeRecords
+deactivate Changes
+History <-- Survey : changeHistory
+deactivate Survey
+
+History -> Survey : getHistorySnapshot(timestamp)
+activate Survey
+Survey -> Versions : findByEntityTypeAndEntityIdAndTimestamp("LandSurvey", id, timestamp)
+activate Versions
+Survey <-- Versions : versionData
+deactivate Versions
+History <-- Survey : snapshotAtPointInTime
+deactivate Survey
+
+UI <- History : surveyHistoryData
+deactivate History
+
+UI -> History : compareSurveyVersions(surveyId, date1, date2)
+activate History
+
+History -> Survey : getHistorySnapshot(date1)
+activate Survey
+History <-- Survey : snapshot1
+deactivate Survey
+
+History -> Survey : getHistorySnapshot(date2)
+activate Survey
+History <-- Survey : snapshot2
+deactivate Survey
+
+History -> History : compareSurveyBoundaries(snapshot1, snapshot2)
+History -> History : generateChangeSummary()
+
+UI <-- History : surveyComparisonReport
+deactivate History
+@enduml
+----
+
+===== Boundary Adjustment Process
+
+[plantuml]
+----
+@startuml
+participant "SurveyService" as Service
+participant "LandSurvey" as Survey
+participant "LandParcel" as Parcel
+participant "BoundaryService" as Boundary
+participant "DomainEventPublisher" as Events
+
+Service -> Survey : initiateBoundaryAdjustment(parcelId, adjustmentReason)
+activate Survey
+
+Survey -> Parcel : getParcel(parcelId)
+activate Parcel
+Survey <-- Parcel : parcel
+deactivate Parcel
+
+Survey -> Survey : getLatestSurvey(parcelId)
+activate Survey
+Survey <-- Survey : previousSurvey
+deactivate Survey
+
+Survey -> Survey : createAdjustmentSurvey(previousSurvey)
+Survey -> Survey : setPreviousSurveyId(previousSurvey.id)
+Survey -> Survey : setAdjustmentReason(adjustmentReason)
+
+Service <-- Survey : adjustmentSurvey
+deactivate Survey
+
+Service -> Survey : recordBoundaryChanges(newBoundaryPoints)
+activate Survey
+
+Survey -> Survey : validateNewBoundary(newBoundaryPoints)
+Survey -> Boundary : calculateAdjustments(previousBoundary, newBoundary)
+activate Boundary
+Survey <-- Boundary : adjustmentCalculations
+deactivate Boundary
+
+Survey -> Survey : recordAdjustmentData(adjustmentCalculations)
+
+Service <-- Survey : updatedAdjustmentSurvey
+deactivate Survey
+
+Service -> Survey : submitAdjustmentForApproval()
+activate Survey
+
+Survey -> Survey : setReviewState(PENDING)
+Survey -> Events : publish(BoundaryAdjustmentSubmittedEvent)
+
+Service <-- Survey : surveySubmitted
+deactivate Survey
+@enduml
+----
+
+===== AccessControlled Implementation
+
+LandSurvey implements the AccessControlled interface:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "LandSurvey\nimplements AccessControlled" as Survey
+participant "AccessControlRepository" as ACRepo
+participant "UserRepository" as Users
+
+Security -> Survey : hasPermission(user, Permission.EDIT)
+activate Survey
+
+Survey -> Survey : getAccessControlList()
+activate Survey
+Survey -> ACRepo : findByEntityTypeAndEntityId("LandSurvey", id)
+activate ACRepo
+Survey <-- ACRepo : accessControlEntries
+deactivate ACRepo
+Survey <-- Survey : entries
+deactivate Survey
+
+alt Direct permission exists
+  Survey -> Survey : checkDirectPermission(user, entries, Permission.EDIT)
+  Survey -> Survey : return true/false based on direct permission
+else Check surveyor permission
+  Survey -> Survey : isSurveyor(user, surveyorId)
+  alt User is surveyor
+    Survey -> Survey : return true (surveyor has implicit EDIT permission)
+  else User is not surveyor
+    Survey -> Users : findRolesForUser(user.id)
+    activate Users
+    Survey <-- Users : userRoles
+    deactivate Users
+    
+    Survey -> Survey : hasRequiredRole(userRoles)
+    Note right: Checks for LAND_REGISTRY_OFFICER or SURVEYOR roles
+    
+    Survey -> Survey : return true/false based on role check
+  end
+end
+
+Security <-- Survey : permissionResult
+deactivate Survey
+@enduml
+----
+
+===== Land Survey Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+
+' Supporting Classes
+class SurveyPoint {
+  +UUID id
+  +UUID surveyId
+  +Double x
+  +Double y
+  +Double z
+  +String pointNumber
+  +PointType type
+  +String description
+  +String markerType
+  +UUID monumentId
+  +Double accuracy
+  +LocalDateTime recordedAt
+  +UUID recordedBy
+  +SurveySession sessionId
+}
+
+class SurveyLine {
+  +UUID id
+  +UUID surveyId
+  +UUID fromPointId
+  +UUID toPointId
+  +Double length
+  +String lineNumber
+  +LineType type
+  +String description
+  +Double bearing
+  +String boundaryDescription
+  +String boundaryMarkers
+  +Boolean isDisputed
+  +String adjacentParcelId
+}
+
+class SurveyMonument {
+  +UUID id
+  +String monumentNumber
+  +MonumentType type
+  +String description
+  +Point location
+  +String materialType
+  +LocalDate installedDate
+  +UUID installedBy
+  +String referenceDescription
+  +String photoKeys
+  +Boolean isOfficial
+  +String registrationNumber
+}
+
+' LandSurvey implementation
+class LandSurvey {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  
+  ' LandSurvey-specific
+  +UUID parcelId
+  +String surveyNumber
+  +SurveyType type
+  +SurveyStatus status
+  +LocalDate surveyDate
+  +UUID surveyorId
+  +String surveyorLicenseNumber
+  +String surveyorName
+  
+  ' Survey details
+  +UUID boundaryId
+  +Double measuredAreaInSquareMeters
+  +Double accuracyInMeters
+  +SurveyMethodType methodType
+  +String equipmentUsed
+  +List<UUID> controlPointIds
+  +String surveyNotes
+  
+  ' Survey data
+  +List<SurveyPoint> surveyPoints
+  +List<SurveyLine> boundaryLines
+  +Set<UUID> monumentIds
+  +String coordinateSystem
+  +Double elevationReference
+  +String referencePoint
+  
+  ' Administrative data
+  +UUID registrationId
+  +LocalDate registrationDate
+  +UUID certifiedById
+  +LocalDate certificationDate
+  +String certificationNumber
+  +UUID supersededBysurveyId
+  +UUID previousSurveyId
+  
+  ' Digital resources
+  +String fieldNotesDocumentId
+  +String rawDataFileId
+  +String processedDataFileId
+  +String surveyMapDocumentId
+  +String certificateDocumentId
+  
+  ' Methods
+  +Boolean validateSurveyData()
+  +Double calculateArea()
+  +Double calculatePerimeter()
+  +List<ConflictPoint> detectBoundaryConflicts()
+  +void addSurveyPoint(SurveyPoint point)
+  +void addBoundaryLine(SurveyLine line)
+  +Boolean isClosed()
+  +Map<String, Double> generateStatistics()
+  +Boolean hasMinimumRequiredPoints()
+  +SurveyValidationResult validateAgainstStandards()
+  +SurveyComparisonResult compareWithPriorSurvey()
+  +List<SurveyAdjustment> getAdjustments()
+}
+
+' Enumerations
+enum SurveyType {
+  CADASTRAL
+  TOPOGRAPHIC
+  BOUNDARY
+  SUBDIVISION
+  AS_BUILT
+  TITLE
+  CONSTRUCTION
+  ENGINEERING
+  MONITORING
+}
+
+enum SurveyStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  CERTIFIED
+  REGISTERED
+  SUPERSEDED
+  ARCHIVED
+  REJECTED
+}
+
+enum SurveyMethodType {
+  TOTAL_STATION
+  GPS_RTK
+  GPS_STATIC
+  AERIAL_PHOTOGRAMMETRY
+  LIDAR
+  TRADITIONAL
+  COMBINED
+  DIGITIZED_FROM_MAPS
+}
+
+enum PointType {
+  BOUNDARY
+  CONTROL
+  REFERENCE
+  TOPOGRAPHIC
+  FEATURE
+  MONUMENT
+  TEMPORARY
+}
+
+enum LineType {
+  BOUNDARY
+  EASEMENT
+  REFERENCE
+  CONSTRUCTION
+  PROPOSED
+  HISTORICAL
+}
+
+enum MonumentType {
+  CONCRETE_MARKER
+  METAL_PIN
+  IRON_PIPE
+  REBAR
+  STONE
+  BRASS_CAP
+  NAIL
+  DRILL_HOLE
+  NATURAL_OBJECT
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandSurvey
+
+' Interface implementation
+LandSurvey ..|> HistoryViewable
+LandSurvey ..|> AccessControlled
+
+' Class relationships
+LandSurvey o-- "many" SurveyPoint
+LandSurvey o-- "many" SurveyLine
+LandSurvey o-- "many" SurveyMonument
+
+' Enum relationships
+LandSurvey -- SurveyType
+LandSurvey -- SurveyStatus
+LandSurvey -- SurveyMethodType
+SurveyPoint -- PointType
+SurveyLine -- LineType
+SurveyMonument -- MonumentType
+@enduml
+----
+
+===== Land Survey Events
+
+[plantuml]
+----
+@startuml
+class SurveyCreatedEvent {
+  +UUID surveyId
+  +UUID parcelId
+  +String surveyNumber
+  +SurveyType type
+  +UUID surveyorId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SurveySubmittedEvent {
+  +UUID surveyId
+  +UUID parcelId
+  +String surveyNumber
+  +String surveyorName
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SurveyCertifiedEvent {
+  +UUID surveyId
+  +UUID parcelId
+  +String surveyNumber
+  +UUID certifiedById
+  +String certificationNumber
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SurveyRegisteredEvent {
+  +UUID surveyId
+  +UUID parcelId
+  +String surveyNumber
+  +String registrationNumber
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SurveySupersededEvent {
+  +UUID oldSurveyId
+  +UUID newSurveyId
+  +UUID parcelId
+  +String oldSurveyNumber
+  +String newSurveyNumber
+  +String supersedingReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SurveyAreaAdjustedEvent {
+  +UUID surveyId
+  +UUID parcelId
+  +Double oldAreaInSquareMeters
+  +Double newAreaInSquareMeters
+  +Double areaDifferencePercentage
+  +String adjustmentReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- SurveyCreatedEvent
+DomainEvent <|-- SurveySubmittedEvent
+DomainEvent <|-- SurveyCertifiedEvent
+DomainEvent <|-- SurveyRegisteredEvent
+DomainEvent <|-- SurveySupersededEvent
+DomainEvent <|-- SurveyAreaAdjustedEvent
+@enduml
+----

@@ -1,0 +1,1268 @@
+==== Land Parcel
+
+Land Parcel is the core entity of the Land Domain, representing a defined piece of land with specific boundaries and characteristics, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class SpatialEntity
+interface HistoryViewable
+interface AccessControlled
+interface ExternalSystemSyncable
+interface GeocodingCapable
+interface Taggable
+interface FullTextSearchable
+
+' LandParcel implementation
+class LandParcel {
+  ' From SpatialEntity
+  +Point centroid
+  +Polygon polygon
+  +Double area
+  +String spatialReference
+  +Double elevation
+  +SpatialAccuracy accuracy
+  +String source
+  
+  ' LandParcel-specific
+  +String parcelNumber
+  +String parcelIdentifier
+  +UUID provinceId
+  +UUID districtId
+  +UUID municipalityId
+  +UUID wardId
+  +AddressComponent address
+  +ParcelType type
+  +ParcelStatus status
+  +LocalDate registrationDate
+  
+  ' Physical characteristics
+  +Double areaInSquareMeters
+  +TerrainType terrain
+  +SlopeClassByDegree slope
+  +Double elevation
+  +AspectType aspect
+  +SoilType soilType
+  
+  ' Administrative data
+  +String surveyNumber
+  +String certificateNumber
+  +String mapSheetNumber
+  +String documentNumber
+  +String parentParcelNumber
+  +List<String> childParcelNumbers
+  
+  ' Usage and characteristics
+  +LandUseType primaryUse
+  +Map<LandUseType, Double> mixedUse
+  +Double marketValue
+  +Double assessedValue
+  +LocalDate valuationDate
+  
+  ' Services and infrastructure
+  +Boolean hasWaterAccess
+  +Boolean hasElectricityAccess
+  +Boolean hasRoadAccess
+  +Boolean hasSewerAccess
+  +Integer distanceToRoadInMeters
+  +Integer distanceToWaterInMeters
+  
+  ' Environmental factors
+  +Boolean floodProne
+  +Boolean landslideRisk
+  +String disasterRiskZone
+  +Boolean protectedArea
+  +String environmentalConstraints
+  
+  ' Tagging and search
+  +Set<Tag> tags
+  +String searchableText
+  +Map<String, String> searchableContent
+  +Set<String> searchKeywords
+  
+  ' External system integration
+  +String externalSystemId
+  +LocalDateTime lastSyncTime
+  +SyncStatus syncStatus
+  +List<SyncConflict> syncConflicts
+  
+  ' Methods
+  +List<LandOwnership> getCurrentOwners()
+  +List<LandRights> getActiveRights()
+  +Boolean isUnderDispute()
+  +void subdivide(List<Polygon> childParcelBoundaries)
+  +LandParcel mergeParcels(List<LandParcel> parcelsToMerge)
+  +LandTransaction startTransaction(TransactionType type)
+  +Boolean validateBoundary()
+  +Double calculatePerimeter()
+  +Boolean containsPoint(Point point)
+  +Boolean overlapsWithParcel(LandParcel otherParcel)
+  +Map<String, Object> getLandUseBreakdown()
+  +List<LandFeature> getFeatures()
+}
+
+' Inheritance relationships
+SpatialEntity <|-- LandParcel
+
+' Interface implementation
+LandParcel ..|> HistoryViewable
+LandParcel ..|> AccessControlled
+LandParcel ..|> ExternalSystemSyncable
+LandParcel ..|> GeocodingCapable
+LandParcel ..|> Taggable
+LandParcel ..|> FullTextSearchable
+
+' Enum relationships
+LandParcel -- ParcelType
+LandParcel -- ParcelStatus
+LandParcel -- TerrainType
+LandParcel -- AspectType
+LandParcel -- SoilType
+LandParcel -- LandUseType
+@enduml
+----
+
+===== Land Parcel Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Unregistered : create
+
+Unregistered --> Registered : register
+Registered --> Active : activate
+Active --> Disputed : dispute filed
+Disputed --> Active : dispute resolved
+Active --> UnderTransaction : sale initiated
+UnderTransaction --> Active : transaction canceled
+UnderTransaction --> TransferPending : sale approved
+TransferPending --> Active : transfer completed
+Active --> PendingSubdivision : subdivision initiated
+PendingSubdivision --> Active : subdivision canceled
+PendingSubdivision --> Subdivided : subdivision complete
+Subdivided --> [*] : child parcels created
+Active --> PendingMerger : merger initiated
+PendingMerger --> Active : merger canceled
+PendingMerger --> Merged : merger complete
+Merged --> [*] : new parcel created
+Active --> Expropriated : government acquisition
+Expropriated --> Active : returned to owner
+Active --> Restricted : restriction imposed
+Restricted --> Active : restriction lifted
+Active --> Decommissioned : obsolete/unused
+Decommissioned --> [*]
+@enduml
+----
+
+===== Land Parcel Registration Process
+
+[plantuml]
+----
+@startuml
+|Land Owner|
+start
+:Prepare parcel documentation;
+:Submit registration request;
+
+|Land Registry Officer|
+:Verify documentation;
+if (Documentation Valid?) then (yes)
+  :Create parcel record;
+else (no)
+  :Request additional documentation;
+  |Land Owner|
+  :Provide additional documentation;
+  note right
+    Return to verification
+  end note
+endif
+
+|Land Registry Officer|
+:Assign parcel identifiers;
+:Map parcel boundaries;
+
+|Land Registry System|
+:Validate spatial attributes;
+:Check for boundary overlaps;
+if (Validation Passed?) then (yes)
+  :Calculate spatial characteristics;
+  :Generate parcel number;
+else (no)
+  :Report spatial validation errors;
+  |Land Registry Officer|
+  :Correct spatial data;
+  note right
+    Return to validation
+  end note
+endif
+
+|Land Registry Officer|
+:Review generated parcel;
+:Submit for approval;
+
+|Senior Registry Official|
+:Review parcel registration;
+if (Approve?) then (yes)
+  :Approve registration;
+else (no)
+  :Return with comments;
+  |Land Registry Officer|
+  :Make corrections;
+  note right
+    Return to review
+  end note
+endif
+
+|Land Registry System|
+:Register parcel as active;
+:Generate registration certificate;
+:Store parcel record;
+:Publish registration event;
+
+|Land Owner|
+:Receive registration certificate;
+
+stop
+@enduml
+----
+
+===== Land Parcel Subdivision Process
+
+[plantuml]
+----
+@startuml
+|Land Owner|
+start
+:Request parcel subdivision;
+:Submit subdivision plan;
+
+|Land Registry Officer|
+:Review subdivision request;
+:Verify ownership rights;
+if (Rights Verified?) then (yes)
+  :Process subdivision request;
+else (no)
+  :Reject subdivision request;
+  stop
+endif
+
+|Land Registry System|
+:Validate subdivision plan;
+:Check minimum parcel requirements;
+if (Validation Passed?) then (yes)
+  :Create subdivision record;
+else (no)
+  :Report validation failures;
+  |Land Registry Officer|
+  :Return plan for modification;
+  |Land Owner|
+  :Revise subdivision plan;
+  note right
+    Return to validation
+  end note
+endif
+
+|Land Registry Officer|
+:Create child parcel boundaries;
+:Assign new parcel identifiers;
+
+|Land Registry System|
+:Validate new boundaries;
+:Calculate new spatial attributes;
+:Check for boundary issues;
+if (Boundaries Valid?) then (yes)
+  :Generate child parcel records;
+else (no)
+  :Report boundary issues;
+  |Land Registry Officer|
+  :Correct boundary data;
+  note right
+    Return to validation
+  end note
+endif
+
+|Senior Registry Official|
+:Review subdivision;
+if (Approve?) then (yes)
+  :Approve subdivision;
+else (no)
+  :Return with comments;
+  |Land Registry Officer|
+  :Make corrections;
+  note right
+    Return to review
+  end note
+endif
+
+|Land Registry System|
+:Update parent parcel status;
+:Activate child parcels;
+:Generate new certificates;
+:Record parent-child relationships;
+:Publish subdivision event;
+
+|Land Owner|
+:Receive new parcel certificates;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Land Parcels are used in the system:
+
+====== Agricultural Land Registration and Loan Application
+
+*Scenario:* Farmer Krishna registers his agricultural land to secure an agricultural loan
+
+[plantuml]
+----
+@startuml
+actor "Farmer Krishna" as Farmer
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandRights" as Rights
+participant "Agricultural Bank" as Bank
+participant "Loan Application\nSystem" as Loan
+
+Farmer -> Registry : Submit land registration with deed
+Registry -> Parcel : Create new land parcel
+activate Parcel
+Parcel -> Parcel : Generate parcel number
+Parcel -> Parcel : Set type = AGRICULTURAL
+Parcel -> Parcel : Set primary use = AGRICULTURAL_CROPLAND
+Parcel -> Parcel : Calculate area = 2.5 hectares
+Parcel -> Parcel : Record soil type = LOAM
+Registry <-- Parcel : Return parcel data
+deactivate Parcel
+
+Registry -> Rights : Create ownership rights
+activate Rights
+Rights -> Rights : Link parcel to farmer
+Rights -> Rights : Set rights type = OWNERSHIP
+Registry <-- Rights : Return rights record
+deactivate Rights
+
+Registry -> Farmer : Issue land certificate
+
+Farmer -> Bank : Apply for agricultural loan using parcel
+Bank -> Loan : Process loan application
+Loan -> Parcel : Verify parcel details
+activate Parcel
+Loan <-- Parcel : Return verification data
+deactivate Parcel
+
+Loan -> Rights : Verify ownership
+activate Rights
+Loan <-- Rights : Confirm ownership
+deactivate Rights
+
+Bank -> Rights : Create mortgage right on parcel
+activate Rights
+Rights -> Rights : Set rights type = MORTGAGE
+Rights -> Rights : Set beneficiary = Bank
+Rights -> Rights : Set conditions = loan terms
+Bank <-- Rights : Return mortgage record
+deactivate Rights
+
+Bank -> Farmer : Approve loan with parcel as collateral
+@enduml
+----
+
+*Real-World Context:*
+Farmer Krishna owns a 2.5-hectare agricultural plot in Jhapa district with fertile loam soil. He needs to register his ancestral land that was previously undocumented in the digital system to secure a NPR 500,000 agricultural loan for purchasing a tractor. The Land Registry creates a LandParcel entity with type AGRICULTURAL, calculates precise area, records soil characteristics, and issues a formal certificate. Krishna takes this certificate to the Agricultural Development Bank, which verifies the parcel details through the system's API, confirms Krishna's ownership, assesses the land value (estimated at NPR 3,750,000), and creates a mortgage right against the parcel as collateral for the loan.
+
+====== Urban Land Subdivision for Development
+
+*Scenario:* A developer subdivides an urban parcel for residential development
+
+[plantuml]
+----
+@startuml
+actor "Real Estate\nDeveloper" as Developer
+participant "Urban Planning\nDepartment" as Planning
+participant "LandParcel\n(Parent)" as ParentParcel
+participant "LandZoning" as Zoning
+participant "LandSurvey" as Survey
+participant "LandParcel\n(Children)" as ChildParcels
+participant "Infrastructure\nDepartment" as Infra
+
+Developer -> Planning : Submit subdivision application
+Planning -> ParentParcel : Verify parcel details
+activate ParentParcel
+Planning <-- ParentParcel : Return parcel data
+deactivate ParentParcel
+
+Planning -> Zoning : Check zoning regulations
+activate Zoning
+Planning <-- Zoning : Return residential zoning requirements
+deactivate Zoning
+
+Planning -> Developer : Request detailed subdivision plan
+
+Developer -> Planning : Submit detailed plan with 12 plots
+
+Planning -> Survey : Create subdivision survey
+activate Survey
+Survey -> Survey : Map individual plot boundaries
+Survey -> Survey : Verify minimum plot size compliance
+Survey -> Survey : Record road access for each plot
+Planning <-- Survey : Return survey data
+deactivate Survey
+
+Planning -> ParentParcel : Execute subdivision
+activate ParentParcel
+ParentParcel -> ChildParcels : Generate 12 child parcels
+ParentParcel -> ParentParcel : Set status = SUBDIVIDED
+ParentParcel -> ParentParcel : Record child parcel references
+Planning <-- ParentParcel : Return updated records
+deactivate ParentParcel
+
+Planning -> Infra : Submit infrastructure requirements
+Infra -> Infra : Plan water connections
+Infra -> Infra : Plan electricity distribution
+Infra -> Infra : Design drainage system
+
+Planning -> Developer : Issue subdivision approval with requirements
+Developer -> Developer : Begin development with infrastructure
+@enduml
+----
+
+*Real-World Context:*
+Kathmandu Valley Development Ltd. owns a 10,000 square meter parcel in Budhanilkantha that was formerly a single estate. With rising housing demand, they apply to convert it into a residential colony with 12 individual plots. The Urban Planning Department uses the LandParcel entity to verify current details and check if it meets the minimum requirements for subdivision in this RESIDENTIAL_MEDIUM_DENSITY zoning area. Each new plot must be at least 650 square meters with road access. The system creates a subdivision record, then generates 12 child LandParcel entities, each with their own parcelNumber and boundary, while maintaining a reference to the parent parcel. The original parcel's status changes to SUBDIVIDED. The system then automatically notifies the Infrastructure Department about new water, electricity, and road service requirements.
+
+====== Land Parcel Used in Boundary Dispute Resolution
+
+*Scenario:* Resolving a boundary dispute between neighboring parcels
+
+[plantuml]
+----
+@startuml
+actor "Landowner A" as OwnerA
+actor "Landowner B" as OwnerB
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel A" as ParcelA
+participant "LandParcel B" as ParcelB
+participant "LandDispute" as Dispute
+participant "LandSurvey" as Survey
+participant "SpatialService" as Spatial
+
+OwnerA -> Registry : File boundary dispute claim
+Registry -> ParcelA : Retrieve parcel details
+activate ParcelA
+Registry <-- ParcelA : Return parcel boundaries
+deactivate ParcelA
+
+Registry -> ParcelB : Retrieve adjacent parcel details
+activate ParcelB
+Registry <-- ParcelB : Return parcel boundaries
+deactivate ParcelB
+
+Registry -> Dispute : Create boundary dispute record
+activate Dispute
+Dispute -> Dispute : Set type = BOUNDARY
+Dispute -> Dispute : Reference both parcels
+Dispute -> Dispute : Set status = FILED
+Registry <-- Dispute : Return dispute record
+deactivate Dispute
+
+Registry -> Survey : Request field measurement
+activate Survey
+Survey -> Survey : Measure actual boundaries
+Survey -> Spatial : Compare with registered boundaries
+activate Spatial
+Spatial -> Spatial : Calculate boundary discrepancy (1.8m overlap)
+Survey <-- Spatial : Return discrepancy analysis
+deactivate Spatial
+Registry <-- Survey : Return survey findings
+deactivate Survey
+
+Registry -> OwnerA : Present evidence to both parties
+Registry -> OwnerB : Present evidence to both parties
+
+alt Parties Agree on Resolution
+  OwnerA -> Registry : Accept proposed boundary
+  OwnerB -> Registry : Accept proposed boundary
+  
+  Registry -> ParcelA : Update boundary
+  activate ParcelA
+  ParcelA -> ParcelA : Adjust polygon coordinates
+  Registry <-- ParcelA : Return updated parcel
+  deactivate ParcelA
+  
+  Registry -> ParcelB : Update boundary
+  activate ParcelB
+  ParcelB -> ParcelB : Adjust polygon coordinates
+  Registry <-- ParcelB : Return updated parcel
+  deactivate ParcelB
+  
+  Registry -> Dispute : Resolve dispute
+  activate Dispute
+  Dispute -> Dispute : Set status = RESOLVED
+  Registry <-- Dispute : Updated dispute record
+  deactivate Dispute
+else Parties Cannot Agree
+  Registry -> Dispute : Schedule formal hearing
+  note right: Land tribunal will make final decision
+end
+
+Registry -> OwnerA : Issue updated certificates
+Registry -> OwnerB : Issue updated certificates
+@enduml
+----
+
+*Real-World Context:*
+In Thimi, Bhaktapur, Mohan and Sita have adjacent land parcels with a disputed boundary. Mohan claims Sita's fence encroaches 2 meters onto his land, while Sita maintains the fence follows the historic boundary. The Land Registry office creates a LandDispute entity linking both LandParcel entities, marking both parcels with status DISPUTED. A surveyor conducts field measurements using GPS equipment, discovering a 1.8-meter discrepancy between the actual fence line and the registered boundary, likely due to an error in the original paper records from 1982. The system's SpatialEntity capabilities compare the historical boundaries with the new survey data, generating visualizations that help both parties understand the discrepancy. After mediation, they agree to split the difference, moving the fence by 0.9 meters. The system updates both LandParcel polygon coordinates, issues new certificates with updated boundaries, and changes both parcels' status back to ACTIVE.
+
+====== Land Value Assessment for Taxation
+
+*Scenario:* Government assessor evaluates land value for property tax assessment
+
+[plantuml]
+----
+@startuml
+actor "Tax Assessor" as Assessor
+participant "Revenue\nDepartment" as Revenue
+participant "LandParcel" as Parcel
+participant "MarketValueService" as Market
+participant "LandZoning" as Zoning
+participant "SpatialAnalysisService" as Spatial
+participant "TaxationSystem" as Tax
+
+Assessor -> Revenue : Initiate annual land valuation
+Revenue -> Parcel : Retrieve parcel data
+activate Parcel
+Revenue <-- Parcel : Return parcel attributes
+deactivate Parcel
+
+Revenue -> Zoning : Get zoning classification
+activate Zoning
+Revenue <-- Zoning : Return COMMERCIAL_CENTRAL zoning
+deactivate Zoning
+
+Revenue -> Spatial : Assess location factors
+activate Spatial
+Spatial -> Spatial : Calculate distance to city center
+Spatial -> Spatial : Analyze road access quality
+Spatial -> Spatial : Evaluate infrastructure availability
+Revenue <-- Spatial : Return location score (9.2/10)
+deactivate Spatial
+
+Revenue -> Market : Get base rate for zone
+activate Market
+Market -> Market : Query recent sales in area
+Market -> Market : Calculate price per square meter
+Revenue <-- Market : Return base rate (NPR 1,500,000/sq.m)
+deactivate Market
+
+Revenue -> Parcel : Update assessed value
+activate Parcel
+Parcel -> Parcel : Set assessedValue = NPR 56,000,000
+Parcel -> Parcel : Set valuationDate = current date
+Revenue <-- Parcel : Return updated parcel
+deactivate Parcel
+
+Revenue -> Tax : Calculate property tax
+activate Tax
+Tax -> Tax : Apply tax rate (1.5%)
+Tax -> Tax : Calculate annual tax (NPR 840,000)
+Revenue <-- Tax : Return tax assessment
+deactivate Tax
+
+Revenue -> Assessor : Provide valuation report
+@enduml
+----
+
+*Real-World Context:*
+A commercial land parcel of 350 square meters near Durbar Marg in central Kathmandu requires valuation for annual property taxes. The Municipal Revenue Department retrieves the LandParcel from the system, noting its COMMERCIAL_CENTRAL zoning, proximity to major landmarks, and premium location. The SpatialEntity capabilities help calculate precise distances to transportation hubs and infrastructure access points. The system combines market data from recent sales in the area (showing rates between NPR 1,400,000-1,600,000 per square meter) with the parcel's attributes. The assessor sets the official assessed value at NPR 56,000,000, updating the LandParcel entity with this value and current date. The system then automatically calculates the property tax liability of NPR 840,000 based on the municipal rate of 1.5% for commercial properties, and generates the official tax assessment notice.
+
+====== Land Parcel Integration with Smart City Infrastructure
+
+*Scenario:* Smart city planning using land parcel data for infrastructure development
+
+[plantuml]
+----
+@startuml
+participant "Smart City\nPlatform" as Smart
+participant "LandParcel" as Parcel
+participant "ExternalSystemSyncable\nInterface" as Sync
+participant "InfrastructurePlanning\nSystem" as Infra
+participant "EmergencyServices\nSystem" as Emergency
+participant "EnvironmentalMonitoring\nSystem" as Env
+
+Smart -> Parcel : Query parcels in development zone
+activate Parcel
+Smart <-- Parcel : Return 230 parcels
+deactivate Parcel
+
+loop for critical infrastructure parcels
+  Smart -> Parcel : Access detailed parcel data
+  activate Parcel
+  Smart <-- Parcel : Return parcel attributes
+  deactivate Parcel
+  
+  Smart -> Sync : Synchronize with external systems
+  activate Sync
+  Sync -> Sync : getExternalSystemId()
+  Sync -> Sync : getExternalSystemUrl()
+  Smart <-- Sync : Synchronization data
+  deactivate Sync
+end
+
+Smart -> Infra : Plan utility networks
+activate Infra
+Infra -> Infra : Optimize water pipe routes
+Infra -> Infra : Plan electrical grid
+Infra -> Infra : Design internet fiber layout
+Smart <-- Infra : Infrastructure plans
+deactivate Infra
+
+Smart -> Emergency : Configure emergency response
+activate Emergency
+Emergency -> Emergency : Map evacuation routes
+Emergency -> Emergency : Plan emergency access
+Emergency -> Emergency : Identify helicopter landing zones
+Smart <-- Emergency : Emergency response plans
+deactivate Emergency
+
+Smart -> Env : Set up environmental monitoring
+activate Env
+Env -> Env : Install flood sensors
+Env -> Env : Place air quality monitors
+Env -> Env : Configure landslide alert system
+Smart <-- Env : Environmental monitoring configuration
+deactivate Env
+
+Smart -> Parcel : Update infrastructure attributes
+activate Parcel
+Parcel -> Parcel : Set hasWaterAccess = true
+Parcel -> Parcel : Set hasElectricityAccess = true
+Parcel -> Parcel : Update disasterRiskZone data
+Smart <-- Parcel : Confirmation
+deactivate Parcel
+@enduml
+----
+
+*Real-World Context:*
+The Pokhara Smart City Initiative uses LandParcel data for integrated infrastructure planning. The project team queries 230 LandParcel entities in the Lakeside development zone through the system's API to identify optimal utility corridor placement. Using the ExternalSystemSyncable interface, parcel data synchronizes with multiple planning systems. The GIS team analyzes parcel boundaries to design the most efficient water distribution network, minimizing road cuts and disruption. The system's spatial analysis capabilities help identify parcels at high risk for flooding (15 parcels identified within potential flood zones), allowing targeted infrastructure investments in drainage. Emergency response planning uses parcel data to ensure fire truck access to all properties. As infrastructure is installed, each LandParcel entity is updated with new attribute values (hasWaterAccess, hasElectricityAccess) and tagged with infrastructure availability, enabling citizens and planners to track service coverage in real-time.
+
+====== Disaster Risk Assessment and Mitigation
+
+*Scenario:* Using land parcel data for landslide risk assessment and mitigation planning
+
+[plantuml]
+----
+@startuml
+participant "Disaster Risk\nManagement Office" as DRMO
+participant "LandParcel" as Parcel
+participant "SpatialAnalysisService" as Spatial
+participant "GeologicalSurvey\nDepartment" as Geo
+participant "CitizenNotificationService" as Notify
+participant "MitigationPlanningSystem" as Plan
+
+DRMO -> Spatial : Analyze landslide risk for district
+activate Spatial
+Spatial -> Spatial : Load elevation models
+Spatial -> Spatial : Analyze rainfall patterns
+Spatial -> Spatial : Calculate slope instability
+Spatial -> Geo : Integrate geological data
+activate Geo
+Spatial <-- Geo : Return soil stability analysis
+deactivate Geo
+DRMO <-- Spatial : Return risk assessment map
+deactivate Spatial
+
+DRMO -> Parcel : Query parcels in high-risk zones
+activate Parcel
+Parcel -> Parcel : Filter by geographic coordinates
+Parcel -> Parcel : Filter by slope > 30 degrees
+DRMO <-- Parcel : Return 28 high-risk parcels
+deactivate Parcel
+
+loop for each high-risk parcel
+  DRMO -> Parcel : Update risk assessment
+  activate Parcel
+  Parcel -> Parcel : Set landslideRisk = true
+  Parcel -> Parcel : Set disasterRiskZone = "HIGH_LANDSLIDE"
+  DRMO <-- Parcel : Updated parcel
+  deactivate Parcel
+  
+  DRMO -> Parcel : Get current owners
+  activate Parcel
+  DRMO <-- Parcel : Owner information
+  deactivate Parcel
+  
+  DRMO -> Notify : Send risk notification to owners
+  activate Notify
+  Notify -> Notify : Generate personalized risk alert
+  Notify -> Notify : Send SMS and email
+  DRMO <-- Notify : Notification confirmation
+  deactivate Notify
+end
+
+DRMO -> Plan : Develop mitigation strategy
+activate Plan
+Plan -> Plan : Identify critical infrastructure
+Plan -> Plan : Design defensive structures
+Plan -> Plan : Calculate implementation costs
+DRMO <-- Plan : Mitigation recommendations
+deactivate Plan
+
+DRMO -> Parcel : Tag parcels for mitigation projects
+activate Parcel
+Parcel -> Parcel : Add tags ["LANDSLIDE_MITIGATION", "PRIORITY_1"]
+DRMO <-- Parcel : Confirmation
+deactivate Parcel
+@enduml
+----
+
+*Real-World Context:*
+Following heavy monsoon rains in Sindhupalchok district, the National Disaster Risk Management Office conducts a comprehensive landslide risk assessment. Leveraging the LandParcel entities' SpatialEntity capabilities, they analyze 1,200 parcels in the eastern hills, evaluating each parcel's slope, elevation, soil type, and proximity to previous landslides. The system identifies 28 high-risk parcels on slopes exceeding 30 degrees with clay-heavy soil composition. These LandParcel entities are updated with landslideRisk=true and categorized in the "HIGH_LANDSLIDE" disasterRiskZone. Using the AccessControlled interface, the system identifies the current owners of each parcel, automatically sending personalized risk notifications. The Taggable interface allows parcels to be tagged for inclusion in the upcoming NPR 15,000,000 mitigation project, which will build retaining walls to protect both the at-risk properties and the highway below them. Construction companies can then query these tagged parcels when bidding for the mitigation contracts.
+
+===== GeocodingCapable Implementation
+
+Land Parcel implements the GeocodingCapable interface for address resolution:
+
+[plantuml]
+----
+@startuml
+participant "AddressService" as Service
+participant "LandParcel\nimplements GeocodingCapable" as LandParcel
+participant "SpatialService" as Spatial
+participant "LocationBoundary" as Boundary
+
+Service -> LandParcel : geocodeAddress(addressText)
+activate LandParcel
+
+LandParcel -> LandParcel : getPolygon()
+LandParcel -> LandParcel : extractAddressComponents(addressText)
+
+LandParcel -> Spatial : matchAddressToParcel(addressComponents)
+activate Spatial
+Spatial -> Spatial : searchNearbyParcels(addressComponents)
+Spatial -> Spatial : calculateAddressMatchScore(parcels)
+LandParcel <-- Spatial : matchedParcels
+deactivate Spatial
+
+alt Exact parcel match
+  LandParcel -> LandParcel : calculateCentroid()
+  Service <-- LandParcel : centroid
+else Multiple potential matches
+  LandParcel -> LandParcel : rankByClosestMatch(matchedParcels)
+  Service <-- LandParcel : bestMatchCentroid
+else No exact match
+  LandParcel -> Boundary : getWardBoundary(wardId)
+  activate Boundary
+  LandParcel <-- Boundary : wardBoundary
+  deactivate Boundary
+  
+  LandParcel -> Spatial : approximateLocation(addressText, wardBoundary)
+  activate Spatial
+  LandParcel <-- Spatial : approximatedPoint
+  deactivate Spatial
+  
+  Service <-- LandParcel : approximatedPoint
+end
+
+deactivate LandParcel
+
+Service -> LandParcel : reverseGeocode(longitude, latitude)
+activate LandParcel
+
+LandParcel -> Spatial : findParcelAtPoint(longitude, latitude)
+activate Spatial
+LandParcel <-- Spatial : containingParcel
+deactivate Spatial
+
+alt Point within parcel
+  LandParcel -> LandParcel : constructAddress()
+  Service <-- LandParcel : formattedAddress
+else No parcel contains point
+  LandParcel -> Spatial : findNearestParcel(longitude, latitude)
+  activate Spatial
+  LandParcel <-- Spatial : nearestParcel
+  deactivate Spatial
+  
+  LandParcel -> LandParcel : constructApproximateAddress(nearestParcel)
+  Service <-- LandParcel : approximateAddress
+end
+
+deactivate LandParcel
+@enduml
+----
+
+===== ExternalSystemSyncable Implementation
+
+Land Parcel implements the ExternalSystemSyncable interface for integration with cadastral systems:
+
+[plantuml]
+----
+@startuml
+participant "CadastralSyncService" as Sync
+participant "LandParcel\nimplements ExternalSystemSyncable" as LandParcel
+participant "NationalCadastralSystem" as CadastralSystem
+participant "DomainEventPublisher" as Events
+
+Sync -> LandParcel : getExternalSystemId()
+activate LandParcel
+Sync <-- LandParcel : "CADASTRE-LP-123456"
+deactivate LandParcel
+
+Sync -> LandParcel : getExternalSystemUrl()
+activate LandParcel
+Sync <-- LandParcel : "https://cadastre.gov.example/parcel/123456"
+deactivate LandParcel
+
+Sync -> LandParcel : getSyncStatus()
+activate LandParcel
+Sync <-- LandParcel : PENDING_SYNC
+deactivate LandParcel
+
+Sync -> CadastralSystem : syncParcelData(parcelData)
+activate CadastralSystem
+Sync <-- CadastralSystem : syncResult
+deactivate CadastralSystem
+
+Sync -> LandParcel : updateLastSyncTime(now)
+activate LandParcel
+LandParcel -> Events : publish(ParcelSyncedEvent)
+Sync <-- LandParcel
+deactivate LandParcel
+
+Sync -> LandParcel : getSyncConflicts()
+activate LandParcel
+LandParcel -> LandParcel : compareCadastralData(externalData)
+LandParcel -> LandParcel : detectAttributeConflicts()
+Sync <-- LandParcel : conflicts
+deactivate LandParcel
+
+alt Conflicts Exist
+  Sync -> LandParcel : resolveSyncConflict(conflict, resolution)
+  activate LandParcel
+  LandParcel -> LandParcel : applyConflictResolution(resolution)
+  LandParcel -> Events : publish(SyncConflictResolvedEvent)
+  Sync <-- LandParcel : resolutionResult
+  deactivate LandParcel
+end
+@enduml
+----
+
+===== AccessControlled Implementation
+
+Land Parcel implements the AccessControlled interface for managing parcel-level permissions:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "LandParcel\nimplements AccessControlled" as LandParcel
+participant "AccessControlRepository" as ACRepo
+participant "OwnershipRepository" as Ownership
+
+Security -> LandParcel : hasPermission(user, Permission.VIEW)
+activate LandParcel
+
+LandParcel -> LandParcel : getAccessControlList()
+activate LandParcel
+LandParcel -> ACRepo : findByEntityTypeAndEntityId("LandParcel", id)
+activate ACRepo
+LandParcel <-- ACRepo : accessControlEntries
+deactivate ACRepo
+LandParcel <-- LandParcel : entries
+deactivate LandParcel
+
+alt Direct permission exists
+  LandParcel -> LandParcel : checkDirectPermission(user, entries, Permission.VIEW)
+  LandParcel -> LandParcel : return true/false based on direct permission
+else Check ownership permission
+  LandParcel -> Ownership : findCurrentOwnersByParcelId(id)
+  activate Ownership
+  LandParcel <-- Ownership : owners
+  deactivate Ownership
+  
+  LandParcel -> LandParcel : checkIfUserIsOwner(user, owners)
+  alt User is owner
+    LandParcel -> LandParcel : return true (owner has implicit VIEW permission)
+  else User is not owner
+    LandParcel -> LandParcel : return false (no VIEW permission)
+  end
+end
+
+Security <-- LandParcel : permissionResult
+deactivate LandParcel
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+Land Parcel implements the HistoryViewable interface to track changes over time:
+
+[plantuml]
+----
+@startuml
+participant "AdminUI" as UI
+participant "ParcelHistoryService" as History
+participant "LandParcel\nimplements HistoryViewable" as LandParcel
+participant "EntityVersionRepository" as Versions
+participant "ParcelChangeRepository" as Changes
+
+UI -> History : getParcelHistory(parcelId)
+activate History
+
+History -> LandParcel : getChangeHistory()
+activate LandParcel
+LandParcel -> Changes : findByEntityTypeAndEntityId("LandParcel", id)
+activate Changes
+LandParcel <-- Changes : changeRecords
+deactivate Changes
+History <-- LandParcel : changeHistory
+deactivate LandParcel
+
+History -> LandParcel : getHistorySnapshot(timestamp)
+activate LandParcel
+LandParcel -> Versions : findByEntityTypeAndEntityIdAndTimestamp("LandParcel", id, timestamp)
+activate Versions
+LandParcel <-- Versions : versionData
+deactivate Versions
+History <-- LandParcel : snapshotAtPointInTime
+deactivate LandParcel
+
+UI <- History : parcelHistoryData
+deactivate History
+
+UI -> History : compareParcelVersions(parcelId, date1, date2)
+activate History
+
+History -> LandParcel : getHistorySnapshot(date1)
+activate LandParcel
+History <-- LandParcel : snapshot1
+deactivate LandParcel
+
+History -> LandParcel : getHistorySnapshot(date2)
+activate LandParcel
+History <-- LandParcel : snapshot2
+deactivate LandParcel
+
+History -> History : generateBoundaryComparison(snapshot1, snapshot2)
+History -> History : generateAttributeComparison(snapshot1, snapshot2)
+
+UI <-- History : versionComparisonResults
+deactivate History
+@enduml
+----
+
+===== Spatial Analysis
+
+Land Parcels leverage SpatialEntity capabilities for geographic analysis:
+
+[plantuml]
+----
+@startuml
+participant "LandAnalysisService" as Service
+participant "LandParcel" as LandParcel
+participant "SpatialAnalysisService" as Spatial
+participant "ElevationService" as Elevation
+participant "SlopeAnalyzer" as Slope
+
+Service -> LandParcel : analyzeSpatialCharacteristics()
+activate LandParcel
+
+LandParcel -> LandParcel : getPolygon()
+activate LandParcel
+LandParcel <-- LandParcel : parcalPolygon
+deactivate LandParcel
+
+LandParcel -> Spatial : calculateTerrainStatistics(parcelPolygon)
+activate Spatial
+Spatial -> Elevation : getElevationProfile(parcelPolygon)
+activate Elevation
+Spatial <-- Elevation : elevationData
+deactivate Elevation
+
+Spatial -> Slope : calculateSlopeDistribution(parcelPolygon, elevationData)
+activate Slope
+Spatial <-- Slope : slopeDistribution
+deactivate Slope
+
+LandParcel <-- Spatial : terrainStatistics
+deactivate Spatial
+
+LandParcel -> LandParcel : updateTerrainAttributes(terrainStatistics)
+activate LandParcel
+LandParcel -> LandParcel : setDominantSlopeClass(slopeDistribution.getDominantSlope())
+LandParcel -> LandParcel : setAverageElevation(elevationData.getAverageElevation())
+LandParcel -> LandParcel : setTerrainType(terrainStatistics.getDominantTerrain())
+LandParcel -> LandParcel : setAspect(terrainStatistics.getDominantAspect())
+LandParcel <-- LandParcel
+deactivate LandParcel
+
+Service <-- LandParcel : updatedParcel
+deactivate LandParcel
+@enduml
+----
+
+===== Land Parcel Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class SpatialEntity
+interface HistoryViewable
+interface AccessControlled
+interface ExternalSystemSyncable
+interface GeocodingCapable
+
+' Enumerations
+enum ParcelType {
+  RESIDENTIAL
+  AGRICULTURAL
+  COMMERCIAL
+  INDUSTRIAL
+  INSTITUTIONAL
+  RECREATIONAL
+  TRANSPORTATION
+  PROTECTED
+  MIXED_USE
+  OTHER
+}
+
+enum ParcelStatus {
+  UNREGISTERED
+  REGISTERED
+  ACTIVE
+  DISPUTED
+  UNDER_TRANSACTION
+  TRANSFER_PENDING
+  PENDING_SUBDIVISION
+  SUBDIVIDED
+  PENDING_MERGER
+  MERGED
+  EXPROPRIATED
+  RESTRICTED
+  DECOMMISSIONED
+}
+
+enum TerrainType {
+  FLAT
+  ROLLING
+  HILLY
+  MOUNTAINOUS
+  VALLEY
+  PLATEAU
+  WETLAND
+  COASTAL
+  RIVERINE
+}
+
+enum AspectType {
+  NORTH
+  NORTHEAST
+  EAST
+  SOUTHEAST
+  SOUTH
+  SOUTHWEST
+  WEST
+  NORTHWEST
+  FLAT
+}
+
+enum SoilType {
+  CLAY
+  SAND
+  SILT
+  LOAM
+  CLAY_LOAM
+  SANDY_LOAM
+  SILTY_CLAY
+  ROCKY
+  PEAT
+}
+
+enum LandUseType {
+  RESIDENTIAL_SINGLE
+  RESIDENTIAL_MULTI
+  COMMERCIAL_RETAIL
+  COMMERCIAL_OFFICE
+  INDUSTRIAL_LIGHT
+  INDUSTRIAL_HEAVY
+  AGRICULTURAL_CROPLAND
+  AGRICULTURAL_PASTURE
+  FOREST
+  CONSERVATION
+  RECREATIONAL
+  INSTITUTIONAL
+  TRANSPORTATION
+  UTILITY
+  VACANT
+  MIXED_USE
+}
+
+' LandParcel implementation
+class LandParcel {
+  ' From SpatialEntity
+  +Point centroid
+  +Polygon polygon
+  +Double area
+  +String spatialReference
+  
+  ' LandParcel-specific
+  +String parcelNumber
+  +String parcelIdentifier
+  +UUID provinceId
+  +UUID districtId
+  +UUID municipalityId
+  +UUID wardId
+  +AddressComponent address
+  +ParcelType type
+  +ParcelStatus status
+  +LocalDate registrationDate
+  
+  ' Physical characteristics
+  +Double areaInSquareMeters
+  +TerrainType terrain
+  +SlopeClassByDegree slope
+  +Double elevation
+  +AspectType aspect
+  +SoilType soilType
+  
+  ' Administrative data
+  +String surveyNumber
+  +String certificateNumber
+  +String mapSheetNumber
+  +String documentNumber
+  +String parentParcelNumber
+  +List<String> childParcelNumbers
+  
+  ' Usage and characteristics
+  +LandUseType primaryUse
+  +Map<LandUseType, Double> mixedUse
+  +Double marketValue
+  +Double assessedValue
+  +LocalDate valuationDate
+  
+  ' Services and infrastructure
+  +Boolean hasWaterAccess
+  +Boolean hasElectricityAccess
+  +Boolean hasRoadAccess
+  +Boolean hasSewerAccess
+  +Integer distanceToRoadInMeters
+  +Integer distanceToWaterInMeters
+  
+  ' Environmental factors
+  +Boolean floodProne
+  +Boolean landslideRisk
+  +String disasterRiskZone
+  +Boolean protectedArea
+  +String environmentalConstraints
+  
+  ' Methods
+  +List<LandOwnership> getCurrentOwners()
+  +List<LandRights> getActiveRights()
+  +Boolean isUnderDispute()
+  +void subdivide(List<Polygon> childParcelBoundaries)
+  +LandParcel mergeParcels(List<LandParcel> parcelsToMerge)
+  +LandTransaction startTransaction(TransactionType type)
+  +Boolean validateBoundary()
+  +Double calculatePerimeter()
+  +Boolean containsPoint(Point point)
+  +Boolean overlapsWithParcel(LandParcel otherParcel)
+  +Map<String, Object> getLandUseBreakdown()
+  +List<LandFeature> getFeatures()
+}
+
+' Inheritance relationships
+SpatialEntity <|-- LandParcel
+
+' Interface implementation
+LandParcel ..|> HistoryViewable
+LandParcel ..|> AccessControlled
+LandParcel ..|> ExternalSystemSyncable
+LandParcel ..|> GeocodingCapable
+
+' Enum relationships
+LandParcel -- ParcelType
+LandParcel -- ParcelStatus
+LandParcel -- TerrainType
+LandParcel -- AspectType
+LandParcel -- SoilType
+LandParcel -- LandUseType
+@enduml
+----
+
+===== Land Parcel Events
+
+[plantuml]
+----
+@startuml
+class LandParcelCreatedEvent {
+  +UUID parcelId
+  +String parcelNumber
+  +ParcelType type
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandParcelRegisteredEvent {
+  +UUID parcelId
+  +String parcelNumber
+  +String registrationNumber
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandParcelBoundaryChangedEvent {
+  +UUID parcelId
+  +String parcelNumber
+  +UUID oldBoundaryId
+  +UUID newBoundaryId
+  +Double oldArea
+  +Double newArea
+  +String changeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandParcelSubdividedEvent {
+  +UUID parentParcelId
+  +String parentParcelNumber
+  +List<UUID> childParcelIds
+  +List<String> childParcelNumbers
+  +String subdivisionReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandParcelMergedEvent {
+  +List<UUID> sourceParcelIds
+  +List<String> sourceParcelNumbers
+  +UUID resultParcelId
+  +String resultParcelNumber
+  +String mergeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandParcelStatusChangedEvent {
+  +UUID parcelId
+  +String parcelNumber
+  +ParcelStatus oldStatus
+  +ParcelStatus newStatus
+  +String changeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- LandParcelCreatedEvent
+DomainEvent <|-- LandParcelRegisteredEvent
+DomainEvent <|-- LandParcelBoundaryChangedEvent
+DomainEvent <|-- LandParcelSubdividedEvent
+DomainEvent <|-- LandParcelMergedEvent
+DomainEvent <|-- LandParcelStatusChangedEvent
+@enduml
+----

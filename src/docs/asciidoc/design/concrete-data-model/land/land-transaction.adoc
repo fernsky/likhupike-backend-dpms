@@ -1,0 +1,894 @@
+==== Land Transaction
+
+Land Transaction represents the transfer, sale, mortgage, lease, or other transactions related to land parcels, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface WebhookTriggerable
+
+' LandTransaction implementation
+class LandTransaction {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  
+  ' LandTransaction-specific
+  +UUID parcelId
+  +TransactionType type
+  +TransactionStatus status
+  +String transactionNumber
+  +LocalDate transactionDate
+  +LocalDate effectiveDate
+  +Double transactionAmount
+  +String currencyCode
+  
+  ' Parties involved
+  +UUID fromPartyId
+  +PartyType fromPartyType
+  +UUID toPartyId
+  +PartyType toPartyType
+  
+  ' Transaction details
+  +String description
+  +List<UUID> documentIds
+  +UUID parentTransactionId
+  +List<UUID> childTransactionIds
+  
+  ' Process tracking
+  +UUID assignedOfficerId
+  +LocalDateTime submittedAt
+  +UUID submittedBy
+  +LocalDate scheduledCompletionDate
+  +Integer completionStepsTotal
+  +Integer completionStepsCurrent
+  
+  ' Financial details
+  +Double taxAmount
+  +Boolean taxPaid
+  +UUID paymentId
+  +List<UUID> feeIds
+  
+  ' Implementation methods...
+}
+
+' Enumerations
+enum TransactionType {
+  SALE
+  PURCHASE
+  TRANSFER
+  MORTGAGE
+  LEASE
+  SUBDIVISION
+  MERGE
+  INHERITANCE
+  DONATION
+  EXPROPRIATION
+  COURT_ORDER
+  EASEMENT
+  RIGHT_OF_WAY
+  TAX_DEED
+  CORRECTION
+}
+
+enum TransactionStatus {
+  DRAFT
+  SUBMITTED
+  DOCUMENT_REVIEW
+  PENDING_PAYMENT
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  ON_HOLD
+}
+
+enum PartyType {
+  INDIVIDUAL
+  BUSINESS
+  GOVERNMENT
+  BANK
+  TRUST
+  ASSOCIATION
+  JOINT_ENTITY
+  FOREIGN_ENTITY
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandTransaction
+
+' Interface implementation
+LandTransaction ..|> HistoryViewable
+LandTransaction ..|> WebhookTriggerable
+
+' Enum relationships
+LandTransaction -- TransactionType
+LandTransaction -- TransactionStatus
+LandTransaction -- PartyType
+@enduml
+----
+
+===== Land Transaction Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Initial Data Entry" as Initial
+  state "Document Collection" as Documents
+  state "Validation" as Validation
+  
+  [*] --> Initial
+  Initial --> Documents : collect documents
+  Documents --> Validation : validate
+  Validation --> [*] : valid
+  Validation --> Initial : invalid
+}
+
+Draft --> Submitted : submit
+Submitted --> DocumentReview : assign reviewer
+DocumentReview --> DocumentsRequested : request documents
+DocumentsRequested --> DocumentReview : provide documents
+DocumentReview --> PendingPayment : documents approved
+
+PendingPayment --> UnderReview : payment received
+UnderReview --> OnHold : issues identified
+OnHold --> UnderReview : issues resolved
+UnderReview --> Rejected : reject
+UnderReview --> Approved : approve
+
+Approved --> RegistryProcessing : process registration
+RegistryProcessing --> Completed : finalize
+Completed --> [*]
+
+Draft --> Cancelled : cancel
+Submitted --> Cancelled : cancel
+DocumentReview --> Cancelled : cancel
+PendingPayment --> Cancelled : cancel
+UnderReview --> Cancelled : cancel
+OnHold --> Cancelled : cancel
+Approved --> Cancelled : cancel with justification
+
+Cancelled --> [*]
+Rejected --> [*]
+@enduml
+----
+
+===== Transaction Submission Process
+
+[plantuml]
+----
+@startuml
+|Transaction Initiator|
+start
+:Prepare transaction details;
+:Collect required documents;
+
+|Land Registry System|
+:Create transaction record;
+:Validate transaction data;
+if (Valid?) then (yes)
+  :Set transaction status to DRAFT;
+else (no)
+  :Return validation errors;
+  |Transaction Initiator|
+  :Correct transaction data;
+  note right
+    Return to validation
+  end note
+endif
+
+|Transaction Initiator|
+:Submit transaction;
+
+|Land Registry System|
+:Set transaction status to SUBMITTED;
+:Generate transaction number;
+:Assign to registry officer;
+
+|Registry Officer|
+:Review submitted documents;
+if (Documents Complete?) then (yes)
+  :Approve documents;
+else (no)
+  :Request additional documents;
+  |Transaction Initiator|
+  :Provide requested documents;
+  note right
+    Return to document review
+  end note
+endif
+
+|Land Registry System|
+:Calculate transaction fees and taxes;
+:Create payment records;
+:Notify parties of payment requirements;
+
+|Transaction Initiator|
+:Make required payments;
+
+|Finance Department|
+:Verify payments;
+:Record payment details;
+
+|Registry Officer|
+:Review transaction details;
+:Perform legal checks;
+if (Legally Valid?) then (yes)
+  :Approve transaction;
+else (no)
+  :Reject transaction;
+  stop
+endif
+
+|Land Registry System|
+:Update land records;
+:Generate new ownership records (if applicable);
+:Update parcel history;
+:Set transaction status to COMPLETED;
+:Publish transaction completion event;
+
+|Transaction Initiator|
+:Receive transaction certificate;
+
+stop
+@enduml
+----
+
+===== Transaction Fee Calculation Process
+
+[plantuml]
+----
+@startuml
+|Registry Officer|
+start
+:Submit transaction for fee calculation;
+
+|Fee Calculation Service|
+:Determine transaction type;
+:Retrieve fee schedule;
+
+if (Transaction Type?) then (Property Sale)
+  :Calculate based on sale value;
+  :Apply sale tax rate;
+else (Other)
+  :Apply standard fee structure;
+endif
+
+:Calculate base transaction fee;
+:Identify applicable surcharges;
+:Calculate document processing fees;
+:Calculate tax withholding (if applicable);
+
+if (Eligible for Discounts?) then (yes)
+  :Apply fee discounts;
+else (no)
+  :No discounts applied;
+endif
+
+:Calculate total fees and taxes;
+
+|Registry Officer|
+:Review calculated fees;
+if (Approval Needed?) then (yes)
+  |Fee Supervisor|
+  :Review fee calculation;
+  if (Approve?) then (yes)
+    :Approve fees;
+  else (no)
+    :Adjust fee calculation;
+    note right
+      Return to fee calculation
+    end note
+  endif
+endif
+
+|Transaction System|
+:Generate payment instructions;
+:Record fee breakdown;
+:Set transaction status to PENDING_PAYMENT;
+:Notify parties of payment requirements;
+
+stop
+@enduml
+----
+
+===== WebhookTriggerable Implementation
+
+LandTransaction implements the WebhookTriggerable interface:
+
+[plantuml]
+----
+@startuml
+participant "ExternalSystem" as External
+participant "WebhookService" as Service
+participant "LandTransaction\nimplements WebhookTriggerable" as Transaction
+participant "WebhookRegistry" as Registry
+participant "EventPublisher" as Events
+
+External -> Service : registerWebhook(transactionId, endpointUrl, events)
+activate Service
+
+Service -> Transaction : registerWebhook(endpoint, events, secret)
+activate Transaction
+Transaction -> Registry : create(entityId, entityType, endpoint, events, secret)
+activate Registry
+Transaction <-- Registry : registration
+deactivate Registry
+Service <-- Transaction : webhookRegistration
+deactivate Transaction
+
+External <-- Service : registrationConfirmation
+deactivate Service
+
+note over Transaction
+  When transaction status changes...
+end note
+
+Transaction -> Events : publish(TransactionStatusChangedEvent)
+activate Events
+Events -> Transaction : triggerWebhooks("TRANSACTION_STATUS_CHANGED", payload)
+activate Transaction
+
+Transaction -> Registry : findWebhooksForEvent(entityId, "TRANSACTION_STATUS_CHANGED")
+activate Registry
+Transaction <-- Registry : webhooks
+deactivate Registry
+
+loop for each webhook
+  Transaction -> External : POST /webhook-endpoint (payload + signature)
+  alt Successful delivery
+    Transaction <-- External : 200 OK
+    Transaction -> Registry : recordSuccessfulDelivery(webhookId)
+  else Failed delivery
+    Transaction <-- External : Error/Timeout
+    Transaction -> Registry : recordFailedAttempt(webhookId)
+    Transaction -> Transaction : scheduleRetry(webhookId)
+  end
+end
+
+Events <-- Transaction
+deactivate Transaction
+deactivate Events
+
+External -> Service : getWebhookHistory(registrationId)
+activate Service
+Service -> Transaction : getWebhookHistory()
+activate Transaction
+Transaction -> Registry : findEventsByWebhookId(registrationId)
+activate Registry
+Transaction <-- Registry : deliveryHistory
+deactivate Registry
+Service <-- Transaction : webhookHistory
+deactivate Transaction
+External <-- Service : deliveryHistory
+deactivate Service
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+LandTransaction implements the HistoryViewable interface:
+
+[plantuml]
+----
+@startuml
+participant "TransactionUI" as UI
+participant "TransactionHistoryService" as History
+participant "LandTransaction\nimplements HistoryViewable" as Transaction
+participant "EntityVersionRepository" as Versions
+participant "TransactionTracker" as Tracker
+
+UI -> History : getTransactionHistory(transactionId)
+activate History
+
+History -> Transaction : getChangeHistory()
+activate Transaction
+Transaction -> Versions : findByEntityTypeAndEntityId("LandTransaction", id)
+activate Versions
+Transaction <-- Versions : changeRecords
+deactivate Versions
+History <-- Transaction : changeHistory
+deactivate Transaction
+
+History -> Transaction : getHistorySnapshot(timestamp)
+activate Transaction
+Transaction -> Versions : findByEntityTypeAndEntityIdAndTimestamp("LandTransaction", id, timestamp)
+activate Versions
+Transaction <-- Versions : versionData
+deactivate Versions
+History <-- Transaction : snapshotAtPointInTime
+deactivate Transaction
+
+UI <- History : transactionHistoryData
+deactivate History
+
+UI -> History : getTransactionTimeline(transactionId)
+activate History
+
+History -> Tracker : getTransactionEvents(transactionId)
+activate Tracker
+History <-- Tracker : timelineEvents
+deactivate Tracker
+
+History -> History : organizeTimelineByDate(timelineEvents)
+History -> History : enrichWithDocumentSubmissions(timelineEvents)
+History -> History : attachUserActions(timelineEvents)
+
+UI <-- History : transactionTimeline
+deactivate History
+@enduml
+----
+
+===== Transaction Processing Workflow
+
+[plantuml]
+----
+@startuml
+participant "WorkflowService" as Service
+participant "LandTransaction" as Transaction
+participant "WorkflowEngine" as Workflow
+participant "TransactionDocumentService" as Documents
+participant "NotificationService" as Notifications
+
+Service -> Transaction : processTransaction()
+activate Transaction
+
+Transaction -> Transaction : getCurrentState()
+Transaction -> Workflow : determineNextSteps(transaction)
+activate Workflow
+Transaction <-- Workflow : nextSteps
+deactivate Workflow
+
+loop for each step in nextSteps
+  alt Document Verification Step
+    Transaction -> Documents : verifyDocuments(documentIds)
+    activate Documents
+    Transaction <-- Documents : verificationResults
+    deactivate Documents
+    
+    Transaction -> Transaction : updateDocumentVerificationStatus(verificationResults)
+    
+    alt All Documents Verified
+      Transaction -> Transaction : advanceToNextStage()
+    else Missing Documents
+      Transaction -> Transaction : requestAdditionalDocuments()
+      Transaction -> Notifications : notifyRequiredDocuments(initiatorId)
+      activate Notifications
+      Transaction <-- Notifications : notificationSent
+      deactivate Notifications
+    end
+  
+  else Fee Calculation Step
+    Transaction -> Transaction : calculateTransactionFees()
+    Transaction -> Transaction : createPaymentRequests()
+    Transaction -> Transaction : setStatus(PENDING_PAYMENT)
+    Transaction -> Notifications : notifyPaymentRequired(parties)
+    activate Notifications
+    Transaction <-- Notifications : notificationSent
+    deactivate Notifications
+  
+  else Legal Compliance Step
+    Transaction -> Transaction : performLegalChecks()
+    Transaction -> Transaction : recordComplianceResults()
+    
+    alt Compliance Issues
+      Transaction -> Transaction : flagComplianceIssue()
+      Transaction -> Transaction : setStatus(ON_HOLD)
+      Transaction -> Notifications : notifyComplianceIssue(officerId)
+      activate Notifications
+      Transaction <-- Notifications : notificationSent
+      deactivate Notifications
+    else Compliance Passed
+      Transaction -> Transaction : markComplianceApproved()
+    end
+  
+  else Registry Update Step
+    Transaction -> Transaction : prepareRegistryUpdates()
+    Transaction -> Transaction : scheduleRegistryChanges()
+    Transaction -> Transaction : setStatus(REGISTRY_PROCESSING)
+  end
+end
+
+Transaction -> Transaction : updateCompletionProgress()
+Transaction -> Workflow : recordWorkflowProgress(transaction)
+activate Workflow
+Transaction <-- Workflow : workflowUpdated
+deactivate Workflow
+
+Service <-- Transaction : processingResult
+deactivate Transaction
+@enduml
+----
+
+===== Multi-Party Transaction Management
+
+[plantuml]
+----
+@startuml
+participant "TransactionService" as Service
+participant "LandTransaction" as Transaction
+participant "PartySignatureService" as Signatures
+participant "ConsentTracker" as Consent
+participant "DomainEventPublisher" as Events
+
+Service -> Transaction : addPartyToTransaction(partyId, partyRole)
+activate Transaction
+
+Transaction -> Transaction : validatePartyAddition(partyId, partyRole)
+Transaction -> Transaction : addPartyToTransaction(partyId, partyRole)
+Transaction -> Transaction : createSignatureRequirement(partyId)
+
+Service <-- Transaction : partyAdded
+deactivate Transaction
+
+Service -> Transaction : requestPartyConsent(partyId)
+activate Transaction
+
+Transaction -> Signatures : createSignatureRequest(partyId, transaction)
+activate Signatures
+Transaction <-- Signatures : signatureRequest
+deactivate Signatures
+
+Transaction -> Consent : trackConsentRequest(partyId, transaction)
+activate Consent
+Transaction <-- Consent : consentRequest
+deactivate Consent
+
+Service <-- Transaction : consentRequested
+deactivate Transaction
+
+Service -> Transaction : recordPartyConsent(partyId, consentType, consentProof)
+activate Transaction
+
+Transaction -> Signatures : verifySignature(partyId, consentProof)
+activate Signatures
+Transaction <-- Signatures : signatureValid
+deactivate Signatures
+
+Transaction -> Consent : recordConsent(partyId, consentType, timestamp)
+activate Consent
+Transaction <-- Consent : consentRecorded
+deactivate Consent
+
+Transaction -> Transaction : updatePartyStatus(partyId, CONSENTED)
+Transaction -> Events : publish(PartyConsentRecordedEvent)
+
+Service <-- Transaction : consentRecorded
+deactivate Transaction
+
+Service -> Transaction : checkAllPartiesConsented()
+activate Transaction
+
+Transaction -> Transaction : getRequiredParties()
+Transaction -> Consent : checkAllPartiesConsented(requiredParties)
+activate Consent
+Transaction <-- Consent : allConsented
+deactivate Consent
+
+alt All Consented
+  Transaction -> Transaction : markReadyForNextStage()
+  Transaction -> Events : publish(AllPartiesConsentedEvent)
+  Service <-- Transaction : true
+else Pending Consents
+  Service <-- Transaction : false
+end
+deactivate Transaction
+@enduml
+----
+
+===== Land Transaction Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface WebhookTriggerable
+
+' Supporting Classes
+class TransactionParty {
+  +UUID id
+  +UUID transactionId
+  +UUID partyId
+  +PartyRole role
+  +PartyStatus status
+  +LocalDateTime lastUpdated
+  +Boolean consentReceived
+  +LocalDateTime consentReceivedAt
+  +String consentMethod
+  +UUID consentDocumentId
+}
+
+enum PartyRole {
+  SELLER
+  BUYER
+  MORTGAGOR
+  MORTGAGEE
+  LESSOR
+  LESSEE
+  AGENT
+  WITNESS
+  NOTARY
+  LEGAL_REPRESENTATIVE
+  GUARANTOR
+}
+
+enum PartyStatus {
+  INVITED
+  INFORMED
+  DOCUMENT_PENDING
+  DOCUMENT_SUBMITTED
+  SIGNATURE_REQUIRED
+  CONSENT_GIVEN
+  PAYMENT_REQUIRED
+  PAYMENT_COMPLETED
+  COMPLETED
+  REJECTED
+}
+
+class TransactionFee {
+  +UUID id
+  +UUID transactionId
+  +FeeType type
+  +String description
+  +Double amount
+  +String currencyCode
+  +Boolean isPaid
+  +UUID paymentId
+  +LocalDateTime paidAt
+  +FeeCalculationMethod calculationMethod
+  +Map<String, Double> calculationParams
+}
+
+enum FeeType {
+  REGISTRATION_FEE
+  PROPERTY_TRANSFER_TAX
+  STAMP_DUTY
+  DOCUMENT_PROCESSING
+  EXPEDITED_SERVICE
+  SURVEY_VERIFICATION
+  MORTGAGE_REGISTRATION
+  VALUE_ADDED_TAX
+  ADMINISTRATIVE_FEE
+}
+
+' LandTransaction implementation
+class LandTransaction {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  
+  ' LandTransaction-specific
+  +UUID parcelId
+  +TransactionType type
+  +TransactionStatus status
+  +String transactionNumber
+  +LocalDate transactionDate
+  +LocalDate effectiveDate
+  +Double transactionAmount
+  +String currencyCode
+  
+  ' Parties involved
+  +List<TransactionParty> parties
+  
+  ' Transaction details
+  +String description
+  +List<UUID> documentIds
+  +UUID parentTransactionId
+  +List<UUID> childTransactionIds
+  
+  ' Process tracking
+  +UUID assignedOfficerId
+  +LocalDateTime submittedAt
+  +UUID submittedBy
+  +LocalDate scheduledCompletionDate
+  +Integer completionStepsTotal
+  +Integer completionStepsCurrent
+  +List<UUID> completedStepIds
+  +List<UUID> pendingStepIds
+  
+  ' Validation and verification
+  +Boolean legallyVerified
+  +UUID legalVerifiedBy
+  +LocalDateTime legalVerifiedAt
+  +String verificationNotes
+  +List<String> validationIssues
+  
+  ' Financial details
+  +List<TransactionFee> fees
+  +Double totalFeeAmount
+  +Double taxAmount
+  +Boolean taxPaid
+  +UUID primaryPaymentId
+  +Boolean isExemptFromTax
+  +String taxExemptionReason
+  
+  ' Methods
+  +LandParcel getParcel()
+  +List<TransactionParty> getParties()
+  +TransactionParty getPrimaryBuyer()
+  +TransactionParty getPrimarySeller()
+  +List<Document> getDocuments()
+  +boolean isComplete()
+  +boolean requiresPayment()
+  +double getTotalAmountDue()
+  +List<TransactionStep> getCompletedSteps()
+  +List<TransactionStep> getPendingSteps()
+  +void addParty(TransactionParty party)
+  +void addDocument(UUID documentId)
+  +void advanceWorkflow()
+  +void calculateFees()
+  +boolean allPartiesConsented()
+  +void cancel(String reason)
+  +void recordPayment(UUID paymentId)
+  +Map<String, Object> generateSummary()
+}
+
+' Enumerations
+enum TransactionType {
+  SALE
+  PURCHASE
+  TRANSFER
+  MORTGAGE
+  LEASE
+  SUBDIVISION
+  MERGE
+  INHERITANCE
+  DONATION
+  EXPROPRIATION
+  COURT_ORDER
+  EASEMENT
+  RIGHT_OF_WAY
+  TAX_DEED
+  CORRECTION
+}
+
+enum TransactionStatus {
+  DRAFT
+  SUBMITTED
+  DOCUMENT_REVIEW
+  PENDING_PAYMENT
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  ON_HOLD
+}
+
+enum PartyType {
+  INDIVIDUAL
+  BUSINESS
+  GOVERNMENT
+  BANK
+  TRUST
+  ASSOCIATION
+  JOINT_ENTITY
+  FOREIGN_ENTITY
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandTransaction
+
+' Interface implementation
+LandTransaction ..|> HistoryViewable
+LandTransaction ..|> WebhookTriggerable
+
+' Class Relationships
+LandTransaction o-- "many" TransactionParty
+LandTransaction o-- "many" TransactionFee
+TransactionParty -- PartyRole
+TransactionParty -- PartyStatus
+TransactionFee -- FeeType
+
+' Enum relationships
+LandTransaction -- TransactionType
+LandTransaction -- TransactionStatus
+LandTransaction -- PartyType
+@enduml
+----
+
+===== Land Transaction Events
+
+[plantuml]
+----
+@startuml
+class TransactionCreatedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +TransactionType type
+  +String transactionNumber
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TransactionStatusChangedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +TransactionStatus oldStatus
+  +TransactionStatus newStatus
+  +String statusChangeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TransactionDocumentAddedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +UUID documentId
+  +String documentType
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TransactionPartyAddedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +UUID partyId
+  +PartyRole role
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TransactionApprovedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +UUID approvedBy
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TransactionRejectedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +String rejectionReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TransactionCompletedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +List<UUID> affectedParcelIds
+  +List<UUID> newOwnershipIds
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TransactionPaymentReceivedEvent {
+  +UUID transactionId
+  +UUID parcelId
+  +UUID paymentId
+  +Double amount
+  +String paymentMethod
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- TransactionCreatedEvent
+DomainEvent <|-- TransactionStatusChangedEvent
+DomainEvent <|-- TransactionDocumentAddedEvent
+DomainEvent <|-- TransactionPartyAddedEvent
+DomainEvent <|-- TransactionApprovedEvent
+DomainEvent <|-- TransactionRejectedEvent
+DomainEvent <|-- TransactionCompletedEvent
+DomainEvent <|-- TransactionPaymentReceivedEvent
+@enduml
+----

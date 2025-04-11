@@ -1,0 +1,1408 @@
+==== Land Ownership
+
+Land Ownership represents the legal ownership of land parcels by individuals, organizations, or other entities, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+interface WebhookTriggerable
+interface FullTextSearchable
+
+' LandOwnership implementation
+class LandOwnership {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  +String reviewNote
+  +UUID currentAssignee
+  +Integer escalationLevel
+  +LocalDate dueDate
+  
+  ' LandOwnership-specific
+  +UUID parcelId
+  +UUID ownerId
+  +OwnerType ownerType
+  +OwnershipType type
+  +OwnershipStatus status
+  +Double ownershipPercentage
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +String registrationNumber
+  +LocalDate registrationDate
+  
+  ' Ownership details
+  +String description
+  +String legalReference
+  +List<UUID> supportingDocumentIds
+  +Boolean isPrimaryOwner
+  +String acquisitionMethod
+  
+  ' Administrative data
+  +UUID recordedBy
+  +LocalDateTime recordedAt
+  +UUID officialRegistryId
+  +UUID supersededByOwnershipId
+  +UUID previousOwnershipId
+  
+  ' Search capabilities
+  +String searchableText
+  +Map<String, String> searchableContent
+  +Set<String> searchKeywords
+  
+  ' Webhook capabilities
+  +List<WebhookRegistration> webhookRegistrations
+  
+  ' Implementation methods...
+}
+
+' Enumerations
+enum OwnerType {
+  INDIVIDUAL
+  ORGANIZATION
+  GOVERNMENT
+  COMMUNITY
+  TRUST
+  FAMILY
+  JOINT
+}
+
+enum OwnershipType {
+  FREEHOLD
+  LEASEHOLD
+  TRUST
+  COMMUNAL
+  SHARED
+  CONDOMINIUM
+  COOPERATIVE
+  USUFRUCT
+  GOVERNMENT_HELD
+  RESTRICTED
+}
+
+enum OwnershipStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  DISPUTED
+  TRANSFERRED
+  EXPIRED
+  TERMINATED
+  REJECTED
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandOwnership
+
+' Interface implementation
+LandOwnership ..|> HistoryViewable
+LandOwnership ..|> AccessControlled
+LandOwnership ..|> WebhookTriggerable
+LandOwnership ..|> FullTextSearchable
+
+' Enum relationships
+LandOwnership -- OwnerType
+LandOwnership -- OwnershipType
+LandOwnership -- OwnershipStatus
+@enduml
+----
+
+===== Land Ownership Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Initial Recording" as Initial
+  state "Document Verification" as Documents
+  state "Validation" as Validation
+  
+  [*] --> Initial
+  Initial --> Documents : verify documents
+  Documents --> Validation : validate
+  Validation --> [*] : valid
+  Validation --> Initial : invalid
+}
+
+Draft --> Pending : submit for approval
+Pending --> Review : assign reviewer
+Review --> Revisions : request changes
+Revisions --> Pending : resubmit
+Review --> Rejected : reject
+Review --> Approved : approve
+Approved --> Active : activate
+
+state Active {
+  state "Current Ownership" as Current
+  state "Tax Assessment" as Tax
+  
+  [*] --> Current
+  Current --> Tax : assess property taxes
+  Tax --> Current : complete assessment
+}
+
+Active --> UnderTransfer : initiate transfer
+UnderTransfer --> Active : cancel transfer
+UnderTransfer --> Transferred : complete transfer
+Transferred --> [*]
+
+Active --> Disputed : dispute filed
+Disputed --> Active : dispute resolved
+Disputed --> Terminated : ownership revoked
+Active --> Terminated : terminate ownership
+Terminated --> [*]
+Rejected --> [*]
+@enduml
+----
+
+===== Land Ownership Registration Process
+
+[plantuml]
+----
+@startuml
+|Land Owner|
+start
+:Submit ownership claim;
+:Provide supporting documents;
+
+|Land Registry Officer|
+:Review ownership claim;
+:Verify documentation;
+if (Documentation Valid?) then (yes)
+  :Create ownership record;
+else (no)
+  :Request additional documentation;
+  |Land Owner|
+  :Provide additional documentation;
+  note right
+    Return to verification
+  end note
+endif
+
+|Land Registry Officer|
+:Verify land parcel details;
+:Check for conflicting claims;
+if (No Conflicts?) then (yes)
+  :Proceed with registration;
+else (no)
+  :Document conflicts;
+  :Initiate conflict resolution;
+  stop
+endif
+
+|Land Registry System|
+:Validate ownership details;
+:Check ownership percentage;
+if (Validation Passed?) then (yes)
+  :Prepare ownership record;
+else (no)
+  :Report validation issues;
+  |Land Registry Officer|
+  :Correct issues;
+  note right
+    Return to validation
+  end note
+endif
+
+|Senior Registry Official|
+:Review ownership registration;
+if (Approve?) then (yes)
+  :Approve ownership;
+else (no)
+  :Return with comments;
+  |Land Registry Officer|
+  :Make corrections;
+  note right
+    Return to review
+  end note
+endif
+
+|Land Registry System|
+:Register ownership as active;
+:Generate ownership certificate;
+:Update land parcel ownership;
+:Publish ownership registration event;
+
+|Land Owner|
+:Receive ownership certificate;
+
+stop
+@enduml
+----
+
+===== Ownership Transfer Process
+
+[plantuml]
+----
+@startuml
+|Current Owner|
+start
+:Initiate ownership transfer;
+:Submit transfer documents;
+
+|New Owner|
+:Accept ownership transfer;
+:Submit identification documents;
+
+|Land Registry Officer|
+:Verify current ownership;
+:Validate transfer documents;
+if (Documents Valid?) then (yes)
+  :Create transfer record;
+else (no)
+  :Request proper documentation;
+  |Current Owner|
+  :Provide correct documents;
+  note right
+    Return to validation
+  end note
+endif
+
+|Land Registry System|
+:Check for legal restrictions;
+:Verify tax payments;
+if (No Restrictions?) then (yes)
+  :Process transfer request;
+else (no)
+  :Report restrictions;
+  |Land Registry Officer|
+  :Notify parties of restrictions;
+  |Current Owner|
+  :Resolve restrictions;
+  note right
+    Return to validation
+  end note
+endif
+
+|Financial System|
+:Calculate transfer taxes;
+:Process payment;
+if (Payment Complete?) then (yes)
+  :Record payment;
+else (no)
+  :Notify payment requirement;
+  |Current Owner|
+  :Complete payment;
+  note right
+    Return when paid
+  end note
+endif
+
+|Senior Registry Official|
+:Review transfer;
+if (Approve?) then (yes)
+  :Approve transfer;
+else (no)
+  :Return with comments;
+  |Land Registry Officer|
+  :Address issues;
+  note right
+    Return to review
+  end note
+endif
+
+|Land Registry System|
+:Update ownership records;
+:Mark previous ownership as transferred;
+:Create new ownership record;
+:Update land parcel reference;
+:Publish ownership transfer event;
+
+|New Owner|
+:Receive ownership certificate;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Land Ownership is used in the system:
+
+====== Land Title Registration for First-Time Owner
+
+*Scenario:* First-time landowner registering title after purchase from a developer
+
+[plantuml]
+----
+@startuml
+actor "Homebuyer\nSunil Tamang" as Buyer
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "Document\nRepository" as Docs
+participant "TaxService" as Tax
+
+Buyer -> Registry : Submit ownership registration with purchase deed
+Registry -> Parcel : Verify parcel details
+activate Parcel
+Registry <-- Parcel : Confirm parcel exists (#P-45872)
+deactivate Parcel
+
+Registry -> Docs : Upload and verify purchase documents
+activate Docs
+Docs -> Docs : Validate deed authenticity
+Docs -> Docs : Verify developer's right to sell
+Registry <-- Docs : Documents verified
+deactivate Docs
+
+Registry -> Ownership : Create initial ownership record
+activate Ownership
+Ownership -> Ownership : Set ownerId = Sunil's ID
+Ownership -> Ownership : Set parcelId = P-45872
+Ownership -> Ownership : Set type = FREEHOLD
+Ownership -> Ownership : Set ownershipPercentage = 100%
+Ownership -> Ownership : Set acquisitionMethod = "PURCHASE"
+Ownership -> Ownership : Set isPrimaryOwner = true
+Ownership -> Ownership : Link supportingDocumentIds
+Ownership -> Ownership : Set reviewState = PENDING
+Registry <-- Ownership : Ownership record created
+deactivate Ownership
+
+Registry -> Tax : Calculate registration tax
+activate Tax
+Tax -> Tax : Apply 4.5% of property value
+Registry <-- Tax : Tax amount = NPR 225,000
+deactivate Tax
+
+Buyer -> Registry : Pay registration tax
+
+Registry -> Ownership : Approve ownership record
+activate Ownership
+Ownership -> Ownership : Set isApproved = true
+Ownership -> Ownership : Set approvedBy = RegistrarID
+Ownership -> Ownership : Set approvedAt = currentTime
+Ownership -> Ownership : Set status = ACTIVE
+Ownership -> Ownership : Generate registrationNumber = "OR-73928"
+Registry <-- Ownership : Ownership approved
+deactivate Ownership
+
+Registry -> Buyer : Issue ownership certificate
+@enduml
+----
+
+*Real-World Context:*
+Sunil Tamang has purchased a newly built 3-bedroom house in Kathmandu's Budhanilkantha area from Valley Homes Developers for NPR 5,000,000. After completing the payment, he visits the Land Revenue Office with the purchase agreement, identification documents, and the developer's authorization letter. The registry officer verifies the LandParcel details in the system, confirming it's a properly registered residential plot with a newly constructed house. The system validates that Valley Homes is the current registered owner with rights to sell. 
+
+A new LandOwnership entity is created in the system with type FREEHOLD (full ownership), linking to Sunil's citizen profile and the parcel ID. The system calculates the 4.5% registration tax (NPR 225,000), which Sunil pays. The ownership record is reviewed by a senior registry official and approved. Sunil receives an official land ownership certificate with a unique registration number (OR-73928) and his ownership is now legally recorded. The system also automatically triggers a notification to the municipal tax office to update the property tax records with the new owner's information.
+
+====== Joint Ownership Registration for Married Couple
+
+*Scenario:* Married couple registering joint ownership of agricultural land
+
+[plantuml]
+----
+@startuml
+actor "Husband\nRam Karki" as Husband
+actor "Wife\nSita Karki" as Wife
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "CitizenRegistry" as Citizens
+participant "Document\nVerification" as Docs
+
+Husband -> Registry : Apply for joint ownership registration
+Wife -> Registry : Confirm joint ownership application
+Registry -> Citizens : Verify marriage relationship
+activate Citizens
+Registry <-- Citizens : Marriage confirmed
+deactivate Citizens
+
+Registry -> Parcel : Check if Ram owns the parcel
+activate Parcel
+Parcel -> Parcel : Retrieve current ownership
+Registry <-- Parcel : Ram is sole owner
+deactivate Parcel
+
+Registry -> Husband : Request consent for joint registration
+Husband -> Registry : Provide written consent
+Registry -> Docs : Verify consent document
+activate Docs
+Registry <-- Docs : Consent verified
+deactivate Docs
+
+Registry -> Ownership : Create first ownership record
+activate Ownership
+Ownership -> Ownership : Set ownerId = Ram's ID
+Ownership -> Ownership : Set ownerType = INDIVIDUAL
+Ownership -> Ownership : Set type = JOINT
+Ownership -> Ownership : Set ownershipPercentage = 50%
+Ownership -> Ownership : Set supportingDocumentIds
+Registry <-- Ownership : First ownership record created
+deactivate Ownership
+
+Registry -> Ownership : Create second ownership record
+activate Ownership
+Ownership -> Ownership : Set ownerId = Sita's ID
+Ownership -> Ownership : Set ownerType = INDIVIDUAL
+Ownership -> Ownership : Set type = JOINT
+Ownership -> Ownership : Set ownershipPercentage = 50%
+Ownership -> Ownership : Link to same supportingDocumentIds
+Registry <-- Ownership : Second ownership record created
+deactivate Ownership
+
+Registry -> Registry : Validate combined ownership = 100%
+
+Registry -> Ownership : Approve both ownership records
+activate Ownership
+Ownership -> Ownership : Mark both records as APPROVED
+Ownership -> Ownership : Set status = ACTIVE
+Ownership -> Ownership : Generate joint registrationNumber
+Registry <-- Ownership : Both records approved
+deactivate Ownership
+
+Registry -> Husband : Issue joint ownership certificate
+Registry -> Wife : Issue joint ownership certificate
+@enduml
+----
+
+*Real-World Context:*
+Ram Karki owns 1.5 hectares of agricultural land in Bardiya district, inherited from his father. After marriage to Sita, they decide to register the land under joint ownership to ensure equal property rights. They visit the Land Revenue Office with their marriage certificate, citizenship papers, and the original land ownership documents.
+
+The system verifies their marriage through the Citizen Registry, then retrieves Ram's existing LandOwnership record which shows 100% ownership of the parcel. After Ram provides written consent, the registry officer creates two new LandOwnership entities in the system, each with type JOINT and 50% ownershipPercentage. Both records link to the same parcel ID and supporting documents. Each record also references the other through a relatedOwnershipIds field to indicate the connection.
+
+The system validates that the combined ownership percentage equals 100% and marks both records as ACTIVE. Ram's previous sole ownership record is marked as TRANSFERRED and the new joint ownership certificates are issued to both Ram and Sita. The change is recorded in the system's history, and both owners now have equal legal rights to the property. In the future, any transactions involving this land will require consent from both owners.
+
+====== Inherited Land Ownership Registration
+
+*Scenario:* Children registering inherited land following parent's death
+
+[plantuml]
+----
+@startuml
+actor "Son\nHari Prasad" as Son
+actor "Daughter\nGita Sharma" as Daughter
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "Document\nService" as Docs
+participant "InheritanceTaxService" as Tax
+
+Son -> Registry : Submit inheritance claim
+Daughter -> Registry : Submit inheritance claim
+Registry -> Docs : Verify death certificate
+activate Docs
+Registry <-- Docs : Death verified
+deactivate Docs
+
+Registry -> Parcel : Check deceased's ownership
+activate Parcel
+Registry <-- Parcel : Confirm deceased owned parcel
+deactivate Parcel
+
+Registry -> Docs : Verify inheritance documents
+activate Docs
+Docs -> Docs : Validate will authenticity
+Docs -> Docs : Check legal heir certificates
+Registry <-- Docs : Documents verified
+deactivate Docs
+
+Registry -> Ownership : Retrieve deceased's ownership
+activate Ownership
+Registry <-- Ownership : Current ownership details
+deactivate Ownership
+
+Registry -> Registry : Calculate inheritance shares
+note right: According to will: 60% to son, 40% to daughter
+
+Registry -> Tax : Calculate inheritance tax
+activate Tax
+Tax -> Tax : Apply tax rates to inheritance value
+Registry <-- Tax : Tax amounts for each heir
+deactivate Tax
+
+Son -> Registry : Pay inheritance tax (son's portion)
+Daughter -> Registry : Pay inheritance tax (daughter's portion)
+
+Registry -> Ownership : Create first inheritance record
+activate Ownership
+Ownership -> Ownership : Set ownerId = Hari's ID
+Ownership -> Ownership : Set ownershipPercentage = 60%
+Ownership -> Ownership : Set acquisitionMethod = "INHERITANCE"
+Ownership -> Ownership : Set previousOwnershipId = deceased's record
+Registry <-- Ownership : First inheritance record created
+deactivate Ownership
+
+Registry -> Ownership : Create second inheritance record
+activate Ownership
+Ownership -> Ownership : Set ownerId = Gita's ID
+Ownership -> Ownership : Set ownershipPercentage = 40%
+Ownership -> Ownership : Set acquisitionMethod = "INHERITANCE"
+Ownership -> Ownership : Set previousOwnershipId = deceased's record
+Registry <-- Ownership : Second inheritance record created
+deactivate Ownership
+
+Registry -> Ownership : Mark deceased's record as TRANSFERRED
+activate Ownership
+Ownership -> Ownership : Set status = TERMINATED
+Ownership -> Ownership : Set terminationReason = "DEATH_TRANSFER"
+Registry <-- Ownership : Previous ownership terminated
+deactivate Ownership
+
+Registry -> Son : Issue inheritance certificate
+Registry -> Daughter : Issue inheritance certificate
+@enduml
+----
+
+*Real-World Context:*
+Following the death of Mohan Prasad, his children Hari and Gita apply to formally register their inheritance of his 3-hectare agricultural land in Morang district. They bring the death certificate, their citizenship documents, and their father's will to the Land Revenue Office.
+
+The system verifies the death certificate through the Civil Registry and confirms that Mohan was the registered owner of the parcel through his LandOwnership record. The will specifies that Hari should receive 60% and Gita 40% of the property. The registry officer calculates the inheritance tax based on the current land value (NPR 3,000,000), which comes to NPR 36,000 for Hari and NPR 24,000 for Gita.
+
+After tax payment, two new LandOwnership entities are created in the system, with ownershipPercentage set to 60% and 40% respectively. Both records include acquisitionMethod="INHERITANCE" and reference Mohan's original ownership record through previousOwnershipId. The HistoryViewable interface allows the system to maintain the complete ownership lineage, showing that this land was previously owned by Mohan and is now legally transferred to his children according to the will's specifications.
+
+Mohan's original ownership record is marked as TERMINATED with terminationReason="DEATH_TRANSFER" and both heirs receive new ownership certificates. The land map in the system now shows the updated ownership information while preserving the historical record.
+
+====== Government Land Acquisition for Infrastructure
+
+*Scenario:* Government acquiring private land for highway construction
+
+[plantuml]
+----
+@startuml
+actor "Government\nHighway Department" as Govt
+actor "Landowner\nKrishna Bahadur" as Owner
+participant "Land Acquisition\nOffice" as LAO
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "CompensationService" as Comp
+participant "Dispute\nResolution" as Dispute
+
+Govt -> LAO : File land acquisition notice
+LAO -> Parcel : Identify affected parcels
+activate Parcel
+LAO <-- Parcel : List of affected parcels
+deactivate Parcel
+
+LAO -> Ownership : Identify affected owners
+activate Ownership
+LAO <-- Ownership : Owner information
+deactivate Ownership
+
+LAO -> Owner : Serve acquisition notice
+LAO -> LAO : Conduct public hearing
+LAO -> Comp : Calculate fair compensation
+activate Comp
+Comp -> Comp : Assess land market value
+Comp -> Comp : Add structure value
+Comp -> Comp : Add crop value
+Comp -> Comp : Add livelihood disruption compensation
+LAO <-- Comp : Total compensation amount
+deactivate Comp
+
+alt Owner Accepts Compensation
+  Owner -> LAO : Accept compensation offer
+  
+  LAO -> Ownership : Create partial acquisition record
+  activate Ownership
+  Ownership -> Ownership : Set ownerId = Government ID
+  Ownership -> Ownership : Set ownerType = GOVERNMENT
+  Ownership -> Ownership : Set type = GOVERNMENT_HELD
+  Ownership -> Ownership : Set acquisitionMethod = "EMINENT_DOMAIN"
+  Ownership -> Ownership : Set ownershipPercentage = 30%
+  LAO <-- Ownership : Government ownership record created
+  deactivate Ownership
+  
+  LAO -> Parcel : Update owner's parcel (partial taking)
+  activate Parcel
+  Parcel -> Parcel : Reduce area by 30%
+  Parcel -> Parcel : Update boundary
+  LAO <-- Parcel : Owner's parcel updated
+  deactivate Parcel
+  
+  LAO -> Parcel : Create new government parcel
+  activate Parcel
+  Parcel -> Parcel : Set acquired area details
+  Parcel -> Parcel : Set type = TRANSPORTATION
+  LAO <-- Parcel : Government parcel created
+  deactivate Parcel
+  
+  Owner -> LAO : Receive compensation payment
+  
+else Owner Disputes Compensation
+  Owner -> Dispute : File compensation dispute
+  activate Dispute
+  Dispute -> Dispute : Create dispute record
+  Dispute -> Dispute : Set type = ACQUISITION_COMPENSATION
+  Dispute -> Dispute : Schedule hearing
+  LAO <-- Dispute : Dispute registered
+  deactivate Dispute
+  
+  LAO -> LAO : Conduct dispute hearing
+  LAO -> LAO : Determine final compensation
+  
+  LAO -> Ownership : Create acquisition record after resolution
+  note right: Process continues after dispute resolution
+end
+
+LAO -> Govt : Transfer acquired land rights
+@enduml
+----
+
+*Real-World Context:*
+The Department of Roads is constructing a new six-lane highway from Kathmandu to Hetauda and needs to acquire portions of multiple private land parcels. Krishna Bahadur owns a 1-hectare plot in Makwanpur district, of which 3,000 square meters (30%) falls within the planned highway corridor.
+
+The Land Acquisition Office serves Krishna with an acquisition notice, detailing the required portion and initial compensation offer. Using the system, they access Krishna's LandOwnership record and the LandParcel boundaries. The CompensationService calculates a fair market value of NPR 900,000 for the 3,000 sq.m. portion, plus NPR 300,000 for structures and NPR 50,000 for standing crops, totaling NPR 1,250,000.
+
+After negotiation, Krishna accepts the compensation. The system handles this complex transaction by:
+1. Creating a new LandParcel entity for the highway portion with type TRANSPORTATION
+2. Reducing Krishna's original parcel area by 30% and updating its boundaries
+3. Creating a new LandOwnership entity for the government with ownerType=GOVERNMENT, type=GOVERNMENT_HELD
+4. Updating Krishna's ownership record to reflect the reduced parcel size
+
+The HistoryViewable interface preserves the complete record of the transaction, showing exactly how the land was acquired, the compensation paid, and the reduction in Krishna's property. The AccessControlled interface ensures appropriate government officials can access and manage the newly acquired property.
+
+====== Temporary Land Lease Registration
+
+*Scenario:* Farmer leasing agricultural land to another farmer
+
+[plantuml]
+----
+@startuml
+actor "Landowner\nDurgesh Rai" as Owner
+actor "Tenant\nBikram Magar" as Tenant
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "LandRights" as Rights
+participant "Document\nService" as Docs
+participant "TaxService" as Tax
+
+Owner -> Registry : Apply to register lease agreement
+Tenant -> Registry : Confirm lease agreement
+Registry -> Parcel : Verify parcel details
+activate Parcel
+Registry <-- Parcel : Parcel details confirmed
+deactivate Parcel
+
+Registry -> Ownership : Verify owner's rights
+activate Ownership
+Registry <-- Ownership : Ownership confirmed
+deactivate Ownership
+
+Registry -> Docs : Process lease contract
+activate Docs
+Docs -> Docs : Validate contract terms
+Docs -> Docs : Store document with reference
+Registry <-- Docs : Contract validated and stored
+deactivate Docs
+
+Registry -> Rights : Create leasehold right
+activate Rights
+Rights -> Rights : Set type = LEASEHOLD
+Rights -> Rights : Set parcelId = parcel.id
+Rights -> Rights : Set grantorId = Owner's ID
+Rights -> Rights : Set beneficiaryId = Tenant's ID
+Rights -> Rights : Set effectiveFrom = current date
+Rights -> Rights : Set effectiveTo = current date + 5 years
+Rights -> Rights : Set conditions from contract
+Registry <-- Rights : Leasehold right created
+deactivate Rights
+
+Registry -> Tax : Calculate lease registration tax
+activate Tax
+Tax -> Tax : Apply 2% of annual rent value
+Registry <-- Tax : Tax amount
+deactivate Tax
+
+Owner -> Registry : Pay registration tax
+
+Registry -> Rights : Approve leasehold right
+activate Rights
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Set status = ACTIVE
+Registry <-- Rights : Leasehold approved
+deactivate Rights
+
+Registry -> Owner : Issue lease registration certificate
+Registry -> Tenant : Issue tenant rights certificate
+@enduml
+----
+
+*Real-World Context:*
+Durgesh Rai owns 5 hectares of fertile agricultural land in Chitwan district but is unable to farm it all himself. He agrees to lease 3 hectares to Bikram Magar for a 5-year term at NPR 200,000 per year. They create a formal lease agreement specifying the term, payment schedule, and conditions (Bikram must maintain the irrigation system and can only grow rice and wheat).
+
+At the Land Revenue Office, the registry officer verifies Durgesh's ownership through his LandOwnership record and confirms there are no restrictions preventing the lease. Rather than creating a new ownership record, the system creates a LandRights entity with type LEASEHOLD, linking both parties. The contract document is scanned and stored in the system with a reference ID linked to the LandRights record.
+
+The leasehold registration requires a 2% tax on the annual rent (NPR 4,000), which Durgesh pays. Once approved, the system records the active lease, which is visible when anyone queries the parcel's status. The land is still shown as owned by Durgesh, but with an active leasehold right to Bikram. The system will automatically notify both parties three months before the lease expiration.
+
+This differs from a transfer of ownership because the LandOwnership record remains unchanged, while the LandRights entity provides the temporary usage rights. If either party wishes to terminate the lease early, they must register the termination through the system, which would update the effectiveTo date and status of the LandRights record.
+
+====== Cooperative Ownership Model
+
+*Scenario:* Community cooperative acquiring land for collective farming
+
+[plantuml]
+----
+@startuml
+actor "Cooperative\nChairperson" as Chair
+actor "Cooperative\nMembers (24)" as Members
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "OrganizationRegistry" as OrgReg
+participant "Document\nService" as Docs
+
+Chair -> Registry : Submit cooperative ownership application
+Members -> Chair : Provide membership verification
+Registry -> OrgReg : Verify cooperative registration
+activate OrgReg
+Registry <-- OrgReg : Cooperative legally registered
+deactivate OrgReg
+
+Registry -> Docs : Verify acquisition documents
+activate Docs
+Docs -> Docs : Validate purchase agreement
+Docs -> Docs : Verify member contributions
+Registry <-- Docs : Documents verified
+deactivate Docs
+
+Registry -> Parcel : Create parcel record
+activate Parcel
+Parcel -> Parcel : Set type = AGRICULTURAL
+Parcel -> Parcel : Set boundary from survey
+Registry <-- Parcel : Parcel created
+deactivate Parcel
+
+Registry -> Ownership : Create cooperative ownership
+activate Ownership
+Ownership -> Ownership : Set ownerId = Cooperative's ID
+Ownership -> Ownership : Set ownerType = ORGANIZATION
+Ownership -> Ownership : Set type = COOPERATIVE
+Ownership -> Ownership : Set ownershipPercentage = 100%
+Ownership -> Ownership : Set supportingDocumentIds
+Ownership -> Ownership : Link cooperative bylaws document
+Registry <-- Ownership : Ownership created
+deactivate Ownership
+
+Registry -> Registry : Verify cooperative bylaws
+Registry -> Registry : Confirm member rights documentation
+
+Registry -> Ownership : Approve cooperative ownership
+activate Ownership
+Ownership -> Ownership : Set isApproved = true
+Ownership -> Ownership : Set status = ACTIVE
+Registry <-- Ownership : Ownership approved
+deactivate Ownership
+
+Registry -> Chair : Issue cooperative ownership certificate
+Chair -> Members : Share ownership information with members
+@enduml
+----
+
+*Real-World Context:*
+The Sunrise Farming Cooperative, consisting of 24 small-scale farmers from Dhading district, pools their resources to purchase 10 hectares of agricultural land for collective farming. As a registered cooperative, they can own land as a single legal entity while internally managing member rights according to their bylaws.
+
+The cooperative chairperson applies for land registration with the cooperative's registration certificate, bylaws, member list, and land purchase agreement. The system verifies the cooperative's legal status through the Organization Registry before proceeding. Unlike individual ownership, the LandOwnership entity is created with ownerType=ORGANIZATION and type=COOPERATIVE, with the cooperative's ID as the owner.
+
+The cooperative's bylaws document is linked to the ownership record, detailing how members' rights are allocated based on their financial contributions. The system doesn't track individual member shares directly (this is managed internally by the cooperative), but recognizes the cooperative as the single legal owner.
+
+When approved, the LandOwnership record shows the cooperative owning 100% of the parcel. The cooperative structure provides several advantages: members can join or leave without changing the land ownership records, the land cannot be sold without proper cooperative approval procedures, and the collective ownership enables better access to agricultural loans and subsidies.
+
+This model demonstrates how the Land Domain handles different ownership types beyond simple individual ownership, accommodating community-based approaches to land management while maintaining clear legal records.
+
+===== AccessControlled Implementation
+
+LandOwnership implements the AccessControlled interface:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "LandOwnership\nimplements AccessControlled" as Ownership
+participant "AccessControlRepository" as ACRepo
+participant "CitizenRepository" as Citizens
+participant "LandParcelRepository" as ParcelRepo
+
+Security -> Ownership : hasPermission(user, Permission.VIEW)
+activate Ownership
+
+Ownership -> Ownership : getAccessControlList()
+activate Ownership
+Ownership -> ACRepo : findByEntityTypeAndEntityId("LandOwnership", id)
+activate ACRepo
+Ownership <-- ACRepo : accessControlEntries
+deactivate ACRepo
+Ownership <-- Ownership : entries
+deactivate Ownership
+
+alt Direct permission exists
+  Ownership -> Ownership : checkDirectPermission(user, entries, Permission.VIEW)
+  Ownership -> Ownership : return true/false based on direct permission
+else Check owner permission
+  Ownership -> Ownership : getOwnerId()
+  Ownership -> Citizens : findOwnerByUserId(user.id)
+  activate Citizens
+  Ownership <-- Citizens : ownerProfile
+  deactivate Citizens
+  
+  alt User is owner
+    Ownership -> Ownership : return true (owner has implicit VIEW permission)
+  else User is not owner
+    Ownership -> ParcelRepo : findById(parcelId)
+    activate ParcelRepo
+    Ownership <-- ParcelRepo : parcel
+    deactivate ParcelRepo
+    
+    Ownership -> ParcelRepo : hasPermission(user, Permission.MANAGE_OWNERSHIP)
+    activate ParcelRepo
+    Ownership <-- ParcelRepo : hasParcelPermission
+    deactivate ParcelRepo
+    
+    Ownership -> Ownership : return hasParcelPermission
+  end
+end
+
+Security <-- Ownership : permissionResult
+deactivate Ownership
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+LandOwnership implements the HistoryViewable interface:
+
+[plantuml]
+----
+@startuml
+participant "LandRegistryUI" as UI
+participant "OwnershipHistoryService" as History
+participant "LandOwnership\nimplements HistoryViewable" as Ownership
+participant "EntityVersionRepository" as Versions
+participant "OwnershipChangeRepository" as Changes
+
+UI -> History : getOwnershipHistory(ownershipId)
+activate History
+
+History -> Ownership : getChangeHistory()
+activate Ownership
+Ownership -> Changes : findByEntityTypeAndEntityId("LandOwnership", id)
+activate Changes
+Ownership <-- Changes : changeRecords
+deactivate Changes
+History <-- Ownership : changeHistory
+deactivate Ownership
+
+History -> Ownership : getHistorySnapshot(timestamp)
+activate Ownership
+Ownership -> Versions : findByEntityTypeAndEntityIdAndTimestamp("LandOwnership", id, timestamp)
+activate Versions
+Ownership <-- Versions : versionData
+deactivate Versions
+History <-- Ownership : snapshotAtPointInTime
+deactivate Ownership
+
+UI <- History : ownershipHistoryData
+deactivate History
+
+UI -> History : compareOwnershipVersions(ownershipId, date1, date2)
+activate History
+
+History -> Ownership : getHistorySnapshot(date1)
+activate Ownership
+History <-- Ownership : snapshot1
+deactivate Ownership
+
+History -> Ownership : getHistorySnapshot(date2)
+activate Ownership
+History <-- Ownership : snapshot2
+deactivate Ownership
+
+History -> History : compareOwnershipData(snapshot1, snapshot2)
+History -> History : highlightSignificantChanges()
+
+UI <-- History : comparisonResults
+deactivate History
+@enduml
+----
+
+===== Co-Ownership Management
+
+[plantuml]
+----
+@startuml
+participant "OwnershipService" as Service
+participant "LandOwnership" as Ownership
+participant "LandParcel" as Parcel
+participant "OwnershipPercentageValidator" as Validator
+participant "DomainEventPublisher" as Events
+
+Service -> Ownership : addCoOwner(ownerId, percentage)
+activate Ownership
+
+Ownership -> Parcel : getExistingOwnershipRecords()
+activate Parcel
+Ownership <-- Parcel : existingOwnerships
+deactivate Parcel
+
+Ownership -> Validator : validateTotalPercentage(existingOwnerships, newPercentage)
+activate Validator
+note right
+  Ensures total ownership 
+  percentages sum to 100%
+end note
+Ownership <-- Validator : validationResult
+deactivate Validator
+
+alt Valid Percentage
+  Ownership -> Ownership : createCoOwnershipRecord(ownerId, percentage)
+  Ownership -> Events : publish(CoOwnershipAddedEvent)
+  Service <-- Ownership : coOwnershipRecord
+else Invalid Percentage
+  Service <-- Ownership : percentageError
+end
+deactivate Ownership
+
+Service -> Ownership : updateOwnershipPercentage(ownershipId, newPercentage)
+activate Ownership
+
+Ownership -> Parcel : getExistingOwnershipRecords()
+activate Parcel
+Ownership <-- Parcel : existingOwnerships
+deactivate Parcel
+
+Ownership -> Validator : validatePercentageChange(existingOwnerships, ownershipId, newPercentage)
+activate Validator
+Ownership <-- Validator : validationResult
+deactivate Validator
+
+alt Valid Percentage
+  Ownership -> Ownership : updatePercentage(newPercentage)
+  Ownership -> Events : publish(OwnershipPercentageChangedEvent)
+  Service <-- Ownership : updatedOwnership
+else Invalid Percentage
+  Service <-- Ownership : percentageError
+end
+deactivate Ownership
+@enduml
+----
+
+===== WebhookTriggerable Implementation 
+
+LandOwnership implements the WebhookTriggerable interface to notify connected systems:
+
+[plantuml]
+----
+@startuml
+participant "ExternalSystem" as External
+participant "WebhookService" as Service
+participant "LandOwnership\nimplements WebhookTriggerable" as Ownership
+participant "WebhookRegistry" as Registry
+participant "EventPublisher" as Events
+
+External -> Service : registerWebhook(entityType="LandOwnership", event="OWNERSHIP_TRANSFER", url)
+activate Service
+
+Service -> Ownership : registerWebhook(url, "OWNERSHIP_TRANSFER", secret)
+activate Ownership
+Ownership -> Registry : saveWebhookRegistration(entityId, "LandOwnership", url, event, secret)
+activate Registry
+Ownership <-- Registry : registration
+deactivate Registry
+Service <-- Ownership : webhookRegistration
+deactivate Ownership
+
+External <-- Service : registrationConfirmation
+deactivate Service
+
+note over Ownership
+  When ownership is transferred...
+end note
+
+Ownership -> Events : publish(LandOwnershipTransferredEvent)
+activate Events
+Events -> Ownership : triggerWebhooks("OWNERSHIP_TRANSFER", transferData)
+activate Ownership
+
+Ownership -> Registry : findWebhooksForEvent(entityId, "OWNERSHIP_TRANSFER")
+activate Registry
+Ownership <-- Registry : webhooks
+deactivate Registry
+
+loop for each webhook
+  Ownership -> External : POST /webhook-endpoint (payload + signature)
+  activate External
+  External --> External : Verify signature
+  External --> External : Process ownership change
+  Ownership <-- External : 200 OK
+  deactivate External
+  Ownership -> Registry : recordSuccessfulDelivery(webhookId)
+end
+
+Events <-- Ownership
+deactivate Ownership
+deactivate Events
+@enduml
+----
+
+===== Land Ownership Verification
+
+LandOwnership verification process:
+
+[plantuml]
+----
+@startuml
+participant "VerificationService" as Service
+participant "LandOwnership" as Ownership
+participant "DocumentRepository" as Documents
+participant "VerificationRuleEngine" as Rules
+participant "ExternalRegistryApi" as External
+
+Service -> Ownership : verifyOwnership()
+activate Ownership
+
+Ownership -> Ownership : getDocumentIds()
+Ownership -> Documents : findByIds(documentIds)
+activate Documents
+Ownership <-- Documents : supportingDocuments
+deactivate Documents
+
+Ownership -> Rules : applyVerificationRules(supportingDocuments)
+activate Rules
+note right
+  Applies document validation rules:
+  - Completeness check
+  - Signature verification
+  - Document expiration check
+  - Tampering detection
+end note
+Ownership <-- Rules : documentVerificationResults
+deactivate Rules
+
+alt External verification needed
+  Ownership -> External : verifyAgainstOfficialRegistry(registrationNumber)
+  activate External
+  Ownership <-- External : externalVerificationResult
+  deactivate External
+  
+  Ownership -> Ownership : combineVerificationResults(documentResults, externalResults)
+else Internal verification sufficient
+  Ownership -> Ownership : finalizeVerificationResults(documentResults)
+end
+
+Ownership -> Ownership : recordVerificationResults()
+Ownership -> Ownership : updateVerificationStatus()
+
+Service <-- Ownership : verificationOutcome
+deactivate Ownership
+@enduml
+----
+
+===== FullTextSearchable Implementation
+
+LandOwnership implements the FullTextSearchable interface for advanced search capabilities:
+
+[plantuml]
+----
+@startuml
+participant "SearchService" as Search
+participant "LandOwnership\nimplements FullTextSearchable" as Ownership
+participant "CitizenService" as Citizen
+participant "LandParcelService" as Parcel
+participant "SearchIndexService" as Index
+
+Search -> Ownership : indexForSearch()
+activate Ownership
+
+Ownership -> Ownership : getSearchableContent()
+activate Ownership
+Ownership -> Citizen : getOwnerName(ownerId)
+activate Citizen
+Ownership <-- Citizen : ownerName
+deactivate Citizen
+Ownership -> Parcel : getParcelDetails(parcelId)
+activate Parcel
+Ownership <-- Parcel : parcelDetails
+deactivate Parcel
+
+Ownership -> Ownership : buildSearchableMap()
+Ownership <-- Ownership : searchContent
+deactivate Ownership
+
+Ownership -> Ownership : getSearchKeywords()
+activate Ownership
+Ownership <-- Ownership : keywords
+deactivate Ownership
+
+Ownership -> Index : updateSearchIndex(entityId, searchContent, keywords)
+activate Index
+Ownership <-- Index : indexUpdateConfirmation
+deactivate Index
+
+Search <-- Ownership : indexingComplete
+deactivate Ownership
+
+Search -> Ownership : getSearchableContent()
+activate Ownership
+Search <-- Ownership : {
+  "owner_name": "Krishna Bahadur",
+  "parcel_id": "P-78945",
+  "registration_number": "OR-56789",
+  "district": "Makwanpur",
+  "municipality": "Hetauda",
+  "ward": "5",
+  "ownership_type": "FREEHOLD",
+  "acquisition_method": "PURCHASE"
+}
+deactivate Ownership
+
+Search -> Ownership : getSearchBoostFactors()
+activate Ownership
+Search <-- Ownership : {
+  "owner_name": 2.0,
+  "registration_number": 5.0,
+  "parcel_id": 3.0
+}
+deactivate Ownership
+@enduml
+----
+
+===== Land Ownership Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+
+' Supporting Classes
+class VerificationRecord {
+  +UUID id
+  +VerificationType type
+  +LocalDateTime verifiedAt
+  +UUID verifiedBy
+  +Boolean isVerified
+  +String verificationNotes
+  +VerificationSource source
+  +Integer confidenceScore
+  +List<UUID> evidenceDocumentIds
+}
+
+enum VerificationType {
+  IDENTITY_VERIFICATION
+  DOCUMENT_VERIFICATION
+  TITLE_VERIFICATION
+  OFFICIAL_RECORD_VERIFICATION
+  ON_SITE_VERIFICATION
+  WITNESS_TESTIMONY
+  LEGAL_OPINION
+}
+
+enum VerificationSource {
+  OFFICIAL_REGISTRY
+  GOVERNMENT_DATABASE
+  LEGAL_PROFESSIONAL
+  FIELD_OFFICER
+  AUTOMATED_SYSTEM
+  COMMUNITY_VALIDATION
+}
+
+' LandOwnership implementation
+class LandOwnership {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  
+  ' LandOwnership-specific
+  +UUID parcelId
+  +UUID ownerId
+  +OwnerType ownerType
+  +OwnershipType type
+  +OwnershipStatus status
+  +Double ownershipPercentage
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +String registrationNumber
+  +LocalDate registrationDate
+  
+  ' Ownership details
+  +String description
+  +String legalReference
+  +List<UUID> supportingDocumentIds
+  +Boolean isPrimaryOwner
+  +String acquisitionMethod
+  
+  ' Verification information
+  +Boolean isVerified
+  +List<VerificationRecord> verifications
+  +Boolean hasDisputes
+  +List<UUID> disputeIds
+  
+  ' Financial information
+  +Double acquisitionValue
+  +String acquisitionCurrency
+  +Boolean mortgageEncumbered
+  +List<UUID> mortgageIds
+  
+  ' Administrative data
+  +UUID recordedBy
+  +LocalDateTime recordedAt
+  +UUID officialRegistryId
+  +UUID supersededByOwnershipId
+  +UUID previousOwnershipId
+  
+  ' Methods
+  +LandParcel getParcel()
+  +Owner getOwner()
+  +boolean isActive()
+  +boolean isExpired()
+  +List<Document> getSupportingDocuments()
+  +boolean hasCompleteDocumentation()
+  +List<VerificationRecord> getVerifications()
+  +void addVerification(VerificationRecord verification)
+  +void transferOwnership(UUID newOwnerId, String transferReason)
+  +void updatePercentage(double newPercentage)
+  +boolean overlapsWith(LandOwnership other)
+  +void terminate(String reason)
+  +List<LandOwnership> getCoOwnerships()
+  +double getRemainingPercentage()
+}
+
+' Enumerations
+enum OwnerType {
+  INDIVIDUAL
+  ORGANIZATION
+  GOVERNMENT
+  COMMUNITY
+  TRUST
+  FAMILY
+  JOINT
+}
+
+enum OwnershipType {
+  FREEHOLD
+  LEASEHOLD
+  TRUST
+  COMMUNAL
+  SHARED
+  CONDOMINIUM
+  COOPERATIVE
+  USUFRUCT
+  GOVERNMENT_HELD
+  RESTRICTED
+}
+
+enum OwnershipStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  DISPUTED
+  TRANSFERRED
+  EXPIRED
+  TERMINATED
+  REJECTED
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandOwnership
+
+' Interface implementation
+LandOwnership ..|> HistoryViewable
+LandOwnership ..|> AccessControlled
+
+' Class Relationships
+LandOwnership o-- "many" VerificationRecord
+VerificationRecord -- VerificationType
+VerificationRecord -- VerificationSource
+
+' Enum relationships
+LandOwnership -- OwnerType
+LandOwnership -- OwnershipType
+LandOwnership -- OwnershipStatus
+@enduml
+----
+
+===== Land Ownership Events
+
+[plantuml]
+----
+@startuml
+class LandOwnershipCreatedEvent {
+  +UUID ownershipId
+  +UUID parcelId
+  +UUID ownerId
+  +OwnershipType type
+  +Double ownershipPercentage
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandOwnershipApprovedEvent {
+  +UUID ownershipId
+  +UUID parcelId
+  +String registrationNumber
+  +UUID approvedBy
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandOwnershipModifiedEvent {
+  +UUID ownershipId
+  +UUID parcelId
+  +String modificationType
+  +String modificationReason
+  +Map<String, Object> changes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandOwnershipTransferredEvent {
+  +UUID ownershipId
+  +UUID parcelId
+  +UUID previousOwnerId
+  +UUID newOwnerId
+  +String transferReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandOwnershipVerifiedEvent {
+  +UUID ownershipId
+  +UUID parcelId
+  +VerificationType verificationType
+  +VerificationSource verificationSource
+  +Boolean verificationResult
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandOwnershipDisputedEvent {
+  +UUID ownershipId
+  +UUID parcelId
+  +UUID disputeId
+  +String disputeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandOwnershipTerminatedEvent {
+  +UUID ownershipId
+  +UUID parcelId
+  +String terminationReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- LandOwnershipCreatedEvent
+DomainEvent <|-- LandOwnershipApprovedEvent
+DomainEvent <|-- LandOwnershipModifiedEvent
+DomainEvent <|-- LandOwnershipTransferredEvent
+DomainEvent <|-- LandOwnershipVerifiedEvent
+DomainEvent <|-- LandOwnershipDisputedEvent
+DomainEvent <|-- LandOwnershipTerminatedEvent
+@enduml
+----

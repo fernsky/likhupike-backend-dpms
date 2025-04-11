@@ -1,0 +1,1001 @@
+==== Land Dispute
+
+Land Dispute represents conflicts over land ownership, boundaries, or rights, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+
+' LandDispute implementation
+class LandDispute {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  
+  ' LandDispute-specific
+  +String disputeNumber
+  +UUID primaryParcelId
+  +Set<UUID> relatedParcelIds
+  +DisputeType type
+  +DisputeStatus status
+  +LocalDate filedDate
+  +UUID initiatorId
+  +Set<UUID> respondentIds
+  +String description
+  
+  ' Dispute details
+  +DisputeCategory category
+  +String groundsForDispute
+  +Set<UUID> supportingDocumentIds
+  +String resolutionApproach
+  +String proposedResolution
+  +Double disputedAreaInSquareMeters
+  +UUID disputedBoundarySegmentId
+  
+  ' Resolution tracking
+  +UUID assignedMediatorId
+  +UUID assignedOfficerId
+  +LocalDate scheduledHearingDate
+  +LocalDate resolvedDate
+  +DisputeResolutionMethod resolutionMethod
+  +String resolutionNotes
+  +String decisionReference
+  +Boolean appealed
+  +UUID appealCaseId
+  
+  ' Implementation methods...
+}
+
+' Enumerations
+enum DisputeType {
+  BOUNDARY
+  OWNERSHIP
+  RIGHTS
+  ACCESS
+  USAGE
+  ENCROACHMENT
+  INHERITANCE
+  TITLE
+  TAX
+  ADMINISTRATIVE
+}
+
+enum DisputeStatus {
+  FILED
+  UNDER_REVIEW
+  EVIDENCE_COLLECTION
+  MEDIATION
+  HEARING_SCHEDULED
+  HEARING_COMPLETED
+  DECISION_PENDING
+  RESOLVED
+  APPEALED
+  CLOSED
+  REOPENED
+}
+
+enum DisputeCategory {
+  PRIVATE_VS_PRIVATE
+  PRIVATE_VS_PUBLIC
+  PUBLIC_VS_PUBLIC
+  HISTORICAL_CLAIM
+  INDIGENOUS_CLAIM
+  COMMUNITY_CLAIM
+  INTERNATIONAL
+}
+
+enum DisputeResolutionMethod {
+  MEDIATION
+  ARBITRATION
+  COURT_DECISION
+  ADMINISTRATIVE_DECISION
+  NEGOTIATED_SETTLEMENT
+  TECHNICAL_CORRECTION
+  ABANDONMENT
+  ALTERNATIVE_DISPUTE_RESOLUTION
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandDispute
+
+' Interface implementation
+LandDispute ..|> HistoryViewable
+LandDispute ..|> AccessControlled
+
+' Enum relationships
+LandDispute -- DisputeType
+LandDispute -- DisputeStatus
+LandDispute -- DisputeCategory
+LandDispute -- DisputeResolutionMethod
+@enduml
+----
+
+===== Land Dispute Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Filed : file dispute
+
+state Filed {
+  state "Initial Filing" as Initial
+  state "Documentation" as Docs
+  state "Assessment" as Assessment
+  
+  [*] --> Initial
+  Initial --> Docs : collect documents
+  Docs --> Assessment : assess validity
+  Assessment --> [*] : valid for review
+}
+
+Filed --> UnderReview : assign reviewer
+UnderReview --> Returned : incomplete filing
+Returned --> Filed : provide missing information
+UnderReview --> EvidenceCollection : accept case
+
+state EvidenceCollection {
+  state "Gather Evidence" as Evidence
+  state "Field Visit" as Visit
+  state "Expert Assessment" as Expert
+  
+  [*] --> Evidence
+  Evidence --> Visit : conduct field visit
+  Visit --> Expert : request expert opinion
+  Expert --> [*] : evidence complete
+}
+
+EvidenceCollection --> Mediation : attempt mediation
+Mediation --> Resolved : successful mediation
+Mediation --> HearingScheduled : failed mediation
+
+HearingScheduled --> HearingCompleted : conduct hearing
+HearingCompleted --> DecisionPending : deliberation
+DecisionPending --> Resolved : issue decision
+
+Resolved --> Appealed : file appeal
+Appealed --> Resolved : appeal resolved
+Resolved --> Closed : implement resolution
+Closed --> Reopened : implementation issue
+Reopened --> EvidenceCollection : investigate issue
+Closed --> [*]
+@enduml
+----
+
+===== Dispute Filing Process
+
+[plantuml]
+----
+@startuml
+|Dispute Initiator|
+start
+:File dispute claim;
+:Identify parcel(s) in dispute;
+:Select dispute type;
+:Provide grounds for dispute;
+:Submit supporting evidence;
+
+|Land Registry Office|
+:Receive dispute filing;
+:Validate documentation;
+if (Complete?) then (yes)
+  :Create dispute record;
+  :Assign case number;
+else (no)
+  :Request additional documentation;
+  |Dispute Initiator|
+  :Provide additional documentation;
+  note right
+    Return to validation
+  end note
+endif
+
+|Land Registry System|
+:Record dispute against parcels;
+:Flag affected parcels as disputed;
+:Update land records status;
+:Set dispute status to FILED;
+:Notify respondent parties;
+
+|Dispute Officer|
+:Review dispute details;
+:Assess jurisdiction;
+:Categorize dispute;
+:Assign priority level;
+
+if (Within Jurisdiction?) then (yes)
+  :Accept dispute case;
+  :Set status to UNDER_REVIEW;
+else (no)
+  :Reject or refer dispute;
+  stop
+endif
+
+|Respondent Parties|
+:Receive dispute notification;
+:Submit response and evidence;
+
+|Dispute Officer|
+:Schedule evidence collection;
+:Assign field officers if needed;
+
+|System|
+:Update dispute status;
+:Link submitted evidence;
+:Create case file;
+
+stop
+@enduml
+----
+
+===== Dispute Resolution Process
+
+[plantuml]
+----
+@startuml
+|Dispute Officer|
+start
+:Review complete case file;
+:Determine resolution approach;
+
+if (Resolution Approach?) then (Mediation)
+  :Assign mediator;
+  :Schedule mediation sessions;
+  
+  |Mediator|
+  :Conduct mediation process;
+  :Document proposed solutions;
+  if (Agreement Reached?) then (yes)
+    :Document agreement;
+    :Prepare resolution;
+  else (no)
+    :Document failed mediation;
+    |Dispute Officer|
+    :Schedule formal hearing;
+  endif
+else (Formal Hearing)
+  |Dispute Officer|
+  :Schedule hearing;
+  :Assign hearing officers;
+endif
+
+|Hearing Panel|
+:Review evidence;
+:Conduct site visit if needed;
+:Hear testimony from parties;
+:Deliberate on case;
+:Render decision;
+
+|Dispute Officer|
+:Record decision;
+:Update land records;
+:Implement boundary adjustments if needed;
+:Update ownership records if needed;
+:Set dispute status to RESOLVED;
+
+|System|
+:Generate resolution documents;
+:Update affected parcels;
+:Remove dispute flags if resolved;
+:Publish dispute resolution event;
+
+|Parties|
+:Receive resolution notification;
+:Review resolution terms;
+
+if (Accept Resolution?) then (yes)
+  :Acknowledge resolution;
+  |Dispute Officer|
+  :Close dispute case;
+  :Set status to CLOSED;
+else (no)
+  |Parties|
+  :File appeal;
+  |Dispute Officer|
+  :Record appeal;
+  :Set status to APPEALED;
+  :Forward to appeal authority;
+endif
+
+stop
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+LandDispute implements the HistoryViewable interface:
+
+[plantuml]
+----
+@startuml
+participant "DisputeUI" as UI
+participant "DisputeHistoryService" as History
+participant "LandDispute\nimplements HistoryViewable" as Dispute
+participant "EntityVersionRepository" as Versions
+participant "DisputeChangeRepository" as Changes
+
+UI -> History : getDisputeHistory(disputeId)
+activate History
+
+History -> Dispute : getChangeHistory()
+activate Dispute
+Dispute -> Changes : findByEntityTypeAndEntityId("LandDispute", id)
+activate Changes
+Dispute <-- Changes : changeRecords
+deactivate Changes
+History <-- Dispute : changeHistory
+deactivate Dispute
+
+History -> Dispute : getHistorySnapshot(timestamp)
+activate Dispute
+Dispute -> Versions : findByEntityTypeAndEntityIdAndTimestamp("LandDispute", id, timestamp)
+activate Versions
+Dispute <-- Versions : versionData
+deactivate Versions
+History <-- Dispute : snapshotAtPointInTime
+deactivate Dispute
+
+UI <- History : disputeHistoryData
+deactivate History
+
+UI -> History : compareDisputeVersions(disputeId, date1, date2)
+activate History
+
+History -> Dispute : getHistorySnapshot(date1)
+activate Dispute
+History <-- Dispute : snapshot1
+deactivate Dispute
+
+History -> Dispute : getHistorySnapshot(date2)
+activate Dispute
+History <-- Dispute : snapshot2
+deactivate Dispute
+
+History -> History : compareDisputeData(snapshot1, snapshot2)
+History -> History : highlightSignificantChanges()
+
+UI <-- History : disputeComparisonResults
+deactivate History
+@enduml
+----
+
+===== AccessControlled Implementation
+
+LandDispute implements the AccessControlled interface:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "LandDispute\nimplements AccessControlled" as Dispute
+participant "AccessControlRepository" as ACRepo
+participant "UserRepository" as Users
+participant "LandRegistry" as Registry
+
+Security -> Dispute : hasPermission(user, Permission.VIEW)
+activate Dispute
+
+Dispute -> Dispute : getAccessControlList()
+activate Dispute
+Dispute -> ACRepo : findByEntityTypeAndEntityId("LandDispute", id)
+activate ACRepo
+Dispute <-- ACRepo : accessControlEntries
+deactivate ACRepo
+Dispute <-- Dispute : entries
+deactivate Dispute
+
+alt Direct permission exists
+  Dispute -> Dispute : checkDirectPermission(user, entries, Permission.VIEW)
+  Dispute -> Dispute : return true/false based on direct permission
+else Check party permission
+  Dispute -> Dispute : isUserInvolved(user)
+  alt User is involved party
+    Dispute -> Dispute : return true (involved party has VIEW permission)
+  else User is registry officer
+    Dispute -> Users : findRolesForUser(user.id)
+    activate Users
+    Dispute <-- Users : userRoles
+    deactivate Users
+    
+    Dispute -> Dispute : hasRegistryRole(userRoles)
+    Dispute -> Dispute : return true/false based on registry role
+  end
+end
+
+Security <-- Dispute : permissionResult
+deactivate Dispute
+@enduml
+----
+
+===== Evidence Management
+
+[plantuml]
+----
+@startuml
+participant "DisputeService" as Service
+participant "LandDispute" as Dispute
+participant "DocumentService" as Documents
+participant "EvidenceValidator" as Validator
+participant "DomainEventPublisher" as Events
+
+Service -> Dispute : addEvidence(partyId, evidenceData)
+activate Dispute
+
+Dispute -> Dispute : validateEvidenceSubmitter(partyId)
+alt Valid Submitter
+  Dispute -> Documents : createDocument(evidenceData)
+  activate Documents
+  Documents -> Validator : validateDocument(evidenceData)
+  activate Validator
+  Documents <-- Validator : validationResult
+  deactivate Validator
+  
+  alt Valid Document
+    Documents -> Documents : storeDocument(evidenceData)
+    Dispute <-- Documents : document
+    deactivate Documents
+    
+    Dispute -> Dispute : linkEvidenceToDispute(document.id, partyId)
+    Dispute -> Events : publish(DisputeEvidenceAddedEvent)
+    
+    Service <-- Dispute : evidenceAccepted
+  else Invalid Document
+    Documents -> Documents : recordValidationFailure(validationResult)
+    Dispute <-- Documents : validationErrors
+    deactivate Documents
+    
+    Service <-- Dispute : evidenceRejected(validationErrors)
+  end
+else Invalid Submitter
+  Service <-- Dispute : unauthorizedSubmission
+end
+deactivate Dispute
+
+Service -> Dispute : getEvidenceByParty(partyId)
+activate Dispute
+
+Dispute -> Dispute : validateAccessToEvidence(requestingUser, partyId)
+Dispute -> Dispute : getEvidenceDocumentIds(partyId)
+Dispute -> Documents : getDocumentsByIds(documentIds)
+activate Documents
+Dispute <-- Documents : documents
+deactivate Documents
+
+Service <-- Dispute : partyEvidence
+deactivate Dispute
+@enduml
+----
+
+===== Boundary Dispute Resolution
+
+[plantuml]
+----
+@startuml
+participant "DisputeResolutionService" as Service
+participant "LandDispute" as Dispute
+participant "LandSurveyService" as Survey
+participant "LandParcelService" as Parcel
+participant "DomainEventPublisher" as Events
+
+Service -> Dispute : resolveBoundaryDispute(resolution)
+activate Dispute
+
+Dispute -> Dispute : validateStatus(DECISION_PENDING)
+Dispute -> Dispute : validateResolutionData(resolution)
+
+alt Valid Resolution
+  Dispute -> Survey : conductCorrectionSurvey(resolution.surveyData)
+  activate Survey
+  Survey -> Survey : createNewSurvey(resolution.surveyData)
+  Dispute <-- Survey : newSurvey
+  deactivate Survey
+
+  Dispute -> Parcel : updateParcelBoundary(resolution.parcelId, newSurvey.id)
+  activate Parcel
+  Parcel -> Parcel : recordBoundaryChange(resolution.parcelId, newSurvey.id)
+  Parcel -> Parcel : updateAdjacentParcels(resolution.parcelId)
+  Dispute <-- Parcel : updatedParcel
+  deactivate Parcel
+  
+  Dispute -> Dispute : setStatus(RESOLVED)
+  Dispute -> Dispute : setResolutionMethod(resolution.method)
+  Dispute -> Dispute : setResolutionNotes(resolution.notes)
+  Dispute -> Dispute : setResolvedDate(now())
+  
+  Dispute -> Events : publish(DisputeResolvedEvent)
+  
+  Service <-- Dispute : resolutionSuccessful
+else Invalid Resolution
+  Service <-- Dispute : invalidResolution
+end
+deactivate Dispute
+@enduml
+----
+
+===== Appeal Process
+
+[plantuml]
+----
+@startuml
+participant "AppealService" as Service
+participant "LandDispute" as Dispute
+participant "AppealCase" as Appeal
+participant "DomainEventPublisher" as Events
+
+Service -> Dispute : fileAppeal(appealData)
+activate Dispute
+
+Dispute -> Dispute : validateAppealEligibility()
+alt Can Appeal
+  Dispute -> Dispute : validateAppealData(appealData)
+  
+  Dispute -> Appeal : create()
+  activate Appeal
+  Appeal -> Appeal : setDisputeId(disputeId)
+  Appeal -> Appeal : setAppealReason(appealData.reason)
+  Appeal -> Appeal : setAppellant(appealData.userId)
+  Appeal -> Appeal : setReviewState(PENDING)
+  Dispute <-- Appeal : appeal
+  deactivate Appeal
+  
+  Dispute -> Dispute : setAppealed(true)
+  Dispute -> Dispute : setAppealCaseId(appeal.id)
+  Dispute -> Dispute : setStatus(APPEALED)
+  
+  Dispute -> Events : publish(DisputeAppealedEvent)
+  
+  Service <-- Dispute : appealFiled
+else Cannot Appeal
+  Service <-- Dispute : appealRejected
+end
+deactivate Dispute
+
+Service -> Appeal : reviewAppeal(appealId, decision)
+activate Appeal
+
+Appeal -> Appeal : validateDecision(decision)
+Appeal -> Appeal : setApproved(decision.approved)
+Appeal -> Appeal : setDecisionReason(decision.reason)
+
+Appeal -> Dispute : handleAppealOutcome(appealId, decision)
+activate Dispute
+
+alt Appeal Approved
+  Dispute -> Dispute : setStatus(REOPENED)
+  Dispute -> Dispute : clearResolutionData()
+  Dispute -> Events : publish(DisputeReopenedEvent)
+else Appeal Rejected
+  Dispute -> Dispute : setStatus(CLOSED)
+  Dispute -> Events : publish(AppealRejectedEvent)
+end
+
+Appeal <-- Dispute : outcomeHandled
+deactivate Dispute
+
+Service <-- Appeal : appealReviewed
+deactivate Appeal
+@enduml
+----
+
+===== Land Dispute Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+
+' Supporting Classes
+class DisputeParty {
+  +UUID id
+  +UUID disputeId
+  +UUID userId
+  +PartyRole role
+  +LocalDateTime joinedAt
+  +Boolean isActive
+  +Set<UUID> evidenceDocumentIds
+  +String statement
+  +LocalDateTime statementDate
+  +Boolean hasAcknowledgedOutcome
+  +LocalDateTime acknowledgedAt
+}
+
+enum PartyRole {
+  INITIATOR
+  RESPONDENT
+  MEDIATOR
+  WITNESS
+  EXPERT
+  REGISTRY_OFFICER
+  LEGAL_REPRESENTATIVE
+  APPEALS_OFFICER
+  HEARING_OFFICER
+}
+
+class DisputeEvent {
+  +UUID id
+  +UUID disputeId
+  +DisputeEventType type
+  +LocalDateTime timestamp
+  +UUID actorId
+  +String description
+  +Map<String, Object> metadata
+  +Set<UUID> relatedDocumentIds
+  +Boolean isPublic
+}
+
+enum DisputeEventType {
+  FILED
+  DOCUMENT_ADDED
+  STATUS_CHANGED
+  FIELD_VISIT
+  MEDIATION_SESSION
+  HEARING_SCHEDULED
+  HEARING_COMPLETED
+  DECISION_ISSUED
+  RESOLUTION_IMPLEMENTED
+  APPEALED
+  REOPENED
+  CLOSED
+}
+
+class DisputeHearing {
+  +UUID id
+  +UUID disputeId
+  +LocalDateTime scheduledDateTime
+  +String location
+  +UUID chairpersonId
+  +Set<UUID> panelMemberIds
+  +HearingStatus status
+  +String minutes
+  +LocalDateTime actualStartTime
+  +LocalDateTime actualEndTime
+  +LocalDate decisionDate
+  +String decisionSummary
+  +UUID decisionDocumentId
+  +Boolean isPublic
+}
+
+enum HearingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  ADJOURNED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+' LandDispute implementation
+class LandDispute {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  
+  ' LandDispute-specific
+  +String disputeNumber
+  +UUID primaryParcelId
+  +Set<UUID> relatedParcelIds
+  +DisputeType type
+  +DisputeStatus status
+  +LocalDate filedDate
+  +UUID initiatorId
+  +Set<UUID> respondentIds
+  +String description
+  
+  ' Dispute details
+  +DisputeCategory category
+  +String groundsForDispute
+  +Set<UUID> supportingDocumentIds
+  +String resolutionApproach
+  +String proposedResolution
+  +Double disputedAreaInSquareMeters
+  +UUID disputedBoundarySegmentId
+  
+  ' Resolution tracking
+  +UUID assignedMediatorId
+  +UUID assignedOfficerId
+  +LocalDate scheduledHearingDate
+  +LocalDate resolvedDate
+  +DisputeResolutionMethod resolutionMethod
+  +String resolutionNotes
+  +UUID resolutionDocumentId
+  +String decisionReference
+  +Boolean appealed
+  +UUID appealCaseId
+  
+  ' Case management
+  +DisputePriority priority
+  +LocalDate dueDate
+  +Integer complexity
+  +Set<UUID> relatedDisputeIds
+  +Set<DisputeTag> tags
+  +Double estimatedResolutionCost
+  +Double actualResolutionCost
+  +String internalNotes
+  +Boolean isPublicRecord
+  
+  ' Timeline tracking
+  +Integer daysInCurrentStatus
+  +Integer totalOpenDays
+  +Integer daysOverdue
+  +LocalDate lastActivityDate
+  +UUID lastActivityByUserId
+  +DisputeEventType lastActivityType
+  
+  ' Methods
+  +void addParty(DisputeParty party)
+  +void removeParty(UUID partyId)
+  +List<DisputeParty> getParties()
+  +DisputeParty getInitiator()
+  +List<DisputeEvent> getEvents()
+  +void addEvent(DisputeEvent event)
+  +Boolean isResolved()
+  +Boolean isActive()
+  +void scheduleHearing(DisputeHearing hearing)
+  +List<DisputeHearing> getHearings()
+  +Map<String, Object> getSummary()
+  +void assignOfficer(UUID officerId)
+  +String getStatus()
+  +void updateStatus(DisputeStatus newStatus, String reason)
+  +void addDocument(UUID documentId, String documentType)
+  +void addEvidence(UUID partyId, UUID documentId)
+  +void resolveDispute(ResolutionDetails resolution)
+  +void reopenDispute(String reason)
+  +void fileAppeal(AppealDetails appeal)
+  +List<Map<String, Object>> getStatusHistory()
+}
+
+' Enumerations
+enum DisputeType {
+  BOUNDARY
+  OWNERSHIP
+  RIGHTS
+  ACCESS
+  USAGE
+  ENCROACHMENT
+  INHERITANCE
+  TITLE
+  TAX
+  ADMINISTRATIVE
+}
+
+enum DisputeStatus {
+  FILED
+  UNDER_REVIEW
+  EVIDENCE_COLLECTION
+  MEDIATION
+  HEARING_SCHEDULED
+  HEARING_COMPLETED
+  DECISION_PENDING
+  RESOLVED
+  APPEALED
+  CLOSED
+  REOPENED
+}
+
+enum DisputeCategory {
+  PRIVATE_VS_PRIVATE
+  PRIVATE_VS_PUBLIC
+  PUBLIC_VS_PUBLIC
+  HISTORICAL_CLAIM
+  INDIGENOUS_CLAIM
+  COMMUNITY_CLAIM
+  INTERNATIONAL
+}
+
+enum DisputeResolutionMethod {
+  MEDIATION
+  ARBITRATION
+  COURT_DECISION
+  ADMINISTRATIVE_DECISION
+  NEGOTIATED_SETTLEMENT
+  TECHNICAL_CORRECTION
+  ABANDONMENT
+  ALTERNATIVE_DISPUTE_RESOLUTION
+}
+
+enum DisputePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  CRITICAL
+}
+
+enum DisputeTag {
+  COMPLEX
+  SENSITIVE
+  MULTI_PARTY
+  PRECEDENT_SETTING
+  RECURRING_ISSUE
+  COMMUNITY_IMPACT
+  JURISDICTIONAL
+  LEGAL_CHALLENGE
+  HISTORICAL
+  TECHNICAL_ERROR
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandDispute
+
+' Interface implementation
+LandDispute ..|> HistoryViewable
+LandDispute ..|> AccessControlled
+
+' Class relationships
+LandDispute o-- "many" DisputeParty
+LandDispute o-- "many" DisputeEvent
+LandDispute o-- "many" DisputeHearing
+DisputeParty -- PartyRole
+DisputeEvent -- DisputeEventType
+DisputeHearing -- HearingStatus
+
+' Enum relationships
+LandDispute -- DisputeType
+LandDispute -- DisputeStatus
+LandDispute -- DisputeCategory
+LandDispute -- DisputeResolutionMethod
+LandDispute -- DisputePriority
+@enduml
+----
+
+===== Land Dispute Events
+
+[plantuml]
+----
+@startuml
+class DisputeCreatedEvent {
+  +UUID disputeId
+  +String disputeNumber
+  +DisputeType type
+  +UUID primaryParcelId
+  +UUID initiatorId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DisputeStatusChangedEvent {
+  +UUID disputeId
+  +DisputeStatus oldStatus
+  +DisputeStatus newStatus
+  +String changeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DisputeEvidenceAddedEvent {
+  +UUID disputeId
+  +UUID partyId
+  +UUID documentId
+  +String documentType
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DisputeHearingScheduledEvent {
+  +UUID disputeId
+  +UUID hearingId
+  +LocalDateTime hearingDateTime
+  +String location
+  +Set<UUID> involvedPartyIds
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DisputeResolvedEvent {
+  +UUID disputeId
+  +DisputeResolutionMethod method
+  +String resolutionSummary
+  +UUID resolutionDocumentId
+  +Set<UUID> affectedParcelIds
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DisputeAppealedEvent {
+  +UUID disputeId
+  +UUID appealId
+  +String appealReason
+  +UUID appellantId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DisputeReopenedEvent {
+  +UUID disputeId
+  +String reopenReason
+  +DisputeStatus previousStatus
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DisputeClosedEvent {
+  +UUID disputeId
+  +Integer totalDaysOpen
+  +String finalOutcome
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- DisputeCreatedEvent
+DomainEvent <|-- DisputeStatusChangedEvent
+DomainEvent <|-- DisputeEvidenceAddedEvent
+DomainEvent <|-- DisputeHearingScheduledEvent
+DomainEvent <|-- DisputeResolvedEvent
+DomainEvent <|-- DisputeAppealedEvent
+DomainEvent <|-- DisputeReopenedEvent
+DomainEvent <|-- DisputeClosedEvent
+@enduml
+----
+
+===== Land Dispute Reporting
+
+[plantuml]
+----
+@startuml
+participant "ReportingService" as Service
+participant "LandDispute" as Dispute
+participant "DisputeRepository" as Repository
+participant "StatisticsCalculator" as Stats
+participant "ChartGenerator" as Charts
+
+Service -> Repository : getDisputeStatistics(parameters)
+activate Repository
+
+Repository -> Repository : aggregateDisputeData(parameters)
+Repository -> Stats : calculateMetrics(aggregatedData)
+activate Stats
+Repository <-- Stats : metrics
+deactivate Stats
+
+Service <-- Repository : statisticsData
+deactivate Repository
+
+Service -> Charts : generateDisputeTypeDistribution(statisticsData)
+activate Charts
+Service <-- Charts : typeDistributionChart
+deactivate Charts
+
+Service -> Charts : generateResolutionRateByType(statisticsData)
+activate Charts
+Service <-- Charts : resolutionRateChart
+deactivate Charts
+
+Service -> Charts : generateResolutionTimeByCategory(statisticsData)
+activate Charts
+Service <-- Charts : resolutionTimeChart
+deactivate Charts
+
+Service -> Charts : generateRecurringIssuesHeatmap(statisticsData)
+activate Charts
+Service <-- Charts : issuesHeatmap
+deactivate Charts
+
+Service -> Repository : getDisputeTimeTrends(parameters)
+activate Repository
+Service <-- Repository : timeTrends
+deactivate Repository
+
+Service -> Charts : generateTrendAnalysis(timeTrends)
+activate Charts
+Service <-- Charts : trendChart
+deactivate Charts
+
+Service -> Dispute : getDetailedCaseloadReport(officerId, parameters)
+activate Dispute
+Service <-- Dispute : caseloadReport
+deactivate Dispute
+@enduml
+----

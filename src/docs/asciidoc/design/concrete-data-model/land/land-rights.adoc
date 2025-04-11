@@ -1,0 +1,1328 @@
+==== Land Rights
+
+Land Rights represent the legal rights, restrictions, and responsibilities associated with a land parcel, extending the core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+interface CustomValidatable
+
+' LandRights implementation
+class LandRights {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  +String reviewNote
+  +UUID currentAssignee
+  +Integer escalationLevel
+  +LocalDate dueDate
+  
+  ' LandRights-specific
+  +UUID parcelId
+  +String rightIdentifier
+  +RightType type
+  +RightStatus status
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +String registrationNumber
+  +LocalDate registrationDate
+  
+  ' Rights details
+  +String description
+  +UUID beneficiaryId
+  +BeneficiaryType beneficiaryType
+  +UUID grantorId
+  +GrantorType grantorType
+  
+  ' Spatial scope
+  +Boolean appliesToWholeParcel
+  +Polygon spatialExtent
+  +Double areaInSquareMeters
+  
+  ' Rights conditions
+  +List<RightCondition> conditions
+  +String restrictions
+  +String obligations
+  +List<UUID> supportingDocumentIds
+  
+  ' Administrative data
+  +String registryReference
+  +String legalInstrumentReference
+  +Boolean requiresRenewal
+  +LocalDate renewalDate
+  +UUID supersededByRightId
+  +UUID previousRightId
+  
+  ' Validation rules
+  +List<ValidationRule> validationRules
+  +LocalDateTime lastValidated
+  
+  ' Implementation methods...
+}
+
+' Enumerations
+enum RightType {
+  OWNERSHIP
+  EASEMENT
+  RIGHT_OF_WAY
+  WATER_RIGHT
+  MINERAL_RIGHT
+  TIMBER_RIGHT
+  DEVELOPMENT_RIGHT
+  GRAZING_RIGHT
+  AIR_RIGHT
+  SUBSURFACE_RIGHT
+  ACCESS_RIGHT
+  LEASEHOLD
+  MORTGAGE
+  LIEN
+  COVENANT
+  RESTRICTION
+}
+
+enum RightStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  TERMINATED
+  TRANSFERRED
+  REJECTED
+}
+
+enum BeneficiaryType {
+  INDIVIDUAL
+  ORGANIZATION
+  GOVERNMENT
+  COMMUNITY
+  TRUST
+  FAMILY
+}
+
+enum GrantorType {
+  INDIVIDUAL
+  ORGANIZATION
+  GOVERNMENT
+  COMMUNITY
+  TRUST
+  FAMILY
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandRights
+
+' Interface implementation
+LandRights ..|> HistoryViewable
+LandRights ..|> AccessControlled
+LandRights ..|> CustomValidatable
+
+' Enum relationships
+LandRights -- RightType
+LandRights -- RightStatus
+LandRights -- BeneficiaryType
+LandRights -- GrantorType
+@enduml
+----
+
+===== Land Rights Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Initial Data Entry" as Initial
+  state "Boundary Definition" as Boundary
+  state "Document Association" as Documents
+  state "Validation" as Validation
+  
+  [*] --> Initial
+  Initial --> Boundary : define spatial extent
+  Initial --> Documents : attach supporting documents
+  Boundary --> Validation : validate
+  Documents --> Validation : validate
+  Validation --> [*] : valid
+  Validation --> Initial : invalid
+}
+
+Draft --> Pending : submit for approval
+Pending --> Review : assign reviewer
+Review --> Revisions : request changes
+Revisions --> Pending : resubmit
+Review --> Rejected : reject
+Review --> Approved : approve
+Approved --> Active : activate
+
+state Active {
+  state "Normal Operation" as Normal
+  state "Modification Request" as Modification
+  state "Renewal Process" as Renewal
+  
+  [*] --> Normal
+  Normal --> Modification : request modification
+  Normal --> Renewal : initiate renewal
+  
+  Modification --> Normal : modification complete
+  Renewal --> Normal : renewal complete
+}
+
+Active --> Suspended : suspend
+Suspended --> Active : reinstate
+Active --> Expired : expiration date reached
+Expired --> Active : renew
+Active --> Terminated : terminate
+Terminated --> [*]
+Rejected --> [*]
+@enduml
+----
+
+===== Land Right Registration Process
+
+[plantuml]
+----
+@startuml
+|Rights Holder|
+start
+:Request right registration;
+:Submit supporting documents;
+
+|Land Registry Officer|
+:Review right request;
+:Verify documentation;
+if (Documentation Valid?) then (yes)
+  :Create right record;
+else (no)
+  :Request additional documentation;
+  |Rights Holder|
+  :Provide additional documentation;
+  note right
+    Return to verification
+  end note
+endif
+
+|Land Registry Officer|
+:Verify parcel ownership;
+if (Ownership Verified?) then (yes)
+  :Continue processing;
+else (no)
+  :Reject right request;
+  stop
+endif
+
+|Land Registry System|
+:Validate right against parcel;
+:Check for conflicting rights;
+if (Validation Passed?) then (yes)
+  :Prepare right record;
+else (no)
+  :Report rights conflicts;
+  |Land Registry Officer|
+  :Resolve conflicts;
+  note right
+    Return to validation
+  end note
+endif
+
+|Land Registry Officer|
+:Define spatial extent (if applicable);
+:Set conditions and restrictions;
+:Submit for approval;
+
+|Rights Approver|
+:Review right registration;
+if (Approve?) then (yes)
+  :Approve right;
+else (no)
+  :Return with comments;
+  |Land Registry Officer|
+  :Make corrections;
+  note right
+    Return to review
+  end note
+endif
+
+|Land Registry System|
+:Register right as active;
+:Generate right certificate;
+:Update parcel rights references;
+:Publish right registration event;
+
+|Rights Holder|
+:Receive right certificate;
+
+stop
+@enduml
+----
+
+===== Land Rights Modification Process
+
+[plantuml]
+----
+@startuml
+|Rights Holder|
+start
+:Request right modification;
+:Specify changes needed;
+
+|Land Registry Officer|
+:Review modification request;
+:Verify requestor authority;
+if (Authority Verified?) then (yes)
+  :Create modification record;
+else (no)
+  :Reject modification request;
+  stop
+endif
+
+|Land Registry System|
+:Create copy of existing right;
+:Apply requested changes;
+:Validate modified right;
+if (Validation Passed?) then (yes)
+  :Prepare modification for review;
+else (no)
+  :Report validation issues;
+  |Land Registry Officer|
+  :Correct issues;
+  note right
+    Return to validation
+  end note
+endif
+
+|Rights Approver|
+:Review right modification;
+if (Approve?) then (yes)
+  :Approve modification;
+else (no)
+  :Return with comments;
+  |Land Registry Officer|
+  :Make corrections;
+  note right
+    Return to review
+  end note
+endif
+
+|Land Registry System|
+:Update right record;
+:Create historical version of previous right;
+:Set right relationship (supersedes/previous);
+:Publish right modification event;
+
+|Rights Holder|
+:Receive updated certificate;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Land Rights are used in the system:
+
+====== Water Rights Registration for Agricultural Land
+
+*Scenario:* Farmer registering water extraction rights from a river adjacent to agricultural land
+
+[plantuml]
+----
+@startuml
+actor "Farmer Hari" as Farmer
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandRights" as Rights
+participant "Water Resources\nDepartment" as Water
+participant "Notification\nService" as Notify
+
+Farmer -> Registry : Apply for water extraction rights
+Registry -> Parcel : Verify parcel ownership
+activate Parcel
+Registry <-- Parcel : Confirm Hari owns adjacent land
+deactivate Parcel
+
+Registry -> Water : Request water availability assessment
+activate Water
+Water -> Water : Assess river flow capacity
+Water -> Water : Check existing extraction rights
+Water -> Water : Calculate sustainable extraction limit
+Registry <-- Water : Assessment report - 5000L/day available
+deactivate Water
+
+Registry -> Rights : Create water right
+activate Rights
+Rights -> Rights : Set type = WATER_RIGHT
+Rights -> Rights : Set beneficiaryId = Hari's ID
+Rights -> Rights : Set spatialExtent = river access point
+Rights -> Rights : Add condition: max 3000L/day
+Rights -> Rights : Add condition: no extraction Jan-Feb (dry season)
+Rights -> Rights : Set effectiveFrom = currentDate
+Rights -> Rights : Set effectiveTo = currentDate + 5 years
+Rights -> Rights : Set reviewState = PENDING
+Registry <-- Rights : Water right created
+deactivate Rights
+
+Registry -> Registry : Review supporting documents
+Registry -> Rights : Approve water right
+activate Rights
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Set reviewState = APPROVED
+Rights -> Rights : Generate registration number
+Registry <-- Rights : Approved water right
+deactivate Rights
+
+Registry -> Notify : Notify downstream users
+activate Notify
+Notify -> Notify : Identify affected landowners
+Notify -> Notify : Send notifications with right details
+Registry <-- Notify : Notification confirmation
+deactivate Notify
+
+Registry -> Farmer : Issue water right certificate
+@enduml
+----
+
+*Real-World Context:*
+Farmer Hari owns agricultural land in Chitwan district that borders the Rapti River. He needs water for irrigation of his 3-hectare paddy field. After submitting an application with proof of land ownership, the Land Registry forwards the request to the Water Resources Department for technical assessment. The department determines that Hari can sustainably extract up to 3000 liters per day, except during January and February when river levels are low. The system creates a WATER_RIGHT with these specific conditions, a five-year term, and precise coordinates for the extraction point. Once approved, the system automatically notifies downstream users about the new water extraction. Hari receives a certificate with a QR code that links to the digital record, which water resource officers can scan during field inspections to verify compliance with extraction limits.
+
+====== Mortgage Registration on Urban Property
+
+*Scenario:* Bank registering a mortgage right on residential property as loan collateral
+
+[plantuml]
+----
+@startuml
+actor "Loan Applicant\nSarita" as Borrower
+actor "Bank Officer" as Bank
+participant "Land Registry\nOffice" as Registry
+participant "LandRights" as Rights
+participant "LandParcel" as Parcel
+participant "Validation\nService" as Validate
+participant "Document\nStorage" as Docs
+
+Borrower -> Bank : Apply for home loan (NPR 5,000,000)
+Bank -> Registry : Request property verification
+Registry -> Parcel : Check property details
+activate Parcel
+Registry <-- Parcel : Property value assessment
+deactivate Parcel
+
+Registry -> Rights : Check existing rights
+activate Rights
+Registry <-- Rights : No existing mortgages or liens
+deactivate Rights
+
+Bank -> Borrower : Approve loan application
+Bank -> Docs : Upload mortgage agreement
+activate Docs
+Bank <-- Docs : Document stored with ID
+deactivate Docs
+
+Bank -> Registry : Request mortgage registration
+Registry -> Rights : Create mortgage right
+activate Rights
+Rights -> Rights : Set type = MORTGAGE
+Rights -> Rights : Set beneficiaryId = Bank's ID
+Rights -> Rights : Set grantorId = Sarita's ID
+Rights -> Rights : Set appliesToWholeParcel = true
+Rights -> Rights : Add condition: loan NPR 5,000,000
+Rights -> Rights : Add condition: 10-year term
+Rights -> Rights : Add condition: 12% interest rate
+Rights -> Rights : Set supportingDocumentIds = [mortgageDoc]
+Registry <-- Rights : Mortgage right created
+deactivate Rights
+
+Registry -> Validate : Validate mortgage right
+activate Validate
+Validate -> Validate : Check for conflicting rights
+Validate -> Validate : Verify parcel value vs loan amount
+Validate -> Validate : Confirm all legal requirements met
+Registry <-- Validate : Validation passed
+deactivate Validate
+
+Registry -> Rights : Approve mortgage right
+activate Rights
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Set reviewState = APPROVED
+Rights -> Rights : Set status = ACTIVE
+Registry <-- Rights : Approved mortgage right
+deactivate Rights
+
+Registry -> Bank : Issue mortgage certificate
+Registry -> Borrower : Send mortgage notification
+@enduml
+----
+
+*Real-World Context:*
+Sarita has purchased a new apartment in Kathmandu's Baluwatar area and is taking a NPR 5,000,000 loan from Nepal Bank Ltd. The bank officer initiates a mortgage registration in the system after the loan is approved. The LandParcel entity is verified to ensure Sarita is the rightful owner and that the property is valued appropriately for the loan amount (property valued at NPR 8,000,000). The system checks for existing encumbrances and finds none. A mortgage right is created, linking the bank as beneficiary and Sarita as grantor, with specific conditions detailing the loan amount, term, interest rate, and payment schedule. The CustomValidatable interface ensures all mortgage validation rules are satisfied, including the loan-to-value ratio (maximum 70%). Once approved by the registry office, the mortgage is recorded and both Sarita and the bank receive digital certificates. Additionally, the bank is automatically registered for event notifications if any transaction is attempted on the property.
+
+====== Easement Registration for Access Road
+
+*Scenario:* Registering an access easement across neighboring property
+
+[plantuml]
+----
+@startuml
+actor "Landowner\nRamesh" as Servient
+actor "Landowner\nShyam" as Dominant
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel A" as ParcelA
+participant "LandParcel B" as ParcelB
+participant "LandRights" as Rights
+participant "Survey\nDepartment" as Survey
+participant "Meditation\nService" as Mediation
+
+Dominant -> Registry : Apply for access easement
+Registry -> ParcelA : Verify Ramesh's parcel
+activate ParcelA
+Registry <-- ParcelA : Parcel details (servient tenement)
+deactivate ParcelA
+
+Registry -> ParcelB : Verify Shyam's parcel
+activate ParcelB
+Registry <-- ParcelB : Parcel details (dominant tenement)
+deactivate ParcelB
+
+Registry -> Registry : Verify parcels are adjacent
+Registry -> Servient : Request consent
+
+alt Consent Given Voluntarily
+  Servient -> Registry : Provide written consent
+  
+  Registry -> Survey : Request easement survey
+  activate Survey
+  Survey -> Survey : Define access road coordinates
+  Survey -> Survey : Measure 3m width x 25m length
+  Registry <-- Survey : Easement spatial details
+  deactivate Survey
+  
+  Registry -> Rights : Create easement right
+  activate Rights
+  Rights -> Rights : Set type = EASEMENT
+  Rights -> Rights : Set spatialExtent = survey coordinates
+  Rights -> Rights : Set beneficiaryId = Shyam's ID
+  Rights -> Rights : Set grantorId = Ramesh's ID
+  Rights -> Rights : Add condition: foot and vehicle access only
+  Rights -> Rights : Add condition: maintenance responsibilities
+  Rights -> Rights : Add condition: no parking on easement
+  Rights -> Rights : Set areaInSquareMeters = 75.0
+  Registry <-- Rights : Easement right created
+  deactivate Rights
+  
+else Consent Not Given
+  Registry -> Mediation : Initiate mediation process
+  activate Mediation
+  Mediation -> Mediation : Schedule hearing
+  Mediation -> Mediation : Conduct site inspection
+  Mediation -> Mediation : Evaluate necessity
+  Registry <-- Mediation : Mediation outcome
+  deactivate Mediation
+  
+  alt Mediation Successful
+    Servient -> Registry : Consent with conditions
+    Registry -> Rights : Create easement with special conditions
+  else Mediation Failed
+    Registry -> Registry : Determine if easement of necessity
+    alt Necessity Proven
+      Registry -> Rights : Create court-ordered easement
+    else Necessity Not Proven
+      Registry -> Dominant : Reject easement request
+      stop
+    end
+  end
+end
+
+Registry -> Rights : Finalize easement
+activate Rights
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Set reviewState = APPROVED
+Rights -> Rights : Set status = ACTIVE
+Registry <-- Rights : Approved easement
+deactivate Rights
+
+Registry -> Servient : Issue easement notification
+Registry -> Dominant : Issue easement certificate
+@enduml
+----
+
+*Real-World Context:*
+Shyam owns a landlocked parcel in Kavre district that requires access through Ramesh's adjacent property to reach the public road. Using the Land Rights system, Shyam applies for an EASEMENT right. The system verifies the spatial relationship between parcels using the SpatialEntity capabilities. Ramesh voluntarily consents after negotiating conditions including a 3-meter width limitation, restriction to residential traffic only, and shared maintenance responsibilities. A surveyor uses GPS to precisely map the easement path across Ramesh's land, and these coordinates are stored in the spatialExtent field of the LandRights entity. The system applies specialized validation rules through the CustomValidatable interface to ensure the easement follows the shortest practical route and minimizes impact on Ramesh's property. Once approved, both landowners receive notifications, and the easement appears on property maps for both parcels. Future property transfers will automatically include this easement as it attaches to the land, not the owners.
+
+====== Mineral Rights Leasing on Rural Land
+
+*Scenario:* Government leasing mineral extraction rights to a mining company
+
+[plantuml]
+----
+@startuml
+actor "Ministry of Mines" as Ministry
+actor "Mining Company" as Company
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandRights" as Rights
+participant "Environmental\nDepartment" as Env
+participant "Community\nConsultation" as Community
+
+Ministry -> Parcel : Identify suitable mining area
+activate Parcel
+Ministry <-- Parcel : 15 hectares in Makwanpur district
+deactivate Parcel
+
+Ministry -> Community : Conduct public consultation
+activate Community
+Community -> Community : Hold public hearings
+Community -> Community : Document community concerns
+Ministry <-- Community : Consultation report
+deactivate Community
+
+Ministry -> Env : Request environmental assessment
+activate Env
+Env -> Env : Conduct impact study
+Env -> Env : Define environmental safeguards
+Ministry <-- Env : Environmental conditions
+deactivate Env
+
+Company -> Ministry : Submit mining lease bid
+Ministry -> Ministry : Evaluate technical capability
+Ministry -> Ministry : Evaluate financial proposal
+Ministry -> Company : Award mining lease
+
+Ministry -> Registry : Request mineral right registration
+Registry -> Rights : Create mineral right
+activate Rights
+Rights -> Rights : Set type = MINERAL_RIGHT
+Rights -> Rights : Set beneficiaryId = Company's ID
+Rights -> Rights : Set grantorId = Government ID
+Rights -> Rights : Set effectiveFrom = currentDate
+Rights -> Rights : Set effectiveTo = currentDate + 10 years
+Rights -> Rights : Set spatialExtent = mining area coordinates
+Rights -> Rights : Add condition: limestone extraction only
+Rights -> Rights : Add condition: maximum 5000 tonnes/month
+Rights -> Rights : Add condition: 7.5% royalty payment
+Rights -> Rights : Add condition: quarterly environmental reports
+Rights -> Rights : Add condition: land restoration bond
+Registry <-- Rights : Mineral right created
+deactivate Rights
+
+Registry -> Rights : Approve mineral right
+activate Rights
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Set reviewState = APPROVED
+Rights -> Rights : Set status = ACTIVE
+Registry <-- Rights : Approved mineral right
+deactivate Rights
+
+Registry -> Company : Issue mineral rights certificate
+Registry -> Parcel : Update parcel with right reference
+@enduml
+----
+
+*Real-World Context:*
+The Ministry of Mines has identified a limestone deposit on government-owned land in Makwanpur district. After geological surveys confirm commercial viability, the Ministry conducts required community consultations and environmental assessments. XYZ Mining Company wins the competitive bidding process for extraction rights. The system creates a MINERAL_RIGHT with precisely defined spatial boundaries (using polygon coordinates) that cover only the extraction zone, not the entire land parcel. Specific conditions are attached including extraction limits, environmental safeguards, community development requirements, and a rehabilitation bond. The right has a 10-year term with a review after 5 years. The CustomValidatable interface ensures compliance with mining regulations, including automatic validation of company licenses and environmental clearances. The system schedules automatic notifications for quarterly royalty payments and report submissions. When the company submits their mandatory reports, the system tracks compliance against the conditions defined in the rights record.
+
+====== Time-Limited Development Rights for Urban Construction
+
+*Scenario:* Municipality granting special development rights for a commercial project
+
+[plantuml]
+----
+@startuml
+actor "Developer\nDurga Developers" as Developer
+participant "Municipal\nPlanning Office" as Municipal
+participant "LandParcel" as Parcel
+participant "LandRights" as Rights
+participant "LandZoning" as Zoning
+participant "Compliance\nMonitoring" as Compliance
+
+Developer -> Municipal : Submit development proposal
+activate Municipal
+Municipal -> Parcel : Verify parcel details
+activate Parcel
+Municipal <-- Parcel : Parcel information
+deactivate Parcel
+
+Municipal -> Zoning : Check current zoning
+activate Zoning
+Municipal <-- Zoning : Mixed-use zone, max 5 floors
+deactivate Zoning
+
+Municipal -> Municipal : Review proposal for 8-story hotel
+Municipal -> Municipal : Determine public benefit
+Municipal -> Municipal : Assess infrastructure impact
+Municipal -> Municipal : Calculate developer contributions
+
+Municipal -> Rights : Create development right
+activate Rights
+Rights -> Rights : Set type = DEVELOPMENT_RIGHT
+Rights -> Rights : Set beneficiaryId = Developer's ID
+Rights -> Rights : Set grantorId = Municipality ID
+Rights -> Rights : Set effectiveFrom = approvalDate
+Rights -> Rights : Set effectiveTo = approvalDate + 3 years
+Rights -> Rights : Add condition: max 8 floors
+Rights -> Rights : Add condition: 20% affordable retail space
+Rights -> Rights : Add condition: public plaza (250 sq.m)
+Rights -> Rights : Add condition: infrastructure fee NPR 2.5M
+Rights -> Rights : Add condition: construction timeline
+Municipal <-- Rights : Development right created
+deactivate Rights
+deactivate Municipal
+
+Municipal -> Rights : Approve development right
+activate Rights
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Set reviewState = APPROVED
+Rights -> Rights : Set status = ACTIVE
+Municipal <-- Rights : Approved development right
+deactivate Rights
+
+Municipal -> Developer : Issue development certificate
+Developer -> Developer : Begin construction
+
+Compliance -> Rights : Monitor compliance
+activate Rights
+Compliance -> Rights : Record milestone completions
+Rights -> Rights : Update compliance records
+Compliance <-- Rights : Compliance status
+deactivate Rights
+
+alt Development Completed on Time
+  Developer -> Municipal : Request completion certificate
+  Municipal -> Rights : Mark development right as fulfilled
+  activate Rights
+  Rights -> Rights : Set status = TERMINATED
+  Rights -> Rights : Set terminationReason = "Completed"
+  Municipal <-- Rights : Rights fulfilled
+  deactivate Rights
+  
+else Development Not Completed
+  Compliance -> Rights : Flag expired rights
+  activate Rights
+  Rights -> Rights : Set status = EXPIRED
+  Municipal -> Municipal : Determine penalties
+  Compliance <-- Rights : Rights expired
+  deactivate Rights
+end
+
+Municipal -> Developer : Issue outcome notification
+@enduml
+----
+
+*Real-World Context:*
+Durga Developers owns a parcel in a prime location in Pokhara's lakeside area, which is currently zoned for 5-story buildings. They propose an 8-story luxury hotel that exceeds zoning but offers public benefits including a lakefront plaza and affordable retail spaces. The municipality grants special DEVELOPMENT_RIGHT through the system, which records specific entitlements beyond standard zoning. The right is time-limited to 3 years for construction completion and includes detailed conditions: maximum height of 8 stories, 20% affordable retail space, a 250 sq.m. public plaza, NPR 2.5 million infrastructure contribution, and specific construction milestones. The CustomValidatable interface enforces validation rules like the "proportionality test" (ensuring public benefits justify the zoning variance) and automatically calculates required fees based on the additional floor area. The system schedules compliance inspections at key milestones and can automatically expire the rights if deadlines are missed. If the developer meets all conditions within the timeline, the rights are recorded as fulfilled; otherwise, the system triggers penalty calculations.
+
+====== Agricultural Land Lease Registration
+
+*Scenario:* Registering a long-term agricultural lease between landowner and farmer
+
+[plantuml]
+----
+@startuml
+actor "Landowner\nGopal" as Owner
+actor "Tenant Farmer\nSantosh" as Tenant
+participant "Land Registry\nOffice" as Registry
+participant "LandParcel" as Parcel
+participant "LandRights" as Rights
+participant "Document\nRegistry" as Docs
+participant "Tax\nAuthority" as Tax
+
+Owner -> Registry : Initiate agricultural lease registration
+Registry -> Parcel : Verify ownership
+activate Parcel
+Registry <-- Parcel : Ownership confirmed
+deactivate Parcel
+
+Owner -> Tenant : Negotiate lease terms
+Tenant -> Tenant : Accept 15-year lease terms
+
+Owner -> Docs : Submit lease agreement
+activate Docs
+Docs -> Docs : Store and digitize agreement
+Owner <-- Docs : Document reference ID
+deactivate Docs
+
+Owner -> Registry : Request lease right registration
+Registry -> Rights : Create leasehold right
+activate Rights
+Rights -> Rights : Set type = LEASEHOLD
+Rights -> Rights : Set beneficiaryId = Santosh's ID
+Rights -> Rights : Set grantorId = Gopal's ID
+Rights -> Rights : Set effectiveFrom = currentDate
+Rights -> Rights : Set effectiveTo = currentDate + 15 years
+Rights -> Rights : Set appliesToWholeParcel = true
+Rights -> Rights : Add condition: annual rent NPR 50,000
+Rights -> Rights : Add condition: tenant handles irrigation
+Rights -> Rights : Add condition: organic farming only
+Rights -> Rights : Add condition: crop rotation required
+Rights -> Rights : Set supportingDocumentIds = [leaseDoc]
+Registry <-- Rights : Leasehold right created
+deactivate Rights
+
+Registry -> Tax : Register lease for tax assessment
+activate Tax
+Tax -> Tax : Calculate lease tax (1.5%)
+Tax -> Tax : Generate tax payment notice
+Registry <-- Tax : Tax assessment complete
+deactivate Tax
+
+Registry -> Rights : Approve leasehold right
+activate Rights
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Set reviewState = APPROVED
+Rights -> Rights : Set status = ACTIVE
+Registry <-- Rights : Approved leasehold
+deactivate Rights
+
+Registry -> Owner : Issue lease registration certificate
+Registry -> Tenant : Issue tenant rights certificate
+@enduml
+----
+
+*Real-World Context:*
+Gopal owns a 5-hectare agricultural parcel in Jhapa district but lives in Kathmandu. He arranges a 15-year agricultural lease with Santosh, a local farmer. Through the Land Registry, they register a LEASEHOLD right that precisely documents their arrangement. The system records all lease terms: annual rent of NPR 50,000, tenant responsibility for irrigation infrastructure, requirement for organic farming methods, and mandated crop rotation. The HistoryViewable interface allows both parties to track any changes to the lease terms over time. The system automatically calculates the lease tax (1.5% of annual rent) and notifies the tax authority. Both parties receive digital and physical certificates confirming the registered lease. The system will send automatic notifications before the lease expiration date and track any rent adjustments or condition modifications through the approval workflow. If Gopal decides to sell the land during the lease period, the system will automatically flag the active lease during the sale process to ensure the new owner honors the existing lease terms.
+
+===== CustomValidatable Implementation
+
+Land Rights implements the CustomValidatable interface for complex validation rules:
+
+[plantuml]
+----
+@startuml
+participant "RightsService" as Service
+participant "LandRights\nimplements CustomValidatable" as Rights
+participant "ValidationRuleEngine" as RuleEngine
+participant "RightTypeValidatorFactory" as ValidatorFactory
+participant "SpatialValidationService" as SpatialValidation
+
+Service -> Rights : validate()
+activate Rights
+
+Rights -> Rights : getValidationRules()
+activate Rights
+Rights <-- Rights : rules
+deactivate Rights
+
+Rights -> ValidatorFactory : getValidator(rightType)
+activate ValidatorFactory
+Rights <-- ValidatorFactory : typeSpecificValidator
+deactivate ValidatorFactory
+
+Rights -> typeSpecificValidator : validate(this)
+activate typeSpecificValidator
+Rights <-- typeSpecificValidator : typeValidationResult
+deactivate typeSpecificValidator
+
+Rights -> RuleEngine : executeRules(rules, this)
+activate RuleEngine
+RuleEngine -> RuleEngine : executeConflictRules()
+RuleEngine -> RuleEngine : executeDurationRules()
+RuleEngine -> RuleEngine : executeConditionRules()
+Rights <-- RuleEngine : ruleValidationResults
+deactivate RuleEngine
+
+alt Spatial Extent Defined
+  Rights -> SpatialValidation : validateSpatialExtent(parcelId, spatialExtent)
+  activate SpatialValidation
+  Rights <-- SpatialValidation : spatialValidationResult
+  deactivate SpatialValidation
+end
+
+Rights -> Rights : combineValidationResults()
+
+Service <-- Rights : validationResult
+deactivate Rights
+
+Service -> Rights : validateField("effectiveTo", newDate)
+activate Rights
+Rights -> Rights : getRulesByField("effectiveTo")
+Rights -> RuleEngine : executeFieldRules(rules, "effectiveTo", newDate)
+activate RuleEngine
+Rights <-- RuleEngine : fieldValidationResult
+deactivate RuleEngine
+Service <-- Rights : fieldValidationResult
+deactivate Rights
+@enduml
+----
+
+===== AccessControlled Implementation
+
+Land Rights implements the AccessControlled interface to manage permissions:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "LandRights\nimplements AccessControlled" as Rights
+participant "AccessControlRepository" as ACRepo
+participant "LandParcelRepository" as ParcelRepo
+
+Security -> Rights : hasPermission(user, Permission.VIEW)
+activate Rights
+
+Rights -> Rights : getAccessControlList()
+activate Rights
+Rights -> ACRepo : findByEntityTypeAndEntityId("LandRights", id)
+activate ACRepo
+Rights <-- ACRepo : accessControlEntries
+deactivate ACRepo
+Rights <-- Rights : entries
+deactivate Rights
+
+alt Direct permission exists
+  Rights -> Rights : checkDirectPermission(user, entries, Permission.VIEW)
+  Rights -> Rights : return true/false based on direct permission
+else Check beneficiary permission
+  Rights -> Rights : isBeneficiary(user, beneficiaryId)
+  alt User is beneficiary
+    Rights -> Rights : return true (beneficiary has implicit VIEW permission)
+  else User is not beneficiary
+    Rights -> ParcelRepo : findById(parcelId)
+    activate ParcelRepo
+    Rights <-- ParcelRepo : parcel
+    deactivate ParcelRepo
+    
+    Rights -> ParcelRepo : isParcelOwner(user, parcel)
+    activate ParcelRepo
+    Rights <-- ParcelRepo : isOwner
+    deactivate ParcelRepo
+    
+    alt User is parcel owner
+      Rights -> Rights : return true (owner has implicit VIEW permission)
+    else User is not owner
+      Rights -> Rights : return false (no VIEW permission)
+    end
+  end
+end
+
+Security <-- Rights : permissionResult
+deactivate Rights
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+Land Rights implements the HistoryViewable interface to track changes:
+
+[plantuml]
+----
+@startuml
+participant "AdminUI" as UI
+participant "RightsHistoryService" as History
+participant "LandRights\nimplements HistoryViewable" as Rights
+participant "EntityVersionRepository" as Versions
+participant "RightsChangeRepository" as Changes
+
+UI -> History : getRightsHistory(rightsId)
+activate History
+
+History -> Rights : getChangeHistory()
+activate Rights
+Rights -> Changes : findByEntityTypeAndEntityId("LandRights", id)
+activate Changes
+Rights <-- Changes : changeRecords
+deactivate Changes
+History <-- Rights : changeHistory
+deactivate Rights
+
+History -> Rights : getHistorySnapshot(timestamp)
+activate Rights
+Rights -> Versions : findByEntityTypeAndEntityIdAndTimestamp("LandRights", id, timestamp)
+activate Versions
+Rights <-- Versions : versionData
+deactivate Versions
+History <-- Rights : snapshotAtPointInTime
+deactivate Rights
+
+UI <- History : rightsHistoryData
+deactivate History
+
+UI -> History : compareRightsVersions(rightsId, date1, date2)
+activate History
+
+History -> Rights : getHistorySnapshot(date1)
+activate Rights
+History <-- Rights : snapshot1
+deactivate Rights
+
+History -> Rights : getHistorySnapshot(date2)
+activate Rights
+History <-- Rights : snapshot2
+deactivate Rights
+
+History -> History : compareRightsData(snapshot1, snapshot2)
+History -> History : highlightSignificantChanges()
+
+UI <-- History : comparisonResults
+deactivate History
+
+@enduml
+----
+
+===== Rights Conflict Detection
+
+[plantuml]
+----
+@startuml
+participant "RightsService" as Service
+participant "LandRights" as Rights
+participant "LandRightsRepository" as Repository
+participant "SpatialOverlapService" as Spatial
+participant "RightConflictDetector" as Detector
+
+Service -> Rights : validateAgainstExistingRights()
+activate Rights
+
+Rights -> Repository : findActiveRightsByParcelId(parcelId)
+activate Repository
+Rights <-- Repository : existingRights
+deactivate Repository
+
+alt Rights applies to whole parcel
+  Rights -> Rights : filterRightsByType(existingRights, type)
+  activate Rights
+  Rights -> Detector : checkTypeCompatibility(type, existingRights)
+  activate Detector
+  Rights <-- Detector : typeConflicts
+  deactivate Detector
+  Rights <-- Rights : filteredRightsByType
+  deactivate Rights
+else Rights applies to specific area
+  Rights -> Rights : getSpatialExtent()
+  activate Rights
+  Rights <-- Rights : spatialExtent
+  deactivate Rights
+  
+  Rights -> Spatial : findOverlappingRights(spatialExtent, existingRights)
+  activate Spatial
+  Rights <-- Spatial : overlappingRights
+  deactivate Spatial
+  
+  Rights -> Detector : analyzeOverlappingRights(overlappingRights, type)
+  activate Detector
+  Rights <-- Detector : spatialConflicts
+  deactivate Detector
+end
+
+Rights -> Rights : combineConflicts(typeConflicts, spatialConflicts)
+Rights -> Rights : categorizeConflictSeverity()
+
+Service <-- Rights : conflictAnalysisResult
+deactivate Rights
+
+alt Severe conflicts
+  Service -> Service : rejectRightRegistration(rights, conflicts)
+else Minor conflicts
+  Service -> Service : flagRightForReview(rights, conflicts)
+else No conflicts
+  Service -> Service : proceedWithRegistration(rights)
+end
+
+@enduml
+----
+
+===== Land Rights Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+interface CustomValidatable
+
+' Supporting Classes
+class RightCondition {
+  +UUID id
+  +String conditionText
+  +ConditionType type
+  +Boolean isMandatory
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +String enforcementMechanism
+  +String verificationMethod
+  +Boolean isComplied
+  +LocalDateTime lastComplianceCheck
+  +String complianceNotes
+  +List<UUID> complianceEvidenceIds
+}
+
+class ValidationRule {
+  +UUID id
+  +String name
+  +String description
+  +RuleType type
+  +String ruleExpression
+  +Boolean isActive
+  +Integer priority
+  +String errorMessage
+  +String warningMessage
+  +List<String> applicableFields
+}
+
+enum RuleType {
+  REQUIRED_FIELD
+  DATE_RANGE
+  MIN_MAX_VALUE
+  SPATIAL_CONTAINMENT
+  DEPENDENCY
+  PERMISSION_BASED
+  CUSTOM_LOGIC
+}
+
+enum ConditionType {
+  USAGE_LIMITATION
+  DEVELOPMENT_RESTRICTION
+  MAINTENANCE_REQUIREMENT
+  PAYMENT_OBLIGATION
+  NOTIFICATION_REQUIREMENT
+  REGULATORY_COMPLIANCE
+  ENVIRONMENTAL_PROTECTION
+  CULTURAL_HERITAGE_PROTECTION
+  THIRD_PARTY_CONSENT
+  TIME_LIMITATION
+}
+
+' LandRights implementation
+class LandRights {
+  ' From ApprovableEntity
+  +Boolean isApproved
+  +ReviewState reviewState
+  +LocalDateTime approvedAt
+  +UUID approvedBy
+  +String reviewNote
+  +UUID currentAssignee
+  +Integer escalationLevel
+  +LocalDate dueDate
+  
+  ' LandRights-specific
+  +UUID parcelId
+  +String rightIdentifier
+  +RightType type
+  +RightStatus status
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +String registrationNumber
+  +LocalDate registrationDate
+  
+  ' Rights details
+  +String description
+  +UUID beneficiaryId
+  +BeneficiaryType beneficiaryType
+  +UUID grantorId
+  +GrantorType grantorType
+  
+  ' Spatial scope
+  +Boolean appliesToWholeParcel
+  +Polygon spatialExtent
+  +Double areaInSquareMeters
+  
+  ' Rights conditions
+  +List<RightCondition> conditions
+  +String restrictions
+  +String obligations
+  +List<UUID> supportingDocumentIds
+  
+  ' Administrative data
+  +String registryReference
+  +String legalInstrumentReference
+  +Boolean requiresRenewal
+  +LocalDate renewalDate
+  +UUID supersededByRightId
+  +UUID previousRightId
+  
+  ' Validation rules
+  +List<ValidationRule> validationRules
+  +LocalDateTime lastValidated
+  +ValidationStatus validationStatus
+  
+  ' Methods
+  +LandParcel getParcel()
+  +Boolean isActive()
+  +Boolean isExpired()
+  +Boolean willExpireSoon(int daysThreshold)
+  +List<Document> getSupportingDocuments()
+  +UserProfile getBeneficiary()
+  +UserProfile getGrantor()
+  +Boolean hasConflictsWith(LandRights otherRight)
+  +Boolean spatiallyOverlaps(LandRights otherRight)
+  +Boolean isCompatibleWith(RightType otherType)
+  +void transferTo(UUID newBeneficiaryId)
+  +void extend(LocalDate newEndDate)
+  +void addCondition(RightCondition condition)
+  +void removeCondition(UUID conditionId)
+  +void suspend(String reason)
+  +void reinstate(String reason)
+  +void terminate(String reason)
+  
+  ' CustomValidatable methods
+  +ValidationResult validate()
+  +List<ValidationRule> getValidationRules()
+  +void addValidationRule(ValidationRule rule)
+  +void removeValidationRule(UUID ruleId)
+  +FieldValidationResult validateField(String fieldName, Object value)
+}
+
+' Enumerations
+enum RightType {
+  OWNERSHIP
+  EASEMENT
+  RIGHT_OF_WAY
+  WATER_RIGHT
+  MINERAL_RIGHT
+  TIMBER_RIGHT
+  DEVELOPMENT_RIGHT
+  GRAZING_RIGHT
+  AIR_RIGHT
+  SUBSURFACE_RIGHT
+  ACCESS_RIGHT
+  LEASEHOLD
+  MORTGAGE
+  LIEN
+  COVENANT
+  RESTRICTION
+}
+
+enum RightStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  TERMINATED
+  TRANSFERRED
+  REJECTED
+}
+
+enum BeneficiaryType {
+  INDIVIDUAL
+  ORGANIZATION
+  GOVERNMENT
+  COMMUNITY
+  TRUST
+  FAMILY
+}
+
+enum GrantorType {
+  INDIVIDUAL
+  ORGANIZATION
+  GOVERNMENT
+  COMMUNITY
+  TRUST
+  FAMILY
+}
+
+enum ValidationStatus {
+  NOT_VALIDATED
+  VALIDATION_PASSED
+  VALIDATION_FAILED
+  VALIDATION_WARNING
+  VALIDATION_IN_PROGRESS
+}
+
+' Inheritance relationships
+ApprovableEntity <|-- LandRights
+
+' Interface implementation
+LandRights ..|> HistoryViewable
+LandRights ..|> AccessControlled
+LandRights ..|> CustomValidatable
+
+' Class relationships
+LandRights o-- "many" RightCondition
+LandRights o-- "many" ValidationRule
+RightCondition -- ConditionType
+ValidationRule -- RuleType
+
+' Enum relationships
+LandRights -- RightType
+LandRights -- RightStatus
+LandRights -- BeneficiaryType
+LandRights -- GrantorType
+LandRights -- ValidationStatus
+@enduml
+----
+
+===== Land Rights Events
+
+[plantuml]
+----
+@startuml
+class LandRightCreatedEvent {
+  +UUID rightId
+  +UUID parcelId
+  +String rightIdentifier
+  +RightType type
+  +UUID beneficiaryId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandRightApprovedEvent {
+  +UUID rightId
+  +UUID parcelId
+  +String rightIdentifier
+  +String registrationNumber
+  +UUID approvedBy
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandRightModifiedEvent {
+  +UUID rightId
+  +UUID parcelId
+  +String rightIdentifier
+  +String modificationType
+  +String modificationReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandRightStatusChangedEvent {
+  +UUID rightId
+  +UUID parcelId
+  +String rightIdentifier
+  +RightStatus oldStatus
+  +RightStatus newStatus
+  +String changeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandRightExpiredEvent {
+  +UUID rightId
+  +UUID parcelId
+  +String rightIdentifier
+  +RightType type
+  +LocalDate expirationDate
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LandRightTransferredEvent {
+  +UUID rightId
+  +UUID parcelId
+  +String rightIdentifier
+  +UUID oldBeneficiaryId
+  +UUID newBeneficiaryId
+  +String transferReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- LandRightCreatedEvent
+DomainEvent <|-- LandRightApprovedEvent
+DomainEvent <|-- LandRightModifiedEvent
+DomainEvent <|-- LandRightStatusChangedEvent
+DomainEvent <|-- LandRightExpiredEvent
+DomainEvent <|-- LandRightTransferredEvent
+@enduml
+----

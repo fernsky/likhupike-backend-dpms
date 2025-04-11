@@ -1,0 +1,865 @@
+==== Land Zoning
+
+Land Zoning represents the classification of land for regulated usage and development, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+interface HistoryViewable
+interface AccessControlled
+interface Taggable
+
+' LandZoning implementation
+class LandZoning {
+  ' From NamedEntity
+  +String name
+  +String code
+  +String description
+  
+  ' LandZoning-specific
+  +UUID municipalityId
+  +UUID districtId
+  +UUID provinceId
+  +ZoningType type
+  +ZoningStatus status
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +String ordinanceNumber
+  +UUID parentZoningId
+  
+  ' Zoning details
+  +ZoningClassification classification
+  +ZoningUsageType primaryUsage
+  +Set<ZoningUsageType> allowedUsages
+  +Set<ZoningUsageType> conditionalUsages
+  +Set<ZoningUsageType> prohibitedUsages
+  
+  ' Development standards
+  +Double maximumBuildingHeightInMeters
+  +Double floorAreaRatio
+  +Double maximumCoveragePercentage
+  +Integer maximumDwellingUnits
+  +Double minimumLotSizeInSquareMeters
+  +Double frontSetbackInMeters
+  +Double rearSetbackInMeters
+  +Double sideSetbackInMeters
+  
+  ' Implementation methods...
+}
+
+' Enumerations
+enum ZoningType {
+  BASE
+  OVERLAY
+  SPECIAL_PURPOSE
+  PLANNED_DEVELOPMENT
+  HISTORIC
+  ENVIRONMENTAL
+  MIXED_USE
+  CONDITIONAL
+  INTERIM
+}
+
+enum ZoningStatus {
+  PROPOSED
+  APPROVED
+  ACTIVE
+  AMENDED
+  SUPERSEDED
+  REPEALED
+}
+
+enum ZoningClassification {
+  RESIDENTIAL_LOW_DENSITY
+  RESIDENTIAL_MEDIUM_DENSITY
+  RESIDENTIAL_HIGH_DENSITY
+  COMMERCIAL_NEIGHBORHOOD
+  COMMERCIAL_CENTRAL
+  COMMERCIAL_HIGHWAY
+  INDUSTRIAL_LIGHT
+  INDUSTRIAL_HEAVY
+  AGRICULTURAL
+  CONSERVATION
+  RECREATIONAL
+  INSTITUTIONAL
+  MIXED_USE
+  SPECIAL_DISTRICT
+}
+
+enum ZoningUsageType {
+  SINGLE_FAMILY_RESIDENTIAL
+  MULTI_FAMILY_RESIDENTIAL
+  RETAIL
+  OFFICE
+  RESTAURANT
+  HOTEL
+  WAREHOUSE
+  LIGHT_MANUFACTURING
+  HEAVY_MANUFACTURING
+  EDUCATIONAL
+  RELIGIOUS
+  MEDICAL
+  RECREATIONAL
+  AGRICULTURAL
+  CONSERVATION
+  TRANSPORTATION
+  UTILITY
+}
+
+' Inheritance relationships
+NamedEntity <|-- LandZoning
+
+' Interface implementation
+LandZoning ..|> HistoryViewable
+LandZoning ..|> AccessControlled
+LandZoning ..|> Taggable
+
+' Enum relationships
+LandZoning -- ZoningType
+LandZoning -- ZoningStatus
+LandZoning -- ZoningClassification
+@enduml
+----
+
+===== Land Zoning Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Proposed : create
+
+state Proposed {
+  state "Initial Draft" as Initial
+  state "Public Comment" as Comment
+  state "Revision" as Revision
+  state "Hearing" as Hearing
+  
+  [*] --> Initial
+  Initial --> Comment : publish for comment
+  Comment --> Revision : revise based on comments
+  Revision --> Hearing : schedule public hearing
+  Hearing --> [*] : finalize proposal
+}
+
+Proposed --> Approval : submit for approval
+Approval --> Rejected : reject
+Rejected --> Proposed : revise
+Approval --> Approved : approve
+Approved --> Active : enact
+
+state Active {
+  state "Current Zoning" as Current
+  state "Amendment Process" as Amendment
+  
+  [*] --> Current
+  Current --> Amendment : propose amendment
+  Amendment --> Current : approve amendment
+}
+
+Active --> Superseded : replace with new zoning
+Active --> Repealed : repeal without replacement
+Superseded --> [*]
+Repealed --> [*]
+@enduml
+----
+
+===== Zoning Approval Process
+
+[plantuml]
+----
+@startuml
+|Planning Department|
+start
+:Draft zoning regulation;
+:Define affected areas;
+:Prepare zoning maps;
+
+|Planning Commission|
+:Review draft zoning;
+:Schedule public hearing;
+
+|Municipality|
+:Publish notice of hearing;
+:Collect public comments;
+
+|Public|
+:Attend hearing;
+:Submit feedback;
+
+|Planning Commission|
+:Evaluate public feedback;
+:Revise zoning if needed;
+:Vote on recommendation;
+
+|Municipal Council|
+:Review recommendation;
+if (Approve?) then (yes)
+  :Approve zoning ordinance;
+else (no)
+  :Reject or request changes;
+  |Planning Department|
+  :Revise zoning plan;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Create LandZoning entity;
+:Set status to APPROVED;
+:Record ordinance number;
+:Set effective dates;
+:Create digital zoning maps;
+:Publish zoning approval event;
+
+|Municipality|
+:Update municipal code;
+:Inform affected property owners;
+:Implement zoning enforcement;
+
+stop
+@enduml
+----
+
+===== Zoning Amendment Process
+
+[plantuml]
+----
+@startuml
+|Property Owner/Developer|
+start
+:Submit zoning amendment request;
+:Provide justification;
+
+|Planning Department|
+:Review amendment request;
+:Assess compatibility with land use plan;
+:Prepare impact analysis;
+
+if (Request Valid?) then (yes)
+  :Process amendment request;
+else (no)
+  :Reject request;
+  stop
+endif
+
+|Planning Commission|
+:Review amendment;
+:Schedule public hearing;
+
+|Municipality|
+:Notify affected property owners;
+:Collect public comments;
+
+|Public|
+:Attend hearing;
+:Submit feedback;
+
+|Planning Commission|
+:Evaluate feedback and impact;
+:Vote on recommendation;
+
+|Municipal Council|
+:Review recommendation;
+if (Approve?) then (yes)
+  :Approve amendment;
+else (no)
+  :Reject amendment;
+  stop
+endif
+
+|System|
+:Create amendment record;
+:Update zoning entity;
+:Update affected parcels;
+:Generate revised zoning map;
+:Publish amendment event;
+
+|Municipality|
+:Update municipal code;
+:Inform affected property owners;
+
+stop
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+LandZoning implements the HistoryViewable interface:
+
+[plantuml]
+----
+@startuml
+participant "ZoningUI" as UI
+participant "ZoningHistoryService" as History
+participant "LandZoning\nimplements HistoryViewable" as Zoning
+participant "EntityVersionRepository" as Versions
+participant "ZoningChangeRepository" as Changes
+
+UI -> History : getZoningHistory(zoningId)
+activate History
+
+History -> Zoning : getChangeHistory()
+activate Zoning
+Zoning -> Changes : findByEntityTypeAndEntityId("LandZoning", id)
+activate Changes
+Zoning <-- Changes : changeRecords
+deactivate Changes
+History <-- Zoning : changeHistory
+deactivate Zoning
+
+History -> Zoning : getHistorySnapshot(timestamp)
+activate Zoning
+Zoning -> Versions : findByEntityTypeAndEntityIdAndTimestamp("LandZoning", id, timestamp)
+activate Versions
+Zoning <-- Versions : versionData
+deactivate Versions
+History <-- Zoning : snapshotAtPointInTime
+deactivate Zoning
+
+UI <- History : zoningHistoryData
+deactivate History
+
+UI -> History : compareZoningVersions(zoningId, date1, date2)
+activate History
+
+History -> Zoning : getHistorySnapshot(date1)
+activate Zoning
+History <-- Zoning : snapshot1
+deactivate Zoning
+
+History -> Zoning : getHistorySnapshot(date2)
+activate Zoning
+History <-- Zoning : snapshot2
+deactivate Zoning
+
+History -> History : comparePermittedUsages(snapshot1, snapshot2)
+History -> History : compareDevelopmentStandards(snapshot1, snapshot2)
+
+UI <-- History : zoningComparisonReport
+deactivate History
+@enduml
+----
+
+===== Taggable Implementation
+
+LandZoning implements the Taggable interface:
+
+[plantuml]
+----
+@startuml
+participant "ZoningService" as Service
+participant "LandZoning\nimplements Taggable" as Zoning
+participant "TagRepository" as TagRepo
+participant "ZoningTagsRepository" as ZoningTags
+
+Service -> Zoning : getTags()
+activate Zoning
+Zoning -> ZoningTags : findByZoningId(id)
+activate ZoningTags
+Zoning <-- ZoningTags : zoningTagMappings
+deactivate ZoningTags
+
+Zoning -> TagRepo : findByIds(tagIds)
+activate TagRepo
+Zoning <-- TagRepo : tags
+deactivate TagRepo
+
+Service <-- Zoning : tags
+deactivate Zoning
+
+Service -> Zoning : addTag(tag)
+activate Zoning
+Zoning -> ZoningTags : save(new ZoningTagMapping(zoningId, tag.id))
+activate ZoningTags
+Zoning <-- ZoningTags : mapping
+deactivate ZoningTags
+Service <-- Zoning : success
+deactivate Zoning
+
+Service -> Zoning : removeTag(tag)
+activate Zoning
+Zoning -> ZoningTags : deleteByZoningIdAndTagId(zoningId, tag.id)
+activate ZoningTags
+Zoning <-- ZoningTags : success
+deactivate ZoningTags
+Service <-- Zoning : success
+deactivate Zoning
+
+Service -> Zoning : getTagsByCategory(category)
+activate Zoning
+Zoning -> ZoningTags : findByZoningId(id)
+activate ZoningTags
+Zoning <-- ZoningTags : zoningTagMappings
+deactivate ZoningTags
+
+Zoning -> TagRepo : findByIds(tagIds)
+activate TagRepo
+Zoning <-- TagRepo : allTags
+deactivate TagRepo
+
+Zoning -> Zoning : filterTagsByCategory(allTags, category)
+
+Service <-- Zoning : categoryTags
+deactivate Zoning
+@enduml
+----
+
+===== Zoning Spatial Analysis
+
+[plantuml]
+----
+@startuml
+participant "ZoningAnalysisService" as Service
+participant "LandZoning" as Zoning
+participant "SpatialService" as Spatial
+participant "LandParcelRepository" as Parcels
+participant "ZoningBoundaryRepository" as Boundaries
+
+Service -> Zoning : analyzeDevelopmentPotential()
+activate Zoning
+
+Zoning -> Boundaries : getZoningBoundary(zoningId)
+activate Boundaries
+Zoning <-- Boundaries : zoningBoundary
+deactivate Boundaries
+
+Zoning -> Parcels : findParcelsWithinBoundary(zoningBoundary)
+activate Parcels
+Zoning <-- Parcels : affectedParcels
+deactivate Parcels
+
+Zoning -> Zoning : calculateDevelopmentMetrics()
+activate Zoning
+Zoning -> Zoning : calculateTotalArea()
+Zoning -> Zoning : calculateBuildableArea()
+Zoning -> Zoning : calculateMaximumUnits()
+Zoning -> Zoning : calculateMaximumFloorArea()
+Zoning <-- Zoning : developmentMetrics
+deactivate Zoning
+
+Zoning -> Spatial : calculateInfrastructureCapacity(zoningBoundary)
+activate Spatial
+Zoning <-- Spatial : infrastructureCapacity
+deactivate Spatial
+
+Zoning -> Spatial : calculateServiceAccessibility(zoningBoundary)
+activate Spatial
+Zoning <-- Spatial : serviceAccessibility
+deactivate Spatial
+
+Zoning -> Zoning : combineAnalysisResults(developmentMetrics, infrastructureCapacity, serviceAccessibility)
+
+Service <-- Zoning : developmentPotentialAnalysis
+deactivate Zoning
+@enduml
+----
+
+===== Variance Process
+
+[plantuml]
+----
+@startuml
+participant "VarianceService" as Service
+participant "LandZoning" as Zoning
+participant "ZoningVariance" as Variance
+participant "ApprovalWorkflow" as Workflow
+participant "DomainEventPublisher" as Events
+
+Service -> Zoning : requestVariance(parcelId, requestData)
+activate Zoning
+
+Zoning -> Zoning : validateVarianceRequest(requestData)
+Zoning -> Zoning : checkZoningRegulations()
+Zoning -> Zoning : calculateDeviation(requestData)
+
+Zoning -> Variance : create()
+activate Variance
+Variance -> Variance : setParcelId(parcelId)
+Variance -> Variance : setZoningId(zoningId)
+Variance -> Variance : setRequestData(requestData)
+Variance -> Variance : setDeviationPercent(deviationPercent)
+Variance -> Variance : setStatus(PENDING)
+Zoning <-- Variance : variance
+deactivate Variance
+
+Zoning -> Workflow : startVarianceApprovalProcess(variance)
+activate Workflow
+Zoning <-- Workflow : workflowId
+deactivate Workflow
+
+Zoning -> Events : publish(VarianceRequestedEvent)
+
+Service <-- Zoning : variance
+deactivate Zoning
+
+Service -> Variance : processVarianceDecision(approvalData)
+activate Variance
+
+Variance -> Variance : updateDecision(approvalData)
+Variance -> Variance : setStatus(approvalData.approved ? APPROVED : REJECTED)
+Variance -> Variance : setDecisionReason(approvalData.reason)
+Variance -> Variance : setDecisionBy(approvalData.decidedBy)
+Variance -> Variance : setDecisionAt(now())
+
+Variance -> Events : publish(approvalData.approved ? 
+                           VarianceApprovedEvent : 
+                           VarianceRejectedEvent)
+
+Service <-- Variance : updatedVariance
+deactivate Variance
+@enduml
+----
+
+===== Land Zoning Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+interface HistoryViewable
+interface AccessControlled
+interface Taggable
+
+' Supporting Classes
+class ZoningStandard {
+  +UUID id
+  +UUID zoningId
+  +StandardType type
+  +String name
+  +String value
+  +String unit
+  +String description
+  +Boolean isRequired
+  +Double minimumValue
+  +Double maximumValue
+  +StandardCalculationType calculationType
+  +String formula
+  +Boolean allowsVariance
+  +Double maximumVariancePercent
+  +String legalReference
+}
+
+class ZoningVariance {
+  +UUID id
+  +UUID zoningId
+  +UUID parcelId
+  +VarianceType type
+  +String requestReason
+  +String description
+  +Double requestedDeviation
+  +Double deviationPercent
+  +VarianceStatus status
+  +LocalDate requestDate
+  +UUID requestedBy
+  +UUID decidedBy
+  +LocalDate decisionDate
+  +String decisionReason
+  +LocalDate expirationDate
+  +Set<UUID> supportingDocumentIds
+  +Boolean requiresHearing
+  +LocalDate hearingDate
+  +String hearingOutcome
+  +String conditions
+}
+
+class ZoningAmendment {
+  +UUID id
+  +UUID zoningId
+  +AmendmentType type
+  +String ordinanceNumber
+  +String description
+  +LocalDate proposedDate
+  +UUID proposedBy
+  +LocalDate effectiveDate
+  +String reason
+  +Set<String> sectionsAmended
+  +Set<UUID> documentIds
+  +String publicHearingNotes
+  +UUID approvedBy
+  +LocalDate approvalDate
+  +String amendmentText
+}
+
+' LandZoning implementation
+class LandZoning {
+  ' From NamedEntity
+  +String name
+  +String code
+  +String description
+  
+  ' LandZoning-specific
+  +UUID municipalityId
+  +UUID districtId
+  +UUID provinceId
+  +ZoningType type
+  +ZoningStatus status
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +String ordinanceNumber
+  +UUID parentZoningId
+  
+  ' Zoning details
+  +ZoningClassification classification
+  +ZoningUsageType primaryUsage
+  +Set<ZoningUsageType> allowedUsages
+  +Set<ZoningUsageType> conditionalUsages
+  +Set<ZoningUsageType> prohibitedUsages
+  
+  ' Development standards
+  +Double maximumBuildingHeightInMeters
+  +Double floorAreaRatio
+  +Double maximumCoveragePercentage
+  +Integer maximumDwellingUnits
+  +Double minimumLotSizeInSquareMeters
+  +Double frontSetbackInMeters
+  +Double rearSetbackInMeters
+  +Double sideSetbackInMeters
+  +List<ZoningStandard> additionalStandards
+  
+  ' Spatial information
+  +UUID boundaryId
+  +String geojsonBoundary
+  +Double areaInSquareKm
+  
+  ' Administrative data
+  +UUID createdById
+  +UUID lastAmendedById
+  +LocalDate lastAmendedAt
+  +String amendmentHistory
+  +Set<UUID> affectedParcelIds
+  
+  ' Supporting information
+  +String planReference
+  +Set<UUID> supportingDocumentIds
+  +String legalDescription
+  +UUID originalOrdinanceDocumentId
+  
+  ' Methods
+  +Boolean isParcelWithinZone(UUID parcelId)
+  +Boolean isUsagePermitted(ZoningUsageType usage)
+  +Boolean isUsageConditional(ZoningUsageType usage)
+  +Boolean isUsageProhibited(ZoningUsageType usage)
+  +Boolean requiresSpecialPermit(ZoningUsageType usage)
+  +Double calculateMaximumBuildableArea(Double parcelSize)
+  +Double calculateMaximumFloorArea(Double parcelSize)
+  +Integer calculateMaximumUnits(Double parcelSize)
+  +Map<String, Object> getZoningRequirements()
+  +List<ZoningVariance> getActiveVariances()
+  +List<ZoningAmendment> getAmendmentHistory()
+  +ZoningCompliance validateParcelCompliance(UUID parcelId)
+}
+
+' Enumerations
+enum ZoningType {
+  BASE
+  OVERLAY
+  SPECIAL_PURPOSE
+  PLANNED_DEVELOPMENT
+  HISTORIC
+  ENVIRONMENTAL
+  MIXED_USE
+  CONDITIONAL
+  INTERIM
+}
+
+enum ZoningStatus {
+  PROPOSED
+  APPROVED
+  ACTIVE
+  AMENDED
+  SUPERSEDED
+  REPEALED
+}
+
+enum ZoningClassification {
+  RESIDENTIAL_LOW_DENSITY
+  RESIDENTIAL_MEDIUM_DENSITY
+  RESIDENTIAL_HIGH_DENSITY
+  COMMERCIAL_NEIGHBORHOOD
+  COMMERCIAL_CENTRAL
+  COMMERCIAL_HIGHWAY
+  INDUSTRIAL_LIGHT
+  INDUSTRIAL_HEAVY
+  AGRICULTURAL
+  CONSERVATION
+  RECREATIONAL
+  INSTITUTIONAL
+  MIXED_USE
+  SPECIAL_DISTRICT
+}
+
+enum ZoningUsageType {
+  SINGLE_FAMILY_RESIDENTIAL
+  MULTI_FAMILY_RESIDENTIAL
+  RETAIL
+  OFFICE
+  RESTAURANT
+  HOTEL
+  WAREHOUSE
+  LIGHT_MANUFACTURING
+  HEAVY_MANUFACTURING
+  EDUCATIONAL
+  RELIGIOUS
+  MEDICAL
+  RECREATIONAL
+  AGRICULTURAL
+  CONSERVATION
+  TRANSPORTATION
+  UTILITY
+}
+
+enum StandardType {
+  HEIGHT
+  COVERAGE
+  DENSITY
+  SETBACK
+  FLOOR_AREA_RATIO
+  LOT_SIZE
+  PARKING
+  LANDSCAPING
+  SIGNAGE
+  NOISE
+  HOURS_OF_OPERATION
+  ENVIRONMENTAL
+  ACCESSIBILITY
+  SAFETY
+}
+
+enum VarianceType {
+  SETBACK
+  HEIGHT
+  COVERAGE
+  USE
+  DENSITY
+  PARKING
+  LOT_SIZE
+  SIGNAGE
+}
+
+enum VarianceStatus {
+  REQUESTED
+  UNDER_REVIEW
+  SCHEDULED_FOR_HEARING
+  APPROVED
+  APPROVED_WITH_CONDITIONS
+  DENIED
+  WITHDRAWN
+  EXPIRED
+}
+
+enum AmendmentType {
+  TEXT_AMENDMENT
+  MAP_AMENDMENT
+  CONDITIONAL_USE
+  PLANNED_DEVELOPMENT
+  REZONING
+  COMPREHENSIVE_UPDATE
+}
+
+' Inheritance relationships
+NamedEntity <|-- LandZoning
+
+' Interface implementation
+LandZoning ..|> HistoryViewable
+LandZoning ..|> AccessControlled
+LandZoning ..|> Taggable
+
+' Class relationships
+LandZoning o-- "many" ZoningStandard
+LandZoning o-- "many" ZoningVariance
+LandZoning o-- "many" ZoningAmendment
+
+' Enum relationships
+LandZoning -- ZoningType
+LandZoning -- ZoningStatus
+LandZoning -- ZoningClassification
+ZoningStandard -- StandardType
+ZoningVariance -- VarianceType
+ZoningVariance -- VarianceStatus
+ZoningAmendment -- AmendmentType
+@enduml
+----
+
+===== Land Zoning Events
+
+[plantuml]
+----
+@startuml
+class ZoningCreatedEvent {
+  +UUID zoningId
+  +String zoningCode
+  +ZoningClassification classification
+  +UUID municipalityId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ZoningApprovedEvent {
+  +UUID zoningId
+  +String zoningCode
+  +String ordinanceNumber
+  +LocalDate effectiveDate
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ZoningAmendedEvent {
+  +UUID zoningId
+  +UUID amendmentId
+  +String zoningCode
+  +AmendmentType amendmentType
+  +String ordinanceNumber
+  +LocalDate effectiveDate
+  +String summary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ZoningSupersededEvent {
+  +UUID oldZoningId
+  +UUID newZoningId
+  +String oldZoningCode
+  +String newZoningCode
+  +String ordinanceNumber
+  +LocalDate effectiveDate
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ZoningVarianceRequestedEvent {
+  +UUID varianceId
+  +UUID zoningId
+  +UUID parcelId
+  +VarianceType type
+  +Double requestedDeviation
+  +String requestReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ZoningVarianceDecidedEvent {
+  +UUID varianceId
+  +UUID zoningId
+  +UUID parcelId
+  +VarianceStatus decision
+  +String decisionReason
+  +List<String> conditions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- ZoningCreatedEvent
+DomainEvent <|-- ZoningApprovedEvent
+DomainEvent <|-- ZoningAmendedEvent
+DomainEvent <|-- ZoningSupersededEvent
+DomainEvent <|-- ZoningVarianceRequestedEvent
+DomainEvent <|-- ZoningVarianceDecidedEvent
+@enduml
+----

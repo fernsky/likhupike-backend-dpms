@@ -1,0 +1,588 @@
+=== Land Domain Model
+
+This section details the concrete implementation of the Land Domain, building upon the core domain models.
+
+==== Domain Overview
+
+The Land Domain represents land parcels, ownership, rights, and usage within the Digital Profile system. It implements a comprehensive model of land-related entities that directly leverages the core domain models.
+
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+' Core Model References
+package "Core Models Used" {
+  abstract class BaseEntity
+  abstract class NamedEntity
+  abstract class SpatialEntity
+  abstract class ApprovableEntity
+  abstract class SoftDeletableEntity
+  abstract class WorkflowEntity
+  abstract class ReferenceDataEntity
+  
+  interface HistoryViewable
+  interface AccessControlled
+  interface ExternalSystemSyncable
+  interface GeocodingCapable
+  interface WebhookTriggerable
+  interface Taggable
+  interface FullTextSearchable
+  interface CustomValidatable
+  interface BatchProcessable
+}
+
+' Land Entity Hierarchy
+package "Land Domain" {
+  class LandParcel
+  class LandRights
+  class LandOwnership
+  class LandUse
+  class LandFeature
+  class LandSurvey
+  class LandBoundary
+  class LandZoning
+  class LandTransaction
+  class LandDispute
+  
+  ' Hierarchy relationships
+  LandParcel "1" o-- "many" LandRights
+  LandParcel "1" o-- "many" LandOwnership
+  LandParcel "1" o-- "1" LandBoundary
+  LandParcel "1" o-- "many" LandFeature
+  LandParcel "1" o-- "many" LandUse
+  LandParcel "1" o-- "many" LandSurvey
+  LandParcel "1" o-- "1" LandZoning
+  LandParcel "1" o-- "many" LandTransaction
+  LandParcel "1" o-- "many" LandDispute
+}
+
+' Core Model Inheritance
+SpatialEntity <|-- LandParcel
+SpatialEntity <|-- LandFeature
+SpatialEntity <|-- LandBoundary
+ApprovableEntity <|-- LandRights
+ApprovableEntity <|-- LandOwnership
+ApprovableEntity <|-- LandTransaction
+ApprovableEntity <|-- LandSurvey
+WorkflowEntity <|-- LandTransaction
+NamedEntity <|-- LandZoning
+ReferenceDataEntity <|-- LandUse
+ApprovableEntity <|-- LandDispute
+
+' Capability Implementation
+LandParcel ..|> HistoryViewable
+LandParcel ..|> AccessControlled
+LandParcel ..|> ExternalSystemSyncable
+LandParcel ..|> GeocodingCapable
+LandParcel ..|> Taggable
+LandParcel ..|> FullTextSearchable
+LandTransaction ..|> WebhookTriggerable
+LandTransaction ..|> BatchProcessable
+LandRights ..|> HistoryViewable
+LandRights ..|> AccessControlled
+LandRights ..|> CustomValidatable
+LandDispute ..|> HistoryViewable
+LandDispute ..|> WorkflowEntity
+
+@enduml
+----
+
+==== Core Domain Model Integration
+
+The Land Domain demonstrates a comprehensive implementation of the core domain models through:
+
+===== Inheritance
+
+Each land entity extends appropriate base classes:
+
+|===
+| Entity | Extends | Purpose
+| LandParcel | SpatialEntity | Geographic representation with spatial attributes
+| LandBoundary | SpatialEntity | Geographic boundary with spatial capabilities
+| LandFeature | SpatialEntity | Features with spatial representation
+| LandRights | ApprovableEntity | Rights with approval workflow
+| LandOwnership | ApprovableEntity | Ownership records with approval workflow
+| LandTransaction | ApprovableEntity, WorkflowEntity | Transactions with approval and workflow capabilities
+| LandZoning | NamedEntity | Named zoning classifications
+| LandSurvey | ApprovableEntity | Survey records with approval workflow
+| LandDispute | ApprovableEntity, WorkflowEntity | Dispute records with approval and workflow capabilities
+| LandUse | ReferenceDataEntity | Reference data for land usage types
+|===
+
+===== Capabilities
+
+Land entities implement interfaces based on their specific needs:
+
+|===
+| Entity | Implements | Capability
+| LandParcel | HistoryViewable | Tracks parcel changes over time
+| | AccessControlled | Manages parcel-level permissions
+| | ExternalSystemSyncable | Synchronizes with cadastral systems
+| | GeocodingCapable | Resolves addresses to parcels
+| | Taggable | Supports categorization and filtering
+| | FullTextSearchable | Enables advanced search capabilities
+| LandTransaction | WebhookTriggerable | Notifies systems of transaction events
+| | BatchProcessable | Supports bulk transaction processing
+| LandRights | HistoryViewable | Tracks rights changes over time
+| | AccessControlled | Manages rights-level permissions
+| | CustomValidatable | Ensures complex validation rules
+| LandDispute | HistoryViewable | Tracks dispute changes over time
+| | WorkflowEntity | Supports complex dispute resolution workflows
+|===
+
+===== Components
+
+The Land Domain utilizes reusable components from the core domain:
+
+|===
+| Component | Used By | Purpose
+| AddressComponent | LandParcel | Physical address representation
+| ContactInformation | LandOwnership | Owner contact details
+| TaggableEntity | LandParcel, LandZoning | Categorization capabilities
+| VersioningStrategy | LandSurvey | Versioning of survey data
+| EntityAuditEvent | All Land Entities | Comprehensive audit trail
+| OperationalHours | LandRegistry Offices | Office hour representation
+| SEOAttributes | Public Land Information | Search optimization
+|===
+
+==== Contextual Use Cases
+
+===== Land Parcel Registration
+
+*Context:* A citizen has purchased a piece of land and needs to register it in the system.
+
+[plantuml]
+----
+@startuml
+actor "Citizen" as User
+participant "Land Registry\nOfficer" as Officer
+participant "LandParcel" as Parcel
+participant "LandSurvey" as Survey
+participant "LandOwnership" as Ownership
+participant "Document\nManagement" as Docs
+
+User -> Officer : Submit registration request with deed
+Officer -> Docs : Upload and verify deed documents
+Officer -> Survey : Create or retrieve survey data
+Officer -> Parcel : Create new land parcel
+activate Parcel
+Parcel -> Parcel : Generate parcel number
+Parcel -> Parcel : Link to location hierarchy
+Parcel -> Parcel : Calculate spatial attributes
+Officer <-- Parcel : Return parcel data
+deactivate Parcel
+Officer -> Ownership : Create ownership record
+activate Ownership
+Ownership -> Ownership : Link to parcel and citizen
+Ownership -> Ownership : Set ownership percentage (100%)
+Ownership -> Ownership : Set effective date
+Officer <-- Ownership : Return ownership data
+deactivate Ownership
+Officer -> Docs : Generate registration certificate
+User <-- Officer : Provide registration certificate
+@enduml
+----
+
+*Real-World Scenario:* 
+Farmer Ramesh purchases agricultural land in Rupandehi district and visits the local land registry office. The officer captures the parcel boundary using GPS, creates a LandParcel entity, sets the type as AGRICULTURAL_LAND, creates a LandOwnership entity linking Ramesh to the parcel, and issues a registration certificate. The system automatically synchronizes this data with the national cadastral database.
+
+===== Land Subdivision
+
+*Context:* A landowner wants to subdivide their land parcel into multiple smaller parcels.
+
+[plantuml]
+----
+@startuml
+actor "Land Owner" as Owner
+participant "Land Registry\nOfficer" as Officer
+participant "LandParcel\n(Parent)" as ParentParcel
+participant "LandSurvey" as Survey
+participant "LandParcel\n(Children)" as ChildParcels
+participant "LandOwnership" as Ownership
+
+Owner -> Officer : Submit subdivision application
+Officer -> ParentParcel : Verify ownership and restrictions
+Officer -> Survey : Create subdivision survey
+activate Survey
+Survey -> Survey : Map new boundaries
+Survey -> Survey : Verify minimum area requirements
+Survey -> Survey : Calculate new areas
+Officer <-- Survey : Return survey data
+deactivate Survey
+Officer -> ParentParcel : Mark for subdivision
+activate ParentParcel
+ParentParcel -> ChildParcels : Generate child parcels
+ParentParcel -> ParentParcel : Update status to SUBDIVIDED
+ParentParcel -> ParentParcel : Record child parcel IDs
+Officer <-- ParentParcel : Return updated parent and children
+deactivate ParentParcel
+Officer -> Ownership : Transfer ownership to child parcels
+Owner <-- Officer : Issue new certificates for child parcels
+@enduml
+----
+
+*Real-World Scenario:*
+Maya owns a 2000 sq.m. residential plot in Kathmandu and decides to subdivide it into three parcels to give to her children. The land registry officer creates a subdivision survey, verifies it meets the municipal minimum plot size requirements, creates three new LandParcel entities (each around 650 sq.m. with separate access roads), updates the status of Maya's original parcel, and issues three new ownership certificates. The system automatically recalculates property taxes for each new parcel.
+
+===== Land Rights Registration
+
+*Context:* A landowner wants to register a specific right (like water usage rights) on their property.
+
+[plantuml]
+----
+@startuml
+actor "Land Owner" as Owner
+participant "Land Registry\nOfficer" as Officer
+participant "LandParcel" as Parcel
+participant "LandRights" as Rights
+participant "Document\nManagement" as Docs
+participant "Notification\nService" as Notify
+
+Owner -> Officer : Apply for water rights registration
+Officer -> Parcel : Verify ownership
+Officer -> Rights : Create water rights record
+activate Rights
+Rights -> Rights : Set rights type (WATER_RIGHT)
+Rights -> Rights : Define spatial extent (if applicable)
+Rights -> Rights : Set conditions and duration
+Rights -> Rights : Set review state (PENDING)
+Officer <-- Rights : Return rights application
+deactivate Rights
+Officer -> Docs : Record supporting documents
+Officer -> Officer : Review application
+Officer -> Rights : Approve rights application
+activate Rights
+Rights -> Rights : Set review state (APPROVED)
+Rights -> Rights : Set isApproved = true
+Rights -> Rights : Record approval metadata
+Officer <-- Rights : Return approved rights
+deactivate Rights
+Officer -> Notify : Notify affected neighbors
+Owner <-- Officer : Issue rights certificate
+@enduml
+----
+
+*Real-World Scenario:*
+Farmer Krishna owns land adjacent to a river and applies for water extraction rights for irrigation. The officer verifies Krishna's ownership, creates a LandRights entity with type WATER_RIGHT, defines conditions (maximum extraction volumes by season), sets a 5-year duration, and records supporting environmental assessment documents. The system automatically notifies downstream landowners of the new water rights application, allowing them to view details and potentially file objections within a 30-day period.
+
+===== Land Dispute Resolution
+
+*Context:* Two landowners have a boundary dispute that needs resolution.
+
+[plantuml]
+----
+@startuml
+actor "Landowner A" as OwnerA
+actor "Landowner B" as OwnerB
+participant "Dispute\nOfficer" as Officer
+participant "LandDispute" as Dispute
+participant "LandSurvey" as Survey
+participant "LandParcel" as Parcels
+participant "Mediation\nService" as Mediation
+
+OwnerA -> Officer : File boundary dispute claim
+Officer -> Dispute : Create dispute record
+activate Dispute
+Dispute -> Dispute : Set type (BOUNDARY)
+Dispute -> Dispute : Record disputants
+Dispute -> Dispute : Set status (FILED)
+Officer <-- Dispute : Return dispute record
+deactivate Dispute
+Officer -> OwnerB : Notify of dispute claim
+OwnerB -> Officer : Submit response
+Officer -> Survey : Request boundary verification
+activate Survey
+Survey -> Survey : Conduct field measurement
+Survey -> Survey : Compare with registered boundary
+Survey -> Survey : Document discrepancies
+Officer <-- Survey : Return survey findings
+deactivate Survey
+Officer -> Mediation : Schedule mediation session
+Mediation -> OwnerA : Facilitate negotiation
+Mediation -> OwnerB : Facilitate negotiation
+alt Agreement Reached
+  Mediation -> Dispute : Record agreement
+  Officer -> Parcels : Update boundaries
+  Officer -> Dispute : Resolve dispute
+else No Agreement
+  Mediation -> Dispute : Document failed mediation
+  Officer -> Dispute : Schedule formal hearing
+  Officer -> Dispute : Render decision after hearing
+  Officer -> Parcels : Enforce boundary decision
+end
+@enduml
+----
+
+*Real-World Scenario:*
+Ram and Shyam have adjacent farms in Chitwan and disagree about their shared boundary, with both claiming a 2-meter strip along their property line. Ram files a LandDispute record with type BOUNDARY, attaching his original deed. The officer notifies Shyam, who submits his own documentation. A surveyor conducts field measurements and creates a LandSurvey showing the historical boundary markers don't match either owner's claim. During mediation, they agree to split the disputed strip equally. The system updates both LandParcel boundaries, issues updated certificates, and closes the dispute with status RESOLVED.
+
+===== Land Transaction (Sale)
+
+*Context:* A landowner is selling their property to a buyer.
+
+[plantuml]
+----
+@startuml
+actor "Seller" as Seller
+actor "Buyer" as Buyer
+participant "Registry\nOfficer" as Officer
+participant "LandTransaction" as Transaction
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "Financial\nSystem" as Finance
+participant "Tax\nAuthority" as Tax
+
+Seller -> Officer : Initiate sale transaction
+Buyer -> Officer : Confirm purchase intent
+Officer -> Parcel : Verify ownership and encumbrances
+Officer -> Transaction : Create sale transaction
+activate Transaction
+Transaction -> Transaction : Set type (SALE)
+Transaction -> Transaction : Add parties (seller, buyer)
+Transaction -> Transaction : Record sale price
+Transaction -> Transaction : Set status (INITIATED)
+Officer <-- Transaction : Return transaction record
+deactivate Transaction
+Officer -> Finance : Calculate fees and taxes
+Finance -> Tax : Request capital gains assessment
+Finance <-- Tax : Return tax calculation
+Officer <-- Finance : Return fee structure
+Buyer -> Finance : Pay fees and taxes
+Finance -> Transaction : Record payment
+Seller -> Officer : Submit transfer deed
+Buyer -> Officer : Submit acceptance
+Officer -> Transaction : Update status (DOCUMENTS_SUBMITTED)
+Officer -> Officer : Review transaction
+Officer -> Transaction : Approve transaction
+activate Transaction
+Transaction -> Transaction : Set status (APPROVED)
+Transaction -> Ownership : Transfer ownership
+Transaction -> Parcel : Update ownership reference
+Transaction -> Transaction : Set status (COMPLETED)
+Officer <-- Transaction : Return updated records
+deactivate Transaction
+Seller <-- Officer : Provide sale confirmation
+Buyer <-- Officer : Issue new ownership certificate
+@enduml
+----
+
+*Real-World Scenario:*
+Sarita is selling her apartment in Pokhara to Binod for NPR 5,000,000. They visit the land registry office where the officer verifies there are no liens on the property. A LandTransaction with type SALE is created, linking both parties and the LandParcel. The system calculates a 2.5% transfer tax (NPR 125,000) and registration fees. After payment, the officer updates the LandOwnership record, transferring ownership from Sarita to Binod. The system automatically notifies the municipality of the ownership change for property tax purposes and triggers a WebhookTriggerable event to update banking systems about the property's new value for mortgage purposes.
+
+===== Land Zoning Changes
+
+*Context:* A municipality is updating zoning regulations affecting multiple land parcels.
+
+[plantuml]
+----
+@startuml
+actor "Municipal\nPlanner" as Planner
+participant "Planning\nCommission" as Commission
+participant "LandZoning" as Zoning
+participant "LandParcel" as Parcels
+participant "GIS\nService" as GIS
+participant "Notification\nService" as Notify
+
+Planner -> Zoning : Draft new zoning regulation
+activate Zoning
+Zoning -> Zoning : Define zoning classification
+Zoning -> Zoning : Set development standards
+Zoning -> Zoning : Define permitted uses
+Planner <-- Zoning : Return draft zoning
+deactivate Zoning
+Planner -> Commission : Submit for review
+Commission -> Commission : Hold public hearing
+Commission -> Zoning : Approve zoning change
+activate Zoning
+Zoning -> Zoning : Update status (ACTIVE)
+Zoning -> GIS : Define affected area
+Commission <-- Zoning : Return approved zoning
+deactivate Zoning
+GIS -> Parcels : Identify affected parcels
+GIS -> Zoning : Link parcels to zoning
+Planner -> Notify : Send notification to owners
+@enduml
+----
+
+*Real-World Scenario:*
+The Bharatpur Municipality planning department is rezoning an area from agricultural to residential-commercial mixed use to accommodate urban growth. The planner creates a new LandZoning entity, defining development standards like maximum building height (4 stories), floor area ratio (1.5), and permitted uses. After public hearings and approval, the GIS service identifies 84 affected LandParcel entities and updates their zoning references. The system automatically notifies all landowners of the zoning change through SMS and email. Property developers can now search for FullTextSearchable parcels in this newly zoned area for potential development opportunities.
+
+===== Land Surveying for Government Project
+
+*Context:* A government infrastructure project requires surveying multiple land parcels.
+
+[plantuml]
+----
+@startuml
+actor "Government\nAgency" as Govt
+participant "Survey\nDepartment" as SurveyDept
+participant "LandSurvey" as Survey
+participant "LandParcel" as Parcels
+participant "LandOwnership" as Ownership
+participant "BatchProcessing\nService" as Batch
+
+Govt -> SurveyDept : Request infrastructure corridor survey
+SurveyDept -> Batch : Initialize batch survey process
+activate Batch
+Batch -> Parcels : Identify affected parcels in corridor
+Batch -> Ownership : Retrieve ownership information
+Batch <-- Ownership : Return owners list
+SurveyDept <-- Batch : Return affected parcels and owners
+deactivate Batch
+SurveyDept -> Ownership : Send survey notices
+SurveyDept -> Survey : Create survey records for each parcel
+activate Survey
+Survey -> Survey : Record survey methodology
+Survey -> Survey : Capture precise boundaries
+Survey -> Survey : Document landscape features
+Survey -> Survey : Calculate affected areas
+SurveyDept <-- Survey : Return completed surveys
+deactivate Survey
+SurveyDept -> Parcels : Update parcel boundaries if needed
+SurveyDept -> Govt : Provide comprehensive survey report
+@enduml
+----
+
+*Real-World Scenario:*
+The Department of Roads is planning a new highway from Kathmandu to Hetauda. The Survey Department uses the BatchProcessable interface to identify 450 LandParcel entities along the proposed route. For each parcel, they create a LandSurvey record using high-precision GPS equipment, documenting the exact portion needed for the highway. The system automatically calculates the affected area of each parcel and generates a comprehensive report of all landowners who will need compensation. This data becomes the foundation for the land acquisition process, with each LandParcel then having a partial LandTransaction for government acquisition.
+
+==== Common Patterns
+
+===== Entity Lifecycle
+
+Land entities follow consistent lifecycle patterns based on their purpose:
+
+[plantuml]
+----
+@startuml
+' Land Parcel Lifecycle
+state "LandParcel Lifecycle" as LPL {
+  [*] --> Registered : register
+  Registered --> UnderTransaction : sell/transfer
+  UnderTransaction --> Registered : complete transaction
+  Registered --> Subdivided : subdivide
+  Registered --> Merged : merge
+  Subdivided --> [*] : new parcels created
+  Merged --> [*] : new parcel created
+}
+
+' Land Rights Lifecycle
+state "LandRights Lifecycle" as LRL {
+  [*] --> Draft : create
+  Draft --> Pending : submit
+  Pending --> Approved : approve
+  Pending --> Rejected : reject
+  Rejected --> Draft : revise
+  Approved --> Active : activate
+  Active --> Suspended : suspend
+  Active --> Terminated : terminate
+  Suspended --> Active : reinstate
+  Terminated --> [*]
+}
+
+' Land Transaction Lifecycle
+state "LandTransaction Lifecycle" as LTL {
+  [*] --> Initiated : initiate
+  Initiated --> DocumentsSubmitted : submit documents
+  DocumentsSubmitted --> UnderReview : review
+  UnderReview --> DocumentsRequested : request more documents
+  DocumentsRequested --> DocumentsSubmitted : provide documents
+  UnderReview --> Approved : approve
+  UnderReview --> Rejected : reject
+  Approved --> Registered : register
+  Registered --> Completed : complete
+  Completed --> [*]
+}
+@enduml
+----
+
+===== Spatial Data Management
+
+Land entities utilize spatial capabilities for boundary management:
+
+[plantuml]
+----
+@startuml
+participant "LandParcel\nextends SpatialEntity" as LP
+participant "LandBoundary" as LB
+participant "GISService" as GIS
+participant "SpatialCalculator" as Calc
+
+LP -> LB : getBoundary()
+activate LB
+LP <-- LB : boundary
+deactivate LB
+
+LP -> GIS : validateGeometry(boundary)
+activate GIS
+LP <-- GIS : validationResult
+deactivate GIS
+
+LP -> Calc : calculateArea(boundary)
+activate Calc
+LP <-- Calc : areaInSquareMeters
+deactivate Calc
+
+LP -> LP : updateSpatialAttributes()
+activate LP
+LP -> LP : setArea(areaInSquareMeters)
+LP -> Calc : calculatePerimeter(boundary)
+activate Calc
+LP <-- Calc : perimeterInMeters
+deactivate Calc
+LP -> LP : setPerimeter(perimeterInMeters)
+LP -> Calc : calculateCentroid(boundary)
+activate Calc
+LP <-- Calc : centroid
+deactivate Calc
+LP -> LP : setCentroid(centroid)
+LP <-- LP
+deactivate LP
+@enduml
+----
+
+===== Approval Workflows
+
+Land transactions follow standardized approval workflows from the core:
+
+[plantuml]
+----
+@startuml
+participant "LandRegistryService" as Service
+participant "LandTransaction\nextends ApprovableEntity" as Transaction
+participant "Workflow" as Workflow
+participant "DomainEventPublisher" as Events
+
+Service -> Transaction : submitForApproval()
+activate Transaction
+Transaction -> Transaction : setReviewState(PENDING)
+Transaction -> Workflow : startApprovalProcess()
+activate Workflow
+Transaction <-- Workflow : workflowInstanceId
+deactivate Workflow
+Service <-- Transaction
+deactivate Transaction
+
+Service -> Transaction : approve()
+activate Transaction
+Transaction -> Transaction : validateApprovalRequirements()
+Transaction -> Transaction : setReviewState(APPROVED)
+Transaction -> Transaction : setIsApproved(true)
+Transaction -> Transaction : setApprovedBy(currentUser)
+Transaction -> Transaction : setApprovedAt(now())
+Transaction -> Events : publish(LandTransactionApprovedEvent)
+Service <-- Transaction
+deactivate Transaction
+@enduml
+----
+
+==== Land Domain Entities
+
+include::land/land-parcel.adoc[leveloffset=+1]
+include::land/land-rights.adoc[leveloffset=+1]
+include::land/land-ownership.adoc[leveloffset=+1]
+include::land/land-transaction.adoc[leveloffset=+1]
+include::land/land-survey.adoc[leveloffset=+1]
+include::land/land-zoning.adoc[leveloffset=+1]
+include::land/land-dispute.adoc[leveloffset=+1]
