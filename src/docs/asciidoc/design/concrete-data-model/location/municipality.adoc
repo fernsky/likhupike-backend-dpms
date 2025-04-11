@@ -1,0 +1,820 @@
+==== Municipality
+
+Municipality is a core administrative division in the Location Domain, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+interface GeocodingCapable
+interface WebhookTriggerable
+
+' Municipality implementation
+class Municipality {
+  ' From NamedEntity
+  +String name
+  +String municipalityCode
+  +String localName
+  +String description
+  
+  ' Municipality-specific
+  +UUID districtId
+  +UUID provinceId
+  +MunicipalityType type
+  +LocalDate establishedDate
+  +Set<UUID> wardIds
+  
+  ' Spatial data
+  +UUID boundaryId
+  +Double areaInSquareKm
+  +Double rightmostLatitude
+  +Double leftmostLatitude
+  +Double topmostLongitude
+  +Double bottommostLongitude
+  
+  ' Contact & admin info
+  +ContactInformation administrativeContact
+  +AddressComponent mainOfficeAddress
+  
+  ' Implementation methods...
+}
+
+' Inheritance relationships
+NamedEntity <|-- ApprovableEntity
+ApprovableEntity <|-- Municipality
+
+' Interface implementation
+Municipality ..|> HistoryViewable
+Municipality ..|> AccessControlled
+Municipality ..|> GeocodingCapable
+Municipality ..|> WebhookTriggerable
+@enduml
+----
+
+===== Municipality Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Initial Data Entry" as Initial
+  state "Boundary Definition" as Boundary
+  state "Ward Planning" as Planning
+  state "Validation" as Validation
+  
+  [*] --> Initial
+  Initial --> Boundary : define boundary
+  Boundary --> Planning : plan wards
+  Planning --> Validation : validate
+  Validation --> [*] : valid
+  Validation --> Initial : invalid
+}
+
+Draft --> Pending : submit for approval
+Pending --> DistrictReview : assign reviewer
+DistrictReview --> Revisions : request changes
+Revisions --> Pending : resubmit
+DistrictReview --> Approved : approve
+Approved --> Active : activate
+
+state Active {
+  state "Normal Operations" as Normal
+  state "Ward Management" as WardMgmt
+  state "Boundary Adjustment" as BoundaryAdj
+  state "Service Configuration" as Service
+  
+  [*] --> Normal
+  Normal --> WardMgmt : manage wards
+  Normal --> BoundaryAdj : adjust boundary
+  Normal --> Service : configure services
+  
+  WardMgmt --> Normal
+  BoundaryAdj --> Normal
+  Service --> Normal
+}
+
+Active --> ProposedChange : propose major change
+ProposedChange --> MergerPlan : plan merger
+ProposedChange --> DivisionPlan : plan division
+ProposedChange --> ReclassificationPlan : plan reclassification
+
+MergerPlan --> Pending : submit for approval
+DivisionPlan --> Pending : submit for approval
+ReclassificationPlan --> Pending : submit for approval
+
+Active --> Deprecated : superseded
+Deprecated --> Historical : archive
+Historical --> [*]
+@enduml
+----
+
+===== Municipality Creation Process
+
+[plantuml]
+----
+@startuml
+|District Administrator|
+start
+:Identify need for new municipality;
+:Prepare municipality data;
+:Define municipal boundary;
+
+|System|
+:Validate municipality data;
+if (Valid?) then (yes)
+  :Create Municipality entity
+  extending NamedEntity
+  and ApprovableEntity;
+  :Set reviewState = DRAFT;
+else (no)
+  :Return validation errors;
+  stop
+endif
+
+|District Administrator|
+:Plan initial wards;
+:Define address format;
+:Submit for approval;
+
+|System|
+:Set reviewState = PENDING;
+:Assign reviewers;
+
+|Province Administrator|
+:Review municipality proposal;
+if (Approve?) then (yes)
+  :Approve municipality;
+else (no)
+  :Request changes;
+  |District Administrator|
+  :Make requested changes;
+  note right
+    Return to System validation
+  end note
+endif
+
+|System|
+:Update municipality:
+- Set isApproved = true
+- Set reviewState = APPROVED
+- Set approvedBy & approvedAt;
+
+:Create LocationBoundary entity;
+:Update spatial relationships;
+:Enable address validation;
+:Publish MunicipalityCreatedEvent;
+
+stop
+@enduml
+----
+
+===== Address Management Capabilities
+
+The Municipality entity provides address management capabilities building on core models:
+
+[plantuml]
+----
+@startuml
+participant "Client" as Client
+participant "AddressService" as Service
+participant "Municipality" as Municipality
+participant "AddressFormat" as Format
+participant "GeocodingService" as Geocoding
+
+Client -> Service : validateAddress(address)
+activate Service
+
+Service -> Municipality : getMunicipality(address.municipalityCode)
+activate Municipality
+Service <-- Municipality : municipality
+deactivate Municipality
+
+Service -> Format : getAddressFormat(municipality.addressFormatId)
+activate Format
+Service <-- Format : addressFormat
+deactivate Format
+
+Service -> Service : validateAgainstFormat(address, addressFormat)
+Service -> Municipality : validateAddress(address)
+activate Municipality
+Service <-- Municipality : municipalityValidation
+deactivate Municipality
+
+Client <-- Service : validationResult
+deactivate Service
+
+Client -> Service : formatAddress(address)
+activate Service
+Service -> Municipality : getMunicipality(address.municipalityCode)
+activate Municipality
+Service <-- Municipality : municipality
+deactivate Municipality
+
+Service -> Format : getAddressFormat(municipality.addressFormatId)
+activate Format
+Service <-- Format : addressFormat
+deactivate Format
+
+Service -> Service : applyFormatTemplate(address, addressFormat)
+Client <-- Service : formattedAddress
+deactivate Service
+
+Client -> Service : geocodeAddress(address)
+activate Service
+Service -> Municipality : getMunicipality(address.municipalityCode)
+activate Municipality
+Service <-- Municipality : municipality
+deactivate Municipality
+
+Service -> Geocoding : geocodeAddressInMunicipality(address, municipality)
+activate Geocoding
+Service <-- Geocoding : coordinates
+deactivate Geocoding
+
+Client <-- Service : geocodingResult
+deactivate Service
+@enduml
+----
+
+===== Ward Management
+
+Municipality manages its wards, integrating with core domain models:
+
+[plantuml]
+----
+@startuml
+participant "MunicipalityService" as Service
+participant "Municipality" as Municipality
+participant "Ward" as Ward
+participant "LocationBoundary" as Boundary
+participant "GISService" as GIS
+participant "DomainEventPublisher" as Events
+
+Service -> Municipality : createWard(wardData)
+activate Municipality
+
+Municipality -> Municipality : validateWardData(wardData)
+Municipality -> GIS : validateBoundaryContainment(municipalityBoundary, wardBoundary)
+activate GIS
+Municipality <-- GIS : containmentValidation
+deactivate GIS
+
+alt Valid Ward
+  Municipality -> Ward : create()
+  activate Ward
+  Ward -> Ward : setReviewState(DRAFT)
+  Municipality <-- Ward : ward
+  deactivate Ward
+  
+  Municipality -> Boundary : createBoundary(ward.id, wardData.boundary)
+  activate Boundary
+  Municipality <-- Boundary : boundary
+  deactivate Boundary
+  
+  Municipality -> Ward : setBoundaryId(boundary.id)
+  
+  Municipality -> Municipality : wardIds.add(ward.id)
+  
+  Municipality -> Events : publish(WardCreatedEvent)
+  
+  Service <-- Municipality : ward
+else Invalid Ward
+  Service <-- Municipality : validationErrors
+end
+deactivate Municipality
+@enduml
+----
+
+===== Municipality Type Changes
+
+Leveraging the ApprovableEntity workflow for municipality reclassification:
+
+[plantuml]
+----
+@startuml
+participant "MunicipalityService" as Service
+participant "Municipality" as Municipality
+participant "BoundaryChangeRequest\nextends ApprovableEntity" as Request
+participant "DomainEventPublisher" as Events
+
+Service -> Municipality : proposeTypeChange(newType, justification)
+activate Municipality
+
+Municipality -> Request : create()
+activate Request
+Request -> Request : setRequestType(TYPE_CHANGE)
+Request -> Request : setReviewState(DRAFT)
+Municipality <-- Request : request
+deactivate Request
+
+Service <-- Municipality : typeChangeRequest
+deactivate Municipality
+
+Service -> Request : submitForApproval(requestId)
+activate Request
+Request -> Request : setReviewState(PENDING)
+Service <-- Request
+deactivate Request
+
+note over Request
+  Standard approval process from
+  ApprovableEntity is followed
+end note
+
+Service -> Request : approve(requestId)
+activate Request
+Request -> Request : setIsApproved(true)
+Request -> Request : setApprovedBy(currentUser)
+Request -> Request : setApprovedAt(now)
+Service <-- Request
+deactivate Request
+
+Service -> Municipality : executeTypeChange(requestId)
+activate Municipality
+Municipality -> Municipality : setType(newType)
+Municipality -> Events : publish(MunicipalityTypeChangedEvent)
+Service <-- Municipality : success
+deactivate Municipality
+@enduml
+----
+
+===== Integration Points
+
+[plantuml]
+----
+@startuml
+node "Municipality" as Municipality
+node "District Management" as District
+node "Ward Management" as Wards
+node "Address System" as Address
+node "Service Delivery" as Services
+node "Citizens Registry" as Citizens
+node "External Systems" as External
+
+Municipality -- District : "Belongs to"
+Municipality -- Wards : "Contains and\nmanages"
+Municipality -- Address : "Provides addressing\ncontext"
+Municipality -- Services : "Configures service\ndelivery"
+Municipality -- Citizens : "Populations and\ndemographics"
+Municipality -- External : "Syncs via\nWebhookTriggerable"
+
+@enduml
+----
+
+===== WebhookTriggerable Implementation
+
+The Municipality entity implements the WebhookTriggerable interface from the core domain models:
+
+[plantuml]
+----
+@startuml
+participant "ExternalSystem" as External
+participant "WebhookService" as Service
+participant "Municipality\nimplements WebhookTriggerable" as Municipality
+participant "WebhookRegistry" as Registry
+participant "EventPublisher" as Events
+
+External -> Service : registerWebhook(municipalityId, endpointUrl, events)
+activate Service
+
+Service -> Municipality : registerWebhook(endpoint, events, secret)
+activate Municipality
+Municipality -> Registry : create(entityId, entityType, endpoint, events, secret)
+activate Registry
+Municipality <-- Registry : registration
+deactivate Registry
+Service <-- Municipality : webhookRegistration
+deactivate Municipality
+
+External <-- Service : registrationConfirmation
+deactivate Service
+
+note over Municipality
+  When municipality changes occur...
+end note
+
+Municipality -> Events : publish(MunicipalityUpdatedEvent)
+activate Events
+Events -> Municipality : triggerWebhooks("MUNICIPALITY_UPDATED", payload)
+activate Municipality
+
+Municipality -> Registry : findWebhooksForEvent(entityId, "MUNICIPALITY_UPDATED")
+activate Registry
+Municipality <-- Registry : webhooks
+deactivate Registry
+
+loop for each webhook
+  Municipality -> External : POST /webhook-endpoint (payload + signature)
+  alt Successful delivery
+    Municipality <-- External : 200 OK
+    Municipality -> Registry : recordSuccessfulDelivery(webhookId)
+  else Failed delivery
+    Municipality <-- External : Error/Timeout
+    Municipality -> Registry : recordFailedAttempt(webhookId)
+    Municipality -> Municipality : scheduleRetry(webhookId)
+  end
+end
+
+Events <-- Municipality
+deactivate Municipality
+deactivate Events
+
+External -> Service : getWebhookHistory(registrationId)
+activate Service
+Service -> Municipality : getWebhookHistory()
+activate Municipality
+Municipality -> Registry : findEventsByWebhookId(registrationId)
+activate Registry
+Municipality <-- Registry : deliveryHistory
+deactivate Registry
+Service <-- Municipality : webhookHistory
+deactivate Municipality
+External <-- Service : deliveryHistory
+deactivate Service
+@enduml
+----
+
+===== GeocodingCapable Implementation
+
+Municipality implements the GeocodingCapable interface for address resolution:
+
+[plantuml]
+----
+@startuml
+participant "AddressService" as Service
+participant "Municipality\nimplements GeocodingCapable" as Municipality
+participant "Ward" as Ward
+participant "GISService" as GIS
+participant "LocationBoundary" as Boundary
+
+Service -> Municipality : geocodeAddress("123 Main St, Ward 5")
+activate Municipality
+
+Municipality -> Municipality : parseAddressComponents(address)
+Municipality -> Municipality : getBoundary()
+activate Municipality
+Municipality -> Boundary : findById(boundaryId)
+activate Boundary
+Municipality <-- Boundary : municipalityBoundary
+deactivate Boundary
+Municipality <-- Municipality : boundary
+deactivate Municipality
+
+alt Specific ward mentioned
+  Municipality -> Municipality : findWard("Ward 5")
+  activate Municipality
+  Municipality -> Ward : findByMunicipalityIdAndNumber(id, 5)
+  activate Ward
+  Municipality <-- Ward : ward
+  deactivate Ward
+  Municipality <-- Municipality : ward
+  deactivate Municipality
+  
+  Municipality -> Ward : geocodeAddress("123 Main St")
+  activate Ward
+  Municipality <-- Ward : wardLevelCoordinates
+  deactivate Ward
+  
+  Service <-- Municipality : coordinates
+else No specific ward
+  Municipality -> GIS : geocodeWithinBoundary("123 Main St", municipalityBoundary)
+  activate GIS
+  
+  GIS -> GIS : matchStreetNames(address, streetsInBoundary)
+  GIS -> GIS : calculateCoordinates(matchedStreet, houseNumber)
+  
+  Municipality <-- GIS : coordinates
+  deactivate GIS
+  
+  Service <-- Municipality : coordinates
+end
+
+deactivate Municipality
+
+Service -> Municipality : reverseGeocode(latitude, longitude)
+activate Municipality
+
+Municipality -> GIS : findWardContainingPoint(municipalityId, latitude, longitude)
+activate GIS
+Municipality <-- GIS : wardId
+deactivate GIS
+
+Municipality -> Municipality : constructAddress(latitude, longitude, wardId)
+
+Service <-- Municipality : formattedAddress
+deactivate Municipality
+@enduml
+----
+
+===== Address Formatting and Validation
+
+Municipality provides address formatting capabilities:
+
+[plantuml]
+----
+@startuml
+participant "AddressService" as Service
+participant "Municipality" as Municipality
+participant "AddressFormat" as Format
+participant "ValidationService" as Validation
+
+Service -> Municipality : getAddressFormat()
+activate Municipality
+Municipality -> Format : findByMunicipalityId(id)
+activate Format
+Municipality <-- Format : addressFormat
+deactivate Format
+Service <-- Municipality : addressFormat
+deactivate Municipality
+
+Service -> Municipality : validateAddress(addressData)
+activate Municipality
+
+Municipality -> Municipality : getAddressFormat()
+activate Municipality
+Municipality -> Format : findByMunicipalityId(id)
+activate Format
+Municipality <-- Format : addressFormat
+deactivate Format
+Municipality <-- Municipality : format
+deactivate Municipality
+
+Municipality -> Validation : validateAgainstFormat(addressData, format)
+activate Validation
+
+Validation -> Validation : checkRequiredFields(addressData, format)
+Validation -> Validation : validatePostalCode(addressData.postalCode, format)
+Validation -> Validation : validateWardReference(addressData.wardNumber, municipalityId)
+Validation -> Validation : checkStreetNameFormat(addressData.streetName, format)
+
+Municipality <-- Validation : validationResult
+deactivate Validation
+
+alt Address is valid
+  Municipality -> Municipality : normalizeAddress(addressData)
+  Service <-- Municipality : {valid: true, normalizedAddress: address}
+else Address has errors
+  Service <-- Municipality : {valid: false, errors: validationErrors}
+end
+
+deactivate Municipality
+
+Service -> Municipality : formatAddress(addressData)
+activate Municipality
+
+Municipality -> Municipality : getAddressFormat()
+activate Municipality
+Municipality <-- Municipality : format
+deactivate Municipality
+
+Municipality -> Municipality : applyFormatTemplate(addressData, format)
+
+Service <-- Municipality : formattedAddress
+deactivate Municipality
+@enduml
+----
+
+===== Hierarchical Statistical Aggregation
+
+Municipalities aggregate data from their wards for statistical analysis:
+
+[plantuml]
+----
+@startuml
+participant "ReportingService" as Service
+participant "Municipality" as Municipality
+participant "Ward" as Ward
+participant "SettlementArea" as Settlement
+participant "StatisticsCalculator" as Stats
+
+Service -> Municipality : getMunicipalStatistics()
+activate Municipality
+
+Municipality -> Municipality : getWards()
+activate Municipality
+Municipality -> Ward : findAllByMunicipalityId(id)
+activate Ward
+Municipality <-- Ward : wards
+deactivate Ward
+Municipality <-- Municipality : wards
+deactivate Municipality
+
+loop for each ward
+  Municipality -> Ward : getWardStatistics()
+  activate Ward
+  
+  Ward -> Settlement : findAllByWardId(wardId)
+  activate Settlement
+  Ward <-- Settlement : settlements
+  deactivate Settlement
+  
+  Ward -> Ward : aggregateSettlementData(settlements)
+  
+  Municipality <-- Ward : wardStats
+  deactivate Ward
+  
+  Municipality -> Municipality : aggregateWardStats(wardStats)
+end
+
+Municipality -> Stats : calculateDerivedStatistics(aggregatedStats)
+activate Stats
+Municipality <-- Stats : derivedStats
+deactivate Stats
+
+Municipality -> Municipality : combineDirectAndAggregatedStats()
+
+Service <-- Municipality : municipalityStatistics
+deactivate Municipality
+
+@enduml
+----
+
+===== Data Model Evolution
+
+The Municipality entity demonstrates how the core model capabilities support evolution:
+
+[plantuml]
+----
+@startuml
+!define TABLE class
+
+TABLE "Early Implementation" as Early {
+  +name
+  +districtId
+  +municipalityCode
+  +establishedDate
+  +wardIds
+}
+
+TABLE "Current Implementation" as Current {
+  ' Core fields from NamedEntity
+  +name
+  +description
+  +code (municipalityCode)
+  +slug
+  
+  ' Core fields from ApprovableEntity
+  +isApproved
+  +reviewState
+  +approvedBy
+  +approvedAt
+  
+  ' Location hierarchy
+  +districtId
+  +provinceId
+  +wardIds
+  
+  ' Municipality-specific
+  +establishedDate
+  +type
+  +administrativeContact
+  
+  ' Spatial data
+  +boundaryId
+  
+  ' Access control
+  +accessControlList
+}
+
+TABLE "Future Expansion" as Future {
+  ' All current fields
+  +...
+  
+  ' New capabilities
+  +webhookRegistrations
+  +translationKeys
+  +geoJsonStyles
+  +serviceBoundaries
+  +demographicStats
+}
+
+Early --> Current : Evolution
+Current --> Future : Planned\nExpansion
+note bottom of Future
+  Core model capabilities make
+  evolution manageable through
+  composition and inheritance
+end note
+@enduml
+----
+
+===== AccessControlled Implementation
+
+Municipality implements the AccessControlled interface from the core domain model:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "Municipality\nimplements AccessControlled" as Municipality
+participant "AccessControlRepository" as ACRepo
+participant "UserRepository" as Users
+participant "District" as District
+
+Security -> Municipality : hasPermission(user, Permission.EDIT)
+activate Municipality
+
+Municipality -> Municipality : getAccessControlList()
+activate Municipality
+Municipality -> ACRepo : findByEntityTypeAndEntityId("Municipality", id)
+activate ACRepo
+Municipality <-- ACRepo : accessControlEntries
+deactivate ACRepo
+
+alt Direct permission exists
+  Municipality -> Municipality : checkDirectPermission(user, entries, Permission.EDIT)
+  Municipality -> Municipality : return true/false based on direct permission
+else Check role-based permission
+  Municipality -> Users : findRolesForUser(user.id)
+  activate Users
+  Municipality <-- Users : userRoles
+  deactivate Users
+  
+  Municipality -> Municipality : checkRoleBasedPermission(userRoles, Permission.EDIT)
+  note right
+    Checks for roles like MUNICIPALITY_ADMIN,
+    DISTRICT_ADMIN, FEDERAL_ADMIN, etc.
+  end note
+else Check inheritance from district
+  Municipality -> District : findById(districtId)
+  activate District
+  Municipality <-- District : district
+  deactivate District
+  
+  Municipality -> District : hasPermission(user, Permission.EDIT)
+  activate District
+  Municipality <-- District : districtPermission
+  deactivate District
+  
+  Municipality -> Municipality : return districtPermission
+end
+
+Security <-- Municipality : permissionResult
+deactivate Municipality
+deactivate Municipality
+
+@enduml
+----
+
+===== Service Level Assignment
+
+Municipalities manage service levels across their administrative area:
+
+[plantuml]
+----
+@startuml
+participant "ServiceDeliverySystem" as SDS
+participant "Municipality" as Municipality
+participant "ServiceLevelRegistry" as Registry
+participant "WardService" as WardService
+participant "DomainEventPublisher" as Events
+
+SDS -> Municipality : configureServiceLevels(serviceConfigurations)
+activate Municipality
+
+loop for each service type
+  Municipality -> Registry : setServiceLevel(municipalityId, serviceType, level)
+  activate Registry
+  Municipality <-- Registry : serviceLevel
+  deactivate Registry
+end
+
+alt Apply to all wards
+  Municipality -> WardService : updateServiceLevels(wardIds, serviceConfigurations)
+  activate WardService
+  Municipality <-- WardService : success
+  deactivate WardService
+end
+
+Municipality -> Events : publish(ServiceLevelsConfiguredEvent)
+
+SDS <-- Municipality : configurationResult
+deactivate Municipality
+
+SDS -> Municipality : getServiceDeliveryMap(serviceType)
+activate Municipality
+
+Municipality -> Registry : getServiceLevel(municipalityId, serviceType)
+activate Registry
+Municipality <-- Registry : serviceLevel
+deactivate Registry
+
+Municipality -> Municipality : getServiceCoverageMap(serviceType)
+activate Municipality
+Municipality <-- Municipality : coverageMap
+deactivate Municipality
+
+Municipality -> Municipality : combineWithWardSpecificOverrides(serviceLevel, coverageMap)
+
+SDS <-- Municipality : serviceDeliveryMap
+deactivate Municipality
+@enduml
+----

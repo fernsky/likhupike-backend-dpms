@@ -1,0 +1,459 @@
+=== Location Domain Model
+
+This section details the concrete implementation of the Location Domain, building upon the core domain models.
+
+==== Domain Overview
+
+The Location Domain represents the geographical and administrative divisions within the Digital Profile system. It implements a hierarchical model of administrative entities that directly leverages the core domain models.
+
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+' Core Model References
+package "Core Models Used" {
+  abstract class BaseEntity
+  abstract class NamedEntity
+  abstract class SpatialEntity
+  abstract class ApprovableEntity
+  abstract class SoftDeletableEntity
+  
+  interface HistoryViewable
+  interface AccessControlled
+  interface ExternalSystemSyncable
+  interface GeocodingCapable
+  interface WebhookTriggerable
+}
+
+' Location Entity Hierarchy
+package "Location Domain" {
+  class Province
+  class District
+  class Municipality
+  class Ward
+  class SettlementArea
+  class LocationBoundary
+  class AddressFormat
+  
+  ' Hierarchy relationships
+  Province "1" o-- "many" District
+  District "1" o-- "many" Municipality
+  Municipality "1" o-- "many" Ward
+  Ward "1" o-- "many" SettlementArea
+  
+  ' Boundaries
+  LocationBoundary -- Province
+  LocationBoundary -- District
+  LocationBoundary -- Municipality
+  LocationBoundary -- Ward
+  
+  ' Supporting entities
+  AddressFormat -- Municipality
+}
+
+' Core Model Inheritance
+NamedEntity <|-- Province
+NamedEntity <|-- District 
+NamedEntity <|-- Municipality
+NamedEntity <|-- Ward
+NamedEntity <|-- SettlementArea
+
+SpatialEntity <|-- LocationBoundary
+
+' Capability Implementation
+Province ..|> HistoryViewable
+Province ..|> AccessControlled
+Province ..|> ExternalSystemSyncable
+
+District ..|> HistoryViewable
+District ..|> AccessControlled
+
+Municipality ..|> HistoryViewable
+Municipality ..|> AccessControlled
+Municipality ..|> GeocodingCapable
+Municipality ..|> WebhookTriggerable
+
+Ward ..|> HistoryViewable
+Ward ..|> GeocodingCapable
+
+@enduml
+----
+
+==== Core Domain Model Integration
+
+The Location Domain demonstrates a comprehensive implementation of the core domain models through:
+
+===== Inheritance
+
+Each location entity extends appropriate base classes:
+
+|===
+| Entity | Extends | Purpose
+| Province | NamedEntity, ApprovableEntity | Base structure and approval workflow
+| District | NamedEntity, ApprovableEntity | Base structure and approval workflow
+| Municipality | NamedEntity, ApprovableEntity | Base structure and approval workflow
+| Ward | NamedEntity, ApprovableEntity | Base structure and approval workflow
+| SettlementArea | NamedEntity, SpatialEntity | Base structure and spatial attributes
+| LocationBoundary | SpatialEntity | Geographic boundary management
+|===
+
+===== Capabilities
+
+Location entities implement interfaces based on their specific needs:
+
+|===
+| Entity | Implements | Capability
+| Province | HistoryViewable | Tracks province changes over time
+| | AccessControlled | Manages federal/provincial permissions
+| | ExternalSystemSyncable | Synchronizes with national systems
+| District | HistoryViewable | Tracks district changes over time
+| | AccessControlled | Manages district-level permissions
+| Municipality | HistoryViewable | Tracks boundary and status changes
+| | AccessControlled | Manages municipal permissions
+| | GeocodingCapable | Resolves addresses within boundaries
+| | WebhookTriggerable | Notifies systems of changes
+| Ward | HistoryViewable | Tracks changes over time
+| | GeocodingCapable | Resolves addresses at ward level
+| SettlementArea | LocalizedEntity | Supports multiple languages for settlement names
+|===
+
+===== Components
+
+The Location Domain utilizes reusable components from the core domain:
+
+|===
+| Component | Used By | Purpose
+| AddressComponent | Province, District, Municipality | Standardized location representation 
+| ContactInformation | Province, District, Municipality | Administrative contact details
+| LocationBoundary | All spatial entities | Boundary management with versioning
+| AddressFormat | Municipality | Address standardization and validation
+| OperationalHours | Municipality (government offices) | Operating hours for administrative offices
+|===
+
+==== Implementation of Core Patterns
+
+The Location Domain implements several key patterns from the core domain model:
+
+===== Soft Deletion Pattern
+
+Location entities leverage the `SoftDeletableEntity` capabilities for safe deprecation:
+
+```kotlin
+// When a municipality is merged or dissolved
+municipality.isDeleted = true
+municipality.deletedAt = LocalDateTime.now()
+municipality.deletedBy = currentUser
+municipality.deletionReason = "Municipal merger with ${targetMunicipality.name}"
+
+// Reference preserved in historical records
+newMunicipality.formerMunicipalityIds.add(municipality.id)
+```
+
+===== Approval Workflow Pattern
+
+The Location Domain extensively uses the `ApprovableEntity` workflow for boundary changes:
+
+```kotlin
+// Province creation follows the standard approval flow
+province.reviewState = ReviewState.DRAFT       // Initial creation
+province.reviewState = ReviewState.PENDING     // Submitted for review
+province.reviewState = ReviewState.IN_REVIEW   // Under review by federal authorities
+province.reviewState = ReviewState.APPROVED    // Approved by authorized officials
+province.isApproved = true
+province.approvedBy = federalAdmin
+province.approvedAt = LocalDateTime.now()
+```
+
+===== Version History Pattern
+
+All boundary changes use the core version tracking capabilities:
+
+```kotlin
+// When a district boundary changes
+val oldBoundary = district.getBoundary()
+val newBoundary = LocationBoundary(
+    entityId = district.id,
+    entityType = "District",
+    effectiveFrom = effectiveDate,
+    boundary = newBoundaryPolygon,
+    previousVersionId = oldBoundary.id,
+    versionNumber = oldBoundary.versionNumber + 1
+)
+
+// Old boundary remains in the system
+oldBoundary.effectiveTo = effectiveDate.minusDays(1)
+```
+
+==== Common Patterns
+
+===== Entity Lifecycle
+
+All location entities follow a consistent lifecycle pattern:
+
+[plantuml]
+----
+@startuml
+' Common states from ApprovableEntity
+[*] --> Draft : create
+Draft --> Pending : submit
+Pending --> InReview : assign
+InReview --> Rejected : reject
+InReview --> Approved : approve
+Rejected --> Draft : revise
+
+' Location-specific extensions
+Approved --> Active : activate
+Active --> UnderChange : proposeChange
+UnderChange --> InReview : submitChange
+Active --> Deprecated : phase out
+Deprecated --> Historical : archive
+Historical --> [*]
+@enduml
+----
+
+===== Boundary Management
+
+All location boundaries are managed using the LocationBoundary entity:
+
+[plantuml]
+----
+@startuml
+class LocationBoundary {
+  +UUID id
+  +UUID entityId
+  +String entityType
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  
+  +Polygon boundary
+  +Polygon simplifiedBoundary
+  +Point centroid
+  +BoundingBox bbox
+  
+  +Double areaInSquareKm
+  +Double perimeterInKm
+  +SpatialAccuracy accuracy
+  
+  +UUID previousVersionId
+  +Integer versionNumber
+}
+@enduml
+----
+
+===== Administrative Hierarchy
+
+Location entities maintain a strict hierarchy with upward referencing:
+
+[plantuml]
+----
+@startuml
+class SettlementArea {
+  +UUID wardId
+  +UUID municipalityId
+  +UUID districtId
+  +UUID provinceId
+}
+
+class Ward {
+  +UUID municipalityId
+  +UUID districtId
+  +UUID provinceId
+}
+
+class Municipality {
+  +UUID districtId
+  +UUID provinceId
+}
+
+class District {
+  +UUID provinceId
+}
+
+class Province
+
+Province <-- District : provinceId
+District <-- Municipality : districtId
+Province <-- Municipality : provinceId
+Municipality <-- Ward : municipalityId
+District <-- Ward : districtId
+Province <-- Ward : provinceId
+Ward <-- SettlementArea : wardId
+Municipality <-- SettlementArea : municipalityId
+District <-- SettlementArea : districtId
+Province <-- SettlementArea : provinceId
+@enduml
+----
+
+===== Cross-Entity Validation
+
+Location entities implement hierarchical validation to ensure containment integrity:
+
+[plantuml]
+----
+@startuml
+participant "LocationService" as Service
+participant "ProvinceValidator" as ProvinceVal
+participant "DistrictValidator" as DistrictVal
+participant "MunicipalityValidator" as MuniVal
+participant "WardValidator" as WardVal
+
+Service -> DistrictVal : validateDistrict(district)
+activate DistrictVal
+DistrictVal -> DistrictVal : validateBasicAttributes()
+DistrictVal -> ProvinceVal : validateDistrictInProvince(district, province)
+DistrictVal <-- ProvinceVal : containmentValidation
+Service <-- DistrictVal : districtValidation
+deactivate DistrictVal
+
+Service -> MuniVal : validateMunicipality(municipality)
+activate MuniVal
+MuniVal -> MuniVal : validateBasicAttributes()
+MuniVal -> DistrictVal : validateMunicipalityInDistrict(municipality, district)
+MuniVal <-- DistrictVal : containmentValidation
+Service <-- MuniVal : municipalityValidation
+deactivate MuniVal
+
+Service -> WardVal : validateWard(ward)
+activate WardVal
+WardVal -> WardVal : validateBasicAttributes()
+WardVal -> MuniVal : validateWardInMunicipality(ward, municipality)
+WardVal <-- MuniVal : containmentValidation
+Service <-- WardVal : wardValidation
+deactivate WardVal
+@enduml
+----
+
+===== Event-Driven Updates
+
+[plantuml]
+----
+@startuml
+participant "LocationService" as Service
+participant "Municipality" as Municipality
+participant "DomainEventPublisher" as Publisher
+participant "NotificationService" as Notification
+participant "SpatialIndexService" as Spatial
+participant "AddressService" as Address
+
+Service -> Municipality : updateBoundary(newBoundary)
+activate Municipality
+
+Municipality -> Publisher : publish(MunicipalityBoundaryChangedEvent)
+activate Publisher
+
+Publisher -> Notification : handleEvent(event)
+Publisher -> Spatial : handleEvent(event)
+Publisher -> Address : handleEvent(event)
+
+Municipality <-- Publisher
+deactivate Publisher
+
+Service <-- Municipality
+deactivate Municipality
+@enduml
+----
+
+==== Key Domain Events
+
+The Location Domain publishes several important domain events:
+
+|===
+| Event | Description | Published By | Subscribers
+| ProvinceCreatedEvent | New province created | ProvinceService | DistrictService, ReportingService, MapService
+| ProvinceBoundaryChangedEvent | Province boundary modified | ProvinceService | DistrictService, AddressService, MapService
+| DistrictCreatedEvent | New district created | DistrictService | MunicipalityService, ReportingService
+| DistrictBoundaryChangedEvent | District boundary modified | DistrictService | MunicipalityService, AddressService
+| MunicipalityCreatedEvent | New municipality created | MunicipalityService | WardService, CitizenService
+| MunicipalityTypeChangedEvent | Municipality type changed | MunicipalityService | ServiceDeliverySystem, BudgetingSystem
+| WardCreatedEvent | New ward created | WardService | SettlementService, AddressService
+| SettlementAreaCreatedEvent | New settlement area created | SettlementService | InfrastructureService, PlanningService
+|===
+
+==== Security and Access Control
+
+The Location Domain implements a hierarchical security model leveraging the `AccessControlled` capabilities:
+
+[plantuml]
+----
+@startuml
+actor "Federal Admin" as FedAdmin
+actor "Province Admin" as ProvAdmin
+actor "District Admin" as DistAdmin
+actor "Municipality Admin" as MuniAdmin
+actor "Ward Officer" as WardOff
+actor "Citizen" as Citizen
+
+rectangle "Province" as Province
+rectangle "District" as District
+rectangle "Municipality" as Municipality
+rectangle "Ward" as Ward
+rectangle "Settlement" as Settlement
+
+FedAdmin --> Province : ADMIN
+ProvAdmin --> Province : EDIT
+ProvAdmin --> District : ADMIN
+DistAdmin --> District : EDIT
+DistAdmin --> Municipality : ADMIN
+MuniAdmin --> Municipality : EDIT
+MuniAdmin --> Ward : ADMIN
+WardOff --> Ward : EDIT
+WardOff --> Settlement : ADMIN
+Citizen --> Province : VIEW
+Citizen --> District : VIEW
+Citizen --> Municipality : VIEW
+Citizen --> Ward : VIEW
+Citizen --> Settlement : VIEW
+
+note right of FedAdmin
+  Each administrative level has ADMIN 
+  permissions for their level and EDIT
+  for the level above.
+  
+  VIEW permission is available to
+  all authenticated users.
+end note
+@enduml
+----
+
+==== API Integration Patterns
+
+The Location Domain leverages the WebhookTriggerable interface to notify external systems of changes:
+
+```kotlin
+// When a municipality's type changes
+municipality.triggerWebhooks(
+    event = "MUNICIPALITY_TYPE_CHANGED",
+    payload = mapOf(
+        "municipalityId" = municipality.id,
+        "municipalityCode" = municipality.municipalityCode,
+        "oldType" = oldType.name,
+        "newType" = newType.name,
+        "effectiveDate" = effectiveDate.toString(),
+        "approvedBy" = currentUser.username
+    )
+)
+```
+
+==== Data Governance Implementation
+
+The Location Domain implements the core data governance patterns:
+
+```kotlin
+// Province definition implements ExternalSystemSyncable
+// to synchronize with national information systems
+province.markForSync(SyncPriority.HIGH)
+val syncId = province.getExternalSystemId() // "NIS-PROVINCE-1"
+val syncUrl = province.getExternalSystemUrl() // "https://nis.gov.example/api/provinces/1"
+val syncStatus = province.getSyncStatus() // SyncStatus.PENDING
+```
+
+==== Location Domain Entities
+
+Each entity in the Location Domain has a specific role and responsibility within the system:
+
+include::location/province.adoc[leveloffset=+1]
+include::location/district.adoc[leveloffset=+1]
+include::location/municipality.adoc[leveloffset=+1]
+include::location/ward.adoc[leveloffset=+1]
+include::location/settlement-area.adoc[leveloffset=+1]

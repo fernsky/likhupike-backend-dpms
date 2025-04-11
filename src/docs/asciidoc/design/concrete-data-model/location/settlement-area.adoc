@@ -1,0 +1,495 @@
+==== Settlement Area
+
+SettlementArea represents populated areas within a Ward, extending core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+abstract class SpatialEntity
+interface LocalizedEntity
+
+' Settlement implementation
+class SettlementArea {
+  ' From NamedEntity
+  +String name
+  +String localName
+  +String description
+  
+  ' From SpatialEntity
+  +Point centroid
+  +Polygon polygon
+  +Double area
+  +Double elevation
+  
+  ' Settlement-specific
+  +UUID wardId
+  +UUID municipalityId
+  +UUID districtId
+  +UUID provinceId
+  +SettlementType type
+  
+  ' Demographics
+  +Integer estimatedPopulation
+  +Integer estimatedHouseholds
+  
+  ' Cultural context
+  +List<String> primaryLanguages
+  +List<String> primaryEthnicGroups
+  +String historicalSignificance
+  +String establishmentPeriod
+  
+  ' Infrastructure
+  +RoadAccessType roadAccessType
+  +WaterSourceType waterSourceType
+  +Boolean electricityAccess
+  +Boolean internetAccess
+  +Map<FacilityType, Double> nearestFacilities
+  
+  ' Economic context
+  +List<String> primaryLivelihoods
+  +List<String> majorCrops
+  +List<String> localIndustries
+  +Boolean marketAccess
+  
+  ' Implementation methods...
+}
+
+' Inheritance relationships
+NamedEntity <|-- SpatialEntity
+SpatialEntity <|-- SettlementArea
+
+' Interface implementation
+SettlementArea ..|> LocalizedEntity
+@enduml
+----
+
+===== Settlement Lifecycle States
+
+[plantuml]
+----
+@startuml
+[*] --> Identified : discover
+
+state Identified {
+  state "Initial Recognition" as Initial
+  state "Basic Mapping" as Mapping
+  state "Population Estimation" as Population
+  
+  [*] --> Initial
+  Initial --> Mapping : map boundary
+  Mapping --> Population : estimate population
+  Population --> [*] : ready for registration
+}
+
+Identified --> Registered : register
+
+state Registered {
+  state "Infrastructure Survey" as Infra
+  state "Cultural Documentation" as Culture
+  state "Service Planning" as Service
+  
+  [*] --> Infra
+  Infra --> Culture : document context
+  Culture --> Service : plan services
+  Service --> [*] : fully documented
+}
+
+Registered --> Active : activate
+
+state Active {
+  state "Infrastructure Development" as InfraDev
+  state "Population Monitoring" as PopMon
+  state "Service Delivery" as ServDel
+  
+  [*] --> InfraDev
+  InfraDev --> PopMon : monitor growth
+  PopMon --> ServDel : adapt services
+  ServDel --> InfraDev : expand infrastructure
+}
+
+Active --> Expanded : population growth
+Expanded --> ReclassificationNeeded : exceed thresholds
+
+ReclassificationNeeded --> TypeChanged : change settlement type
+TypeChanged --> Active : resume operations
+
+Active --> Merged : merge with other settlement
+Active --> Abandoned : population decline
+Merged --> [*]
+Abandoned --> Historical : preserve records
+Historical --> [*]
+@enduml
+----
+
+===== Settlement Creation Process
+
+[plantuml]
+----
+@startuml
+|Ward Administrator|
+start
+:Identify distinct settlement;
+:Map settlement boundary;
+:Estimate population;
+
+|System|
+:Validate settlement data;
+:Check boundary within ward;
+if (Valid?) then (yes)
+  :Create SettlementArea entity
+  extending NamedEntity
+  and SpatialEntity;
+else (no)
+  :Return validation errors;
+  stop
+endif
+
+|Ward Administrator|
+:Document cultural context;
+:Record infrastructure details;
+:Define economic activities;
+
+|System|
+:Calculate infrastructure score;
+:Update spatial relationships;
+:Enable in addressing system;
+:Update ward settlement list;
+:Publish SettlementAreaCreatedEvent;
+
+|Statistics System|
+:Update demographic statistics;
+:Recalculate coverage metrics;
+:Update development indicators;
+
+stop
+@enduml
+----
+
+===== Infrastructure Assessment
+
+SettlementArea provides infrastructure assessment capabilities:
+
+[plantuml]
+----
+@startuml
+participant "SettlementService" as Service
+participant "SettlementArea" as Settlement
+participant "InfrastructureScorer" as Scorer
+participant "SpatialService" as Spatial
+participant "DevelopmentIndexService" as Index
+
+Service -> Settlement : updateInfrastructure(infraData)
+activate Settlement
+
+Settlement -> Settlement : validateData(infraData)
+Settlement -> Settlement : updateAttributes(infraData)
+
+note right of Settlement
+  Updates attributes:
+  - roadAccessType
+  - waterSourceType
+  - electricityAccess
+  - internetAccess
+  - nearestFacilities
+end note
+
+Settlement -> Scorer : calculateInfrastructureScore()
+activate Scorer
+Settlement <-- Scorer : infrastructureScore
+deactivate Scorer
+
+Settlement -> Spatial : updateSettlementFacilities(id, infraData)
+activate Spatial
+Settlement <-- Spatial : success
+deactivate Spatial
+
+Settlement -> Index : updateDevelopmentIndicators(id)
+activate Index
+Settlement <-- Index : updatedIndicators
+deactivate Index
+
+Service <-- Settlement : updatedSettlement
+deactivate Settlement
+
+Service -> Settlement : getInfrastructureReport()
+activate Settlement
+
+Settlement -> Settlement : calculateRoadScore()
+Settlement -> Settlement : calculateWaterScore()
+Settlement -> Settlement : calculateElectricityScore()
+Settlement -> Settlement : calculateCommunicationsScore()
+Settlement -> Settlement : calculateFacilityAccessScore()
+
+Settlement -> Settlement : combineScores()
+
+Service <-- Settlement : infrastructureReport
+deactivate Settlement
+@enduml
+----
+
+===== Facility Proximity Calculation
+
+SettlementArea calculates facility access metrics:
+
+[plantuml]
+----
+@startuml
+participant "SettlementService" as Service
+participant "SettlementArea" as Settlement
+participant "SpatialService" as Spatial
+participant "FacilityRegistry" as Facilities
+participant "GISService" as GIS
+
+Service -> Settlement : calculateNearestFacilities()
+activate Settlement
+
+Settlement -> Settlement : getCentroid()
+Settlement -> Facilities : getFacilityTypes()
+activate Facilities
+Settlement <-- Facilities : facilityTypes
+deactivate Facilities
+
+loop for each facility type
+  Settlement -> Spatial : findNearestFacility(centroid, facilityType)
+  activate Spatial
+  
+  Spatial -> GIS : spatialQuery(centroid, facilityType)
+  activate GIS
+  Spatial <-- GIS : nearestFacilities
+  deactivate GIS
+  
+  Spatial -> Spatial : calculateDistance(centroid, facility)
+  Settlement <-- Spatial : facilityWithDistance
+  deactivate Spatial
+  
+  Settlement -> Settlement : updateNearestFacility(facilityType, distance)
+end
+
+Settlement -> Settlement : calculateAccessibilityScores()
+
+Service <-- Settlement : facilityProximityReport
+deactivate Settlement
+@enduml
+----
+
+===== Localization Implementation
+
+SettlementArea implements the LocalizedEntity interface:
+
+[plantuml]
+----
+@startuml
+participant "UserInterface" as UI
+participant "LocalizationService" as Service
+participant "SettlementArea\nimplements LocalizedEntity" as Settlement
+participant "TranslationRepository" as Translations
+
+UI -> Service : getLocalizedSettlement(id, locale)
+activate Service
+
+Service -> Settlement : getSettlement(id)
+activate Settlement
+Service <-- Settlement : settlement
+deactivate Settlement
+
+Service -> Settlement : getDefaultLocale()
+activate Settlement
+Service <-- Settlement : defaultLocale
+deactivate Settlement
+
+Service -> Settlement : getTranslationKeys()
+activate Settlement
+Service <-- Settlement : translationKeys
+deactivate Settlement
+
+alt Requested locale available
+  Service -> Translations : getTranslations(translationKeys, locale)
+  activate Translations
+  Service <-- Translations : localizedValues
+  deactivate Translations
+  
+  Service -> Service : applyTranslations(settlement, localizedValues)
+else Fallback to default
+  Service -> Translations : getTranslations(translationKeys, defaultLocale)
+  activate Translations
+  Service <-- Translations : defaultValues
+  deactivate Translations
+  
+  Service -> Service : applyTranslations(settlement, defaultValues)
+end
+
+UI <-- Service : localizedSettlement
+deactivate Service
+@enduml
+----
+
+===== Settlement Type Evolution
+
+[plantuml]
+----
+@startuml
+participant "SettlementService" as Service
+participant "SettlementArea" as Settlement
+participant "SettlementTypePolicy" as Policy
+participant "DomainEventPublisher" as Events
+
+Service -> Settlement : evaluateSettlementType()
+activate Settlement
+
+Settlement -> Settlement : getCurrentType()
+Settlement -> Settlement : getPopulation()
+Settlement -> Settlement : getInfrastructureScore()
+
+Settlement -> Policy : determineAppropriateType(currentType, population, infrastructureScore)
+activate Policy
+Settlement <-- Policy : recommendedType
+deactivate Policy
+
+alt Type change needed
+  Settlement -> Settlement : proposeTypeChange(recommendedType)
+  
+  Service <-- Settlement : typeChangeProposal
+  deactivate Settlement
+  
+  Service -> Service : reviewTypeChangeProposal(proposal)
+  
+  Service -> Settlement : changeType(recommendedType)
+  activate Settlement
+  
+  Settlement -> Settlement : setType(recommendedType)
+  Settlement -> Settlement : recordTypeChangeHistory()
+  Settlement -> Events : publish(SettlementTypeChangedEvent)
+  
+  Service <-- Settlement : updatedSettlement
+  deactivate Settlement
+else No change needed
+  Service <-- Settlement : noChangeNeeded
+  deactivate Settlement
+end
+@enduml
+----
+
+===== Integration Points
+
+[plantuml]
+----
+@startuml
+node "Settlement Area" as Settlement
+node "Ward" as Ward
+node "Address System" as Address
+node "Cultural Registry" as Culture
+node "Infrastructure Planning" as Infrastructure
+node "Development Index" as Development
+node "Census System" as Census
+
+Settlement -- Ward : "Located within"
+Settlement -- Address : "Provides addressing\ncontext"
+Settlement -- Culture : "Cultural heritage\nand context"
+Settlement -- Infrastructure : "Infrastructure\nplanning target"
+Settlement -- Development : "Development\nmetrics source"
+Settlement -- Census : "Demographic\ndata source"
+
+@enduml
+----
+
+===== Settlement Area Vs. Standard Geographic Unit
+
+[plantuml]
+----
+@startuml
+rectangle "Standard Geographic Unit" as SGU {
+  card "Fixed Boundary" as SGUBoundary
+  card "Statistical Purpose" as SGUStat
+  card "Centrally Defined" as SGUDef
+  card "Purely Geographic" as SGUGeo
+}
+
+rectangle "Settlement Area Model" as Settlement {
+  card "Dynamic Boundary" as SettBoundary
+  card "Service Delivery Focus" as SettService
+  card "Community Recognized" as SettComm
+  card "Cultural & Economic Context" as SettContext
+}
+
+note bottom of Settlement
+  SettlementArea extends beyond standard
+  geographic units by incorporating:
+  - Community identity
+  - Cultural context
+  - Economic characteristics
+  - Infrastructure status
+  - Development needs
+end note
+@enduml
+----
+
+===== Data Model Evolution
+
+[plantuml]
+----
+@startuml
+!define TABLE class
+
+TABLE "Early Implementation" as Early {
+  +name
+  +wardId
+  +boundary
+  +estimatedPopulation
+  +type
+}
+
+TABLE "Current Implementation" as Current {
+  ' Core fields from NamedEntity
+  +name
+  +description
+  +localName
+  
+  ' Core fields from SpatialEntity
+  +polygon
+  +centroid
+  +area
+  +elevation
+  
+  ' Location hierarchy
+  +wardId
+  +municipalityId
+  +districtId
+  +provinceId
+  
+  ' Demographics
+  +estimatedPopulation
+  +estimatedHouseholds
+  
+  ' Infrastructure
+  +roadAccessType
+  +waterSourceType
+  +electricityAccess
+  +internetAccess
+  +nearestFacilities
+}
+
+TABLE "Future Expansion" as Future {
+  ' All current fields
+  +...
+  
+  ' New capabilities
+  +naturalDisasterRisk
+  +climateAdaptationNeeds
+  +healthIndicators
+  +educationStats
+  +communityAssets
+  +seasonalDynamics
+}
+
+Early --> Current : Evolution
+Current --> Future : Planned\nExpansion
+note bottom of Future
+  Core model capabilities allow seamless evolution
+  of the settlement model as needs grow
+end note
+@enduml
+----

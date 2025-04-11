@@ -1,0 +1,588 @@
+==== District
+
+District is an administrative division within a Province, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+abstract class ApprovableEntity
+abstract class SpatialEntity
+interface HistoryViewable
+interface AccessControlled
+
+' District implementation
+class District {
+  ' From NamedEntity
+  +String name
+  +String districtCode
+  +String localName
+  +String description
+  
+  ' District-specific
+  +UUID provinceId
+  +Boolean isMetropolitan
+  +LocalDate establishedDate
+  +Set<UUID> municipalityIds
+  +UUID headquarterMunicipalityId
+  
+  ' Spatial data
+  +UUID boundaryId
+  +Double areaInSquareKm
+  +Double rightmostLatitude
+  +Double leftmostLatitude
+  +Double topmostLongitude
+  +Double bottommostLongitude
+  +Set<UUID> adjacentDistrictIds
+  +Set<UUID> borderingProvinceIds
+  +Set<String> borderingCountries
+  
+  ' Implementation methods...
+}
+
+' Inheritance relationships
+NamedEntity <|-- ApprovableEntity
+ApprovableEntity <|-- District
+SpatialEntity <|.. District
+
+' Interface implementation
+District ..|> HistoryViewable
+District ..|> AccessControlled
+@enduml
+----
+
+===== District Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Proposed : Create new district
+
+state Proposed {
+  [*] --> Draft : Initial creation
+  Draft --> ProvinceReview : Submit
+  ProvinceReview --> Rejected : Reject proposal
+  ProvinceReview --> Approved : Approve
+  Rejected --> Draft : Revise
+}
+
+Approved --> Active : Activate
+Active --> Active : Minor updates
+
+state Active {
+  state "Normal Operation" as Normal
+  state "Municipality Management" as MunMgmt
+  state "Census Update" as Census
+  
+  Normal --> MunMgmt : Add/modify municipalities
+  MunMgmt --> Normal
+  Normal --> Census : Update population data
+  Census --> Normal
+}
+
+Active --> ProposedMajorChange : Propose restructuring
+
+state ProposedMajorChange {
+  [*] --> ChangeProposal
+  ChangeProposal --> ChangeReview
+  ChangeReview --> ChangeRejected : Reject change
+  ChangeReview --> ChangeApproved : Approve change
+  ChangeRejected --> ChangeProposal : Revise
+}
+
+ProposedMajorChange --> Active : Implement approved changes
+Active --> Deprecated : Phase out
+Deprecated --> Historical : Archive
+Historical --> [*]
+@enduml
+----
+
+===== District Creation Process
+
+[plantuml]
+----
+@startuml
+|Province Administrator|
+start
+:Identify need for new district;
+:Define district boundaries;
+:Assign district code;
+:Select headquarters municipality;
+
+|System|
+:Validate district data;
+:Check boundary within province;
+if (Valid?) then (yes)
+  :Calculate spatial attributes;
+  :Create district record in DRAFT state;
+else (no)
+  :Return validation errors;
+  stop
+endif
+
+|Province Administrator|
+:Submit for approval;
+
+|Approving Authority|
+:Review district proposal;
+if (Approve?) then (yes)
+  :Approve district;
+else (no)
+  :Reject with comments;
+  |Province Administrator|
+  :Revise district details;
+  note right
+    Return to System validation
+  end note
+endif
+
+|System|
+:Create district boundary record;
+:Update spatial relationships;
+:Update province's district list;
+:Find adjacent districts;
+:Update bordering information;
+:Set district status to ACTIVE;
+:Publish district creation event;
+
+|Province Administrator|
+:Create initial municipalities;
+:Configure district administration;
+
+stop
+@enduml
+----
+
+===== District Boundary Change Process
+
+[plantuml]
+----
+@startuml
+|District Administrator|
+start
+:Identify need for boundary change;
+:Prepare boundary change proposal;
+:Document justification;
+
+|System|
+:Validate new boundaries;
+:Check containment within province;
+:Identify affected municipalities;
+if (Valid?) then (yes)
+  :Create boundary change request;
+else (no)
+  :Return validation errors;
+  stop
+endif
+
+|Province Administrator|
+:Review boundary change request;
+:Assess impact on municipalities;
+if (Approve?) then (yes)
+  :Approve boundary change;
+else (no)
+  :Reject with comments;
+  |District Administrator|
+  :Revise boundary proposal;
+  note right
+    Return to System validation
+  end note
+endif
+
+|System|
+:Create historical record of old boundary;
+:Implement new district boundary;
+:Update affected municipality references;
+:Update adjacency relationships;
+:Recalculate district statistics;
+:Publish boundary change events;
+
+|District Administrator|
+:Review implementation;
+:Update district documentation;
+
+stop
+@enduml
+----
+
+===== District Integration Points
+
+[plantuml]
+----
+@startuml
+node "District" as District
+node "Province" as Province
+node "Municipalities" as Municipalities
+node "Geographic Information System" as GIS
+node "Service Delivery System" as Services
+node "Statistical System" as Stats
+
+District -- Province : "Belongs to"
+District -- Municipalities : "Contains and\nmanages"
+District -- GIS : "Defines boundaries\nand spatial context"
+District -- Services : "Coordinates service\ndelivery"
+District -- Stats : "Aggregates\nstatistics"
+
+@enduml
+----
+
+===== Adjacent District Detection
+
+[plantuml]
+----
+@startuml
+start
+:Create/Update District Boundary;
+
+:Find all district boundaries that 
+intersect with this boundary;
+
+if (Any intersecting boundaries?) then (yes)
+    :For each intersecting district:;
+    :Calculate shared border length;
+    :Update adjacency relationships in both districts;
+    :Store shared border length;
+else (no)
+    :No adjacent districts found;
+endif
+
+:Check if district boundary touches province boundary;
+if (Touches province boundary?) then (yes)
+    :Mark as provincial border district;
+    :Find adjacent provinces;
+    :Update bordering provinces list;
+    
+    :Check if province boundary is international border;
+    if (Is international border?) then (yes)
+        :Mark as international border district;
+        :Update bordering countries list;
+    endif
+endif
+
+stop
+@enduml
+----
+
+===== District Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+abstract class ApprovableEntity
+abstract class SpatialEntity
+interface HistoryViewable
+interface AccessControlled
+
+' District implementation
+class District {
+  ' From NamedEntity
+  +String name
+  +String districtCode
+  +String localName
+  +String description
+  
+  ' District-specific
+  +UUID provinceId
+  +Boolean isMetropolitan
+  +LocalDate establishedDate
+  +Set<UUID> municipalityIds
+  +UUID headquarterMunicipalityId
+  
+  ' Spatial data
+  +UUID boundaryId
+  +Double areaInSquareKm
+  +Double rightmostLatitude
+  +Double leftmostLatitude
+  +Double topmostLongitude
+  +Double bottommostLongitude
+  +Double lowestAltitude
+  +Double highestAltitude
+  +Set<UUID> adjacentDistrictIds
+  +Set<UUID> borderingProvinceIds
+  +Set<String> borderingCountries
+  
+  ' Census data
+  +Integer population
+  +Integer populationYear
+  +Integer urbanPopulation
+  +Integer ruralPopulation
+  +Integer householdCount
+  +Map<String, Any> demographicData
+  
+  ' Governance data
+  +AddressComponent districtAdminOfficeAddress
+  +ContactInformation districtAdminContactInfo
+  
+  ' Historical data
+  +List<HistoricalName> formerNames
+  +Set<UUID> formerDistrictIds
+  +List<RestructuringEvent> restructuringHistory
+}
+
+' Inheritance relationships
+NamedEntity <|-- ApprovableEntity
+ApprovableEntity <|-- District
+SpatialEntity <|.. District
+
+' Interface implementation
+District ..|> HistoryViewable
+District ..|> AccessControlled
+@enduml
+----
+
+===== District Access Control Implementation
+
+The District entity implements the AccessControlled interface from the core domain model:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "District\nimplements AccessControlled" as District
+participant "AccessControlRepository" as ACRepo
+participant "UserRepository" as Users
+
+Security -> District : hasPermission(user, Permission.EDIT)
+activate District
+
+District -> District : getAccessControlList()
+activate District
+District -> ACRepo : findByEntityTypeAndEntityId("District", id)
+activate ACRepo
+District <-- ACRepo : accessControlEntries
+deactivate ACRepo
+
+alt Direct permission exists
+  District -> District : checkDirectPermission(user, entries, Permission.EDIT)
+  District -> District : return true/false based on direct permission
+else Check role-based permission
+  District -> Users : findRolesForUser(user.id)
+  activate Users
+  District <-- Users : userRoles
+  deactivate Users
+  
+  District -> District : checkRoleBasedPermission(userRoles, Permission.EDIT)
+  note right
+    Checks if user has district admin role
+    or province admin role for the parent province
+  end note
+else Check inheritance
+  District -> District : getProvince()
+  District -> District : checkInheritedPermission(user, province, Permission.EDIT)
+end
+
+Security <-- District : permissionResult
+deactivate District
+deactivate District
+
+@enduml
+----
+
+===== District History Tracking
+
+District implements the HistoryViewable interface to track changes:
+
+[plantuml]
+----
+@startuml
+participant "AdminUI" as UI
+participant "HistoryService" as History
+participant "District\nimplements HistoryViewable" as District
+participant "EntityVersionRepository" as Versions
+participant "DistrictBoundaryRepository" as Boundaries
+
+UI -> History : getDistrictHistory(districtId)
+activate History
+
+History -> District : getChangeHistory()
+activate District
+District -> Versions : findByEntityTypeAndEntityId("District", id)
+activate Versions
+District <-- Versions : changeRecords
+deactivate Versions
+History <-- District : changeHistory
+deactivate District
+
+History -> District : getHistorySnapshot(timestamp)
+activate District
+District -> Versions : findByEntityTypeAndEntityIdAndTimestamp("District", id, timestamp)
+activate Versions
+District <-- Versions : versionData
+deactivate Versions
+History <-- District : snapshotAtPointInTime
+deactivate District
+
+UI <- History : districtHistoryData
+deactivate History
+
+UI -> History : compareBoundaryVersions(districtId, date1, date2)
+activate History
+
+History -> District : getBoundaryId()
+activate District
+History <-- District : currentBoundaryId
+deactivate District
+
+History -> Boundaries : findHistoricalBoundaries(districtId, date1, date2)
+activate Boundaries
+History <-- Boundaries : boundaryVersions
+deactivate Boundaries
+
+History -> History : generateBoundaryDiff(boundaryVersions)
+
+UI <-- History : boundaryComparisonMap
+deactivate History
+
+@enduml
+----
+
+===== District Spatial Analysis
+
+Districts leverage the SpatialEntity capabilities for geographic analysis:
+
+[plantuml]
+----
+@startuml
+participant "GISService" as GIS
+participant "District" as District
+participant "LocationBoundary" as Boundary
+participant "SpatialAnalysisService" as Spatial
+
+GIS -> District : getDistrictStats(districtId)
+activate District
+
+District -> District : getBoundary()
+activate District
+District -> Boundary : findById(boundaryId)
+activate Boundary
+District <-- Boundary : districtBoundary
+deactivate Boundary
+District <-- District : boundary
+deactivate District
+
+District -> Spatial : calculateAreaStatistics(boundary)
+activate Spatial
+Spatial -> Spatial : calculateUrbanzedArea(boundary)
+Spatial -> Spatial : calculateAgriculturalArea(boundary)
+Spatial -> Spatial : calculateForestCoverage(boundary)
+Spatial -> Spatial : calculateWaterCoverage(boundary)
+District <-- Spatial : areaStatistics
+deactivate Spatial
+
+District -> Spatial : calculatePopulationDensity(boundary, population)
+activate Spatial
+District <-- Spatial : populationDensity
+deactivate Spatial
+
+District -> Spatial : calculateRoadNetworkDensity(boundary)
+activate Spatial
+District <-- Spatial : roadNetworkStats
+deactivate Spatial
+
+District -> District : combineStatistics(areaStatistics, populationDensity, roadNetworkStats)
+
+GIS <-- District : comprehensiveDistrictStats
+deactivate District
+
+@enduml
+----
+
+===== District Events
+
+[plantuml]
+----
+@startuml
+class DistrictCreatedEvent {
+  +UUID districtId
+  +String districtName
+  +UUID provinceId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DistrictApprovedEvent {
+  +UUID districtId
+  +String districtName
+  +UUID provinceId
+  +String approvedBy
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DistrictBoundaryChangedEvent {
+  +UUID districtId
+  +String districtName
+  +UUID provinceId
+  +UUID oldBoundaryId
+  +UUID newBoundaryId
+  +LocalDate effectiveDate
+  +String changeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- DistrictCreatedEvent
+DomainEvent <|-- DistrictApprovedEvent
+DomainEvent <|-- DistrictBoundaryChangedEvent
+@enduml
+----
+
+===== District Relationship to Municipality
+
+[plantuml]
+----
+@startuml
+participant "DistrictService" as Service
+participant "District" as District
+participant "Municipality" as Municipality
+participant "MunicipalityService" as MuniService
+participant "DomainEventPublisher" as Events
+
+Service -> District : createMunicipality(municipalityData)
+activate District
+
+District -> District : validateMunicipalityData(municipalityData)
+District -> District : validateMunicipalityWithinDistrict(municipalityData.boundary)
+
+alt Valid Municipality
+  District -> MuniService : createMunicipality(municipalityData)
+  activate MuniService
+  MuniService -> Municipality : create()
+  activate Municipality
+  MuniService <-- Municipality : newMunicipality
+  deactivate Municipality
+  District <-- MuniService : municipality
+  deactivate MuniService
+  
+  District -> District : municipalityIds.add(municipality.id)
+  
+  District -> Events : publish(MunicipalityCreatedEvent)
+  
+  Service <-- District : municipality
+else Invalid Municipality
+  Service <-- District : validationErrors
+end
+deactivate District
+
+Service -> District : getMunicipalities()
+activate District
+District -> District : getMunicipalityIds()
+Service <-- District : municipalities
+deactivate District
+
+Service -> District : recalculateStatisticsFromMunicipalities()
+activate District
+District -> District : getMunicipalities()
+District -> District : aggregatePopulationData()
+District -> District : aggregateInfrastructureData()
+District -> District : updateStatistics()
+Service <-- District : updatedDistrict
+deactivate District
+@enduml
+----

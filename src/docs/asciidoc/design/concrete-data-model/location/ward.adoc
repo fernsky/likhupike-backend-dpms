@@ -1,0 +1,825 @@
+==== Ward
+
+Ward is the smallest administrative division within a Municipality, extending core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+abstract class ApprovableEntity
+abstract class SpatialEntity
+interface HistoryViewable
+interface GeocodingCapable
+
+' Ward implementation
+class Ward {
+  ' From NamedEntity
+  +String name
+  +String localName
+  +String description
+  
+  ' Ward-specific
+  +Integer wardNumber
+  +UUID municipalityId
+  +UUID districtId
+  +UUID provinceId
+  +WardType type
+  +LocalDate establishedDate
+  
+  ' Spatial data
+  +UUID boundaryId
+  +Double areaInSquareKm
+  +Set<UUID> adjacentWardIds
+  
+  ' Settlement management
+  +Set<UUID> majorSettlementIds
+  
+  ' Demographics
+  +Integer population
+  +Integer householdCount
+  
+  ' Infrastructure
+  +Integer schoolCount
+  +Integer healthFacilityCount
+  +Double waterSupplyCoverage
+  +Double electricityCoverage
+  +Double internetCoverage
+  
+  ' Historical context
+  +String formingLocalBody
+  +List<String> formingConstituentWards
+  
+  ' Implementation methods...
+}
+
+' Inheritance relationships
+NamedEntity <|-- ApprovableEntity
+ApprovableEntity <|-- Ward
+
+' Interface implementation
+Ward ..|> HistoryViewable
+Ward ..|> GeocodingCapable
+@enduml
+----
+
+===== Ward Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Initial Data Entry" as Initial
+  state "Boundary Definition" as Boundary
+  state "Settlement Planning" as Planning
+  state "Validation" as Validation
+  
+  [*] --> Initial
+  Initial --> Boundary : define boundary
+  Boundary --> Planning : identify settlements
+  Planning --> Validation : validate
+  Validation --> [*] : valid
+  Validation --> Initial : invalid
+}
+
+Draft --> Pending : submit for approval
+Pending --> MunicipalReview : assign reviewer
+MunicipalReview --> Revisions : request changes
+Revisions --> Pending : resubmit
+MunicipalReview --> Approved : approve
+Approved --> Active : activate
+
+state Active {
+  state "Normal Operations" as Normal
+  state "Settlement Management" as SettlementMgmt
+  state "Infrastructure Updates" as InfraUpdate
+  state "Census Updates" as Census
+  
+  [*] --> Normal
+  Normal --> SettlementMgmt : manage settlements
+  Normal --> InfraUpdate : update infrastructure
+  Normal --> Census : update population
+  
+  SettlementMgmt --> Normal
+  InfraUpdate --> Normal
+  Census --> Normal
+}
+
+Active --> ProposedChange : propose change
+ProposedChange --> BoundaryAdjustment : adjust boundary
+ProposedChange --> WardMerger : merge wards
+ProposedChange --> WardDivision : divide ward
+
+BoundaryAdjustment --> Pending : submit for approval
+WardMerger --> Pending : submit for approval
+WardDivision --> Pending : submit for approval
+
+Active --> Deprecated : superseded
+Deprecated --> Historical : archive
+Historical --> [*]
+@enduml
+----
+
+===== Ward Creation Process
+
+[plantuml]
+----
+@startuml
+|Municipality Administrator|
+start
+:Identify need for new ward;
+:Prepare ward data;
+:Define ward boundary;
+
+|System|
+:Validate ward data;
+:Check boundary within municipality;
+if (Valid?) then (yes)
+  :Create Ward entity
+  extending NamedEntity
+  and ApprovableEntity;
+  :Set reviewState = DRAFT;
+else (no)
+  :Return validation errors;
+  stop
+endif
+
+|Municipality Administrator|
+:Identify major settlements;
+:Document infrastructure;
+:Submit for approval;
+
+|System|
+:Set reviewState = PENDING;
+:Assign reviewers;
+
+|Municipality Reviewer|
+:Review ward proposal;
+if (Approve?) then (yes)
+  :Approve ward;
+else (no)
+  :Request changes;
+  |Municipality Administrator|
+  :Make requested changes;
+  note right
+    Return to System validation
+  end note
+endif
+
+|System|
+:Update ward:
+- Set isApproved = true
+- Set reviewState = APPROVED
+- Set approvedBy & approvedAt;
+
+:Create LocationBoundary entity;
+:Update municipality ward list;
+:Update adjacency relationships;
+:Enable geocoding for ward;
+:Publish WardCreatedEvent;
+
+stop
+@enduml
+----
+
+===== Settlement Management
+
+Wards manage settlements using composition with core domain patterns:
+
+[plantuml]
+----
+@startuml
+participant "WardService" as Service
+participant "Ward" as Ward
+participant "SettlementArea" as Settlement
+participant "LocationBoundary" as Boundary
+participant "GISService" as GIS
+participant "DomainEventPublisher" as Events
+
+Service -> Ward : createSettlement(settlementData)
+activate Ward
+
+Ward -> Ward : validateSettlementData(settlementData)
+Ward -> GIS : validateBoundaryContainment(wardBoundary, settlementBoundary)
+activate GIS
+Ward <-- GIS : containmentValidation
+deactivate GIS
+
+alt Valid Settlement
+  Ward -> Settlement : create()
+  activate Settlement
+  Settlement -> Settlement : setSpatialAttributes()
+  Ward <-- Settlement : settlement
+  deactivate Settlement
+  
+  Ward -> Boundary : createBoundary(settlement.id, settlementData.boundary)
+  activate Boundary
+  Ward <-- Boundary : boundary
+  deactivate Boundary
+  
+  Ward -> Settlement : setBoundaryId(boundary.id)
+  
+  Ward -> Ward : majorSettlementIds.add(settlement.id)
+  
+  Ward -> Events : publish(SettlementCreatedEvent)
+  
+  Service <-- Ward : settlement
+else Invalid Settlement
+  Service <-- Ward : validationErrors
+end
+deactivate Ward
+@enduml
+----
+
+===== Geocoding Implementation
+
+Ward implements the GeocodingCapable interface from the core:
+
+[plantuml]
+----
+@startuml
+participant "AddressService" as Service
+participant "Ward\nimplements GeocodingCapable" as Ward
+participant "LocationBoundary" as Boundary
+participant "GISService" as GIS
+
+Service -> Ward : geocodeAddress("123 Main St, Settlement X")
+activate Ward
+
+Ward -> Boundary : getBoundary()
+activate Boundary
+Ward <-- Boundary : wardBoundary
+deactivate Boundary
+
+Ward -> Ward : getSettlements()
+Ward -> Ward : identifySettlement("Settlement X")
+
+alt Settlement Identified
+  Ward -> GIS : geocodeWithinSettlement(address, settlement)
+else No Specific Settlement
+  Ward -> GIS : geocodeWithinBoundary(address, wardBoundary)
+end
+
+activate GIS
+Ward <-- GIS : coordinates
+deactivate GIS
+
+Service <-- Ward : geocodingResult
+deactivate Ward
+
+Service -> Ward : reverseGeocode(latitude, longitude)
+activate Ward
+
+Ward -> Boundary : getBoundary()
+activate Boundary
+Ward <-- Boundary : wardBoundary
+deactivate Boundary
+
+Ward -> GIS : findSettlementAt(latitude, longitude)
+activate GIS
+Ward <-- GIS : settlementId
+deactivate GIS
+
+Ward -> Ward : constructAddress(latitude, longitude, settlementId)
+
+Service <-- Ward : addressComponent
+deactivate Ward
+@enduml
+----
+
+===== Infrastructure Tracking
+
+Wards track infrastructure, building on the core domain models:
+
+[plantuml]
+----
+@startuml
+participant "WardService" as Service
+participant "Ward" as Ward
+participant "InfrastructureTracker" as Tracker
+participant "SpatialService" as Spatial
+participant "DomainEventPublisher" as Events
+
+Service -> Ward : updateInfrastructureData(updatedData)
+activate Ward
+
+Ward -> Ward : validateData(updatedData)
+
+Ward -> Ward : updateCounts(updatedData)
+note right
+  Updates:
+  - schoolCount
+  - healthFacilityCount
+  - waterSupplyCoverage
+  - electricityCoverage
+  - internetCoverage
+end note
+
+Ward -> Tracker : calculateInfrastructureScore(updatedData)
+activate Tracker
+Ward <-- Tracker : infrastructureScore
+deactivate Tracker
+
+Ward -> Spatial : updateServiceCoverage(wardId, updatedData)
+activate Spatial
+Ward <-- Spatial : success
+deactivate Spatial
+
+Ward -> Events : publish(WardInfrastructureUpdatedEvent)
+
+Service <-- Ward : updated ward
+deactivate Ward
+@enduml
+----
+
+===== Ward Restructuring
+
+Ward restructuring leverages the ApprovableEntity workflow:
+
+[plantuml]
+----
+@startuml
+participant "WardService" as Service
+participant "Ward" as Ward
+participant "RestructuringRequest\nextends ApprovableEntity" as Request
+participant "LocationBoundary" as Boundary
+participant "DomainEventPublisher" as Events
+
+Service -> Ward : proposeRestructuring(restructuringData)
+activate Ward
+
+Ward -> Request : create()
+activate Request
+Request -> Request : setRequestType(restructuringData.type)
+Request -> Request : setReviewState(DRAFT)
+Ward <-- Request : request
+deactivate Request
+
+Service <-- Ward : restructuringRequest
+deactivate Ward
+
+Service -> Request : submitForApproval(requestId)
+activate Request
+Request -> Request : setReviewState(PENDING)
+Service <-- Request
+deactivate Request
+
+note over Request
+  Standard approval process from
+  ApprovableEntity is followed
+end note
+
+Service -> Request : approve(requestId)
+activate Request
+Request -> Request : setIsApproved(true)
+Request -> Request : setApprovedBy(currentUser)
+Request -> Request : setApprovedAt(now)
+Service <-- Request
+deactivate Request
+
+Service -> Ward : executeRestructuring(requestId)
+activate Ward
+
+alt Ward Merger
+  Ward -> Ward : createNewWard(mergedData)
+  Ward -> Ward : deprecateSourceWards()
+  Ward -> Boundary : createMergedBoundary()
+  Ward -> Events : publish(WardMergerCompletedEvent)
+else Ward Division
+  Ward -> Ward : createNewWards(dividedData)
+  Ward -> Ward : deprecateSourceWard()
+  Ward -> Boundary : createDividedBoundaries()
+  Ward -> Events : publish(WardDivisionCompletedEvent)
+else Boundary Adjustment
+  Ward -> Boundary : updateBoundary(newBoundary)
+  Ward -> Ward : updateAdjacentWardRelationships()
+  Ward -> Events : publish(WardBoundaryChangedEvent)
+end
+
+Service <-- Ward : restructuringResult
+deactivate Ward
+@enduml
+----
+
+===== Integration Points
+
+[plantuml]
+----
+@startuml
+node "Ward" as Ward
+node "Municipality" as Municipality
+node "Settlements" as Settlements
+node "Infrastructure" as Infrastructure
+node "Address System" as Address
+node "Service Delivery" as Services
+node "Reporting System" as Reports
+
+Ward -- Municipality : "Belongs to"
+Ward -- Settlements : "Contains and\nmanages"
+Ward -- Infrastructure : "Tracks facilities\nand coverage"
+Ward -- Address : "Provides addressing\ncontext"
+Ward -- Services : "Local service\ndelivery point"
+Ward -- Reports : "Demographic and\nservice statistics"
+
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+Ward implements the HistoryViewable interface from the core domain model:
+
+[plantuml]
+----
+@startuml
+participant "AdminUI" as UI
+participant "HistoryService" as History
+participant "Ward\nimplements HistoryViewable" as Ward
+participant "EntityVersionRepository" as Versions
+participant "WardBoundaryRepository" as Boundaries
+
+UI -> History : getWardHistory(wardId)
+activate History
+
+History -> Ward : getChangeHistory()
+activate Ward
+Ward -> Versions : findByEntityTypeAndEntityId("Ward", id)
+activate Versions
+Ward <-- Versions : changeRecords
+deactivate Versions
+History <-- Ward : changeHistory
+deactivate Ward
+
+History -> Ward : getHistorySnapshot(timestamp)
+activate Ward
+Ward -> Versions : findByEntityTypeAndEntityIdAndTimestamp("Ward", id, timestamp)
+activate Versions
+Ward <-- Versions : versionData
+deactivate Versions
+History <-- Ward : snapshotAtPointInTime
+deactivate Ward
+
+UI <- History : wardHistoryData
+deactivate History
+
+UI -> History : compareSnapshots(wardId, date1, date2)
+activate History
+
+History -> Ward : getHistorySnapshot(date1)
+activate Ward
+History <-- Ward : snapshot1
+deactivate Ward
+
+History -> Ward : getHistorySnapshot(date2)
+activate Ward
+History <-- Ward : snapshot2
+deactivate Ward
+
+History -> History : diffSnapshots(snapshot1, snapshot2)
+
+UI <-- History : wardChangeComparison
+deactivate History
+
+@enduml
+----
+
+===== Statistical Aggregation
+
+Ward aggregates data from settlements for statistical reporting:
+
+[plantuml]
+----
+@startuml
+participant "ReportingService" as Service
+participant "Ward" as Ward
+participant "SettlementArea" as Settlement
+participant "StatisticsCalculator" as Stats
+participant "WardSnapshot" as Snapshot
+
+Service -> Ward : generateStatisticalSummary()
+activate Ward
+
+Ward -> Ward : getSettlements()
+activate Ward
+Ward -> Settlement : findAllByWardId(id)
+activate Settlement
+Ward <-- Settlement : settlements
+deactivate Settlement
+Ward <-- Ward : settlements
+deactivate Ward
+
+Ward -> Ward : aggregateDemographicData(settlements)
+activate Ward
+Ward -> Ward : calculatePopulationStatistics()
+Ward -> Ward : calculateHouseholdStatistics()
+Ward -> Ward : calculateGenderDistribution()
+Ward -> Ward : calculateAgeDistribution()
+Ward <-- Ward : demographicStats
+deactivate Ward
+
+Ward -> Stats : calculateInfrastructureStatistics(ward, settlements)
+activate Stats
+Stats -> Stats : calculateWaterCoveragePercentage()
+Stats -> Stats : calculateElectricityCoveragePercentage()
+Stats -> Stats : calculateInternetCoveragePercentage()
+Stats -> Stats : calculateHealthServiceCoverage()
+Stats -> Stats : calculateEducationServiceCoverage()
+Ward <-- Stats : infrastructureStats
+deactivate Stats
+
+Ward -> Ward : combineStatistics(demographicStats, infrastructureStats)
+
+Ward -> Snapshot : createQuarterlySnapshot(combinedStats)
+activate Snapshot
+Ward <-- Snapshot : snapshot
+deactivate Snapshot
+
+Service <-- Ward : wardStatisticalSummary
+deactivate Ward
+
+Service -> Ward : getStatisticalTimeSeries(metricId, timeRange)
+activate Ward
+Ward -> Snapshot : findByWardIdAndMetricAndTimeRange(id, metricId, timeRange)
+activate Snapshot
+Ward <-- Snapshot : timeSeriesData
+deactivate Snapshot
+Service <-- Ward : metricTimeSeries
+deactivate Ward
+@enduml
+----
+
+===== Address Management Capabilities
+
+Ward provides address validation and standardization:
+
+[plantuml]
+----
+@startuml
+participant "AddressService" as Service
+participant "Ward" as Ward
+participant "Municipality" as Municipality
+participant "AddressFormat" as Format
+participant "SettlementArea" as Settlement
+
+Service -> Ward : validateAddress(addressData)
+activate Ward
+
+Ward -> Ward : checkWardNumber(addressData.wardNumber)
+
+Ward -> Municipality : getMunicipality()
+activate Municipality
+Ward <-- Municipality : municipality
+deactivate Municipality
+
+Ward -> Municipality : getAddressFormat()
+activate Municipality
+Municipality -> Format : findByMunicipalityId(municipalityId)
+activate Format
+Municipality <-- Format : addressFormat
+deactivate Format
+Ward <-- Municipality : format
+deactivate Municipality
+
+Ward -> Ward : validateStreetAddress(addressData.streetAddress, format)
+
+Ward -> Ward : validateSettlementReference(addressData.settlement)
+activate Ward
+Ward -> Settlement : findByNameAndWardId(addressData.settlement, id)
+activate Settlement
+Ward <-- Settlement : settlementArea
+deactivate Settlement
+Ward <-- Ward : settlementValidation
+deactivate Ward
+
+Ward -> Ward : combineValidationResults()
+
+Service <-- Ward : addressValidationResult
+deactivate Ward
+
+Service -> Ward : formatAddress(addressData)
+activate Ward
+Ward -> Ward : getFormattedAddress(addressData, format, municipality)
+Service <-- Ward : formattedAddress
+deactivate Ward
+@enduml
+----
+
+===== GeoJSON Boundary Generation
+
+Ward provides optimized boundary representations for mapping:
+
+[plantuml]
+----
+@startuml
+participant "MapService" as Map
+participant "Ward" as Ward
+participant "LocationBoundary" as Boundary
+participant "GeoJsonGenerator" as GeoJson
+participant "SimplificationService" as Simplify
+
+Map -> Ward : getGeoJsonRepresentation(zoomLevel)
+activate Ward
+
+Ward -> Ward : getBoundaryId()
+Ward -> Boundary : findById(boundaryId)
+activate Boundary
+Ward <-- Boundary : boundary
+deactivate Boundary
+
+alt High zoom level (detailed)
+  Ward -> GeoJson : generateFromBoundary(boundary, simplificationLevel.NONE)
+  activate GeoJson
+  Ward <-- GeoJson : detailedGeoJson
+  deactivate GeoJson
+  
+  Map <-- Ward : detailedGeoJson
+else Medium zoom level
+  Ward -> Simplify : simplifyBoundary(boundary, toleranceLevel.MEDIUM)
+  activate Simplify
+  Ward <-- Simplify : simplifiedBoundary
+  deactivate Simplify
+  
+  Ward -> GeoJson : generateFromBoundary(simplifiedBoundary, properties)
+  activate GeoJson
+  Ward <-- GeoJson : mediumGeoJson
+  deactivate GeoJson
+  
+  Map <-- Ward : mediumGeoJson
+else Low zoom level (simplified)
+  Ward -> Simplify : simplifyBoundary(boundary, toleranceLevel.HIGH)
+  activate Simplify
+  Ward <-- Simplify : highlySimplifiedBoundary
+  deactivate Simplify
+  
+  Ward -> GeoJson : generateFromBoundary(highlySimplifiedBoundary, minimalProperties)
+  activate GeoJson
+  Ward <-- GeoJson : simplifiedGeoJson
+  deactivate GeoJson
+  
+  Map <-- Ward : simplifiedGeoJson
+end
+
+deactivate Ward
+
+Map -> Ward : getBoundaryWithSettlements()
+activate Ward
+
+Ward -> Ward : getBoundary()
+Ward -> Ward : getSettlements()
+Ward -> GeoJson : generateLayeredGeoJson(boundary, settlements)
+activate GeoJson
+Ward <-- GeoJson : layeredGeoJson
+deactivate GeoJson
+
+Map <-- Ward : layeredGeojsonWithSettlements
+deactivate Ward
+@enduml
+----
+
+===== Citizen Registration Integration
+
+Ward integrates with the Citizen domain for local resident management:
+
+[plantuml]
+----
+@startuml
+participant "CitizenService" as Citizen
+participant "Ward" as Ward
+participant "WardResidentRegistry" as Registry
+participant "DomainEventPublisher" as Events
+participant "NotificationService" as Notification
+
+Citizen -> Ward : registerResident(citizenProfile)
+activate Ward
+
+Ward -> Ward : validateResidenceAddress(citizenProfile.address)
+Ward -> Registry : checkExistingRegistration(citizenProfile.id)
+activate Registry
+Ward <-- Registry : existingRegistration
+deactivate Registry
+
+alt New registration
+  Ward -> Registry : createRegistration(citizenProfile, ward)
+  activate Registry
+  Ward <-- Registry : registration
+  deactivate Registry
+  
+  Ward -> Events : publish(WardResidentRegisteredEvent)
+  activate Events
+  Ward <-- Events
+  deactivate Events
+else Address change
+  Ward -> Registry : updateRegistration(existingRegistration, ward)
+  activate Registry
+  Ward <-- Registry : updatedRegistration
+  deactivate Registry
+  
+  Ward -> Events : publish(ResidentAddressChangedEvent)
+  activate Events
+  Ward <-- Events
+  deactivate Events
+end
+
+Citizen <-- Ward : registrationResult
+deactivate Ward
+
+Citizen -> Ward : getResidentCount()
+activate Ward
+Ward -> Registry : countByWardId(id)
+activate Registry
+Ward <-- Registry : residentCount
+deactivate Registry
+Citizen <-- Ward : residentCount
+deactivate Ward
+
+Citizen -> Ward : notifyResidents(notification)
+activate Ward
+Ward -> Registry : getResidentsForNotification(id, notificationCriteria)
+activate Registry
+Ward <-- Registry : residentList
+deactivate Registry
+
+Ward -> Notification : sendBulkNotification(residentList, notification)
+activate Notification
+Ward <-- Notification : deliveryStatus
+deactivate Notification
+
+Citizen <-- Ward : notificationResults
+deactivate Ward
+@enduml
+----
+
+===== Data Model Evolution
+
+The Ward entity demonstrates core model capability evolution:
+
+[plantuml]
+----
+@startuml
+!define TABLE class
+
+TABLE "Early Implementation" as Early {
+  +name
+  +wardNumber
+  +municipalityId
+  +establishedDate
+  +population
+}
+
+TABLE "Current Implementation" as Current {
+  ' Core fields from NamedEntity
+  +name
+  +description
+  +localName
+  
+  ' Core fields from ApprovableEntity
+  +isApproved
+  +reviewState
+  +approvedBy
+  +approvedAt
+  
+  ' Location hierarchy
+  +wardNumber
+  +municipalityId
+  +districtId
+  +provinceId
+  
+  ' Spatial data
+  +boundaryId
+  +areaInSquareKm
+  +adjacentWardIds
+  
+  ' Settlements
+  +majorSettlementIds
+  
+  ' Infrastructure
+  +schoolCount
+  +healthFacilityCount
+  +waterSupplyCoverage
+  +electricityCoverage
+}
+
+TABLE "Future Expansion" as Future {
+  ' All current fields
+  +...
+  
+  ' New capabilities
+  +localRepresentatives
+  +developmentProjects
+  +communityEvents
+  +disasterRiskZones
+  +emergencyResources
+}
+
+Early --> Current : Evolution
+Current --> Future : Planned\nExpansion
+note bottom of Future
+  Core model inheritance and interfaces
+  allow gradual capability expansion
+  while maintaining compatibility
+end note
+@enduml
+----

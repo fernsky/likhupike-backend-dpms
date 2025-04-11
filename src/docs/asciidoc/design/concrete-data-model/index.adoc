@@ -1,4 +1,10 @@
+= Concrete Data Model
+
+This section details the concrete data model used throughout the Digital Profile Information System.
 
 include::core.adoc[leveloffset=+1]
-
-include::entity-implementation.adoc[leveloffset=+1]
+include::sample-aggregate.adoc[leveloffset=+1]
+include::citizen.adoc[leveloffset=+1]
+include::land.adoc[leveloffset=+1]
+include::document.adoc[leveloffset=+1]
+include::location.adoc[leveloffset=+1]

@@ -2,6 +2,304 @@
 
 This section describes the foundational data models that serve as building blocks for the Digital Profile Information System.
 
+==== Domain Model Integration Overview
+
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+package "Core Entity Hierarchy" {
+  abstract class BaseEntity
+  abstract class SoftDeletableEntity
+  abstract class ApprovableEntity
+  abstract class NamedEntity
+  abstract class MediaEntity
+  abstract class PublishableEntity
+  abstract class EncryptedEntity
+  abstract class WorkflowEntity
+  abstract class ReferenceDataEntity
+  abstract class SpatialEntity
+  abstract class LocalizedEntity
+  
+  BaseEntity <|-- SoftDeletableEntity
+  SoftDeletableEntity <|-- ApprovableEntity
+  BaseEntity <|-- NamedEntity
+  BaseEntity <|-- MediaEntity
+  ApprovableEntity <|-- PublishableEntity
+  SoftDeletableEntity <|-- EncryptedEntity
+  ApprovableEntity <|-- WorkflowEntity
+  NamedEntity <|-- ReferenceDataEntity
+  BaseEntity <|-- SpatialEntity
+  BaseEntity <|-- LocalizedEntity
+}
+
+package "Core Capabilities" {
+  interface Taggable
+  interface AccessControlled
+  interface Subscribable
+  interface HistoryViewable
+  interface EventSourcingCapable
+  interface BiometricVerifiable
+  interface MobileAccessible
+  interface FullTextSearchable
+  interface ImportableEntity
+  interface ExportableEntity
+  interface BatchProcessable
+  interface CustomValidatable
+  interface FaultTolerant
+  interface AnalyticsTrackable
+  interface ComplianceAuditable
+  interface ExternalSystemSyncable
+  interface WebhookTriggerable
+}
+
+package "Embedded Components" {
+  class AddressComponent
+  class ContactInformation
+  class SEOAttributes
+  class OperationalHours
+}
+
+package "Cross-Cutting" {
+  class EntityVersion
+  class EntityAuditEvent
+  class AuditableAction
+  class DomainEvent
+  class Tag
+  class AccessControlEntry
+  class DataRetentionPolicy
+}
+
+ApprovableEntity -- ReviewState
+Taggable -- Tag
+AccessControlled -- AccessControlEntry
+AccessControlled -- Permission
+EventSourcingCapable -- DomainEvent
+Subscribable -- NotificationType
+BiometricVerifiable -- BiometricType
+MobileAccessible -- OfflineCapability
+PublishableEntity -- VersioningStrategy
+
+@enduml
+----
+
+==== Component Integration Strategy
+
+The Digital Profile Information System follows these integration patterns:
+
+1. *Core Entity Inheritance Hierarchy* - A clear entity inheritance structure starting with BaseEntity
+2. *Capability Interfaces* - Domain capabilities implemented via interfaces for composition over inheritance
+3. *Value Objects and Embeddables* - Reusable components that can be embedded in multiple entities
+4. *Cross-Cutting Concerns* - Domain-wide structures for auditing, versioning, events, and access control
+5. *Domain Events* - Event-driven communication between bounded contexts
+
+==== Integration Patterns
+
+===== Composition over Inheritance
+
+Entities combine base classes with capability interfaces:
+
+[source,kotlin]
+----
+// Example of composition pattern
+class CitizenProfile : 
+    NamedEntity(),                // Base structure 
+    SoftDeletableEntity(),        // Deletion capability
+    EncryptedEntity(),            // Security capability
+    BiometricVerifiable,          // Verification capability 
+    MobileAccessible,             // Mobile access capability
+    ComplianceAuditable {         // Compliance capability
+    
+    // Embedded components
+    var address: AddressComponent? = null
+    var contactInfo: ContactInformation? = null
+    
+    // Entity-specific fields
+    var citizenId: String? = null
+    var dateOfBirth: LocalDate? = null
+    
+    // Implementation of capability interfaces
+    override fun getBiometricVerificationTypes(): Set<BiometricType> { ... }
+    override fun getMobileViewConfiguration(): MobileViewConfig { ... }
+    // Other implementations...
+}
+----
+
+===== Bounded Contexts and Aggregates
+
+The system is divided into bounded contexts with clear aggregate roots:
+
+* *Citizen Context* - CitizenProfile as aggregate root
+* *Land Context* - LandParcel as aggregate root
+* *Document Context* - Document as aggregate root
+* *Organization Context* - Organization as aggregate root
+
+===== Cross-Context Integration
+
+Contexts integrate through:
+
+1. *Domain Events* - Loosely coupled communication
+2. *Shared Kernel* - Common core models (this document)
+3. *Context Maps* - Explicit relationships between contexts
+
+==== Domain Event Flow
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Citizen Profile Created" as CPC
+RECTANGLE "Document Uploaded" as DU
+RECTANGLE "Verification Requested" as VR
+RECTANGLE "Verification Completed" as VC
+RECTANGLE "Profile Approved" as PA
+
+CPC --> DU : triggers
+DU --> VR : may trigger
+VR --> VC : followed by
+VC --> PA : may lead to
+
+@enduml
+----
+
+==== Enhanced Integration Examples
+
+===== Entity Lifecycle Management
+
+The following diagram demonstrates the lifecycle of managed entities:
+
+[plantuml]
+----
+@startuml
+[*] --> Created : create()
+Created --> InReview : submit()
+InReview --> NeedsChanges : requestChanges()
+InReview --> Approved : approve()
+NeedsChanges --> InReview : resubmit()
+Approved --> Published : publish()
+Published --> Unpublished : unpublish()
+Approved --> InReview : revise()
+Unpublished --> [*] : delete()
+Published --> [*] : delete()
+@enduml
+----
+
+===== Cross-Entity Validations
+
+Entities can participate in cross-entity validation rules:
+
+[source,kotlin]
+----
+// Cross-entity validation example
+class ValidationService {
+    fun validateCitizenWithProperty(citizen: CitizenProfile, property: LandParcel): ValidationResult {
+        // Complex validation rules spanning entities
+        val addressMatches = citizen.address?.municipalityCode == property.municipalityCode
+        val ageValid = citizen.calculateAge() >= 18
+        val ownershipProofValid = verifyDocuments(citizen, property)
+        
+        // Return comprehensive validation result
+        return ValidationResult(
+            isValid = addressMatches && ageValid && ownershipProofValid,
+            violations = buildViolationsList(addressMatches, ageValid, ownershipProofValid)
+        )
+    }
+}
+----
+
+===== Query Optimization Strategies
+
+The domain model supports efficient querying through:
+
+1. *Denormalized Fields* - Pre-computed fields for frequent queries
+2. *Caching Strategies* - Time and version-based cache invalidation
+3. *Materialized Views* - For complex reporting needs
+4. *Search Indexes* - For full-text search capabilities
+
+[source,kotlin]
+----
+// Query optimization example
+interface EntityRepository<T : BaseEntity> {
+    // Standard queries
+    fun findById(id: UUID): T?
+    
+    // Optimized for read-heavy operations
+    fun findByIdCached(id: UUID): T?
+    
+    // Specialized search methods
+    fun search(query: String, filters: Map<String, Any>): List<T>
+    
+    // Denormalized aggregates
+    fun getStatisticsSummary(): StatisticsSummary
+}
+----
+
+==== Integration with External Systems
+
+The domain model establishes patterns for external integration:
+
+1. *Adapters* - Convert between internal and external models
+2. *Synchronization* - Bidirectional sync with external systems
+3. *Webhooks* - Event notifications to external systems
+4. *Import/Export* - Standardized data exchange formats
+
+[plantuml]
+----
+@startuml
+actor User
+component "Digital Profile System" as DPS
+database "Internal DB" as DB
+cloud "External Systems" as ES
+cloud "Mobile Apps" as MA
+
+User --> DPS
+DPS <--> DB
+DPS <--> ES : APIs, Webhooks, \nETL Processes
+DPS <--> MA : Mobile API, \nOffline Sync
+
+@enduml
+----
+
+==== Domain Security Integration
+
+Security is integrated throughout the domain model:
+
+1. *Entity-Level Encryption* - Via EncryptedEntity base class
+2. *Field-Level Encryption* - For sensitive fields
+3. *Access Control* - Via AccessControlled interface
+4. *Biometric Verification* - Via BiometricVerifiable interface
+5. *Audit Trails* - Comprehensive action logging
+6. *Data Classification* - Security levels for data
+
+==== Version Control and Change Management
+
+The domain incorporates enterprise-grade version control:
+
+1. *Entity Versions* - Complete version history
+2. *Change Tracking* - Field-level change detection
+3. *Approval Workflows* - Multi-level review processes
+4. *Conflict Resolution* - Strategies for concurrent modifications
+
+==== Data Governance Integration
+
+The domain model supports data governance through:
+
+1. *Data Retention Policies* - Lifecycle management
+2. *Compliance Frameworks* - Regulatory requirements tracking
+3. *Data Lineage* - Origin and transformation tracking
+4. *Quality Metrics* - Data quality measurement
+
+==== Scalability Patterns
+
+The domain model implements patterns for horizontal scaling:
+
+1. *Tenant Isolation* - Via TenantAware interface
+2. *Sharding Support* - Entity design compatible with data sharding
+3. *Eventual Consistency* - Event-based synchronization
+4. *CQRS* - Separation of read and write models
+
 ==== `BaseEntity`
 Abstract base class providing common attributes for all entities in the system.
 

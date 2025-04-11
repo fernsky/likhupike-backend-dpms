@@ -1,0 +1,431 @@
+==== Province
+
+Province is the top-level administrative division in the Location Domain, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+interface ExternalSystemSyncable
+
+' Province implementation
+class Province {
+  ' From NamedEntity
+  +String name
+  +String provinceCode
+  +String localName
+  +String description
+  
+  ' Province-specific
+  +ProvinceType type
+  +LocalDate establishedDate
+  +Set<UUID> districtIds
+  +UUID capitalDistrictId
+  
+  ' Spatial data
+  +UUID boundaryId
+  +Double areaInSquareKm
+  +Double rightmostLatitude
+  +Double leftmostLatitude
+  +Double topmostLongitude
+  +Double bottommostLongitude
+  
+  ' Administrative data
+  +String administrativeCapital
+  +AddressComponent governorOfficeAddress
+  +ContactInformation governorContactInfo
+  
+  ' Historical context
+  +List<HistoricalName> formerNames
+  +Set<UUID> formerProvinceIds
+  
+  ' Implementation methods...
+}
+
+' Inheritance relationships
+NamedEntity <|-- ApprovableEntity
+ApprovableEntity <|-- Province
+
+' Interface implementation
+Province ..|> HistoryViewable
+Province ..|> AccessControlled
+Province ..|> ExternalSystemSyncable
+@enduml
+----
+
+===== Province Lifecycle Stages
+
+[plantuml]
+----
+@startuml
+[*] --> Proposed : Create new province
+
+state Proposed {
+  [*] --> Draft : Initial creation
+  Draft --> UnderReview : Submit
+  UnderReview --> Rejected : Reject proposal
+  UnderReview --> Approved : Approve
+  Rejected --> Draft : Revise
+}
+
+Approved --> Active : Activate
+Active --> Active : Minor updates
+
+state Active {
+  state "Normal Operation" as Normal
+  state "Census Update" as Census
+  state "Administrative Change" as AdminChange
+  
+  Normal --> Census : Update population data
+  Census --> Normal
+  Normal --> AdminChange : Change capital/structure
+  AdminChange --> Normal
+}
+
+Active --> ProposedMajorChange : Propose restructuring
+
+state ProposedMajorChange {
+  [*] --> ChangeProposal
+  ChangeProposal --> ChangeReview
+  ChangeReview --> ChangeRejected : Reject change
+  ChangeReview --> ChangeApproved : Approve change
+  ChangeRejected --> ChangeProposal : Revise
+}
+
+ProposedMajorChange --> Active : Implement approved changes
+Active --> Deprecated : Phase out
+Deprecated --> Historical : Archive
+Historical --> [*]
+@enduml
+----
+
+===== Province Creation Process
+
+[plantuml]
+----
+@startuml
+|Federal Administrator|
+start
+:Identify need for new province;
+:Define province boundaries;
+:Assign province code;
+:Select capital district;
+
+|System|
+:Validate province data;
+if (Valid?) then (yes)
+  :Calculate spatial attributes;
+  :Create province record in DRAFT state;
+else (no)
+  :Return validation errors;
+  stop
+endif
+
+|Federal Administrator|
+:Submit for approval;
+
+|Approving Authority|
+:Review province proposal;
+if (Approve?) then (yes)
+  :Approve province;
+else (no)
+  :Reject with comments;
+  |Federal Administrator|
+  :Revise province details;
+  note right
+    Return to System validation
+  end note
+endif
+
+|System|
+:Create province boundary record;
+:Update spatial relationships;
+:Set province status to ACTIVE;
+:Enable in all subsystems;
+:Publish province creation event;
+
+|Federal Administrator|
+:Create initial districts;
+:Configure province administration;
+
+stop
+@enduml
+----
+
+===== Province Restructuring Process
+
+[plantuml]
+----
+@startuml
+|Federal Administrator|
+start
+:Identify need for restructuring;
+:Create restructuring plan;
+:Define new boundaries;
+:Identify affected districts;
+
+|System|
+:Validate restructuring plan;
+if (Valid?) then (yes)
+  :Create restructuring request;
+  :Set request status to PROPOSED;
+else (no)
+  :Return validation errors;
+  stop
+endif
+
+|Approving Authority|
+:Review restructuring proposal;
+:Assess impact on districts;
+:Evaluate demographic changes;
+if (Approve?) then (yes)
+  :Approve restructuring;
+else (no)
+  :Reject with comments;
+  |Federal Administrator|
+  :Revise restructuring plan;
+  note right
+    Return to System validation
+  end note
+endif
+
+|System|
+:Create historical record of old boundaries;
+:Implement new boundaries;
+:Update affected districts;
+:Update spatial relationships;
+:Publish restructuring events;
+
+|Federal Administrator|
+:Review implementation;
+:Adjust administrative assignments;
+:Update documentation;
+
+stop
+@enduml
+----
+
+===== Province Integration Points
+
+[plantuml]
+----
+@startuml
+node "Province" as Province
+node "Federal Systems" as Federal
+node "District Management" as Districts
+node "Census Data" as Census
+node "Geographic Information System" as GIS
+node "Reporting System" as Reports
+
+Province -- Federal : "Syncs official\ndesignations"
+Province -- Districts : "Contains and\nmanages"
+Province -- Census : "Provides demographic\nbaseline"
+Province -- GIS : "Defines boundaries\nand spatial data"
+Province -- Reports : "Rolls up statistics\nand indicators"
+
+@enduml
+----
+
+===== Province State Transitions
+
+[plantuml]
+----
+@startuml
+hide empty description
+
+[*] --> Draft
+Draft --> Pending : submit()
+Pending --> InReview : assignReviewer()
+InReview --> Rejected : reject()
+InReview --> Approved : approve()
+Rejected --> Draft : revise()
+Approved --> Active : activate()
+Active --> UnderChange : proposeChange()
+UnderChange --> InReview : submitChange()
+Active --> Deprecated : deprecate()
+Deprecated --> Historical : archive()
+Historical --> [*]
+
+@enduml
+----
+
+===== Province Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class NamedEntity
+abstract class ApprovableEntity
+interface HistoryViewable
+interface AccessControlled
+interface ExternalSystemSyncable
+
+' Province implementation
+class Province {
+  ' From NamedEntity
+  +String name
+  +String provinceCode
+  +String localName
+  +String description
+  
+  ' Province-specific
+  +ProvinceType type
+  +LocalDate establishedDate
+  +Set<UUID> districtIds
+  +UUID capitalDistrictId
+  
+  ' Spatial data
+  +UUID boundaryId
+  +Double areaInSquareKm
+  +Double rightmostLatitude
+  +Double leftmostLatitude
+  +Double topmostLongitude
+  +Double bottommostLongitude
+  +Set<String> borderingCountries
+  
+  ' Administrative data
+  +String administrativeCapital
+  +AddressComponent governorOfficeAddress
+  +ContactInformation governorContactInfo
+  
+  ' Census data
+  +Integer population
+  +Integer populationYear
+  +Integer urbanPopulation
+  +Integer ruralPopulation
+  +Integer householdCount
+  
+  ' Historical context
+  +List<HistoricalName> formerNames
+  +Set<UUID> formerProvinceIds
+  +List<RestructuringEvent> restructuringHistory
+}
+
+' Inheritance relationships
+NamedEntity <|-- ApprovableEntity
+ApprovableEntity <|-- Province
+
+' Interface implementation
+Province ..|> HistoryViewable
+Province ..|> AccessControlled
+Province ..|> ExternalSystemSyncable
+@enduml
+----
+
+===== Province External System Integration
+
+The Province entity implements the ExternalSystemSyncable interface from the core domain to enable integration with national information systems:
+
+[plantuml]
+----
+@startuml
+participant "SyncService" as Sync
+participant "Province\nimplements ExternalSystemSyncable" as Province
+participant "NationalInfoSystem" as NIS
+participant "DomainEventPublisher" as Events
+
+Sync -> Province : getExternalSystemId()
+activate Province
+Sync <-- Province : "NIS-PROVINCE-123"
+deactivate Province
+
+Sync -> Province : getExternalSystemUrl()
+activate Province
+Sync <-- Province : "https://nis.gov.example/api/provinces/123"
+deactivate Province
+
+Sync -> Province : getSyncStatus()
+activate Province
+Sync <-- Province : PENDING_SYNC
+deactivate Province
+
+Sync -> NIS : syncEntity(provinceData)
+activate NIS
+Sync <-- NIS : syncResult
+deactivate NIS
+
+Sync -> Province : updateLastSyncTime(now)
+activate Province
+Province -> Events : publish(ProvinceSyncedEvent)
+Sync <-- Province
+deactivate Province
+
+@enduml
+----
+
+===== Province Events
+
+[plantuml]
+----
+@startuml
+class ProvinceCreatedEvent {
+  +UUID provinceId
+  +String provinceName
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProvinceApprovedEvent {
+  +UUID provinceId
+  +String provinceName
+  +String approvedBy
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProvinceBoundaryChangedEvent {
+  +UUID provinceId
+  +String provinceName
+  +UUID oldBoundaryId
+  +UUID newBoundaryId
+  +LocalDate effectiveDate
+  +String changeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- ProvinceCreatedEvent
+DomainEvent <|-- ProvinceApprovedEvent
+DomainEvent <|-- ProvinceBoundaryChangedEvent
+@enduml
+----
+
+===== Province Historical Data Management
+
+Province implements the HistoryViewable interface from the core domain to track changes over time:
+
+[plantuml]
+----
+@startuml
+participant "HistoryService" as History
+participant "Province\nimplements HistoryViewable" as Province
+participant "EntityVersionRepository" as Versions
+
+History -> Province : getChangeHistory()
+activate Province
+Province -> Versions : findByEntityTypeAndEntityId("Province", id)
+activate Versions
+Province <-- Versions : changeRecords
+deactivate Versions
+History <-- Province : changeHistory
+deactivate Province
+
+History -> Province : getHistorySnapshot(timestamp)
+activate Province
+Province -> Versions : findByEntityTypeAndEntityIdAndTimestamp("Province", id, timestamp)
+activate Versions
+Province <-- Versions : versionData
+deactivate Versions
+History <-- Province : snapshotAtPointInTime
+deactivate Province
+
+@enduml
+----

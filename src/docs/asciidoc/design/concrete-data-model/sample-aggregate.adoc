@@ -1,0 +1,412 @@
+=== Sample Aggregate: Citizen Profile
+
+This section demonstrates a complete aggregate example to show how the core domain models integrate in practice.
+
+==== Citizen Profile Aggregate
+
+The CitizenProfile aggregate demonstrates integration of multiple domain models:
+
+[plantuml]
+----
+@startuml
+package "Citizen Profile Aggregate" {
+  class CitizenProfile
+  class CitizenDocument
+  class VerificationRecord
+  class IdentityProof
+  class CitizenAttribute
+  class BiometricRecord
+  
+  CitizenProfile "1" *-- "0..*" CitizenDocument : contains >
+  CitizenProfile "1" *-- "0..*" VerificationRecord : verified by >
+  CitizenProfile "1" *-- "1..*" IdentityProof : proven by >
+  CitizenProfile "1" *-- "0..*" CitizenAttribute : has >
+  CitizenProfile "1" *-- "0..*" BiometricRecord : authenticated by >
+}
+
+package "Cross-Aggregate References" {
+  class LandParcel
+  class Organization
+  class FamilyUnit
+  
+  CitizenProfile "1" -- "0..*" LandParcel : owns >
+  CitizenProfile "0..*" -- "0..*" Organization : affiliated with >
+  CitizenProfile "1..*" -- "0..1" FamilyUnit : belongs to >
+}
+@enduml
+----
+
+==== CitizenProfile Entity
+
+[source,kotlin]
+----
+class CitizenProfile : 
+    NamedEntity(),
+    ApprovableEntity(),
+    EncryptedEntity(),
+    BiometricVerifiable,
+    MobileAccessible,
+    HistoryViewable,
+    ComplianceAuditable,
+    AccessControlled {
+    
+    // Identity information
+    var citizenId: String
+    var nationalId: String?
+    var dateOfBirth: LocalDate
+    var placeOfBirth: String?
+    var gender: Gender
+    var maritalStatus: MaritalStatus?
+    
+    // Embedded components
+    var permanentAddress: AddressComponent
+    var mailingAddress: AddressComponent?
+    var contactInformation: ContactInformation
+    
+    // References to other entities
+    var familyUnitId: UUID?
+    var organizationIds: Set<UUID> = HashSet()
+    var propertyIds: Set<UUID> = HashSet()
+    
+    // Contained child entities
+    var documents: List<CitizenDocument> = ArrayList()
+    var verificationRecords: List<VerificationRecord> = ArrayList()
+    var identityProofs: List<IdentityProof> = ArrayList()
+    var attributes: Map<String, CitizenAttribute> = HashMap()
+    var biometricRecords: List<BiometricRecord> = ArrayList()
+    
+    // Lifecycle management
+    var status: CitizenStatus = CitizenStatus.PENDING
+    var statusReason: String? = null
+    var lastVerifiedAt: LocalDateTime? = null
+    var expiresAt: LocalDateTime? = null
+    
+    // Compliance fields
+    var consentRecord: ConsentRecord? = null
+    var dataUsageAgreements: List<DataUsageAgreement> = ArrayList()
+    
+    // Domain logic methods
+    fun isVerified(): Boolean {
+        return status == CitizenStatus.VERIFIED && 
+               (expiresAt == null || expiresAt.isAfter(LocalDateTime.now()))
+    }
+    
+    fun canAccessService(serviceCode: String): Boolean {
+        // Complex business rule implementation
+        val hasRequiredDocuments = documents.any { it.documentType.requiredForServices.contains(serviceCode) }
+        val hasRequiredVerifications = verificationRecords.any { it.isValid && it.appliesTo.contains(serviceCode) }
+        val meetsComplianceRequirements = validateComplianceState().isValid
+        
+        return isVerified() && hasRequiredDocuments && hasRequiredVerifications && meetsComplianceRequirements
+    }
+    
+    fun addDocument(document: CitizenDocument): DocumentAddResult {
+        // Validation and business rules
+        if (documents.any { it.documentType == document.documentType && it.isActive }) {
+            return DocumentAddResult.DUPLICATE
+        }
+        
+        // State changes on the aggregate
+        documents.add(document)
+        
+        // Domain events
+        DomainEventPublisher.publish(
+            DocumentAddedEvent(
+                entityId = this.id,
+                documentId = document.id,
+                documentType = document.documentType,
+                timestamp = LocalDateTime.now()
+            )
+        )
+        
+        return DocumentAddResult.SUCCESS
+    }
+    
+    // Interface implementations
+    override fun getBiometricVerificationTypes(): Set<BiometricType> {
+        return biometricRecords.map { it.biometricType }.toSet()
+    }
+    
+    override fun getAccessControlList(): Set<AccessControlEntry> {
+        // Implement access control logic
+        val entries = HashSet<AccessControlEntry>()
+        
+        // Owner always has full access
+        entries.add(
+            AccessControlEntry(
+                entity = this,
+                principal = this.createdBy,
+                permission = Permission.ADMIN,
+                grantedBy = this.createdBy,
+                grantedAt = this.createdAt
+            )
+        )
+        
+        // Other access control logic...
+        
+        return entries
+    }
+    
+    // Other interface implementations...
+}
+----
+
+==== Integration with Domain Services
+
+[source,kotlin]
+----
+// Example domain service integration
+class CitizenVerificationService(
+    private val idVerificationProvider: IdVerificationProvider,
+    private val biometricProvider: BiometricProvider,
+    private val documentRepository: DocumentRepository,
+    private val auditService: AuditService
+) {
+    fun verifyIdentity(citizenProfile: CitizenProfile): VerificationResult {
+        // 1. Record verification attempt
+        auditService.recordAction(
+            AuditableAction(
+                actionType = "IDENTITY_VERIFICATION",
+                entityType = "CitizenProfile",
+                entityId = citizenProfile.id,
+                performedBy = SecurityContext.getCurrentUser()
+            )
+        )
+        
+        // 2. Check documents
+        val documentVerifications = citizenProfile.documents
+            .filter { it.documentType.isIdentityDocument }
+            .map { idVerificationProvider.verifyDocument(it) }
+        
+        // 3. Check biometrics if available
+        val biometricResult = if (citizenProfile.biometricRecords.isNotEmpty()) {
+            biometricProvider.verifyBiometrics(citizenProfile)
+        } else {
+            BiometricVerificationResult.NOT_APPLICABLE
+        }
+        
+        // 4. Create verification record
+        val record = VerificationRecord(
+            verifiedAt = LocalDateTime.now(),
+            verifiedBy = SecurityContext.getCurrentUser(),
+            result = if (documentVerifications.all { it.isVerified } && 
+                        biometricResult != BiometricVerificationResult.FAILED) 
+                       VerificationResult.SUCCESS else VerificationResult.FAILED,
+            evidence = buildEvidenceMap(documentVerifications, biometricResult),
+            expiresAt = LocalDateTime.now().plusYears(1)
+        )
+        
+        // 5. Update aggregate state
+        citizenProfile.verificationRecords.add(record)
+        citizenProfile.lastVerifiedAt = record.verifiedAt
+        
+        if (record.result == VerificationResult.SUCCESS) {
+            citizenProfile.status = CitizenStatus.VERIFIED
+        }
+        
+        // 6. Domain events
+        DomainEventPublisher.publish(
+            CitizenVerifiedEvent(
+                citizenId = citizenProfile.id,
+                verificationId = record.id,
+                success = record.result == VerificationResult.SUCCESS
+            )
+        )
+        
+        return record.result
+    }
+    
+    private fun buildEvidenceMap(
+        documentResults: List<DocumentVerificationResult>,
+        biometricResult: BiometricVerificationResult
+    ): Map<String, Any> {
+        // Build evidence map for the verification record
+        // ...implementation...
+    }
+}
+----
+
+==== Database Integration Example
+
+[source,sql]
+----
+-- Example of how the domain model maps to SQL schema
+CREATE TABLE citizen_profile (
+    id UUID PRIMARY KEY,
+    created_at TIMESTAMP NOT NULL,
+    created_by UUID REFERENCES users(id),
+    updated_at TIMESTAMP,
+    updated_by UUID REFERENCES users(id),
+    version INTEGER NOT NULL DEFAULT 0,
+    entity_hash VARCHAR(64),
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP,
+    deleted_by UUID REFERENCES users(id),
+    is_approved BOOLEAN DEFAULT FALSE,
+    approved_at TIMESTAMP,
+    approved_by UUID REFERENCES users(id),
+    review_state VARCHAR(20),
+    
+    -- Encrypted fields
+    encryption_key_id UUID,
+    encryption_algorithm VARCHAR(50),
+    
+    -- Identity fields
+    citizen_id VARCHAR(50) NOT NULL,
+    national_id VARCHAR(50) ENCRYPTED,
+    date_of_birth DATE ENCRYPTED,
+    place_of_birth VARCHAR(100) ENCRYPTED,
+    gender VARCHAR(20),
+    marital_status VARCHAR(20),
+    
+    -- Status fields
+    status VARCHAR(20) NOT NULL,
+    status_reason TEXT,
+    last_verified_at TIMESTAMP,
+    expires_at TIMESTAMP,
+    
+    -- Embedded components stored as JSON
+    permanent_address JSONB NOT NULL,
+    mailing_address JSONB,
+    contact_information JSONB NOT NULL,
+    
+    -- References
+    family_unit_id UUID REFERENCES family_unit(id),
+    tenant_id UUID REFERENCES tenant(id),
+    
+    -- Optimized search fields
+    searchable_text TEXT,
+    
+    CONSTRAINT uk_citizen_profile_citizen_id UNIQUE (citizen_id)
+);
+
+-- Child entities
+CREATE TABLE citizen_document (
+    id UUID PRIMARY KEY,
+    citizen_profile_id UUID NOT NULL REFERENCES citizen_profile(id),
+    document_type VARCHAR(50) NOT NULL,
+    document_number VARCHAR(100) ENCRYPTED,
+    issued_at DATE,
+    expires_at DATE,
+    issuing_authority VARCHAR(100),
+    verification_status VARCHAR(20),
+    document_key VARCHAR(200),
+    is_active BOOLEAN DEFAULT TRUE,
+    
+    -- Common fields
+    created_at TIMESTAMP NOT NULL,
+    created_by UUID REFERENCES users(id),
+    updated_at TIMESTAMP,
+    updated_by UUID REFERENCES users(id),
+    version INTEGER NOT NULL DEFAULT 0
+);
+
+-- Many-to-many relationships
+CREATE TABLE citizen_organization (
+    citizen_id UUID REFERENCES citizen_profile(id),
+    organization_id UUID REFERENCES organization(id),
+    relationship_type VARCHAR(50),
+    start_date DATE,
+    end_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    PRIMARY KEY (citizen_id, organization_id)
+);
+----
+
+==== API Integration Example
+
+[source,json]
+----
+// Example of REST API response for CitizenProfile
+{
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "citizenId": "CITIZEN123456",
+  "name": "John Doe",
+  "dateOfBirth": "1980-01-15",
+  "gender": "MALE",
+  "status": "VERIFIED",
+  "lastVerifiedAt": "2023-06-10T15:30:45Z",
+  
+  "permanentAddress": {
+    "provinceCode": "P001",
+    "districtCode": "D123",
+    "municipalityCode": "M456",
+    "wardNumber": 5,
+    "streetAddress": "123 Main Street",
+    "formattedAddress": "123 Main Street, Ward 5, Municipality M456"
+  },
+  
+  "contactInformation": {
+    "email": "john.doe@example.com",
+    "phoneNumber": "+1-555-123-4567",
+    "preferredContactMethod": "EMAIL"
+  },
+  
+  "documents": [
+    {
+      "id": "d8e8fca2-dc1b-49a5-8bab-837983a8a3e2",
+      "documentType": "NATIONAL_ID",
+      "issuedAt": "2018-05-12",
+      "expiresAt": "2028-05-11",
+      "issuingAuthority": "National Identity Authority",
+      "verificationStatus": "VERIFIED"
+    },
+    {
+      "id": "36774584-4f14-4f1e-a01c-c7d745081467",
+      "documentType": "PASSPORT",
+      "issuedAt": "2020-03-15",
+      "expiresAt": "2030-03-14",
+      "issuingAuthority": "Passport Office",
+      "verificationStatus": "VERIFIED"
+    }
+  ],
+  
+  "verificationRecords": [
+    {
+      "id": "9fafd95b-01dc-49f8-8c7b-c97d8fbb8e89",
+      "verifiedAt": "2023-06-10T15:30:45Z",
+      "verifiedBy": "admin",
+      "result": "SUCCESS",
+      "expiresAt": "2024-06-10T15:30:45Z"
+    }
+  ],
+  
+  "_links": {
+    "self": {
+      "href": "/api/citizens/f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    },
+    "documents": {
+      "href": "/api/citizens/f47ac10b-58cc-4372-a567-0e02b2c3d479/documents"
+    },
+    "properties": {
+      "href": "/api/citizens/f47ac10b-58cc-4372-a567-0e02b2c3d479/properties"
+    },
+    "family": {
+      "href": "/api/citizens/f47ac10b-58cc-4372-a567-0e02b2c3d479/family"
+    }
+  }
+}
+----
+
+==== Event Flow Example
+
+[source,json]
+----
+// Example of domain event for CitizenVerifiedEvent
+{
+  "eventId": "e8dc566b-d7e6-4553-8c0b-d9c669f99c4b",
+  "eventType": "CITIZEN_VERIFIED",
+  "entityId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "entityType": "CitizenProfile",
+  "timestamp": "2023-06-10T15:30:45Z",
+  "actorId": "system-verifier",
+  "sequenceNumber": 42,
+  "payload": {
+    "citizenId": "CITIZEN123456",
+    "verificationId": "9fafd95b-01dc-49f8-8c7b-c97d8fbb8e89",
+    "success": true,
+    "methods": ["DOCUMENT", "BIOMETRIC"],
+    "evidenceCount": 3
+  }
+}
+----
