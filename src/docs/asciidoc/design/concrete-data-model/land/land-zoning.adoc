@@ -12,6 +12,8 @@ abstract class NamedEntity
 interface HistoryViewable
 interface AccessControlled
 interface Taggable
+interface WebhookTriggerable
+interface FullTextSearchable
 
 ' LandZoning implementation
 class LandZoning {
@@ -47,6 +49,14 @@ class LandZoning {
   +Double frontSetbackInMeters
   +Double rearSetbackInMeters
   +Double sideSetbackInMeters
+  
+  ' WebhookTriggerable fields
+  +List<WebhookRegistration> webhookRegistrations
+  
+  ' FullTextSearchable fields
+  +String searchableText
+  +Map<String, String> searchableContent
+  +Set<String> searchKeywords
   
   ' Implementation methods...
 }
@@ -117,6 +127,8 @@ NamedEntity <|-- LandZoning
 LandZoning ..|> HistoryViewable
 LandZoning ..|> AccessControlled
 LandZoning ..|> Taggable
+LandZoning ..|> WebhookTriggerable
+LandZoning ..|> FullTextSearchable
 
 ' Enum relationships
 LandZoning -- ZoningType
@@ -284,6 +296,694 @@ endif
 :Inform affected property owners;
 
 stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Land Zoning is used in the system:
+
+====== Urban Residential Zoning Implementation for Growing Municipality
+
+*Scenario:* Municipality creating new residential zoning for planned urban growth area
+
+[plantuml]
+----
+@startuml
+actor "Urban Planning\nDepartment" as Planning
+participant "Municipality\nAdministration" as Municipality
+participant "LandZoning" as Zoning
+participant "ZoningMap\nService" as Map
+participant "LandParcel\nRepository" as Parcels
+participant "Stakeholder\nNotification" as Notification
+
+Planning -> Planning : Conduct urban growth study
+Planning -> Planning : Identify 120-hectare expansion area
+Planning -> Planning : Draft zoning classification parameters
+
+Planning -> Municipality : Submit zoning proposal for East Lalitpur Expansion Area
+Municipality -> Municipality : Schedule public consultation
+Municipality -> Notification : Notify affected stakeholders
+activate Notification
+Notification -> Notification : Send notices to landowners
+Notification -> Notification : Publish public hearing dates
+Municipality <-- Notification : Notification complete
+deactivate Notification
+
+Municipality -> Municipality : Conduct public hearing
+Municipality -> Municipality : Review feedback and finalize zoning
+
+Municipality -> Zoning : Create new residential zoning
+activate Zoning
+Zoning -> Zoning : Set name = "East Lalitpur Residential Zone"
+Zoning -> Zoning : Set classification = RESIDENTIAL_MEDIUM_DENSITY
+Zoning -> Zoning : Set type = BASE
+Zoning -> Zoning : Set status = PROPOSED
+Zoning -> Zoning : Set primaryUsage = SINGLE_FAMILY_RESIDENTIAL
+Zoning -> Zoning : Add allowedUsages = [SINGLE_FAMILY_RESIDENTIAL, MULTI_FAMILY_RESIDENTIAL]
+Zoning -> Zoning : Add conditionalUsages = [RETAIL, EDUCATIONAL, RELIGIOUS]
+Zoning -> Zoning : Add prohibitedUsages = [INDUSTRIAL_LIGHT, INDUSTRIAL_HEAVY]
+Zoning -> Zoning : Set maximumBuildingHeightInMeters = 12.0
+Zoning -> Zoning : Set floorAreaRatio = 1.5
+Zoning -> Zoning : Set maximumCoveragePercentage = 60.0
+Zoning -> Zoning : Set minimumLotSizeInSquareMeters = 250.0
+Zoning -> Zoning : Set frontSetbackInMeters = 3.0
+Zoning -> Zoning : Set sideSetbackInMeters = 1.5
+Municipality <-- Zoning : Zoning created
+deactivate Zoning
+
+Municipality -> Map : Define zoning boundary
+activate Map
+Map -> Map : Create GeoJSON boundary from survey coordinates
+Map -> Map : Validate boundary topology
+Map -> Zoning : Link boundary to zoning
+Municipality <-- Map : Boundary mapping complete
+deactivate Map
+
+Municipality -> Parcels : Identify affected parcels
+activate Parcels
+Parcels -> Parcels : Spatial query for parcels within boundary
+Parcels -> Parcels : Tag 215 parcels with new zoning reference
+Municipality <-- Parcels : Affected parcels identified
+deactivate Parcels
+
+Municipality -> Municipality : Approve zoning ordinance (#23-456)
+Municipality -> Zoning : Update zoning status
+activate Zoning
+Zoning -> Zoning : Set status = APPROVED
+Zoning -> Zoning : Set ordinanceNumber = "23-456"
+Zoning -> Zoning : Set effectiveFrom = 2023-09-01
+Municipality <-- Zoning : Zoning approved
+deactivate Zoning
+
+Municipality -> Notification : Notify affected stakeholders of approval
+activate Notification
+Notification -> Notification : Send formal notices to landowners
+Notification -> Notification : Publish zoning ordinance
+Municipality <-- Notification : Notification complete
+deactivate Notification
+@enduml
+----
+
+*Real-World Context:*
+Lalitpur Metropolitan City is experiencing rapid population growth and needs to expand eastward. The Urban Planning Department creates a new zoning regulation for a 120-hectare area that was previously unzoned agricultural land. The LandZoning entity is created with type RESIDENTIAL_MEDIUM_DENSITY, which permits single and multi-family homes while allowing some conditional uses like small retail, schools, and places of worship.
+
+The zoning specifies concrete parameters: buildings can't exceed 12 meters in height (approximately 4 stories), must have at least 3-meter front setbacks for consistent street appearance, and parcels must be at least 250 square meters. These parameters are stored in the LandZoning entity's development standards fields.
+
+After public consultation and addressing concerns about traffic and infrastructure capacity, the city council approves Ordinance #23-456, making the zoning effective from September 1, 2023. The system identifies 215 affected land parcels, updating their references to include this new zoning classification. Property owners can now check their development rights through the system, which shows exactly what they can build according to the detailed parameters.
+
+This comprehensive zoning process helps balance the city's need for housing with maintaining neighborhood character and ensuring adequate infrastructure capacity.
+
+====== Commercial Overlay Zoning for Tourism District
+
+*Scenario:* Creating a special tourism overlay zone in historical district
+
+[plantuml]
+----
+@startuml
+actor "Tourism\nDepartment" as Tourism
+actor "Urban Planning\nDepartment" as Planning
+participant "Municipality\nCouncil" as Council
+participant "LandZoning" as Zoning
+participant "Heritage\nCommittee" as Heritage
+participant "Business\nAssociation" as Business
+participant "GIS\nService" as GIS
+
+Tourism -> Planning : Propose tourism overlay zone for Bhaktapur heritage area
+Planning -> Heritage : Request heritage impact assessment
+activate Heritage
+Heritage -> Heritage : Assess impact on historical structures
+Heritage -> Heritage : Identify compatible commercial activities
+Heritage -> Heritage : Define building modification restrictions
+Planning <-- Heritage : Heritage assessment report
+deactivate Heritage
+
+Planning -> Business : Consult local business owners
+activate Business
+Business -> Business : Gather input on needed flexibilities
+Business -> Business : Identify desired business types
+Business -> Business : Propose operating hours and signage needs
+Planning <-- Business : Business community recommendations
+deactivate Business
+
+Planning -> Council : Present overlay zone proposal
+Council -> Council : Review historical and commercial considerations
+Council -> Council : Schedule public hearing
+
+Council -> Zoning : Create tourism overlay zone
+activate Zoning
+Zoning -> Zoning : Set name = "Bhaktapur Heritage Tourism Overlay"
+Zoning -> Zoning : Set type = OVERLAY
+Zoning -> Zoning : Set classification = COMMERCIAL_NEIGHBORHOOD
+Zoning -> Zoning : Set primaryUsage = RETAIL
+Zoning -> Zoning : Add allowedUsages = [RETAIL, RESTAURANT, HOTEL]
+Zoning -> Zoning : Add conditionalUsages = [OFFICE, EDUCATIONAL]
+Zoning -> Zoning : Add restrictedSignage tag
+Zoning -> Zoning : Add heritagePreservation tag
+Zoning -> Zoning : Add nighttimeOperation tag
+Zoning -> Zoning : Set heightRestrictions standards
+Zoning -> Zoning : Set facadePreservation standards
+Zoning -> Zoning : Set signageStandards
+Council <-- Zoning : Overlay zone created
+deactivate Zoning
+
+Council -> GIS : Define overlay boundary
+activate GIS
+GIS -> GIS : Create polygon boundary around 3 historical squares
+GIS -> GIS : Include 4 connecting street corridors
+GIS -> Zoning : Link boundary to overlay zone
+Council <-- GIS : Boundary mapping complete
+deactivate GIS
+
+Council -> Council : Review final proposal
+Council -> Council : Amend base zoning with overlay (Ordinance #22-78)
+Council -> Zoning : Activate overlay zone
+activate Zoning
+Zoning -> Zoning : Set status = ACTIVE
+Zoning -> Zoning : Set effectiveFrom = current date
+Zoning -> Zoning : Set ordinanceNumber = "22-78"
+Council <-- Zoning : Overlay zone activated
+deactivate Zoning
+
+Council -> Planning : Implement tourism signage program
+Council -> Tourism : Develop tourism promotion for new district
+@enduml
+----
+
+*Real-World Context:*
+Bhaktapur Municipality aims to balance heritage preservation with tourism economic development in its UNESCO World Heritage district. The Tourism Department proposes a specialized overlay zone that adds tourism-friendly provisions to the base residential-commercial zoning that already exists.
+
+The LandZoning entity is created as an OVERLAY type, which means it adds additional regulations on top of existing base zoning rather than replacing it. The overlay specifically allows tourism-related uses like hotels, restaurants, and souvenir shops while imposing strict design standards for building façades, signage, and lighting to preserve the historical character.
+
+The Taggable interface is leveraged to add specific tags like "heritagePreservation" and "restrictedSignage" that can be used for filtering and specialized processing. The overlay includes standardized design guidelines for signage (traditional wooden signs only, limited size, no illuminated signs) and façade modifications (must maintain traditional Newari architecture elements, restricted color palette).
+
+After the council approves Ordinance #22-78, the system applies this overlay to 82 parcels in the historic core, enabling property owners to operate tourist-oriented businesses while ensuring the district's historical character remains intact. When stakeholders query properties in this area, the system automatically merges requirements from both the base zoning and this overlay, showing the combined restrictions and opportunities.
+
+====== Rezoning for Transit-Oriented Development
+
+*Scenario:* Rezoning existing area for high-density, mixed-use development along new metro line
+
+[plantuml]
+----
+@startuml
+actor "Transport\nAuthority" as Transport
+actor "Urban Planning\nDepartment" as Planning
+participant "Land Registry\nOffice" as Registry
+participant "LandZoning" as Zoning
+participant "SpatialAnalysis\nService" as Spatial
+participant "Public Consultation\nPlatform" as Public
+participant "Environmental\nImpact Service" as Environment
+
+Transport -> Planning : Submit transit-oriented development plan around new Koteshwor station
+Planning -> Spatial : Analyze 500m radius around station
+activate Spatial
+Spatial -> Spatial : Map existing land use
+Spatial -> Spatial : Identify redevelopment potential
+Spatial -> Spatial : Calculate infrastructure capacity
+Planning <-- Spatial : Site analysis report
+deactivate Spatial
+
+Planning -> Registry : Check existing zoning
+activate Registry
+Registry -> Registry : Retrieve current zoning (low-density residential)
+Planning <-- Registry : Current zoning details
+deactivate Registry
+
+Planning -> Environment : Request environmental assessment
+activate Environment
+Environment -> Environment : Assess traffic impact
+Environment -> Environment : Calculate density impact
+Environment -> Environment : Evaluate utility load changes
+Planning <-- Environment : Environmental impact report
+deactivate Environment
+
+Planning -> Public : Launch public consultation
+activate Public
+Public -> Public : Host three community meetings
+Public -> Public : Collect online feedback
+Public -> Public : Document concerns and suggestions
+Planning <-- Public : Consultation report
+deactivate Public
+
+Planning -> Planning : Prepare rezoning proposal
+Planning -> Planning : Address density, traffic concerns
+Planning -> Planning : Incorporate affordable housing incentives
+Planning -> Planning : Plan phased implementation
+
+Planning -> Zoning : Create transit-oriented development zone
+activate Zoning
+Zoning -> Zoning : Set name = "Koteshwor Metro Station TOD Zone"
+Zoning -> Zoning : Set type = SPECIAL_PURPOSE
+Zoning -> Zoning : Set classification = MIXED_USE
+Zoning -> Zoning : Set primaryUsage = MULTI_FAMILY_RESIDENTIAL
+Zoning -> Zoning : Add allowedUsages = [MULTI_FAMILY_RESIDENTIAL, RETAIL, OFFICE, RESTAURANT]
+Zoning -> Zoning : Add sustainableDesign tag
+Zoning -> Zoning : Add pedestrianFriendly tag
+Zoning -> Zoning : Add mixedIncome tag
+Zoning -> Zoning : Set maximumBuildingHeightInMeters = 30.0
+Zoning -> Zoning : Set floorAreaRatio = 4.0
+Zoning -> Zoning : Set maximumCoveragePercentage = 75.0
+Zoning -> Zoning : Set minimumLotSizeInSquareMeters = 500.0
+Zoning -> Zoning : Add parkingReduction standard
+Zoning -> Zoning : Add affordableHousingBonus standard
+Zoning -> Zoning : Add setbackReduction standard
+Planning <-- Zoning : TOD zone created
+deactivate Zoning
+
+Planning -> Registry : Rezone affected area
+activate Registry
+Registry -> Registry : Identify 68 affected parcels
+Registry -> Registry : Update parcel zoning references
+Registry -> Registry : Record previous zoning for history
+Planning <-- Registry : Rezoning complete
+deactivate Registry
+
+Planning -> Transport : Coordinate infrastructure improvements
+Transport -> Transport : Schedule road widening
+Transport -> Transport : Plan pedestrian facilities
+Transport -> Transport : Design multimodal connections
+
+Planning -> Public : Announce rezoning and implementation timeline
+@enduml
+----
+
+*Real-World Context:*
+With Kathmandu's new metro line under construction, the Transport Authority and Urban Planning Department collaborate to maximize the benefit of the major infrastructure investment by creating a Transit-Oriented Development (TOD) zone around the new Koteshwor station.
+
+The existing area is primarily low-density residential (2-3 story buildings) with some small businesses. The rezoning creates a SPECIAL_PURPOSE LandZoning entity that enables much higher density (up to 8-10 stories) with a floor area ratio of 4.0 (meaning the total floor area can be four times the lot size). The zone encourages mixed-use buildings with retail on ground floors and residences or offices above.
+
+The zoning leverages FullTextSearchable capabilities with specific keywords like "transit-oriented," "mixed-use," and "high-density" to make it easily discoverable in the system. The zoning includes special standards for reduced parking requirements (0.5 spaces per unit instead of the usual 1.5) because of proximity to transit, and density bonuses for developments that include affordable housing units.
+
+This rezoning affects 68 parcels within a 500-meter radius of the station. When property owners in this zone access the system, they see the new development opportunities, including the increased height allowance, mixed-use permissions, and special incentives. Developers can search specifically for TOD-zoned properties when looking for investment opportunities, easily finding this area through the tagging and search capabilities.
+
+====== Industrial Zone Environmental Compliance Overlay
+
+*Scenario:* Creating an environmental compliance overlay for existing industrial zone
+
+[plantuml]
+----
+@startuml
+actor "Environmental\nProtection Agency" as EPA
+actor "Municipal\nPlanning Department" as Planning
+participant "Industrial\nAssociation" as Industry
+participant "LandZoning" as Zoning
+participant "Environment\nMonitoring System" as Monitoring
+participant "WebhookService" as Webhook
+
+EPA -> Planning : Request environmental compliance overlay for Balaju Industrial Area
+EPA -> EPA : Document water pollution concerns
+EPA -> EPA : Document air quality violations
+EPA -> EPA : Document waste management issues
+
+Planning -> Industry : Consult on implementation timeline
+activate Industry
+Industry -> Industry : Assess economic impact
+Industry -> Industry : Propose phased implementation
+Industry -> Industry : Request technical assistance
+Planning <-- Industry : Industry feedback
+deactivate Industry
+
+Planning -> Monitoring : Analyze current pollution levels
+activate Monitoring
+Monitoring -> Monitoring : Collect water quality data
+Monitoring -> Monitoring : Collect air quality data
+Monitoring -> Monitoring : Identify main pollution sources
+Planning <-- Monitoring : Environmental baseline report
+deactivate Monitoring
+
+Planning -> Zoning : Create environmental compliance overlay
+activate Zoning
+Zoning -> Zoning : Set name = "Balaju Industrial Environmental Compliance Overlay"
+Zoning -> Zoning : Set type = OVERLAY
+Zoning -> Zoning : Set classification = INDUSTRIAL_HEAVY
+Zoning -> Zoning : Add environmentalCompliance tag
+Zoning -> Zoning : Add waterQualityProtection tag
+Zoning -> Zoning : Add airQualityControl tag
+Zoning -> Zoning : Add wastewaterTreatment standard
+Zoning -> Zoning : Add emissionsMonitoring standard
+Zoning -> Zoning : Add wasteManagement standard
+Zoning -> Zoning : Add bufferZone standard
+Zoning -> Zoning : Set effectiveFrom = current date + 6 months
+Planning <-- Zoning : Environmental overlay created
+deactivate Zoning
+
+Planning -> Webhook : Register environmental monitoring webhook
+activate Webhook
+Webhook -> Zoning : registerWebhook(monitoringEndpoint, "ZONING_ACTIVE", secret)
+activate Zoning
+Webhook <-- Zoning : webhookRegistration
+deactivate Zoning
+Planning <-- Webhook : Webhook registered
+deactivate Webhook
+
+Planning -> Planning : Approve overlay ordinance (#21-345)
+Planning -> Zoning : Update overlay with ordinance
+activate Zoning
+Zoning -> Zoning : Set ordinanceNumber = "21-345"
+Zoning -> Zoning : Set status = APPROVED
+Planning <-- Zoning : Overlay approved
+deactivate Zoning
+
+Planning -> Industry : Provide compliance guidelines
+Planning -> EPA : Confirm overlay implementation
+EPA -> Monitoring : Configure monitoring program
+activate Monitoring
+Monitoring -> Monitoring : Deploy additional sensors
+Monitoring -> Monitoring : Set up alert thresholds
+Monitoring -> Monitoring : Configure reporting dashboard
+EPA <-- Monitoring : Monitoring configured
+deactivate Monitoring
+
+note right of Zoning
+  After 6 months, overlay becomes ACTIVE
+  and webhook notification is triggered
+end note
+@enduml
+----
+
+*Real-World Context:*
+The Balaju Industrial Area in Kathmandu has faced increasing environmental concerns with multiple factories exceeding pollution limits. Rather than shutting down these important economic activities, the Environmental Protection Agency works with the municipality to create an environmental compliance overlay zone.
+
+The LandZoning entity is created as an OVERLAY type that adds environmental requirements without changing the underlying INDUSTRIAL_HEAVY zoning classification. The overlay specifically requires wastewater treatment facilities, air emission controls, proper waste management, and buffer zones between industrial activities and nearby residential areas.
+
+The system utilizes the WebhookTriggerable interface to integrate with environmental monitoring systems. When the overlay becomes active after the 6-month phase-in period, the system automatically notifies the monitoring service, which then begins tracking compliance data for all facilities in the zone.
+
+The zoning includes specific standards for each requirement. For example, the wastewater treatment standard mandates primary and secondary treatment capabilities with specific pollutant removal percentages, while the buffer zone standard requires a minimum 50-meter separation between heavy industrial activities and residential areas, with required tree planting in these buffers.
+
+Factory owners in the affected area can access the system to see exactly what environmental upgrades they need to implement and by what deadline. The LandZoning entity's effectiveFrom date of 6 months from approval gives businesses time to make the necessary investments in pollution control technology.
+
+====== Agricultural Land Protection Zone
+
+*Scenario:* Designating high-value agricultural land with special protections
+
+[plantuml]
+----
+@startuml
+actor "Agriculture\nDepartment" as Agriculture
+actor "Land Management\nDepartment" as Land
+participant "District\nCouncil" as Council
+participant "LandZoning" as Zoning
+participant "LandParcel\nRepository" as Parcels
+participant "Soil Analysis\nService" as Soil
+participant "Farmer\nAssociation" as Farmers
+
+Agriculture -> Soil : Request soil quality assessment
+activate Soil
+Soil -> Soil : Analyze soil samples from Chitwan district
+Soil -> Soil : Map soil fertility levels
+Soil -> Soil : Identify prime agricultural areas
+Agriculture <-- Soil : Soil quality report
+deactivate Soil
+
+Agriculture -> Farmers : Consult local farming community
+activate Farmers
+Farmers -> Farmers : Document historical crop yields
+Farmers -> Farmers : Identify traditional farming areas
+Farmers -> Farmers : Report development pressures
+Agriculture <-- Farmers : Local knowledge report
+deactivate Farmers
+
+Agriculture -> Land : Propose agricultural protection zone
+Land -> Land : Evaluate urban growth patterns
+Land -> Land : Assess development pressures
+Land -> Land : Review infrastructure plans
+
+Land -> Parcels : Identify candidate parcels
+activate Parcels
+Parcels -> Parcels : Query parcels with agricultural use
+Parcels -> Parcels : Filter by soil quality rating
+Parcels -> Parcels : Exclude fragmented parcels
+Land <-- Parcels : 2,500 hectares identified
+deactivate Parcels
+
+Land -> Council : Present agricultural protection proposal
+Council -> Council : Review economic implications
+Council -> Council : Consider food security benefits
+Council -> Council : Evaluate farmer incentives
+
+Council -> Zoning : Create agricultural protection zone
+activate Zoning
+Zoning -> Zoning : Set name = "Chitwan Prime Agricultural Land Zone"
+Zoning -> Zoning : Set type = SPECIAL_PURPOSE
+Zoning -> Zoning : Set classification = AGRICULTURAL
+Zoning -> Zoning : Set primaryUsage = AGRICULTURAL
+Zoning -> Zoning : Add foodSecurity tag
+Zoning -> Zoning : Add culturalHeritage tag
+Zoning -> Zoning : Add primeAgricultural tag
+Zoning -> Zoning : Add subdivisionRestriction standard
+Zoning -> Zoning : Add nonFarmDevelopmentRestriction standard
+Zoning -> Zoning : Add farmStructureAllowance standard
+Council <-- Zoning : Agricultural zone created
+deactivate Zoning
+
+Council -> Council : Approve protection ordinance (#22-89)
+Council -> Zoning : Update zone with ordinance
+activate Zoning
+Zoning -> Zoning : Set ordinanceNumber = "22-89"
+Zoning -> Zoning : Set status = APPROVED
+Zoning -> Zoning : Set effectiveFrom = current date
+Council <-- Zoning : Zone approved and active
+deactivate Zoning
+
+Council -> Agriculture : Implement farmer support programs
+Agriculture -> Farmers : Announce protection zone and incentives
+Land -> Parcels : Apply zoning to identified parcels
+activate Parcels
+Parcels -> Parcels : Tag parcels with new zoning ID
+Parcels -> Parcels : Update parcel development rights
+Land <-- Parcels : Zoning application complete
+deactivate Parcels
+@enduml
+----
+
+*Real-World Context:*
+Chitwan district contains some of Nepal's most fertile agricultural land, but urban sprawl from growing municipalities threatens to convert prime farmland to housing and commercial uses. The Agriculture Department works with local authorities to create a special protection zone for high-value agricultural land.
+
+The LandZoning entity created is a SPECIAL_PURPOSE type with an AGRICULTURAL classification. The zoning includes strict standards that prevent subdivision below 2 hectares, prohibit non-agricultural development, and limit building coverage to 5% of the parcel (for farm structures only). These precise limitations are stored in the zoning's development standards, creating clear rules for what activities are permitted.
+
+The system uses the Taggable interface to add important classification tags like "primeAgricultural" and "foodSecurity" that allow specialized processing and filtering of these parcels. The searchable keywords make it easy for agricultural agencies to locate these protected lands for support programs.
+
+When landowners of protected parcels access the system, they see their development restrictions but also information about agricultural incentive programs they qualify for, including tax benefits, irrigation subsidies, and preferred access to agricultural extension services. Potential purchasers see the restrictions upfront, helping maintain appropriate land valuation based on agricultural rather than development potential.
+
+This zoning protects approximately 2,500 hectares of prime agricultural land across Chitwan district, preserving food production capacity and rural livelihoods while directing development to more appropriate areas.
+
+====== Historic Preservation District Zoning
+
+*Scenario:* Creating specialized zoning to protect historic architectural district
+
+[plantuml]
+----
+@startuml
+actor "Heritage\nDepartment" as Heritage
+actor "Urban Planning\nDepartment" as Planning
+participant "Municipal\nCouncil" as Council
+participant "LandZoning" as Zoning
+participant "Property Owner\nAssociation" as Owners
+participant "Tourism\nDepartment" as Tourism
+participant "Document\nManagement" as Docs
+
+Heritage -> Heritage : Conduct historic building inventory
+Heritage -> Heritage : Document architectural significance
+Heritage -> Heritage : Assess preservation priorities
+
+Heritage -> Owners : Consult property owners
+activate Owners
+Owners -> Owners : Express concerns about restrictions
+Owners -> Owners : Request restoration incentives
+Owners -> Owners : Propose adaptive reuse allowances
+Heritage <-- Owners : Stakeholder feedback
+deactivate Owners
+
+Heritage -> Tourism : Assess tourism potential
+activate Tourism
+Tourism -> Tourism : Evaluate visitor attraction potential
+Tourism -> Tourism : Suggest tourism infrastructure needs
+Tourism -> Tourism : Estimate economic benefits
+Heritage <-- Tourism : Tourism assessment
+deactivate Tourism
+
+Heritage -> Planning : Develop historic district proposal
+Planning -> Planning : Define district boundaries
+Planning -> Planning : Draft preservation standards
+Planning -> Planning : Create design guidelines
+
+Planning -> Docs : Create design guideline document
+activate Docs
+Docs -> Docs : Upload architectural standards
+Docs -> Docs : Document acceptable materials
+Docs -> Docs : Provide restoration techniques
+Planning <-- Docs : Document ID: HIST-GUIDE-001
+deactivate Docs
+
+Planning -> Council : Present historic district zoning proposal
+Council -> Council : Review economic impact
+Council -> Council : Consider property rights
+Council -> Council : Evaluate preservation benefits
+
+Council -> Zoning : Create historic preservation zone
+activate Zoning
+Zoning -> Zoning : Set name = "Patan Durbar Historic District"
+Zoning -> Zoning : Set type = HISTORIC
+Zoning -> Zoning : Set classification = SPECIAL_DISTRICT
+Zoning -> Zoning : Set primaryUsage = RESIDENTIAL
+Zoning -> Zoning : Add allowedUsages = [RESIDENTIAL, RETAIL, RESTAURANT, HOTEL]
+Zoning -> Zoning : Add historicPreservation tag
+Zoning -> Zoning : Add culturalHeritage tag
+Zoning -> Zoning : Add touristDestination tag
+Zoning -> Zoning : Add facadePreservation standard
+Zoning -> Zoning : Add heightRestriction standard
+Zoning -> Zoning : Add materialRegulation standard
+Zoning -> Zoning : Add adaptiveReuse standard
+Zoning -> Zoning : Link documentIds = [HIST-GUIDE-001]
+Council <-- Zoning : Historic zone created
+deactivate Zoning
+
+Council -> Council : Approve historic district ordinance (#21-456)
+Council -> Zoning : Update zone with ordinance
+activate Zoning
+Zoning -> Zoning : Set ordinanceNumber = "#21-456"
+Zoning -> Zoning : Set status = APPROVED
+Zoning -> Zoning : Set effectiveFrom = current date
+Council <-- Zoning : Zone approved and active
+deactivate Zoning
+
+Council -> Heritage : Establish review committee
+Council -> Planning : Implement tax incentive program
+Heritage -> Owners : Provide restoration guidelines
+Planning -> Tourism : Coordinate tourism promotion
+@enduml
+----
+
+*Real-World Context:*
+Patan's Durbar Square area contains priceless Newari architecture dating back centuries, including UNESCO World Heritage sites. To protect this cultural treasure while allowing for economic vitality, the Heritage Department works with urban planners to create a specialized historic preservation zoning district.
+
+The LandZoning entity is created with type HISTORIC and classification SPECIAL_DISTRICT. Unlike standard zoning that primarily regulates use and density, this zoning focuses on preserving architectural character through detailed design standards. The zoning links to comprehensive design guidelines (document HIST-GUIDE-001) that specify acceptable building materials (traditional brick, wood, stone), façade elements (carved windows, traditional doors), and appropriate restoration techniques.
+
+The zoning allows mixed uses to keep the area economically viable—residential, retail, restaurants, and boutique hotels are permitted—but with strict controls on how buildings can be modified. Building heights are restricted to match historical patterns (maximum 3-4 stories depending on the street), and all exterior modifications require heritage committee approval.
+
+Property owners in the district can access the system to view their specific restrictions, the detailed design guidelines, and information about available tax incentives and restoration grants. The HistoryViewable interface maintains records of all approved modifications to historic properties, creating a comprehensive restoration history for each building.
+
+This specialized zoning balances preservation with economic needs, maintaining Patan's cultural heritage while allowing appropriate contemporary uses of historic structures.
+
+===== WebhookTriggerable Implementation
+
+LandZoning implements the WebhookTriggerable interface to notify integrated systems about zoning changes:
+
+[plantuml]
+----
+@startuml
+participant "ExternalSystem" as External
+participant "WebhookService" as Service
+participant "LandZoning\nimplements WebhookTriggerable" as Zoning
+participant "WebhookRegistry" as Registry
+participant "EventPublisher" as Events
+
+External -> Service : registerWebhook(zoningId, endpointUrl, events)
+activate Service
+
+Service -> Zoning : registerWebhook(endpoint, events, secret)
+activate Zoning
+Zoning -> Registry : saveWebhookRegistration(entityId, "LandZoning", url, event, secret)
+activate Registry
+Zoning <-- Registry : registration
+deactivate Registry
+Service <-- Zoning : webhookRegistration
+deactivate Zoning
+
+External <-- Service : registrationConfirmation
+deactivate Service
+
+note over Zoning
+  When zoning status changes to ACTIVE...
+end note
+
+Zoning -> Events : publish(ZoningApprovedEvent)
+activate Events
+Events -> Zoning : triggerWebhooks("ZONING_ACTIVE", zoningData)
+activate Zoning
+
+Zoning -> Registry : findWebhooksForEvent(entityId, "ZONING_ACTIVE")
+activate Registry
+Zoning <-- Registry : webhooks
+deactivate Registry
+
+loop for each webhook
+  Zoning -> External : POST /webhook-endpoint (payload + signature)
+  activate External
+  External --> External : Verify signature
+  External --> External : Update GIS mapping
+  Zoning <-- External : 200 OK
+  deactivate External
+  Zoning -> Registry : recordSuccessfulDelivery(webhookId)
+end
+
+Events <-- Zoning
+deactivate Zoning
+deactivate Events
+@enduml
+----
+
+===== FullTextSearchable Implementation
+
+LandZoning implements the FullTextSearchable interface for advanced search capabilities:
+
+[plantuml]
+----
+@startuml
+participant "SearchService" as Search
+participant "LandZoning\nimplements FullTextSearchable" as Zoning
+participant "MunicipalityService" as Municipality
+participant "IndexingService" as Index
+
+Search -> Zoning : indexForSearch()
+activate Zoning
+
+Zoning -> Zoning : getSearchableContent()
+activate Zoning
+Zoning -> Municipality : getMunicipalityName(municipalityId)
+activate Municipality
+Zoning <-- Municipality : municipalityName
+deactivate Municipality
+
+Zoning -> Zoning : buildSearchableMap()
+Zoning <-- Zoning : searchContent = {
+  "name": "East Lalitpur Residential Zone",
+  "classification": "RESIDENTIAL_MEDIUM_DENSITY",
+  "municipality": "Lalitpur Metropolitan City",
+  "primaryUsage": "SINGLE_FAMILY_RESIDENTIAL",
+  "allowedUsages": "residential, multi-family",
+  "status": "ACTIVE"
+}
+deactivate Zoning
+
+Zoning -> Zoning : getSearchKeywords()
+activate Zoning
+Zoning <-- Zoning : keywords = [
+  "residential",
+  "medium-density",
+  "Lalitpur",
+  "single-family",
+  "multi-family"
+]
+deactivate Zoning
+
+Zoning -> Index : updateSearchIndex(entityId, searchContent, keywords)
+activate Index
+Zoning <-- Index : indexUpdateConfirmation
+deactivate Index
+
+Search <-- Zoning : indexingComplete
+deactivate Zoning
+
+Search -> Zoning : getSearchBoostFactors()
+activate Zoning
+Search <-- Zoning : {
+  "name": 2.0,
+  "classification": 1.5,
+  "municipality": 1.2,
+  "primaryUsage": 1.0
+}
+deactivate Zoning
 @enduml
 ----
 

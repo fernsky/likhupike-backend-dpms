@@ -9,8 +9,11 @@ Land Dispute represents conflicts over land ownership, boundaries, or rights, ex
 @startuml
 ' Core models
 abstract class ApprovableEntity
+abstract class WorkflowEntity
 interface HistoryViewable
 interface AccessControlled
+interface WebhookTriggerable
+interface FullTextSearchable
 
 ' LandDispute implementation
 class LandDispute {
@@ -19,6 +22,21 @@ class LandDispute {
   +ReviewState reviewState
   +LocalDateTime approvedAt
   +UUID approvedBy
+  +String reviewNote
+  +UUID currentAssignee
+  +Integer escalationLevel
+  +LocalDate dueDate
+  
+  ' From WorkflowEntity
+  +String workflowDefinitionId
+  +String workflowInstanceId
+  +String currentState
+  +List<String> previousStates
+  +List<String> nextPossibleStates
+  +LocalDateTime stateEnteredAt
+  +LocalDate stateDeadline
+  +List<UUID> activeTaskIds
+  +Integer workflowPriority
   
   ' LandDispute-specific
   +String disputeNumber
@@ -40,75 +58,26 @@ class LandDispute {
   +Double disputedAreaInSquareMeters
   +UUID disputedBoundarySegmentId
   
-  ' Resolution tracking
-  +UUID assignedMediatorId
-  +UUID assignedOfficerId
-  +LocalDate scheduledHearingDate
-  +LocalDate resolvedDate
-  +DisputeResolutionMethod resolutionMethod
-  +String resolutionNotes
-  +String decisionReference
-  +Boolean appealed
-  +UUID appealCaseId
+  ' WebhookTriggerable data
+  +List<WebhookRegistration> webhookRegistrations
+  
+  ' FullTextSearchable data
+  +String searchableText
+  +Map<String, String> searchableContent
+  +Set<String> searchKeywords
   
   ' Implementation methods...
 }
 
-' Enumerations
-enum DisputeType {
-  BOUNDARY
-  OWNERSHIP
-  RIGHTS
-  ACCESS
-  USAGE
-  ENCROACHMENT
-  INHERITANCE
-  TITLE
-  TAX
-  ADMINISTRATIVE
-}
-
-enum DisputeStatus {
-  FILED
-  UNDER_REVIEW
-  EVIDENCE_COLLECTION
-  MEDIATION
-  HEARING_SCHEDULED
-  HEARING_COMPLETED
-  DECISION_PENDING
-  RESOLVED
-  APPEALED
-  CLOSED
-  REOPENED
-}
-
-enum DisputeCategory {
-  PRIVATE_VS_PRIVATE
-  PRIVATE_VS_PUBLIC
-  PUBLIC_VS_PUBLIC
-  HISTORICAL_CLAIM
-  INDIGENOUS_CLAIM
-  COMMUNITY_CLAIM
-  INTERNATIONAL
-}
-
-enum DisputeResolutionMethod {
-  MEDIATION
-  ARBITRATION
-  COURT_DECISION
-  ADMINISTRATIVE_DECISION
-  NEGOTIATED_SETTLEMENT
-  TECHNICAL_CORRECTION
-  ABANDONMENT
-  ALTERNATIVE_DISPUTE_RESOLUTION
-}
-
 ' Inheritance relationships
-ApprovableEntity <|-- LandDispute
+ApprovableEntity <|-- WorkflowEntity
+WorkflowEntity <|-- LandDispute
 
 ' Interface implementation
 LandDispute ..|> HistoryViewable
 LandDispute ..|> AccessControlled
+LandDispute ..|> WebhookTriggerable
+LandDispute ..|> FullTextSearchable
 
 ' Enum relationships
 LandDispute -- DisputeType
@@ -305,6 +274,897 @@ else (no)
 endif
 
 stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Land Disputes are used in the system:
+
+====== Boundary Dispute Between Adjacent Landowners
+
+*Scenario:* Two farmers in dispute over the exact location of their shared boundary
+
+[plantuml]
+----
+@startuml
+actor "Farmer Ramesh\n(Initiator)" as Initiator
+actor "Farmer Hari\n(Respondent)" as Respondent
+participant "Land Registry\nOffice" as Registry
+participant "LandDispute" as Dispute
+participant "LandParcel" as Parcels
+participant "LandSurvey" as Survey
+participant "Document\nRepository" as Docs
+
+Initiator -> Registry : File boundary dispute claim
+Registry -> Parcels : Verify ownership of parcel KTM-0723-09
+activate Parcels
+Registry <-- Parcels : Ownership confirmed for Ramesh
+deactivate Parcels
+
+Registry -> Parcels : Identify adjacent parcel KTM-0724-09
+activate Parcels
+Registry <-- Parcels : Adjacent parcel owned by Hari
+deactivate Parcels
+
+Registry -> Dispute : Create boundary dispute record
+activate Dispute
+Dispute -> Dispute : Set type = BOUNDARY
+Dispute -> Dispute : Set category = PRIVATE_VS_PRIVATE
+Dispute -> Dispute : Set primary parcel = KTM-0723-09
+Dispute -> Dispute : Add related parcel = KTM-0724-09
+Dispute -> Dispute : Set initiator = Ramesh
+Dispute -> Dispute : Add respondent = Hari
+Dispute -> Dispute : Generate dispute number = "BD-2023-0142"
+Dispute -> Dispute : Set status = FILED
+Dispute -> Dispute : Set disputed area = 125 sq.m.
+Registry <-- Dispute : Dispute created
+deactivate Dispute
+
+Registry -> Respondent : Notify of dispute filing
+Respondent -> Registry : Submit response to dispute
+
+Initiator -> Docs : Submit historical deed showing boundary
+activate Docs
+Docs -> Docs : Process and store document
+Initiator <-- Docs : Document ID: DOC-1753
+deactivate Docs
+
+Registry -> Dispute : Add supporting document
+activate Dispute
+Dispute -> Dispute : Add document ID to supportingDocumentIds
+Registry <-- Dispute : Document added
+deactivate Dispute
+
+Respondent -> Docs : Submit irrigation agreement with boundary mention
+activate Docs
+Docs -> Docs : Process and store document
+Respondent <-- Docs : Document ID: DOC-1762
+deactivate Docs
+
+Registry -> Dispute : Add supporting document
+activate Dispute
+Dispute -> Dispute : Add document ID to supportingDocumentIds
+Registry <-- Dispute : Document added
+deactivate Dispute
+
+Registry -> Dispute : Update status to EVIDENCE_COLLECTION
+activate Dispute
+Dispute -> Dispute : Set status = EVIDENCE_COLLECTION
+Registry <-- Dispute : Status updated
+deactivate Dispute
+
+Registry -> Survey : Request field survey
+activate Survey
+Survey -> Survey : Conduct boundary survey
+Survey -> Survey : Identify historic boundary markers
+Survey -> Survey : Compare with official cadastral map
+Registry <-- Survey : Technical report
+deactivate Survey
+
+Registry -> Dispute : Schedule mediation
+activate Dispute
+Dispute -> Dispute : Set status = MEDIATION
+Dispute -> Dispute : Assign mediator = "Shyam Prasad"
+Dispute -> Dispute : Set meeting date
+Registry <-- Dispute : Mediation scheduled
+deactivate Dispute
+
+Registry -> Initiator : Notify of mediation
+Registry -> Respondent : Notify of mediation
+
+note right of Registry
+  Mediation meeting happens
+end note
+
+Registry -> Dispute : Record mediation outcome
+activate Dispute
+Dispute -> Dispute : Set status = RESOLVED
+Dispute -> Dispute : Set resolutionMethod = MEDIATION
+Dispute -> Dispute : Set resolutionNotes = "Parties agreed to set boundary along irrigation channel with 1.5m offset"
+Dispute -> Dispute : Set resolvedDate = current date
+Registry <-- Dispute : Resolution recorded
+deactivate Dispute
+
+Registry -> Survey : Create boundary adjustment survey
+activate Survey
+Survey -> Parcels : Update parcel boundaries
+Registry <-- Survey : Boundaries updated
+deactivate Survey
+
+Registry -> Initiator : Issue resolution certificate
+Registry -> Respondent : Issue resolution certificate
+@enduml
+----
+
+*Real-World Context:*
+Ramesh and Hari are farmers in Kavre district whose lands share a 50-meter boundary. Ramesh believes Hari's recent irrigation work encroached 2.5 meters onto his land, affecting approximately 125 square meters. After unsuccessfully trying to resolve the issue directly, Ramesh files a formal boundary dispute with the Land Registry Office.
+
+The system creates a LandDispute entity with type BOUNDARY, linking both LandParcel entities and recording both parties. Both parcels are automatically flagged with a DISPUTED status, which becomes visible in any land transaction attempts during the dispute period.
+
+The LandDispute entity stores both parties' evidence documents. Ramesh submits his original deed showing boundary descriptions from 1975, while Hari provides a 1992 irrigation agreement that mentions boundary landmarks. The system's search capabilities index all document text for dispute officers to search for relevant terms like "boundary," "landmark," or "irrigation channel."
+
+A field survey reveals that a historical stone marker supports Ramesh's claim, but also that the functional boundary (an irrigation channel) has been used for over 20 years, supporting Hari's position. During mediation, the parties agree to establish the official boundary along the irrigation channel with a 1.5-meter protective strip for Ramesh's land.
+
+Upon resolution, the system updates both LandParcel boundaries with the new coordinates, records the agreement terms in the LandDispute entity, removes the DISPUTED flag from the parcels, and issues resolution certificates to both parties. The dispute and its resolution become part of the permanent record for both parcels, visible in future land history reports.
+
+====== Inheritance Dispute Among Family Members
+
+*Scenario:* Siblings contesting land inheritance after parent's death
+
+[plantuml]
+----
+@startuml
+actor "Sister Sunita\n(Initiator)" as Initiator
+actor "Brother Bikram\n(Respondent)" as Respondent
+participant "Land Registry\nOffice" as Registry
+participant "LandDispute" as Dispute
+participant "LandParcel" as Parcel
+participant "LandOwnership" as Ownership
+participant "Document\nRepository" as Docs
+participant "Hearing\nPanel" as Panel
+
+Initiator -> Registry : File inheritance dispute
+Registry -> Parcel : Verify parcel EO-4567-89 status
+activate Parcel
+Registry <-- Parcel : Parcel currently in deceased father's name
+deactivate Parcel
+
+Registry -> Ownership : Check existing ownership
+activate Ownership
+Ownership -> Ownership : Verify ownership transfer pending
+Registry <-- Ownership : Transfer to brother Bikram in process
+deactivate Ownership
+
+Registry -> Dispute : Create inheritance dispute record
+activate Dispute
+Dispute -> Dispute : Set type = INHERITANCE
+Dispute -> Dispute : Set category = PRIVATE_VS_PRIVATE
+Dispute -> Dispute : Set primary parcel = EO-4567-89
+Dispute -> Dispute : Set initiator = Sunita
+Dispute -> Dispute : Add respondent = Bikram
+Dispute -> Dispute : Generate dispute number = "ID-2023-0087"
+Dispute -> Dispute : Set groundsForDispute = "Contested will authenticity and equal inheritance rights"
+Dispute -> Dispute : Set status = FILED
+Registry <-- Dispute : Dispute created
+deactivate Dispute
+
+Registry -> Dispute : Apply automatic hold on property transfer
+activate Dispute
+Dispute -> Dispute : Flag parcel for transfer restriction
+Registry <-- Dispute : Transfer blocked
+deactivate Dispute
+
+Registry -> Respondent : Notify of dispute filing
+
+Initiator -> Docs : Submit parent's original will
+activate Docs
+Docs -> Docs : Process and store document
+Initiator <-- Docs : Document ID: DOC-4587
+deactivate Docs
+
+Respondent -> Docs : Submit newer will and supporting affidavit
+activate Docs
+Docs -> Docs : Process and store documents
+Respondent <-- Docs : Document IDs: DOC-4592, DOC-4593
+deactivate Docs
+
+Registry -> Dispute : Update status to EVIDENCE_COLLECTION
+activate Dispute
+Dispute -> Dispute : Set status = EVIDENCE_COLLECTION
+Registry <-- Dispute : Status updated
+deactivate Dispute
+
+Registry -> Dispute : Attempt mediation
+activate Dispute
+Dispute -> Dispute : Set status = MEDIATION
+Registry <-- Dispute : Status updated
+deactivate Dispute
+
+note right of Registry
+  Mediation unsuccessful
+end note
+
+Registry -> Dispute : Schedule formal hearing
+activate Dispute
+Dispute -> Dispute : Set status = HEARING_SCHEDULED
+Dispute -> Dispute : Set hearingDate = 2 weeks from now
+Registry <-- Dispute : Hearing scheduled
+deactivate Dispute
+
+note right of Registry
+  Formal hearing takes place
+end note
+
+Panel -> Dispute : Record hearing outcome
+activate Dispute
+Dispute -> Dispute : Set status = DECISION_PENDING
+Registry <-- Dispute : Status updated
+deactivate Dispute
+
+Panel -> Dispute : Issue decision
+activate Dispute
+Dispute -> Dispute : Set status = RESOLVED
+Dispute -> Dispute : Set resolutionMethod = ADMINISTRATIVE_DECISION
+Dispute -> Dispute : Set resolutionNotes = "Newer will deemed invalid due to procedural irregularities. Property to be divided equally between siblings."
+Dispute -> Dispute : Set resolvedDate = current date
+Registry <-- Dispute : Decision recorded
+deactivate Dispute
+
+Registry -> Parcel : Update parcel subdivision plan
+activate Parcel
+Parcel -> Parcel : Flag for subdivision
+Registry <-- Parcel : Subdivision planned
+deactivate Parcel
+
+Registry -> Ownership : Update ownership records
+activate Ownership
+Ownership -> Ownership : Cancel transfer to Bikram
+Ownership -> Ownership : Prepare equal share transfer to both siblings
+Registry <-- Ownership : Ownership updated
+deactivate Ownership
+
+Registry -> Initiator : Issue resolution certificate
+Registry -> Respondent : Issue resolution certificate
+@enduml
+----
+
+*Real-World Context:*
+After the death of their father in Butwal, siblings Sunita and Bikram are in conflict over a 4-hectare farmland (parcel EO-4567-89). Bikram has produced a will dated one month before their father's death that leaves the entire property to him, and has initiated the ownership transfer process. Sunita believes the will is fraudulent and that she is entitled to an equal share under inheritance law.
+
+The system creates a LandDispute entity with type INHERITANCE and automatically places a hold on the pending land transfer, preventing the completion of ownership transfer to Bikram while the dispute is active. This hold is visible to all registry officials and prevents any transaction involving the disputed parcel.
+
+The dispute record tracks the conflicting evidence documents: Sunita submits an older will showing equal distribution, while Bikram provides the newer will and supporting affidavits. Mediation fails as both parties maintain their positions.
+
+During the formal hearing, document forensics determine that the newer will contains irregularities in witnessing protocols. The hearing panel issues a decision that invalidates the newer will and directs equal division of the property between siblings.
+
+The system updates the LandDispute status to RESOLVED and triggers actions to implement the resolution: the original transfer to Bikram is canceled, and a subdivision process is initiated to create two equal parcels. The WorkflowEntity capabilities of LandDispute coordinate with LandParcel and LandOwnership workflows to ensure all related actions are properly sequenced. The resolution is recorded with detailed notes and becomes part of the permanent record for the parcels.
+
+====== Government Infrastructure Project Causing Private Land Dispute
+
+*Scenario:* Road expansion project leading to disputes with multiple landowners
+
+[plantuml]
+----
+@startuml
+actor "Department of\nRoads" as Government
+actor "Landowners\n(15 parties)" as Owners
+participant "Land Acquisition\nOffice" as LAO
+participant "LandDispute" as Dispute
+participant "BatchProcessingService" as Batch
+participant "LandParcel" as Parcels
+participant "Land Survey" as Survey
+participant "Compensation\nCommittee" as Committee
+
+Government -> LAO : Submit road expansion plan
+LAO -> Batch : Identify affected parcels
+activate Batch
+Batch -> Batch : Query parcels along highway corridor
+LAO <-- Batch : 23 affected parcels identified
+deactivate Batch
+
+LAO -> Government : Prepare acquisition notices
+
+loop for each disputed property
+  Owners -> LAO : File objection to proposed acquisition
+  
+  LAO -> Dispute : Create dispute record
+  activate Dispute
+  Dispute -> Dispute : Set type = ADMINISTRATIVE
+  Dispute -> Dispute : Set category = PRIVATE_VS_PUBLIC
+  Dispute -> Dispute : Set primaryParcelId = affected parcel
+  Dispute -> Dispute : Set respondentId = Department of Roads
+  Dispute -> Dispute : Set initiatorId = landowner
+  Dispute -> Dispute : Generate disputeNumber = "AD-2023-" + sequence
+  Dispute -> Dispute : Set status = FILED
+  LAO <-- Dispute : Dispute created
+  deactivate Dispute
+end
+
+LAO -> Batch : Group similar disputes
+activate Batch
+Batch -> Batch : Identify common issues
+Batch -> Batch : Create dispute groups
+LAO <-- Batch : Disputes categorized by issue
+deactivate Batch
+
+LAO -> Dispute : Update all disputes to EVIDENCE_COLLECTION
+activate Dispute
+Dispute -> Dispute : Apply batch status update
+LAO <-- Dispute : Statuses updated
+deactivate Dispute
+
+LAO -> Survey : Request detailed impact survey
+activate Survey
+Survey -> Survey : Measure exact impact on each parcel
+Survey -> Survey : Document existing structures
+Survey -> Survey : Prepare acquisition maps
+LAO <-- Survey : Technical reports
+deactivate Survey
+
+LAO -> Committee : Evaluate compensation rates
+activate Committee
+Committee -> Committee : Review market values
+Committee -> Committee : Calculate compensation formula
+Committee -> Committee : Prepare compensation schedule
+LAO <-- Committee : Compensation guidelines
+deactivate Committee
+
+LAO -> LAO : Group dispute hearings by type
+LAO -> Dispute : Schedule group hearings
+activate Dispute
+Dispute -> Dispute : Update multiple disputes 
+Dispute -> Dispute : Set status = HEARING_SCHEDULED
+LAO <-- Dispute : Hearings scheduled
+deactivate Dispute
+
+note right of LAO
+  Conduct hearings for each category
+end note
+
+LAO -> Dispute : Record hearing outcomes
+activate Dispute
+Dispute -> Dispute : Update resolutions for each dispute
+Dispute -> Dispute : Set appropriate compensation adjustments
+Dispute -> Dispute : Set resolution methods
+LAO <-- Dispute : Resolutions recorded
+deactivate Dispute
+
+LAO -> Owners : Issue compensation offers
+Owners -> LAO : Accept/reject offers
+
+LAO -> Dispute : Update resolution status
+activate Dispute
+loop for resolved disputes
+  Dispute -> Dispute : Set status = RESOLVED
+  Dispute -> Dispute : Record accepted compensation
+end
+LAO <-- Dispute : Status updated
+deactivate Dispute
+
+LAO -> Parcels : Update parcel records for acquisitions
+activate Parcels
+Parcels -> Parcels : Record government acquisition
+Parcels -> Parcels : Update boundaries
+LAO <-- Parcels : Records updated
+deactivate Parcels
+
+LAO -> Government : Provide acquisition clearance
+LAO -> Owners : Disburse compensation
+@enduml
+----
+
+*Real-World Context:*
+The Department of Roads is expanding a national highway in Nawalparasi district from two lanes to four, requiring acquisition of portions of private land along a 15-kilometer stretch. The Land Acquisition Office identifies 23 affected parcels, but 15 landowners file objections disputing either the acquisition itself or the proposed compensation amounts.
+
+The system creates multiple LandDispute entities with type ADMINISTRATIVE and category PRIVATE_VS_PUBLIC, each linking the affected LandParcel with both the landowner (initiator) and the Department of Roads (respondent). The BatchProcessable capabilities allow efficient creation and management of these related disputes.
+
+The disputes are classified into groups with similar issues: eight disputes over compensation amounts, four over the extent of land taken, two claiming improper notice, and one claiming special historical status. The system's FullTextSearchable interface enables officials to search across all dispute documents for specific terms like "historical," "undervalued," or "notification."
+
+Survey teams conduct detailed measurements of each affected property, updating the LandDispute records with precise information about affected areas and structures. The Compensation Committee establishes standardized compensation rates based on land use, location, and improvements.
+
+Rather than holding 15 separate hearings, the LAO conducts consolidated hearings for each dispute category. The WorkflowEntity capabilities of LandDispute coordinate the progression of all disputes through the same stages while maintaining individual details and resolutions.
+
+After hearings, most disputes are resolved with adjusted compensation. Some landowners receive additional compensation for specific impacts (a specialty crop orchard, an affected water source), while others receive boundary adjustments to minimize impact. The system records each specific resolution while maintaining the relationship between all disputes in this project. Compensation is disbursed according to the specific terms recorded in each resolved LandDispute entity.
+
+====== Indigenous Community Land Rights Dispute
+
+*Scenario:* Indigenous community claiming traditional rights over forest land
+
+[plantuml]
+----
+@startuml
+actor "Tharu Community\nRepresentatives" as Community
+actor "Forest\nDepartment" as Forest
+participant "Land Registry\nOffice" as Registry
+participant "LandDispute" as Dispute
+participant "LandRights" as Rights
+participant "Document\nRepository" as Docs
+participant "Indigenous Rights\nCommission" as Commission
+
+Community -> Registry : File land rights claim dispute
+Registry -> Dispute : Create rights dispute record
+activate Dispute
+Dispute -> Dispute : Set type = RIGHTS
+Dispute -> Dispute : Set category = INDIGENOUS_CLAIM
+Dispute -> Dispute : Set primaryParcelId = forest parcel BRD-1045
+Dispute -> Dispute : Set initiatorId = community leader ID
+Dispute -> Dispute : Set respondentId = Forest Department
+Dispute -> Dispute : Generate disputeNumber = "RC-2023-0042"
+Dispute -> Dispute : Set groundsForDispute = "Traditional usage rights and cultural significance"
+Dispute -> Dispute : Set status = FILED
+Registry <-- Dispute : Dispute created
+deactivate Dispute
+
+Registry -> Forest : Notify of rights dispute filing
+Forest -> Registry : Contest claim
+
+Community -> Docs : Submit historical use evidence
+activate Docs
+Docs -> Docs : Process oral history transcripts
+Docs -> Docs : Process historical photographs
+Docs -> Docs : Process anthropological study
+Community <-- Docs : Documents stored
+deactivate Docs
+
+Registry -> Dispute : Add supporting documents
+activate Dispute
+Dispute -> Dispute : Link community documents
+Registry <-- Dispute : Documents added
+deactivate Dispute
+
+Forest -> Docs : Submit conservation documentation
+activate Docs
+Docs -> Docs : Process conservation plan
+Docs -> Docs : Process forest management records
+Forest <-- Docs : Documents stored
+deactivate Docs
+
+Registry -> Dispute : Add supporting documents
+activate Dispute
+Dispute -> Dispute : Link Forest Department documents
+Registry <-- Dispute : Documents added
+deactivate Dispute
+
+Registry -> Dispute : Set status to EVIDENCE_COLLECTION
+activate Dispute
+Dispute -> Dispute : Set status = EVIDENCE_COLLECTION
+Registry <-- Dispute : Status updated
+deactivate Dispute
+
+Registry -> Commission : Request expert assessment
+activate Commission
+Commission -> Commission : Research traditional use patterns
+Commission -> Commission : Document cultural significance
+Commission -> Commission : Analyze conservation needs
+Registry <-- Commission : Expert report
+deactivate Commission
+
+Registry -> Dispute : Schedule formal hearing
+activate Dispute
+Dispute -> Dispute : Set status = HEARING_SCHEDULED
+Registry <-- Dispute : Hearing scheduled
+deactivate Dispute
+
+note right of Registry
+  Multi-day hearing with community
+  elders and Forest representatives
+end note
+
+Registry -> Dispute : Record hearing decision
+activate Dispute
+Dispute -> Dispute : Set status = RESOLVED
+Dispute -> Dispute : Set resolutionMethod = ADMINISTRATIVE_DECISION
+Dispute -> Dispute : Set resolutionNotes = "Community granted specific usage rights with conservation conditions"
+Registry <-- Dispute : Resolution recorded
+deactivate Dispute
+
+Registry -> Rights : Create special usage rights
+activate Rights
+Rights -> Rights : Set type = TRADITIONAL_USE
+Rights -> Rights : Set grantorId = Forest Department
+Rights -> Rights : Set beneficiaryId = Community ID
+Rights -> Rights : Set conditions from resolution
+Registry <-- Rights : Rights created
+deactivate Rights
+
+Registry -> Dispute : Link rights to resolution
+activate Dispute
+Dispute -> Dispute : Add rightId to resolution
+Registry <-- Dispute : Rights linked
+deactivate Dispute
+
+Registry -> Community : Issue rights certificate
+Registry -> Forest : Issue implementation directive
+@enduml
+----
+
+*Real-World Context:*
+A Tharu indigenous community in Bardiya district files a dispute claiming traditional forest resource use rights over a 500-hectare protected forest area (parcel BRD-1045) managed by the Forest Department. The community asserts they have harvested medicinal plants, performed cultural rituals, and sustainably used forest resources for generations before the area was designated as protected.
+
+The system creates a LandDispute entity with type RIGHTS and category INDIGENOUS_CLAIM. Unlike boundary or ownership disputes, rights disputes can coexist with current ownership arrangements, seeking to establish specific usage rights rather than full ownership transfer.
+
+The LandDispute entity stores rich documentary evidence: the community submits oral history transcripts, historical photographs dating to the 1930s, and an anthropological study documenting traditional forest knowledge. The Forest Department provides conservation plans and biodiversity reports indicating the need for protection.
+
+The Indigenous Rights Commission conducts field research in the disputed area, confirming the community's historical presence through archaeological evidence and documenting specific areas used for cultural practices versus conservation-critical zones.
+
+After a formal hearing, the dispute is resolved with a compromise solution: the community is granted specific traditional use rights for medicinal plant harvesting in designated areas, cultural site access, and seasonal non-timber forest product collection, with conservation conditions including harvest limits and prohibited practices.
+
+The resolution creates a new LandRights entity with type TRADITIONAL_USE that details specific allowed activities, access schedules, resource quotas, and prohibited actions. The HistoryViewable interface records this complex resolution, allowing future reference to the exact terms of the traditional rights granted. The relationship between the LandDispute and resulting LandRights entities maintains the full context of how these rights were established.
+
+====== Urban Land Encroachment Dispute
+
+*Scenario:* Property owner discovers neighbor's building encroaching on their land
+
+[plantuml]
+----
+@startuml
+actor "Property Owner\nSima" as Owner
+actor "Neighbor\nArun" as Neighbor
+participant "Municipal\nOffice" as Municipal
+participant "LandDispute" as Dispute
+participant "LandParcel" as Parcels
+participant "LandSurvey" as Survey
+participant "Municipal\nEngineer" as Engineer
+participant "Building\nPermit System" as Permits
+
+Owner -> Municipal : Report building encroachment
+Municipal -> Parcels : Verify parcel ownership
+activate Parcels
+Municipal <-- Parcels : Ownership confirmed
+deactivate Parcels
+
+Municipal -> Permits : Check building permits
+activate Permits
+Municipal <-- Permits : Permit exists but boundary unclear
+deactivate Permits
+
+Municipal -> Dispute : Create encroachment dispute
+activate Dispute
+Dispute -> Dispute : Set type = ENCROACHMENT
+Dispute -> Dispute : Set category = PRIVATE_VS_PRIVATE
+Dispute -> Dispute : Set primaryParcelId = Owner's parcel
+Dispute -> Dispute : Add relatedParcelId = Neighbor's parcel
+Dispute -> Dispute : Set initiatorId = Owner's ID
+Dispute -> Dispute : Set respondentId = Neighbor's ID
+Dispute -> Dispute : Generate disputeNumber = "EC-2023-0156"
+Dispute -> Dispute : Set groundsForDispute = "Building foundation extends 0.75m onto property"
+Dispute -> Dispute : Set status = FILED
+Municipal <-- Dispute : Dispute created
+deactivate Dispute
+
+Municipal -> Neighbor : Notify of dispute
+
+Owner -> Municipal : Submit property certificate and photos
+Neighbor -> Municipal : Submit building plans and permits
+
+Municipal -> Dispute : Add supporting documents
+activate Dispute
+Dispute -> Dispute : Link both parties' documents
+Municipal <-- Dispute : Documents added
+deactivate Dispute
+
+Municipal -> Survey : Request precise boundary survey
+activate Survey
+Survey -> Survey : Conduct detailed measurement
+Survey -> Survey : Compare with official records
+Municipal <-- Survey : Technical report confirming 0.75m encroachment
+deactivate Survey
+
+Municipal -> Dispute : Update with survey findings
+activate Dispute
+Dispute -> Dispute : Add survey report to documents
+Dispute -> Dispute : Set status = EVIDENCE_COLLECTION
+Dispute -> Dispute : Set disputedAreaInSquareMeters = 9.75
+Municipal <-- Dispute : Updated with findings
+deactivate Dispute
+
+Municipal -> Engineer : Request structural assessment
+activate Engineer
+Engineer -> Engineer : Assess removal feasibility
+Engineer -> Engineer : Calculate modification costs
+Municipal <-- Engineer : Technical assessment
+deactivate Engineer
+
+Municipal -> Dispute : Attempt mediation
+activate Dispute
+Dispute -> Dispute : Set status = MEDIATION
+Municipal <-- Dispute : Status updated
+deactivate Dispute
+
+note right of Municipal
+  Mediation session with both parties
+end note
+
+Municipal -> Dispute : Record mediation outcome
+activate Dispute
+Dispute -> Dispute : Set status = RESOLVED
+Dispute -> Dispute : Set resolutionMethod = NEGOTIATED_SETTLEMENT
+Dispute -> Dispute : Set resolutionNotes = "Owner agrees to sell encroached area (9.75 sq.m.) at market rate of NPR 100,000/sq.m. Neighbor agrees to purchase and obtain proper permits."
+Municipal <-- Dispute : Resolution recorded
+deactivate Dispute
+
+Municipal -> Parcels : Update parcel boundaries
+activate Parcels
+Parcels -> Parcels : Adjust boundary between parcels
+Municipal <-- Parcels : Boundaries updated
+deactivate Parcels
+
+Municipal -> Permits : Update building permit
+activate Permits
+Permits -> Permits : Modify permit to match new boundary
+Municipal <-- Permits : Permit updated
+deactivate Permits
+
+Municipal -> Owner : Issue boundary adjustment certificate
+Municipal -> Neighbor : Issue amended building permit
+@enduml
+----
+
+*Real-World Context:*
+Sima discovers that her neighbor Arun's newly constructed house in Lalitpur Metropolitan City has a foundation wall that extends 0.75 meters onto her property along a 13-meter boundary, encroaching on approximately 9.75 square meters of her land. After confronting Arun and receiving no satisfactory response, she files an encroachment dispute with the municipal office.
+
+The system creates a LandDispute entity with type ENCROACHMENT, linking both LandParcel entities. This encroachment dispute automatically triggers the WebhookTriggerable interface to notify the Municipal Building Permit System about a potential permit issue, placing a hold on final occupancy approval for Arun's building.
+
+The LandDispute entity stores both parties' documentation: Sima provides her property certificate, boundary markers documentation, and photographs of the encroachment. Arun submits his building plans, permits, and a surveyor's report he commissioned (which shows a different boundary line).
+
+An official land survey confirms Sima's claim that the foundation wall extends 0.75 meters into her property. A structural engineering assessment determines removing the encroaching portion would require significant structural modifications costing approximately NPR 1.2 million and potentially compromising the building's integrity.
+
+During mediation, the parties reach a compromise: rather than removing the encroaching structure, Arun agrees to purchase the 9.75 square meters of land from Sima at the current market rate (NPR 100,000 per square meter, totaling NPR 975,000). The system creates a LandTransaction for this sale, directly linked from the LandDispute record.
+
+Once resolved, the system updates both LandParcel boundaries, modifies Arun's building permit to match the new property line, and removes the hold on occupancy approval. The HistoryViewable interface preserves the complete record of how this boundary change occurred through dispute resolution rather than standard sale procedures.
+
+====== Multi-Party Dispute Over Residential Development Impact
+
+*Scenario:* Residential community disputing developer's impact on access road and drainage
+
+[plantuml]
+----
+@startuml
+actor "Residential\nCommunity" as Community
+actor "Property\nDeveloper" as Developer
+actor "Municipal\nPlanning Office" as Planning
+participant "LandDispute" as Dispute
+participant "Document\nRepository" as Docs
+participant "BatchProcessingService" as Batch
+participant "Technical\nCommittee" as Technical
+participant "Community\nMediation Center" as Mediation
+
+Community -> Planning : File collective impact dispute
+Planning -> Batch : Process multiple complainants
+activate Batch
+Batch -> Batch : Group 42 households as single party
+Planning <-- Batch : Community registered as collective entity
+deactivate Batch
+
+Planning -> Dispute : Create land usage dispute
+activate Dispute
+Dispute -> Dispute : Set type = USAGE
+Dispute -> Dispute : Set category = PRIVATE_VS_PRIVATE
+Dispute -> Dispute : Set primaryParcelId = development parcel
+Dispute -> Dispute : Add relatedParcelIds = 42 community parcels
+Dispute -> Dispute : Set initiatorId = community representative
+Dispute -> Dispute : Set respondentId = developer company
+Dispute -> Dispute : Generate disputeNumber = "UD-2023-0098"
+Dispute -> Dispute : Set groundsForDispute = "Improper road access and drainage alterations affecting existing properties"
+Dispute -> Dispute : Set status = FILED
+Planning <-- Dispute : Dispute created
+deactivate Dispute
+
+Planning -> Developer : Notify of dispute filing
+
+Community -> Docs : Submit evidence package
+activate Docs
+Docs -> Docs : Process flooding photographs
+Docs -> Docs : Process original development agreement
+Docs -> Docs : Process traffic impact documentation
+Docs -> Docs : Process property value assessments
+Community <-- Docs : Documents processed
+deactivate Docs
+
+Developer -> Docs : Submit development documentation
+activate Docs
+Docs -> Docs : Process approved plans
+Docs -> Docs : Process permits
+Docs -> Docs : Process engineering reports
+Developer <-- Docs : Documents processed
+deactivate Docs
+
+Planning -> Dispute : Link all documentation
+activate Dispute
+Dispute -> Dispute : Add all document IDs
+Planning <-- Dispute : Documents linked
+deactivate Dispute
+
+Planning -> Technical : Request impact assessment
+activate Technical
+Technical -> Technical : Review drainage modifications
+Technical -> Technical : Assess road capacity
+Technical -> Technical : Evaluate infrastructure capacity
+Planning <-- Technical : Impact report
+deactivate Technical
+
+Planning -> Dispute : Update with technical findings
+activate Dispute
+Dispute -> Dispute : Add technical report document
+Dispute -> Dispute : Set status = EVIDENCE_COLLECTION
+Planning <-- Dispute : Updated with findings
+deactivate Dispute
+
+Planning -> Dispute : Refer to community mediation
+activate Dispute
+Dispute -> Dispute : Set status = MEDIATION
+Dispute -> Dispute : Assign mediator = community center
+Planning <-- Dispute : Referred to mediation
+deactivate Dispute
+
+Mediation -> Community : Facilitate discussions
+Mediation -> Developer : Facilitate discussions
+note right of Mediation
+  Multiple sessions with technical experts
+end note
+
+Mediation -> Dispute : Record resolution agreement
+activate Dispute
+Dispute -> Dispute : Set status = RESOLVED
+Dispute -> Dispute : Set resolutionMethod = MEDIATION
+Dispute -> Dispute : Set resolutionNotes = "Developer agrees to install enhanced drainage system, widen access road by 2m, and contribute NPR 5M to community infrastructure fund"
+Planning <-- Dispute : Resolution recorded
+deactivate Dispute
+
+Planning -> Dispute : Update developer permits
+activate Dispute
+Dispute -> Dispute : Link modified permits
+Planning <-- Dispute : Permits updated
+deactivate Dispute
+
+Planning -> Community : Issue resolution certificate
+Planning -> Developer : Issue modified development permit
+@enduml
+----
+
+*Real-World Context:*
+A community of 42 households in Bhaktapur files a collective dispute against "Valley Heights Developers" claiming that their new 100-unit residential project is causing flooding on existing properties due to improper drainage and creating severe traffic congestion on the only access road. The community asserts these issues violate the original development agreement and municipal building codes.
+
+The system creates a LandDispute entity with type USAGE, efficiently handling multiple complainants using the BatchProcessable interface to register them as a collective entity rather than creating 42 individual disputes. The dispute links the developer's parcel and all 42 affected community parcels.
+
+The LandDispute entity stores extensive evidence: the community submits photographs of flooding, traffic studies showing 300% increased congestion, property value assessments showing 15% depreciation, and the original development agreement promising "no negative impact on existing infrastructure." The developer provides approved building plans, permits, and engineering reports claiming compliance with all requirements.
+
+A technical committee assessment confirms partial issues: the drainage system meets minimum requirements but is inadequate for peak rainfall, and the road width complies with regulations but cannot handle the increased traffic volume. This creates a complex dispute where both parties have partially valid positions.
+
+Through mediation, a compromise solution is reached: the developer agrees to install an enhanced drainage system exceeding minimum requirements, widen the access road by 2 meters by donating some of their land area, and contribute NPR 5 million to a community infrastructure fund for additional improvements.
+
+The resolution is recorded in detail, and the system manages several consequential actions through its WorkflowEntity capabilities: modifying the developer's permits, creating an agreement record, scheduling inspections of the required improvements, and removing development holds once improvements are verified. The WebhookTriggerable interface notifies relevant municipal departments (roads, drainage, building permits) about the resolution terms that affect their operations.
+
+===== WebhookTriggerable Implementation
+
+LandDispute implements the WebhookTriggerable interface to notify connected systems:
+
+[plantuml]
+----
+@startuml
+participant "ExternalSystem" as External
+participant "WebhookService" as Service
+participant "LandDispute\nimplements WebhookTriggerable" as Dispute
+participant "WebhookRegistry" as Registry
+participant "EventPublisher" as Events
+
+External -> Service : registerWebhook(entityType="LandDispute", event="DISPUTE_STATUS_CHANGED", url)
+activate Service
+
+Service -> Dispute : registerWebhook(url, "DISPUTE_STATUS_CHANGED", secret)
+activate Dispute
+Dispute -> Registry : saveWebhookRegistration(entityId, "LandDispute", url, event, secret)
+activate Registry
+Dispute <-- Registry : registration
+deactivate Registry
+Service <-- Dispute : webhookRegistration
+deactivate Dispute
+
+External <-- Service : registrationConfirmation
+deactivate Service
+
+note over Dispute
+  When dispute status changes...
+end note
+
+Dispute -> Events : publish(DisputeStatusChangedEvent)
+activate Events
+Events -> Dispute : triggerWebhooks("DISPUTE_STATUS_CHANGED", payload)
+activate Dispute
+
+Dispute -> Registry : findWebhooksForEvent(entityId, "DISPUTE_STATUS_CHANGED")
+activate Registry
+Dispute <-- Registry : webhooks
+deactivate Registry
+
+loop for each webhook
+  Dispute -> External : POST /webhook-endpoint (payload + signature)
+  activate External
+  External --> External : Verify signature
+  External --> External : Update case management system
+  Dispute <-- External : 200 OK
+  deactivate External
+  Dispute -> Registry : recordSuccessfulDelivery(webhookId)
+end
+
+Events <-- Dispute
+deactivate Dispute
+deactivate Events
+@enduml
+----
+
+===== FullTextSearchable Implementation
+
+LandDispute implements the FullTextSearchable interface for advanced search capabilities:
+
+[plantuml]
+----
+@startuml
+participant "SearchService" as Search
+participant "LandDispute\nimplements FullTextSearchable" as Dispute
+participant "PartyService" as Party
+participant "ParcelService" as Parcel
+participant "IndexingService" as Index
+
+Search -> Dispute : indexForSearch()
+activate Dispute
+
+Dispute -> Dispute : getSearchableContent()
+activate Dispute
+Dispute -> Party : getPartyNames(initiatorId, respondentIds)
+activate Party
+Dispute <-- Party : partyNames
+deactivate Party
+
+Dispute -> Parcel : getParcelDetails(primaryParcelId)
+activate Parcel
+Dispute <-- Parcel : parcelDetails
+deactivate Parcel
+
+Dispute -> Dispute : buildSearchableMap()
+Dispute <-- Dispute : searchContent = {
+  "disputeNumber": "BD-2023-0142",
+  "type": "BOUNDARY",
+  "status": "RESOLVED",
+  "initiator": "Ramesh Magar",
+  "respondent": "Hari Thapa",
+  "filedDate": "2023-05-15",
+  "resolvedDate": "2023-07-22",
+  "location": "Dhading District",
+  "description": "Boundary dispute over irrigation channel",
+  "groundsForDispute": "Encroachment claim of 2.5m"
+}
+deactivate Dispute
+
+Dispute -> Dispute : getSearchKeywords()
+activate Dispute
+Dispute <-- Dispute : keywords = [
+  "boundary",
+  "irrigation",
+  "encroachment",
+  "Dhading",
+  "resolved"
+]
+deactivate Dispute
+
+Dispute -> Index : updateSearchIndex(entityId, searchContent, keywords)
+activate Index
+Dispute <-- Index : indexUpdateConfirmation
+deactivate Index
+
+Search <-- Dispute : indexingComplete
+deactivate Dispute
+
+Search -> Dispute : getSearchBoostFactors()
+activate Dispute
+Search <-- Dispute : {
+  "disputeNumber": 5.0,
+  "partyNames": 2.0,
+  "location": 1.5,
+  "type": 1.2
+}
+deactivate Dispute
 @enduml
 ----
 
