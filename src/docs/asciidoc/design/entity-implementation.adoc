@@ -1,0 +1,538 @@
+= Entity Implementation Guide
+
+== Core Entity Implementation
+
+This guide explains how to implement the core entity hierarchy using Kotlin and JPA annotations.
+
+=== Base Entity Classes
+
+==== BaseEntity Implementation
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.entity
+
+import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.annotation.LastModifiedBy
+import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.Instant
+import java.util.UUID
+
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener::class)
+abstract class UuidBaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant = Instant.now()
+
+    @CreatedBy
+    @Column(name = "created_by")
+    var createdBy: UUID? = null
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: Instant = Instant.now()
+
+    @LastModifiedBy
+    @Column(name = "updated_by")
+    var updatedBy: UUID? = null
+
+    @Version
+    @Column(name = "version")
+    var version: Long? = null
+}
+----
+
+==== SoftDeletableEntity Implementation
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.entity
+
+import jakarta.persistence.Column
+import jakarta.persistence.MappedSuperclass
+import java.time.Instant
+import java.util.UUID
+
+@MappedSuperclass
+abstract class SoftDeletableEntity : UuidBaseEntity() {
+    @Column(name = "is_deleted", nullable = false)
+    var isDeleted: Boolean = false
+
+    @Column(name = "deleted_at")
+    var deletedAt: Instant? = null
+
+    @Column(name = "deleted_by")
+    var deletedBy: UUID? = null
+
+    fun markAsDeleted(deletedBy: UUID) {
+        this.isDeleted = true
+        this.deletedAt = Instant.now()
+        this.deletedBy = deletedBy
+    }
+}
+----
+
+==== ApprovableEntity Implementation
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.entity
+
+import jakarta.persistence.Column
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.MappedSuperclass
+import np.sthaniya.dpis.common.enumeration.ReviewState
+import java.time.Instant
+import java.util.UUID
+
+@MappedSuperclass
+abstract class ApprovableEntity : SoftDeletableEntity() {
+    @Column(name = "is_approved", nullable = false)
+    var isApproved: Boolean = false
+
+    @Column(name = "approved_at")
+    var approvedAt: Instant? = null
+
+    @Column(name = "approved_by")
+    var approvedBy: UUID? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "review_state", nullable = false)
+    var reviewState: ReviewState = ReviewState.PENDING
+
+    @Column(name = "review_note")
+    var reviewNote: String? = null
+
+    fun approve(approvedBy: UUID, note: String? = null) {
+        this.isApproved = true
+        this.approvedAt = Instant.now()
+        this.approvedBy = approvedBy
+        this.reviewState = ReviewState.APPROVED
+        this.reviewNote = note
+    }
+
+    fun reject(rejectedBy: UUID, note: String) {
+        this.reviewState = ReviewState.REJECTED
+        this.reviewNote = note
+        this.updatedBy = rejectedBy
+    }
+
+    fun requestChanges(requestedBy: UUID, note: String) {
+        this.reviewState = ReviewState.ACTION_NEEDED
+        this.reviewNote = note
+        this.updatedBy = requestedBy
+    }
+}
+----
+
+==== LocalizedEntity Implementation
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.entity
+
+import jakarta.persistence.Column
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
+import jakarta.persistence.MappedSuperclass
+import np.sthaniya.dpis.internationalization.entity.TranslationKey
+import java.util.Locale
+
+@MappedSuperclass
+abstract class LocalizedEntity : UuidBaseEntity() {
+    @Column(name = "default_locale", nullable = false)
+    var defaultLocale: String = Locale.getDefault().toLanguageTag()
+
+    @ManyToMany
+    @JoinTable(
+        name = "entity_translation_keys",
+        joinColumns = [JoinColumn(name = "entity_id")],
+        inverseJoinColumns = [JoinColumn(name = "translation_key_id")]
+    )
+    var translationKeys: MutableSet<TranslationKey> = mutableSetOf()
+
+    fun addTranslationKey(translationKey: TranslationKey) {
+        translationKeys.add(translationKey)
+    }
+
+    fun removeTranslationKey(translationKey: TranslationKey) {
+        translationKeys.remove(translationKey)
+    }
+}
+----
+
+==== SpatialEntity Implementation
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.entity
+
+import jakarta.persistence.Column
+import jakarta.persistence.MappedSuperclass
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+import org.locationtech.jts.geom.Point
+import org.locationtech.jts.geom.Polygon
+
+@MappedSuperclass
+abstract class SpatialEntity : UuidBaseEntity() {
+    @Column(name = "point", columnDefinition = "geometry")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    var point: Point? = null
+
+    @Column(name = "polygon", columnDefinition = "geometry")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    var polygon: Polygon? = null
+
+    @Column(name = "centroid", columnDefinition = "geometry")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    var centroid: Point? = null
+
+    @Column(name = "area_sq_meters")
+    var area: Double? = null
+
+    @Column(name = "elevation_meters")
+    var elevation: Double? = null
+}
+----
+
+==== NamedEntity Implementation
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.entity
+
+import jakarta.persistence.Column
+import jakarta.persistence.MappedSuperclass
+import jakarta.validation.constraints.Size
+import np.sthaniya.dpis.common.util.SlugGenerator
+
+@MappedSuperclass
+abstract class NamedEntity : UuidBaseEntity() {
+    @Column(name = "name", nullable = false)
+    var name: String? = null
+
+    @Column(name = "name_translation_key")
+    var nameTranslationKey: String? = null
+
+    @Column(name = "description", length = 2000)
+    var description: String? = null
+
+    @Column(name = "desc_translation_key")
+    var descTranslationKey: String? = null
+
+    @Size(max = 255)
+    @Column(name = "slug", unique = true)
+    var slug: String? = null
+        set(value) {
+            field = value ?: generateSlug()
+        }
+
+    @Column(name = "code")
+    var code: String? = null
+
+    private fun generateSlug(): String {
+        return name?.let { SlugGenerator.generateSlug(it) } ?: ""
+    }
+}
+----
+
+==== MediaEntity Implementation
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.entity
+
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.MappedSuperclass
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+
+@MappedSuperclass
+abstract class MediaEntity : UuidBaseEntity() {
+    @Column(name = "primary_photo_key")
+    var primaryPhotoKey: String? = null
+
+    @ElementCollection
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "photo_keys", columnDefinition = "jsonb")
+    var photoKeys: MutableSet<String> = mutableSetOf()
+
+    @ElementCollection
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "video_keys", columnDefinition = "jsonb")
+    var videoKeys: MutableSet<String> = mutableSetOf()
+
+    @ElementCollection
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "document_keys", columnDefinition = "jsonb")
+    var documentKeys: MutableSet<String> = mutableSetOf()
+
+    @Column(name = "thumbnail_key")
+    var thumbnailKey: String? = null
+
+    @Column(name = "cover_image_key")
+    var coverImageKey: String? = null
+}
+----
+
+=== Embeddable Components
+
+==== Address Component
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.component
+
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import np.sthaniya.dpis.common.enumeration.AddressType
+
+@Embeddable
+class Address {
+    @Column(name = "province_code")
+    var provinceCode: String? = null
+
+    @Column(name = "district_code")
+    var districtCode: String? = null
+
+    @Column(name = "municipality_code")
+    var municipalityCode: String? = null
+
+    @Column(name = "ward_number")
+    var wardNumber: Int? = null
+
+    @Column(name = "ward_municipality_code")
+    var wardMunicipalityCode: String? = null
+
+    @Column(name = "street_address")
+    var streetAddress: String? = null
+
+    @Column(name = "postal_code")
+    var postalCode: String? = null
+
+    @Column(name = "formatted_address")
+    var formattedAddress: String? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "address_type")
+    var addressType: AddressType? = null
+
+    fun toAddressString(): String {
+        return buildString {
+            streetAddress?.let { append(it).append(", ") }
+            if (wardNumber != null) {
+                append("Ward ").append(wardNumber).append(", ")
+            }
+            municipalityCode?.let { append(it).append(", ") }
+            districtCode?.let { append(it).append(", ") }
+            provinceCode?.let { append(it) }
+            postalCode?.let { append(" ").append(it) }
+        }
+    }
+}
+----
+
+==== Contact Information Component
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.component
+
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Embeddable
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.Pattern
+
+@Embeddable
+class ContactInformation {
+    @Email
+    @Column(name = "email")
+    var email: String? = null
+
+    @Email
+    @Column(name = "alternate_email")
+    var alternateEmail: String? = null
+
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$")
+    @Column(name = "phone_number")
+    var phoneNumber: String? = null
+
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$")
+    @Column(name = "mobile_number")
+    var mobileNumber: String? = null
+
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$")
+    @Column(name = "fax_number")
+    var faxNumber: String? = null
+
+    @Column(name = "website_url")
+    var websiteUrl: String? = null
+
+    @ElementCollection
+    var socialMediaUrls: MutableMap<String, String> = mutableMapOf()
+}
+----
+
+==== SEO Attributes Component
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.component
+
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import np.sthaniya.dpis.common.enumeration.TwitterCardType
+
+@Embeddable
+class SEOAttributes {
+    @Column(name = "meta_title")
+    var metaTitle: String? = null
+
+    @Column(name = "meta_description", length = 500)
+    var metaDescription: String? = null
+
+    @Column(name = "meta_keywords")
+    var metaKeywords: String? = null
+
+    @Column(name = "canonical_url")
+    var canonicalUrl: String? = null
+
+    @Column(name = "og_title")
+    var ogTitle: String? = null
+
+    @Column(name = "og_description", length = 500)
+    var ogDescription: String? = null
+
+    @Column(name = "og_image_key")
+    var ogImageKey: String? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "twitter_card_type")
+    var twitterCardType: TwitterCardType = TwitterCardType.SUMMARY
+}
+----
+
+== Extension Functions and Utility Methods
+
+=== Slug Generator
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.util
+
+import java.text.Normalizer
+import java.util.*
+
+object SlugGenerator {
+    fun generateSlug(input: String): String {
+        return Normalizer.normalize(input, Normalizer.Form.NFD)
+            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+            .lowercase(Locale.getDefault())
+            .replace("[^\\w\\s-]".toRegex(), "")
+            .replace("\\s+".toRegex(), "-")
+            .replace("-+".toRegex(), "-")
+            .trim('-')
+    }
+    
+    fun generateUniqueSlug(input: String, existingSlug: (String) -> Boolean): String {
+        var slug = generateSlug(input)
+        var counter = 1
+        
+        while (existingSlug(slug)) {
+            slug = "${generateSlug(input)}-$counter"
+            counter++
+        }
+        
+        return slug
+    }
+}
+----
+
+=== Entity Mapper Strategy
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.common.mapper
+
+interface EntityMapper<Entity, Dto, CreateDto, UpdateDto> {
+    fun toDto(entity: Entity): Dto
+    fun toEntity(createDto: CreateDto): Entity
+    fun updateEntity(entity: Entity, updateDto: UpdateDto): Entity
+}
+----
+
+== Example Implementation
+
+Here's how to implement a domain entity using this base structure:
+
+[source,kotlin]
+----
+package np.sthaniya.dpis.location.entity
+
+import jakarta.persistence.*
+import np.sthaniya.dpis.common.component.SEOAttributes
+import np.sthaniya.dpis.common.entity.NamedEntity
+import np.sthaniya.dpis.common.entity.LocalizedEntity
+import np.sthaniya.dpis.common.entity.SpatialEntity
+
+@Entity
+@Table(name = "tourist_areas")
+class TouristArea : NamedEntity(), LocalizedEntity, SpatialEntity {
+    @Enumerated(EnumType.STRING)
+    @Column(name = "area_type")
+    var areaType: AreaType? = null
+    
+    @Column(name = "ward_id")
+    var wardId: UUID? = null
+    
+    @Column(name = "location")
+    var location: String? = null
+    
+    @Column(name = "distance_from_ward_center")
+    var distanceFromWardCenter: Double? = null
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "distance_unit")
+    var distanceUnit: DistanceUnit? = null
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "access_road_condition")
+    var accessRoadCondition: AccessRoadCondition? = null
+    
+    @Embedded
+    var seoAttributes: SEOAttributes = SEOAttributes()
+    
+    @ElementCollection
+    @CollectionTable(
+        name = "tourist_area_photos",
+        joinColumns = [JoinColumn(name = "tourist_area_id")]
+    )
+    @Column(name = "photo_key")
+    var photoKeys: MutableSet<String> = mutableSetOf()
+    
+    @ElementCollection
+    @CollectionTable(
+        name = "tourist_area_festivals",
+        joinColumns = [JoinColumn(name = "tourist_area_id")]
+    )
+    @Column(name = "festival_name")
+    var festivals: MutableSet<String> = mutableSetOf()
+}
+----

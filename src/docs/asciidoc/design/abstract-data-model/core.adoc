@@ -1,0 +1,219 @@
+=== Core Domain Models
+
+This section describes the foundational data models that serve as building blocks for the Digital Profile Information System.
+
+==== `BaseEntity`
+Abstract base class providing common attributes for all entities in the system.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `id`         | Unique identifier (UUID) for the entity
+| `createdAt`  | Timestamp when the entity was created
+| `createdBy`  | Reference to the user who created the entity
+| `updatedAt`  | Timestamp when the entity was last updated
+| `updatedBy`  | Reference to the user who last updated the entity
+| `version`    | Optimistic locking version number for concurrency control
+|===
+
+==== `SoftDeletableEntity`
+Extends BaseEntity with soft deletion capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `isDeleted`  | Flag indicating whether the entity has been soft-deleted
+| `deletedAt`  | Timestamp when the entity was soft-deleted
+| `deletedBy`  | Reference to the user who soft-deleted the entity
+|===
+
+==== `ApprovableEntity`
+Extends SoftDeletableEntity with approval workflow capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `isApproved`   | Flag indicating whether the entity has been approved
+| `approvedAt`   | Timestamp when the entity was approved
+| `approvedBy`   | Reference to the user who approved the entity
+| `reviewState`  | Current state in the review workflow (reference to ReviewState)
+| `reviewNote`   | Optional note providing context about the review decision
+|===
+
+==== `ReviewState`
+Enumeration for entity review workflow states.
+
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `PENDING`       | Entity is awaiting initial review
+| `IN_REVIEW`     | Entity is currently being reviewed
+| `ACTION_NEEDED` | Entity needs modification before approval
+| `APPROVED`      | Entity has been reviewed and approved
+| `REJECTED`      | Entity has been reviewed and rejected
+|===
+
+==== `LocalizedEntity`
+Extends BaseEntity with internationalization capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `defaultLocale`    | Default locale for this entity's content
+| `translationKeys`  | Collection of translation keys associated with this entity
+|===
+
+==== `SpatialEntity`
+Abstract base class for entities with geographic components.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `point`      | Geographic point location (longitude, latitude)
+| `polygon`    | Geographic boundary represented as a polygon
+| `centroid`   | Calculated center point of the entity
+| `area`       | Calculated area covered by the entity in square meters
+| `elevation`  | Elevation above sea level in meters
+|===
+
+==== `NamedEntity`
+Abstract base class for entities with name and description.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `name`               | Primary name of the entity
+| `nameTranslationKey` | Reference to name translation key for localization
+| `description`        | Textual description of the entity
+| `descTranslationKey` | Reference to description translation key for localization
+| `slug`               | URL-friendly unique identifier derived from name
+| `code`               | Optional system code for the entity (for integration purposes)
+|===
+
+==== `MediaEntity`
+Abstract base class for entities with associated media.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `primaryPhotoKey` | Storage key for primary photo/image
+| `photoKeys`       | Collection of storage keys for additional photos
+| `videoKeys`       | Collection of storage keys for videos
+| `documentKeys`    | Collection of storage keys for documents
+| `thumbnailKey`    | Storage key for thumbnail image
+| `coverImageKey`   | Storage key for cover image
+|===
+
+==== `AuditableAction`
+Records specific actions performed on entities for comprehensive audit trails.
+
+[cols="1,3", options="header"]
+|===
+| Field           | Description
+| `actionType`    | Type of action performed (CREATE, READ, UPDATE, DELETE, APPROVE, etc.)
+| `entityType`    | Type of entity on which the action was performed
+| `entityId`      | ID of the entity on which the action was performed
+| `performedBy`   | User who performed the action
+| `performedAt`   | Timestamp when the action was performed
+| `ipAddress`     | IP address from which the action was initiated
+| `userAgent`     | User agent information from which the action was initiated
+| `changes`       | JSON representation of changes made (for UPDATE actions)
+| `notes`         | Optional notes providing context about the action
+|===
+
+==== `AddressComponent`
+Embeddable component for structured address information.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `provinceCode`        | Reference code to province/state
+| `districtCode`        | Reference code to district/county
+| `municipalityCode`    | Reference code to municipality/city
+| `wardNumber`          | Ward number within the municipality
+| `wardMunicipalityCode`| Combined ward and municipality reference
+| `streetAddress`       | Detailed street address
+| `postalCode`          | Postal/ZIP code
+| `formattedAddress`    | Complete formatted address string
+| `addressType`         | Type of address (e.g., PERMANENT, TEMPORARY, BUSINESS)
+|===
+
+==== `ContactInformation`
+Embeddable component for contact details.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `email`           | Primary email address
+| `alternateEmail`  | Secondary email address
+| `phoneNumber`     | Primary phone number
+| `mobileNumber`    | Mobile phone number
+| `faxNumber`       | Fax number
+| `websiteUrl`      | Website URL
+| `socialMediaUrls` | Collection of social media profile URLs
+|===
+
+==== `SEOAttributes`
+Embeddable component for search engine optimization data.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `metaTitle`         | Custom SEO title (falls back to entity name if not specified)
+| `metaDescription`   | SEO meta description
+| `metaKeywords`      | SEO meta keywords
+| `canonicalUrl`      | Canonical URL for this entity
+| `ogTitle`           | Open Graph title for social sharing
+| `ogDescription`     | Open Graph description for social sharing
+| `ogImageKey`        | Storage key for Open Graph image
+| `twitterCardType`   | Twitter card type (summary, summary_large_image, etc.)
+|===
+
+==== `OperationalHours`
+Embeddable component for storing operational hours information.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `dayOfWeek`         | Day of the week (MONDAY, TUESDAY, etc.)
+| `openTime`          | Opening time
+| `closeTime`         | Closing time
+| `isClosed`          | Whether the entity is closed on this day
+| `breakStartTime`    | Start time for break/lunch period
+| `breakEndTime`      | End time for break/lunch period
+| `specialNotes`      | Any special notes about operations on this day
+|===
+
+==== `TaggableEntity`
+Mixin interface for entities that can be tagged for categorization.
+
+[cols="1,3", options="header"]
+|===
+| Field     | Description
+| `tags`    | Collection of tags associated with the entity
+|===
+
+==== `Taggable`
+Interface marking an entity as taggable with methods for tag management.
+
+[source,kotlin]
+----
+interface Taggable {
+    fun getTags(): Set<Tag>
+    fun addTag(tag: Tag)
+    fun removeTag(tag: Tag)
+    fun hasTag(tagName: String): Boolean
+}
+----
+
+==== `Tag`
+Represents a categorization tag that can be applied to entities.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `name`         | Name of the tag
+| `description`  | Optional description of the tag
+| `category`     | Optional category for grouping related tags
+| `slug`         | URL-friendly version of the tag name
+|===
