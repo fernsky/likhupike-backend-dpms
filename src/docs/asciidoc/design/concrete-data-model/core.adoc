@@ -175,6 +175,248 @@ Abstract base class for entities with associated media.
 | `cdnUrls`           | Precomputed CDN URLs for frequently accessed media
 |===
 
+==== `PublishableEntity`
+Abstract base class for content that can be drafted, scheduled, published and unpublished.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `publishStatus`       | Current publishing status (DRAFT, SCHEDULED, PUBLISHED, UNPUBLISHED)
+| `publishedAt`         | Timestamp when the entity was published
+| `publishedBy`         | Reference to the user who published the entity
+| `unpublishedAt`       | Timestamp when the entity was unpublished
+| `unpublishedBy`       | Reference to the user who unpublished the entity
+| `scheduledPublishAt`  | Future timestamp when entity should be published
+| `scheduledUnpublishAt`| Future timestamp when entity should be unpublished
+| `autoPublish`         | Whether to automatically publish upon approval
+| `publicationVersion`  | Version number of the current publication
+| `publicationNotes`    | Notes related to publication decisions
+| `highlightUntil`      | Date until which this entity should be highlighted as recently published
+| `readyForReview`      | Flag indicating readiness for publication review
+|===
+
+==== `VersioningStrategy`
+Enumeration for different approaches to content versioning.
+
+[cols="1,3", options="header"]
+|===
+| Value                 | Description
+| `MAJOR_MINOR`         | Traditional major.minor versioning (e.g., 1.0, 1.1, 2.0)
+| `SEMANTIC`            | Semantic versioning with major.minor.patch (e.g., 1.0.0, 1.0.1)
+| `DATE_BASED`          | Versions based on dates (e.g., 2023.1, 2023.2)
+| `SEQUENTIAL`          | Simple sequential numbering (v1, v2, v3)
+| `CUSTOM`              | Custom versioning strategy defined by application logic
+|===
+
+==== `ImportableEntity`
+Interface for entities that can be imported from external systems.
+
+[source,kotlin]
+----
+interface ImportableEntity {
+    fun validateImportData(data: Map<String, Any>): ValidationResult
+    fun mapExternalFields(externalData: Map<String, Any>): Map<String, Any>
+    fun getImportHistory(): List<ImportRecord>
+    fun resolveImportConflicts(conflicts: List<FieldConflict>): Resolution
+    fun postImportProcess()
+    fun getSourceSystemIdentifier(): String?
+    fun getLastImportDate(): LocalDateTime?
+}
+----
+
+==== `ExportableEntity`
+Interface for entities that can be exported to various formats.
+
+[source,kotlin]
+----
+interface ExportableEntity {
+    fun toJson(options: ExportOptions): String
+    fun toCsv(options: ExportOptions): String
+    fun toXml(options: ExportOptions): String
+    fun toPdf(options: ExportOptions): ByteArray
+    fun getExportableFields(exportContext: ExportContext): List<String>
+    fun getExportHistory(): List<ExportRecord>
+    fun sanitizeForExport(securityContext: SecurityContext): ExportableEntity
+    fun enrichForExport(enrichmentContext: EnrichmentContext): ExportableEntity
+}
+----
+
+==== `BatchProcessable`
+Interface for entities that can be processed in bulk operations.
+
+[source,kotlin]
+----
+interface BatchProcessable {
+    fun validateBatchOperation(operation: BatchOperation): ValidationResult
+    fun processBatch(items: List<BatchItem>, operation: BatchOperation): BatchResult
+    fun getAvailableBatchOperations(): List<BatchOperation>
+    fun getBatchProcessingHistory(): List<BatchProcessRecord>
+    fun estimateBatchProcessingTime(itemCount: Int, operation: BatchOperation): Duration
+    fun supportsConcurrentBatchProcessing(): Boolean
+}
+----
+
+==== `ReferenceDataEntity`
+Abstract base class for lookup tables and reference data with effective dates.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `code`                | Unique code for this reference data item
+| `category`            | Category or group this reference data belongs to
+| `effectiveFrom`       | Date from which this reference data is effective
+| `effectiveTo`         | Date until which this reference data is effective
+| `isDefault`           | Whether this is the default value in its category
+| `sortOrder`           | Numeric value for controlling display ordering
+| `replacedBy`          | Reference to newer version that replaces this item
+| `sourceSystem`        | System of record for this reference data
+| `validationRules`     | JSON rules for validating usage of this reference data
+| `metadataSchema`      | JSON schema for additional metadata on this reference item
+| `isActive`            | Whether this reference data item is currently active
+| `deprecationNotes`    | Notes on why an item is deprecated or replaced
+|===
+
+==== `ExternalSystemSyncable`
+Interface for entities that synchronize with external systems.
+
+[source,kotlin]
+----
+interface ExternalSystemSyncable {
+    fun getExternalSystemId(): String
+    fun getExternalSystemUrl(): URL
+    fun getLastSyncTime(): LocalDateTime
+    fun getSyncStatus(): SyncStatus
+    fun markForSync(priority: SyncPriority = SyncPriority.NORMAL)
+    fun getSyncConflicts(): List<SyncConflict>
+    fun resolveSyncConflict(conflict: SyncConflict, resolution: ConflictResolution)
+    fun getSyncHistory(): List<SyncEvent>
+    fun getDataMappingRules(): Map<String, String>
+}
+----
+
+==== `WebhookTriggerable`
+Interface for entities that can trigger webhooks on state changes.
+
+[source,kotlin]
+----
+interface WebhookTriggerable {
+    fun getRegisteredWebhooks(): List<WebhookRegistration>
+    fun registerWebhook(endpoint: URL, events: Set<String>, secret: String): WebhookRegistration
+    fun unregisterWebhook(registrationId: String)
+    fun triggerWebhooks(event: String, payload: Map<String, Any>)
+    fun getWebhookHistory(): List<WebhookEvent>
+    fun validateWebhookPayload(payload: Map<String, Any>): Boolean
+    fun getFailedWebhookAttempts(): List<FailedWebhookAttempt>
+}
+----
+
+==== `ComplianceAuditable`
+Interface for tracking specific compliance requirements.
+
+[source,kotlin]
+----
+interface ComplianceAuditable {
+    fun getComplianceFrameworks(): Set<ComplianceFramework>
+    fun getComplianceStatus(framework: ComplianceFramework): ComplianceStatus
+    fun getComplianceAuditTrail(): List<ComplianceAuditEvent>
+    fun getRequiredAttestations(): List<ComplianceAttestation>
+    fun attestCompliance(attestation: ComplianceAttestation, user: User): AttestationResult
+    fun getComplianceDocumentation(): List<ComplianceDocument>
+    fun validateComplianceState(): ValidationResult
+}
+----
+
+==== `DataRetentionPolicy`
+Entity for managing data lifecycle according to regulations.
+
+[cols="1,3", options="header"]
+|===
+| Field                     | Description
+| `policyName`              | Name of the retention policy
+| `retentionPeriodDays`     | Number of days to retain data
+| `legalBasis`              | Legal basis for retention period
+| `dataCategories`          | Categories of data this policy applies to
+| `actionAfterRetention`    | Action to take after retention (DELETE, ANONYMIZE, ARCHIVE)
+| `notificationPeriodDays`  | Days before retention action to notify stakeholders
+| `exemptionCriteria`       | Criteria for exempting data from this policy
+| `lastReviewDate`          | When policy was last reviewed
+| `effectiveDate`           | When policy became effective
+| `policyOwner`             | Person/role responsible for this policy
+| `regulatoryReferences`    | References to regulations this policy satisfies
+| `isActive`                | Whether this policy is currently active
+|===
+
+==== `AnalyticsTrackable`
+Interface for entities that need usage statistics tracking.
+
+[source,kotlin]
+----
+interface AnalyticsTrackable {
+    fun recordView(user: User?, context: ViewContext)
+    fun recordInteraction(type: InteractionType, user: User?, metadata: Map<String, Any>)
+    fun getViewCount(): Int
+    fun getUniqueViewerCount(): Int
+    fun getViewsByPeriod(period: AnalyticsPeriod): Map<LocalDate, Int>
+    fun getPopularityScore(): Double
+    fun getInteractionRatios(): Map<InteractionType, Double>
+    fun getConversionEvents(): List<ConversionEvent>
+    fun resetAnalytics()
+}
+----
+
+==== `CustomValidatable`
+Interface for entities with complex business rule validations.
+
+[source,kotlin]
+----
+interface CustomValidatable {
+    fun validate(): ValidationResult
+    fun getValidationRules(): List<ValidationRule>
+    fun addValidationRule(rule: ValidationRule)
+    fun removeValidationRule(ruleId: String)
+    fun getValidationHistory(): List<ValidationEvent>
+    fun validateField(fieldName: String, value: Any?): FieldValidationResult
+    fun runCustomValidation(validationId: String, context: Map<String, Any>): ValidationResult
+    fun getActiveValidators(): List<Validator>
+}
+----
+
+==== `FullTextSearchable`
+Interface with additional fields for optimizing search capabilities.
+
+[source,kotlin]
+----
+interface FullTextSearchable {
+    fun getSearchableContent(): Map<String, String>
+    fun getSearchKeywords(): Set<String>
+    fun getSearchBoostFactors(): Map<String, Double>
+    fun getSearchFacets(): Map<String, Set<String>>
+    fun getSearchSynonyms(): Map<String, Set<String>>
+    fun indexForSearch()
+    fun getSuggestedSearchQueries(): List<String>
+    fun getSearchRelevanceScore(query: String): Double
+    fun updateSearchMetadata(metadata: Map<String, Any>)
+}
+----
+
+==== `FaultTolerant`
+Interface with strategies for handling recovery from system failures.
+
+[source,kotlin]
+----
+interface FaultTolerant {
+    fun createRecoveryCheckpoint(): RecoveryCheckpoint
+    fun restoreFromCheckpoint(checkpoint: RecoveryCheckpoint): RecoveryResult
+    fun getAvailableCheckpoints(): List<RecoveryCheckpoint>
+    fun validateChecksumIntegrity(): Boolean
+    fun getLastKnownGoodState(): RecoveryState
+    fun getRecoveryLogs(): List<RecoveryLog>
+    fun runSelfRepair(options: RepairOptions): RepairResult
+    fun isInCorruptedState(): Boolean
+    fun getCorruptionDetails(): CorruptionReport?
+}
+----
+
 ==== `TenantAware`
 Mixin interface for entities that support multi-tenancy.
 
@@ -457,4 +699,136 @@ Enumeration of possible permissions for access control.
 | `EXPORT`       | Permission to export the entity
 | `ADMIN`        | Full administrative control of the entity
 | `COMMENT`      | Permission to add comments
+|===
+
+==== `HistoryViewable`
+Interface for entities that provide a comprehensive view of historical changes.
+
+[source,kotlin]
+----
+interface HistoryViewable {
+    fun getChangeHistory(): List<ChangeRecord>
+    fun getHistorySnapshot(timestamp: LocalDateTime): Map<String, Any>
+    fun compareSnapshots(timestamp1: LocalDateTime, timestamp2: LocalDateTime): ChangeComparison
+    fun getHistoryTimeline(): List<HistoryEvent>
+    fun getFieldHistory(fieldName: String): List<FieldChangeRecord>
+    fun getContributors(): List<User>
+    fun getMajorVersions(): List<VersionInfo>
+    fun restoreToVersion(versionId: String): RestoreResult
+    fun getActivityHeatmap(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int>
+}
+----
+
+==== `WorkflowEntity`
+Abstract base class for entities that follow a business process workflow.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `workflowDefinitionId`| Reference to the workflow definition this entity follows
+| `workflowInstanceId`  | Identifier for this specific workflow instance
+| `currentState`        | Current state in the workflow process
+| `previousStates`      | Collection of previous states this entity has been through
+| `nextPossibleStates`  | Collection of potential next states based on current state
+| `stateEnteredAt`      | Timestamp when the current state was entered
+| `stateDeadline`       | Optional deadline for completing the current state
+| `assignee`            | User currently assigned to handle this workflow state
+| `watchers`            | Collection of users monitoring this workflow
+| `workflowStartedAt`   | When this workflow instance was initiated
+| `workflowCompletedAt` | When this workflow instance was completed (if finished)
+| `workflowData`        | JSON data specific to this workflow instance
+| `stateTransitionHistory` | History of state transitions with timestamps and actors
+| `activeTaskIds`       | IDs of active tasks that must be completed in current state
+| `workflowPriority`    | Priority level for this workflow instance
+|===
+
+==== `EncryptedEntity`
+Abstract base class for entities containing encrypted sensitive data.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `encryptionKeyId`    | Reference to the encryption key used for this entity
+| `encryptionAlgorithm`| Algorithm used for encryption
+| `encryptedFields`    | List of fields that are encrypted
+| `encryptionVersion`  | Version of encryption scheme used
+| `lastReencryptedAt`  | When the entity was last re-encrypted
+| `encryptionContext`  | Context information needed for decryption
+| `dataClassification` | Classification level of contained data (e.g., PUBLIC, CONFIDENTIAL, SECRET)
+| `decryptionAuditLog` | Log of when the entity was decrypted and by whom
+| `keyRotationDue`     | Date when encryption key rotation is due
+| `encryptionMetadata` | Additional metadata about encryption process
+| `hashOfOriginal`     | Hash of original unencrypted data for integrity checks
+|===
+
+==== `BiometricVerifiable`
+Interface for entities that can be verified using biometric data.
+
+[source,kotlin]
+----
+interface BiometricVerifiable {
+    fun getBiometricVerificationTypes(): Set<BiometricType>
+    fun isBiometricallyVerified(type: BiometricType): Boolean
+    fun getBiometricVerificationStatus(): VerificationStatus
+    fun getLastVerificationAttempt(): BiometricVerificationAttempt?
+    fun recordVerificationAttempt(attempt: BiometricVerificationAttempt)
+    fun getBiometricVerificationHistory(): List<BiometricVerificationAttempt>
+    fun getRequiredVerificationLevel(): VerificationLevel
+    fun getVerificationExpiry(type: BiometricType): LocalDateTime?
+    fun clearBiometricVerifications(reason: String, performedBy: User)
+}
+----
+
+==== `BiometricType`
+Enumeration of supported biometric verification methods.
+
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `FINGERPRINT`       | Fingerprint scanning verification
+| `FACIAL_RECOGNITION`| Facial recognition verification
+| `IRIS_SCAN`         | Iris pattern scanning verification
+| `VOICE_RECOGNITION` | Voice pattern recognition verification
+| `SIGNATURE`         | Digital signature verification
+| `PALM_VEIN`         | Palm vein pattern verification
+| `RETINA_SCAN`       | Retina scanning verification
+| `GAIT_ANALYSIS`     | Walking pattern analysis verification
+| `HAND_GEOMETRY`     | Hand shape and structure verification
+|===
+
+==== `MobileAccessible`
+Interface for entities that support mobile access with additional context.
+
+[source,kotlin]
+----
+interface MobileAccessible {
+    fun getMobileViewConfiguration(): MobileViewConfig
+    fun getOfflineCapabilities(): Set<OfflineCapability>
+    fun getLastMobileAccess(): MobileAccessRecord?
+    fun getMobileAccessHistory(): List<MobileAccessRecord>
+    fun getLocationRequirements(): LocationRequirement?
+    fun isSupportedOnMobileVersion(version: String): Boolean
+    fun getMobileSyncStatus(): SyncStatus
+    fun getFallbackDisplayMode(): MobileDisplayMode
+    fun prepareForOfflineAccess(): OfflinePackage
+    fun getEstimatedMobileDataUsage(): Long
+    fun getRequiredMobilePermissions(): Set<MobilePermission>
+}
+----
+
+==== `OfflineCapability`
+Enumeration of capabilities available in offline mode.
+
+[cols="1,3", options="header"]
+|===
+| Value               | Description
+| `VIEW_ONLY`         | Can only view entity content when offline
+| `EDIT`              | Can edit entity while offline
+| `CREATE_NEW`        | Can create new entities while offline
+| `DELETE`            | Can delete entities while offline
+| `SUBMIT`            | Can submit forms/changes while offline (will sync later)
+| `PARTIAL_CONTENT`   | Only critical content available offline
+| `FULL_CONTENT`      | All entity content available offline
+| `MEDIA_EXCLUDED`    | All media assets excluded from offline access
+| `LOW_RES_MEDIA`     | Only low-resolution media available offline
 |===
