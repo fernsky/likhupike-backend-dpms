@@ -237,3 +237,75 @@
 - WOMEN
 - TRANSPORTATION
 - ENERGY
+
+
+==== FinancialInstitutions
+
+- name
+- ward
+- location
+- point
+- polygon
+- type
+
+
+===== FinancialInstitutionType
+
+- DEVELOPMENT_BANK
+- COMMERCIAL_BANK
+- RURAL_DEVELOPMENT_BANK
+- MICROFINANCE
+- INSURANCE
+- FINANCE_COMPANY
+
+
+==== WardWiseTimeToNearestBank
+
+- ward
+- time
+- households
+
+===== TimeType
+
+- TIME_15_MINUTES_OR_LESS
+- TIME_30_MINTUES_OR_LESS
+- TIME_1_HOUR_OR_LESS
+- TIME_1_HOUR_OR_MORE
+
+==== WardWiseTimeToNearestCooperative
+
+- ward
+- time
+- households
+
+
+===== WardWiseFinancialAccounts
+
+- ward
+- financialOrganization
+- households
+
+===== FinancialOrganizationType
+
+- BANK
+- FINANCE
+- MICRO_FINANCE
+- COOPERATIVE
+- NONE
+
+==== MillsCollectionCenter
+
+- name
+- ward
+- location
+- point
+- polygon
+- type
+
+===== MillsCollectionCenterType
+
+- MILL
+- COLLECTION_CENTER
+- REFINERY
+- PROCESSING_CENTER
+

@@ -1,0 +1,216 @@
+=== Education Domain
+
+==== EducationalInstitutions
+
+- name
+- location
+- ward
+- point
+- polygon
+- contactNumbers
+- principalName
+- principalContactNumber
+- type
+- isPublic
+- totalBoys
+- totalGirls
+- totalTeachers
+
+==== EducationalInstitutionType
+
+[source,java]
+----
+public enum EducationalInstitutionType {
+    PRIMARY_SCHOOL,                // Grades 1–5
+    LOWER_SECONDARY_SCHOOL,        // Grades 6–8
+    SECONDARY_SCHOOL,              // Grades 9–10
+    HIGHER_SECONDARY_SCHOOL,       // Grades 11–12 (also known as +2)
+    MADHYAMIK_VIDYALAYA,           // Alternate term for Secondary/High School (commonly used in Nepali)
+    MADARSA,                       // Islamic religious school
+    GUMBA,                         // Buddhist monastic school
+    COLLEGE,                       // General term for higher secondary or bachelor level
+    UNIVERSITY,                    // Tertiary education offering bachelor's and above
+    VOCATIONAL_TRAINING_CENTER,   // Skill-based training
+    POLYTECHNIC_INSTITUTE,        // Technical education
+    TECHNICAL_SCHOOL,             // Focus on practical/technical subjects
+    PRESCHOOL,                    // Montessori / Early Childhood Development (ECD)
+    OPEN_SCHOOL,                  // For non-formal education
+    SPECIAL_EDUCATION_SCHOOL,     // For students with disabilities
+    COACHING_CENTER,              // Private tuition and entrance prep institutions
+    TEACHER_TRAINING_CENTER       // For training educators
+}
+----
+
+==== StudentDetails
+
+- institutionName
+
+===== StudentEnrollmentCaste extends StudentDetails
+
+- caste
+- gender
+- students
+
+===== CasteType
+
+- BRAHMIN_CHETRIYA
+- DALIT
+- JANJHATI
+- OTHER
+
+===== StudentGenderType
+
+- BOY
+- GIRL
+
+===== StudentEnrollmentSchoolLeave extends StudentDetails
+
+- gender
+- students
+
+===== StudentNewEnrollment extends StudentDetails
+
+- gender
+- students
+
+===== StudentRepeatingStudents extends StudentDetails
+
+- gender
+- students
+
+===== StudentPassedStudents extends StudentDetails
+
+- gender
+- students
+
+===== WardWiseLiteracyStatus
+
+- ward
+- literayType
+- population
+
+===== LiteracyType
+
+[source,java]
+----
+public enum LiteracyType {
+    BOTH_READING_AND_WRITING,   // पढ्न लेख्न जानेको
+    READING_ONLY,               // पढ्न मात्र जानेको
+    ILLITERATE                  // पढ्न लेख्न नजानेका
+}
+----
+
+===== WardWiseEducationalLevel
+
+- ward
+- educationLevelType
+- population
+
+===== EducationalLevelType
+
+public enum EducationalLevelType {
+    CHILD_DEVELOPMENT_CENTER,    // बालविकास केन्द्र / मंटेस्वोरी
+    NURSERY,                     // नर्सरी/केजी
+    GRADE_1,                     // कक्षा १
+    GRADE_2,                     // कक्षा २
+    GRADE_3,                     // कक्षा ३
+    GRADE_4,                     // कक्षा ४
+    GRADE_5,                     // कक्षा ५
+    GRADE_6,                     // कक्षा ६
+    GRADE_7,                     // कक्षा ७
+    GRADE_8,                     // कक्षा ८
+    GRADE_9,                     // कक्षा ९
+    GRADE_10,                    // कक्षा १०
+    SLC_LEVEL,                   // एसईई/एसएलसी/सो सरह
+    CLASS_12_LEVEL,              // कक्षा १२ वा PCL वा सो सरह
+    BACHELOR_LEVEL,              // स्नातक वा सो सरह
+    MASTERS_LEVEL,               // स्नातकोत्तर वा सो सरह
+    PHD_LEVEL,                   // पीएचडी वा सो सरह
+    OTHER,                       // अन्य
+    INFORMAL_EDUCATION,          // अनौपचारिक शिक्षा
+    EDUCATED,                    // साक्षर
+    UNKNOWN                      // थाहा नभएको
+}
+
+===== WardWiseMajorSubject
+
+- ward
+- subjectType
+- population
+
+===== MajorSubjectType
+
+public enum MajorSubjectType {
+    ENGLISH("अंग्रेजी"),
+    ECONOMICS("अर्थशास्त्र"),
+    ENGINEERING("इन्जिनियरङ्गि"),
+    HISTORY("इतिहास"),
+    HOME_ECONOMICS("गृहविज्ञान"),
+    RURAL_DEVELOPMENT("ग्रामीण विकास"),
+    MEDICINE("चिकित्सा"),
+    POPULATION_STUDY("जनसंख्या अध्ययन"),
+    BIOLOGY("जीवशास्त्र"),
+    STATISTICS("तथ्यांकशास्त्र"),
+    NEPALI("नेपाली"),
+    TOURISM("पर्यटन"),
+    GEOGRAPHY("भूगोल"),
+    PHYSICS("भौतिकशास्त्र"),
+    PSYCHOLOGY("मनोविज्ञान"),
+    HUMANITIES("मानविकी"),
+    CHEMISTRY("रसायनशास्त्र"),
+    POLITICAL_SCIENCE("राजनीतिकशास्त्र"),
+    FORESTRY_AND_AGRICULTURE("वन, कृषि तथा पशुविज्ञान"),
+    BOTANY("वनस्पतिशास्त्र"),
+    COMMERCE("वाणिज्य"),
+    SCIENCE("विज्ञान"),
+    MANAGEMENT("व्यवस्थापन"),
+    EDUCATION("शिक्षा"),
+    EDUCATIONAL_SCIENCE("शिक्षाशास्त्र"),
+    SANSKRIT("संस्कृत"),
+    ARTS("संस्कृति"),
+    SOCIAL_SCIENCES("समाजशास्त्र"),
+    INFORMATION_TECHNOLOGY("सूचना प्रविधि"),
+    HINDI("हिन्दी"),
+    OTHER("अन्य");
+
+    private final String nepaliName;
+
+    MajorSubjectType(String nepaliName) {
+        this.nepaliName = nepaliName;
+    }
+
+    public String getNepaliName() {
+        return nepaliName;
+    }
+}
+
+===== WardWiseSchoolDropout
+
+- ward
+- cause
+- population
+
+
+===== SchoolDropoutCauseType
+
+public enum SchoolDropoutCauseType {
+    BUSINESS("व्यापार/व्यवसाय"),
+    PRIVATE_JOB("निजी नोकरी"),
+    GOVERNMENTAL_JOB("सरकारी जागिर"),
+    STUDY("अध्ययन/तालिम"),
+    WORK("काम/जागिरको खोजी"),
+    DEPENDENT("आश्रित"),
+    CONFLICT("द्वन्द्व"),
+    OTHER("अन्य"),
+    UNKNOWN("थाहा छैन");
+
+    private final String nepaliName;
+
+    SchoolDropoutCauseType(String nepaliName) {
+        this.nepaliName = nepaliName;
+    }
+
+    public String getNepaliName() {
+        return nepaliName;
+    }
+}
