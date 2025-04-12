@@ -1,0 +1,375 @@
+===== `PersonName`
+Standardized representation of person names with support for different cultural naming practices.
+
+[plantuml]
+----
+@startuml
+class PersonName {
+  +String firstName
+  +String middleName
+  +String lastName
+  +String honorificPrefix
+  +String honorificSuffix
+  +String preferredName
+  +String fullName
+  +String localLanguageName
+  +String localLanguageFirstName
+  +String localLanguageMiddleName
+  +String localLanguageLastName
+  +NameFormat nameFormat
+  +NameScript nameScript
+  +Transliteration transliteration
+  +NameType nameType
+  +Boolean validatedName
+  +UUID validatedBy
+  +LocalDateTime validatedAt
+}
+
+enum NameFormat {
+  WESTERN
+  EASTERN
+  PATRONYMIC
+  SINGLE_NAME
+  CLAN_BASED
+  FAMILIAL_MULTIPLE_SURNAMES
+}
+
+enum NameScript {
+  LATIN
+  DEVANAGARI
+  TIBETAN
+  NEWARI
+  LIMBU
+}
+
+class Transliteration {
+  +String sourceScript
+  +String targetScript
+  +String transliteratedFirstName
+  +String transliteratedMiddleName
+  +String transliteratedLastName
+  +String transliterationMethod
+  +LocalDateTime transliteratedAt
+}
+
+enum NameType {
+  LEGAL
+  ALIAS
+  MAIDEN
+  RELIGIOUS
+  PROFESSIONAL
+  NICKNAME
+}
+
+PersonName -- NameFormat
+PersonName -- NameScript
+PersonName -- Transliteration
+PersonName -- NameType
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                    | Description
+| `firstName`              | Given or first name
+| `middleName`             | Middle name or names
+| `lastName`               | Family name or surname
+| `honorificPrefix`        | Title or honorific before name (e.g., Dr., Mr., Shree)
+| `honorificSuffix`        | Title or honorific after name (e.g., Ph.D, Jr.)
+| `preferredName`          | Name the person prefers to be called
+| `fullName`               | Complete name as a single string
+| `localLanguageName`      | Full name in local script (e.g., Devanagari)
+| `localLanguageFirstName` | First name in local script
+| `localLanguageMiddleName`| Middle name in local script
+| `localLanguageLastName`  | Last name in local script
+| `nameFormat`             | Format of the name (Western, Eastern, etc.)
+| `nameScript`             | Script used for the name
+| `transliteration`        | Transliteration information
+| `nameType`               | Type of name (legal, alias, etc.)
+| `validatedName`          | Whether name has been officially validated
+| `validatedBy`            | Who validated the name
+| `validatedAt`            | When the name was validated
+|===
+
+====== PersonName Interface
+
+```java
+/**
+ * Represents a person's name with cultural adaptability
+ */
+public interface PersonName {
+    /**
+     * Get first/given name
+     */
+    String getFirstName();
+    
+    /**
+     * Get middle name
+     */
+    String getMiddleName();
+    
+    /**
+     * Get last/family name
+     */
+    String getLastName();
+    
+    /**
+     * Get honorific prefix
+     */
+    String getHonorificPrefix();
+    
+    /**
+     * Get honorific suffix
+     */
+    String getHonorificSuffix();
+    
+    /**
+     * Get preferred name
+     */
+    String getPreferredName();
+    
+    /**
+     * Get full name as a single string
+     */
+    String getFullName();
+    
+    /**
+     * Get full name in local script
+     */
+    String getLocalLanguageName();
+    
+    /**
+     * Get first name in local script
+     */
+    String getLocalLanguageFirstName();
+    
+    /**
+     * Get middle name in local script
+     */
+    String getLocalLanguageMiddleName();
+    
+    /**
+     * Get last name in local script
+     */
+    String getLocalLanguageLastName();
+    
+    /**
+     * Get name format
+     */
+    NameFormat getNameFormat();
+    
+    /**
+     * Get script used for the name
+     */
+    NameScript getNameScript();
+    
+    /**
+     * Get transliteration information
+     */
+    Transliteration getTransliteration();
+    
+    /**
+     * Get type of name
+     */
+    NameType getNameType();
+    
+    /**
+     * Check if name has been validated
+     */
+    Boolean isValidatedName();
+    
+    /**
+     * Get who validated the name
+     */
+    UUID getValidatedBy();
+    
+    /**
+     * Get when the name was validated
+     */
+    LocalDateTime getValidatedAt();
+    
+    /**
+     * Format the name according to a specific pattern
+     */
+    String formatName(String pattern);
+    
+    /**
+     * Get sortable name according to format
+     */
+    String getSortableName();
+    
+    /**
+     * Get initials
+     */
+    String getInitials();
+    
+    /**
+     * Check if name matches another name with fuzzy matching
+     */
+    boolean matches(PersonName other, double threshold);
+    
+    /**
+     * Get part of name that indicates caste/ethnicity (if applicable)
+     */
+    String getEthnicIdentifier();
+    
+    /**
+     * Transliterate name to another script
+     */
+    PersonName transliterate(NameScript targetScript);
+}
+
+/**
+ * Name formats supported by the system
+ */
+public enum NameFormat {
+    WESTERN,               // Given name followed by family name
+    EASTERN,               // Family name followed by given name
+    PATRONYMIC,            // Given name + patronymic name
+    SINGLE_NAME,           // Single name only
+    CLAN_BASED,            // Name including clan identifier
+    FAMILIAL_MULTIPLE_SURNAMES // Name with both father's and mother's surnames
+}
+
+/**
+ * Scripts supported for names
+ */
+public enum NameScript {
+    LATIN,      // English and romanized names
+    DEVANAGARI, // Nepali and other Indo-Aryan languages
+    TIBETAN,    // Sherpa, Tamang, etc.
+    NEWARI,     // Traditional Nepal Bhasa script
+    LIMBU       // Kiranti languages
+}
+
+/**
+ * Types of names
+ */
+public enum NameType {
+    LEGAL,        // Official name on documents
+    ALIAS,        // Alternative name
+    MAIDEN,       // Birth name before marriage
+    RELIGIOUS,    // Name taken for religious purposes
+    PROFESSIONAL, // Name used professionally
+    NICKNAME      // Informal name
+}
+```
+
+====== Contextual Use Case for PersonName
+
+*Real-World Scenario:* Citizen Registration in a Diverse Nepali Context
+
+[plantuml]
+----
+@startuml
+actor "Citizenship\nRegistrar" as Registrar
+actor "Citizen\n(पेम्बा शेर्पा)" as Citizen
+participant "CitizenProfile" as Profile
+participant "PersonName" as Name
+participant "TransliterationService" as Translit
+participant "NameValidator" as Validator
+participant "EthnicNamePattern\nRegistry" as EthnicReg
+
+Citizen -> Registrar: Apply for citizenship card
+Registrar -> Profile: initiateCitizenRegistration()
+activate Profile
+
+Profile -> Name: create()
+activate Name
+Name -> Name: setLocalLanguageName("पेम्बा शेर्पा")
+Name -> Name: setLocalLanguageFirstName("पेम्बा")
+Name -> Name: setLocalLanguageLastName("शेर्पा")
+Name -> Name: setNameScript(DEVANAGARI)
+Profile <-- Name: nameInLocalScript
+deactivate Name
+
+Registrar -> EthnicReg: identifyNamePattern("शेर्पा")
+activate EthnicReg
+Registrar <-- EthnicReg: ethnicPattern = SHERPA
+deactivate EthnicReg
+
+Registrar -> Profile: setEthnicityInfo(ethnicPattern)
+
+Registrar -> Profile: addLatinScriptName(pembaSherpa)
+activate Profile
+Profile -> Name: addTransliteration()
+activate Name
+Name -> Translit: transliterate("पेम्बा", DEVANAGARI, LATIN)
+activate Translit
+Name <-- Translit: "Pemba"
+deactivate Translit
+Name -> Translit: transliterate("शेर्पा", DEVANAGARI, LATIN)
+activate Translit
+Name <-- Translit: "Sherpa"
+deactivate Translit
+Name -> Name: setFirstName("Pemba")
+Name -> Name: setLastName("Sherpa")
+Name -> Name: createTransliteration(DEVANAGARI, LATIN)
+Name -> Name: setNameFormat(WESTERN)
+Name -> Name: setTransliterationMethod("ISO")
+Profile <-- Name: transliterationAdded
+deactivate Name
+Registrar <-- Profile: latinScriptNameAdded
+deactivate Profile
+
+Registrar -> Profile: validateName()
+activate Profile
+Profile -> Validator: validateNameConsistency(name)
+activate Validator
+Validator -> Validator: checkScriptConsistency()
+Validator -> Validator: checkEthnicPatternMatch(SHERPA, "शेर्पा")
+Validator -> Validator: verifyTransliteration()
+Profile <-- Validator: validationResult
+deactivate Validator
+
+Profile -> Name: setValidatedName(true)
+activate Name
+Name -> Name: setValidatedBy(registrarId)
+Name -> Name: setValidatedAt(now())
+Profile <-- Name: nameValidated
+deactivate Name
+Registrar <-- Profile: nameValidated
+deactivate Profile
+
+Registrar -> Profile: recordNameComponents()
+activate Profile
+Profile -> Name: setNameType(LEGAL)
+activate Name
+Name -> Name: generateSortableName()
+note right: Sherpa, Pemba (surname first for sorting)
+Name -> Name: generateInitials()
+note right: P.S.
+Name -> Name: generateFullName()
+note right: Pemba Sherpa
+Profile <-- Name: nameComponentsRecorded
+deactivate Name
+Registrar <-- Profile: nameComponentsSet
+deactivate Profile
+
+Registrar -> Profile: completeCitizenRegistration()
+activate Profile
+Profile -> Profile: generateCitizenshipNumber()
+Profile -> Profile: attachValidatedName(name)
+Registrar <-- Profile: registrationComplete
+deactivate Profile
+
+Registrar -> Citizen: Issue citizenship card with dual-script name
+@enduml
+----
+
+*Implementation Details:*
+The PersonName component in Nepal's Digital Profile system addresses the complex multicultural, multilingual, and multi-script environment that characterizes Nepali naming practices, ensuring that all citizens' names are accurately represented.
+
+In this scenario, a Citizenship Registrar in Solukhumbu district is processing an application for a citizenship card for पेम्बा शेर्पा (Pemba Sherpa), a citizen from the Sherpa community. The citizenship card, a fundamental identity document in Nepal, must correctly represent the person's name in both Devanagari (the official script for Nepali) and Latin script.
+
+The system first captures the name in Devanagari script, as provided in the original documentation. It then identifies "शेर्पा" (Sherpa) as an ethnic surname associated with the Sherpa community, one of Nepal's many ethnic groups. This recognition is important as ethnic surnames in Nepal often follow different patterns than Indo-Aryan surnames and connect individuals to their cultural heritage.
+
+The TransliterationService converts the Devanagari script to Latin script following standardized ISO transliteration rules, ensuring consistent romanization across government documents. This is crucial in Nepal where the same Devanagari name can be spelled multiple ways in Latin script (e.g., Sherpa/Sherpaa/Xerpaa). The system follows the Department of Immigration's standardized transliteration approach for official documents.
+
+The NameValidator performs several checks, including verification that the name follows typical Sherpa naming patterns. This ethnic pattern validation is important in Nepal's context where names often reveal ethnic identity and have cultural significance. The system uses a registry of ethnic name patterns that covers Nepal's 125+ ethnic groups to validate that the name is correctly structured according to cultural traditions.
+
+The PersonName component recognizes that Sherpa names typically follow a WESTERN format (given name followed by surname), unlike some other Nepali communities like the Newars who traditionally use EASTERN format (surname followed by given name). This cultural awareness ensures correct formatting in different contexts, including alphabetical sorting in registers, which in Nepal is often done by surname first for administrative purposes.
+
+The dual-script recording of names (in both Devanagari and Latin) reflects Nepal's official requirements for citizenship documents, particularly necessary for international use. The validated name, marked with the registrar's official validation, becomes part of the citizen's legal identity in the system, used for generating the citizenship card with accurate representation in both scripts.
+
+This implementation acknowledges Nepal's diverse naming practices while providing standardization necessary for official purposes, balancing cultural sensitivity with administrative requirements.

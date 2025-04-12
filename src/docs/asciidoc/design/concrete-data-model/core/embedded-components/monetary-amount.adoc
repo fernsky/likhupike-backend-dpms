@@ -1,0 +1,400 @@
+===== `MonetaryAmount`
+Component for representing, storing, and manipulating monetary values with currency information.
+
+[plantuml]
+----
+@startuml
+class MonetaryAmount {
+  +BigDecimal amount
+  +String currency
+  +BigDecimal convertedAmount
+  +String convertedCurrency
+  +LocalDateTime conversionTimestamp
+  +BigDecimal conversionRate
+  +String conversionSource
+  +Boolean isPrimary
+  +LocalDate effectiveDate
+  +Boolean isEstimate
+  +String description
+  +TaxInfo taxInfo
+  +Map<String, Object> metadata
+  +UUID createdBy
+  +LocalDateTime createdAt
+  +Boolean isVerified
+  +UUID verifiedBy
+}
+
+class TaxInfo {
+  +BigDecimal taxRate
+  +BigDecimal taxAmount
+  +String taxType
+  +String taxReference
+  +Boolean isTaxInclusive
+}
+
+enum CurrencyCode {
+  NPR
+  INR
+  USD
+  EUR
+  GBP
+  CNY
+  SGD
+  AUD
+  JPY
+}
+
+MonetaryAmount -- TaxInfo
+MonetaryAmount -- CurrencyCode
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `amount`              | The monetary value
+| `currency`            | The currency code (e.g., NPR, USD)
+| `convertedAmount`     | The amount converted to another currency
+| `convertedCurrency`   | The currency code of the converted amount
+| `conversionTimestamp` | When the conversion was done
+| `conversionRate`      | The exchange rate used for conversion
+| `conversionSource`    | Source of the exchange rate data
+| `isPrimary`           | Whether this is the primary amount
+| `effectiveDate`       | Date when the amount is effective
+| `isEstimate`          | Whether the amount is an estimate
+| `description`         | Description of the monetary amount
+| `taxInfo`             | Tax-related information
+| `metadata`            | Additional contextual information
+| `createdBy`           | Who created this monetary record
+| `createdAt`           | When this monetary record was created
+| `isVerified`          | Whether the amount has been verified
+| `verifiedBy`          | Who verified the amount
+|===
+
+====== MonetaryAmount Interface
+
+```java
+/**
+ * Represents a monetary amount with currency information
+ */
+public interface MonetaryAmount {
+    /**
+     * Get the monetary value
+     */
+    BigDecimal getAmount();
+    
+    /**
+     * Get the currency code
+     */
+    String getCurrency();
+    
+    /**
+     * Get the converted amount
+     */
+    BigDecimal getConvertedAmount();
+    
+    /**
+     * Get the converted currency code
+     */
+    String getConvertedCurrency();
+    
+    /**
+     * Get when the conversion was done
+     */
+    LocalDateTime getConversionTimestamp();
+    
+    /**
+     * Get the exchange rate used
+     */
+    BigDecimal getConversionRate();
+    
+    /**
+     * Get source of exchange rate
+     */
+    String getConversionSource();
+    
+    /**
+     * Check if this is the primary amount
+     */
+    Boolean isPrimary();
+    
+    /**
+     * Get date when amount is effective
+     */
+    LocalDate getEffectiveDate();
+    
+    /**
+     * Check if amount is an estimate
+     */
+    Boolean isEstimate();
+    
+    /**
+     * Get amount description
+     */
+    String getDescription();
+    
+    /**
+     * Get tax information
+     */
+    TaxInfo getTaxInfo();
+    
+    /**
+     * Get additional metadata
+     */
+    Map<String, Object> getMetadata();
+    
+    /**
+     * Get who created this record
+     */
+    UUID getCreatedBy();
+    
+    /**
+     * Get when this record was created
+     */
+    LocalDateTime getCreatedAt();
+    
+    /**
+     * Check if amount is verified
+     */
+    Boolean isVerified();
+    
+    /**
+     * Get who verified the amount
+     */
+    UUID getVerifiedBy();
+    
+    /**
+     * Add tax information to the amount
+     */
+    void addTax(BigDecimal rate, String taxType, Boolean inclusive);
+    
+    /**
+     * Calculate total with tax
+     */
+    BigDecimal getTotalWithTax();
+    
+    /**
+     * Convert to another currency
+     */
+    MonetaryAmount convertTo(String targetCurrency);
+    
+    /**
+     * Format as string according to locale
+     */
+    String format(Locale locale);
+    
+    /**
+     * Format as string with Nepali numerals
+     */
+    String formatInNepaliNumerals();
+    
+    /**
+     * Add another monetary amount
+     */
+    MonetaryAmount add(MonetaryAmount other);
+    
+    /**
+     * Subtract another monetary amount
+     */
+    MonetaryAmount subtract(MonetaryAmount other);
+    
+    /**
+     * Multiply by a factor
+     */
+    MonetaryAmount multiply(BigDecimal factor);
+    
+    /**
+     * Divide by a divisor
+     */
+    MonetaryAmount divide(BigDecimal divisor);
+}
+
+/**
+ * Represents tax information for a monetary amount
+ */
+public interface TaxInfo {
+    /**
+     * Get tax rate
+     */
+    BigDecimal getTaxRate();
+    
+    /**
+     * Get tax amount
+     */
+    BigDecimal getTaxAmount();
+    
+    /**
+     * Get tax type
+     */
+    String getTaxType();
+    
+    /**
+     * Get tax reference number
+     */
+    String getTaxReference();
+    
+    /**
+     * Check if tax is inclusive
+     */
+    Boolean isTaxInclusive();
+}
+```
+
+====== Contextual Use Case for MonetaryAmount
+
+*Real-World Scenario:* Land Valuation and Property Tax Assessment in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Valuation Officer\n(Hari Prasad)" as Officer
+actor "Property Owner\n(Sunita Adhikari)" as Owner
+actor "Tax Collector\n(Binod Sharma)" as Collector
+participant "LandParcel" as Land
+participant "ValuationRecord" as Valuation
+participant "MonetaryAmount" as Money
+participant "TaxCalculationService" as TaxCalc
+participant "ExchangeRateService" as Exchange
+participant "PaymentSystem" as Payment
+
+Owner -> Officer: Request property valuation
+activate Officer
+
+Officer -> Land: retrieveParcelDetails(parcelId)
+activate Land
+Officer <-- Land: parcelDetails
+deactivate Land
+
+Officer -> Valuation: createValuationRecord(parcelId)
+activate Valuation
+Valuation -> Money: createAmount()
+activate Money
+Money -> Money: setAmount(5000000)
+Money -> Money: setCurrency("NPR")
+Money -> Money: setEffectiveDate(today)
+Money -> Money: setDescription("Market value assessment")
+Money -> Money: setCreatedBy(officerId)
+Money -> Money: setCreatedAt(now())
+Valuation <-- Money: monetaryAmount
+deactivate Money
+Officer <-- Valuation: valuationCreated
+deactivate Valuation
+
+Officer -> TaxCalc: calculatePropertyTax(valuationRecord)
+activate TaxCalc
+TaxCalc -> Money: getTaxInfo()
+activate Money
+TaxCalc <-- Money: taxInfo=null
+deactivate Money
+
+TaxCalc -> TaxCalc: applyTaxRates()
+note right: 1.5% annual property tax rate for urban residential property
+
+TaxCalc -> Money: addTax(0.015, "Property Tax", false)
+activate Money
+Money -> Money: createTaxInfo()
+Money -> Money: setTaxRate(0.015)
+Money -> Money: setTaxAmount(75000)
+Money -> Money: setTaxType("Property Tax")
+Money -> Money: setTaxInclusive(false)
+TaxCalc <-- Money: taxInfoAdded
+deactivate Money
+
+Officer <-- TaxCalc: taxCalculation
+deactivate TaxCalc
+
+Owner -> Officer: Requests valuation in USD for foreign bank
+Officer -> Exchange: getExchangeRate("NPR", "USD")
+activate Exchange
+Exchange -> Exchange: fetchLatestRate()
+note right: 1 USD = 132.5 NPR
+Officer <-- Exchange: rate=0.00754 (1/132.5)
+deactivate Exchange
+
+Officer -> Valuation: convertToForeignCurrency("USD")
+activate Valuation
+Valuation -> Money: convertTo("USD")
+activate Money
+Money -> Money: setConvertedAmount(37735.85)
+Money -> Money: setConvertedCurrency("USD")
+Money -> Money: setConversionRate(0.00754)
+Money -> Money: setConversionTimestamp(now())
+Money -> Money: setConversionSource("Nepal Rastra Bank")
+Valuation <-- Money: conversionAdded
+deactivate Money
+Officer <-- Valuation: convertedValuation
+deactivate Valuation
+
+Officer -> Valuation: finalizeValuation()
+activate Valuation
+Valuation -> Money: setIsVerified(true)
+activate Money
+Money -> Money: setVerifiedBy(officerId)
+Valuation <-- Money: verified
+deactivate Money
+Officer <-- Valuation: valuationFinalized
+deactivate Valuation
+
+Officer -> Owner: Provide valuation certificate
+
+Owner -> Collector: Pay annual property tax
+activate Collector
+Collector -> Valuation: retrieveValuation(parcelId)
+activate Valuation
+Collector <-- Valuation: valuation
+deactivate Valuation
+
+Collector -> Money: getTotalWithTax()
+activate Money
+Money -> Money: calculateTotal()
+note right: 5,000,000 + 75,000 = 5,075,000 NPR
+Collector <-- Money: total=5075000
+deactivate Money
+
+Collector -> Payment: initiatePayment(total)
+activate Payment
+Payment -> Payment: createPaymentRecord()
+Payment -> Payment: generateReceiptNumber()
+Collector <-- Payment: paymentInitiated
+deactivate Payment
+
+Owner -> Payment: completePayment()
+activate Payment
+Payment -> Payment: processTransaction()
+Payment -> Payment: generateReceipt()
+Payment -> Money: formatInNepaliNumerals()
+activate Money
+Money -> Money: convertToNepaliDigits()
+note right: Converts "5,075,000" to "५,०७५,०००"
+Payment <-- Money: nepaliFormat
+deactivate Money
+Owner <-- Payment: receipt
+deactivate Payment
+
+Collector -> Valuation: updatePaymentStatus("PAID")
+activate Valuation
+Valuation -> Valuation: recordPayment()
+Collector <-- Valuation: statusUpdated
+deactivate Valuation
+
+Collector -> Owner: Issue tax clearance certificate
+deactivate Collector
+@enduml
+----
+
+*Implementation Details:*
+The MonetaryAmount component in Nepal's Digital Profile system provides robust support for the complex monetary operations in Nepal's land administration system, with specific adaptations for the country's unique financial environment.
+
+In this scenario, a Valuation Officer (Hari Prasad) is conducting a property valuation for a land parcel owned by Sunita Adhikari in Kathmandu. The monetary component handles multiple aspects critical to Nepal's property ecosystem.
+
+The system initially records the property valuation in Nepalese Rupees (NPR), the national currency. The MonetaryAmount component captures the precise market value of 5,000,000 NPR along with metadata about who performed the valuation and when. This official valuation becomes the basis for various government processes, including property taxation and potential land acquisition proceedings.
+
+Nepal's property tax system varies by municipality, with calculations based on assessed value. The MonetaryAmount component's tax handling capabilities capture the 1.5% annual property tax rate for urban residential properties in Kathmandu Metropolitan City, calculating the 75,000 NPR tax amount. This separation of tax information from the base amount is particularly important in Nepal's context where different government offices (valuation authority and tax authority) may need to access and modify different aspects of the monetary information.
+
+The currency conversion capability addresses a common need in Nepal, where property owners frequently require valuations in foreign currencies for overseas bank loans, foreign investment documentation, or emigration purposes. The component leverages the official exchange rate from Nepal Rastra Bank (the central bank) to provide legally valid converted valuations. The system maintains both the original NPR value and the USD equivalent, recording the exact conversion rate and timestamp - critical for audit trails in Nepal's financial regulations.
+
+The MonetaryAmount component's verification feature reflects Nepal's bureaucratic requirement for official endorsement, marking the valuation as officially verified by an authorized officer. This verification status transforms the monetary record from an estimate to an official government-recognized valuation that can be used for legal and financial purposes.
+
+When the property owner proceeds to pay the property tax, the MonetaryAmount component calculates the total amount inclusive of tax. The formatting capability to display amounts in Nepali numerals (५,०७५,००० instead of 5,075,000) supports Nepal's bilingual documentation requirements, where official receipts often display amounts in both Western and Nepali numerals.
+
+This implementation acknowledges Nepal's specific monetary ecosystem, including its tax structure, currency conversion needs, and multilingual numeric representation requirements, while providing a standardized way to handle monetary values across the Digital Profile system.

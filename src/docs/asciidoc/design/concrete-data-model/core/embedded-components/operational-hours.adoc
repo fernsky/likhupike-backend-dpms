@@ -1,0 +1,364 @@
+===== `OperationalHours`
+Component representing operating hours for offices, services, and facilities.
+
+[plantuml]
+----
+@startuml
+class OperationalHours {
+  +Map<DayOfWeek, List<TimeRange>> regularHours
+  +List<SpecialHours> specialHours
+  +List<HolidayClosure> holidays
+  +List<ServiceSpecificHours> serviceHours
+  +String timeZone
+  +String notes
+  +Boolean isOperational
+  +Boolean is24x7
+  +Map<String, Object> seasonalVariations
+  +LocalDate effectiveFrom
+  +LocalDate effectiveTo
+  +LocalDateTime lastUpdated
+  +UUID lastUpdatedBy
+}
+
+class TimeRange {
+  +LocalTime startTime
+  +LocalTime endTime
+  +String description
+}
+
+class SpecialHours {
+  +LocalDate date
+  +List<TimeRange> hours
+  +String reason
+}
+
+class HolidayClosure {
+  +String name
+  +LocalDate date
+  +String observanceReason
+  +Boolean isRecurring
+  +RecurrencePattern recurrencePattern
+}
+
+class ServiceSpecificHours {
+  +String serviceName
+  +Map<DayOfWeek, List<TimeRange>> hours
+  +String notes
+}
+
+OperationalHours -- TimeRange
+OperationalHours -- SpecialHours
+OperationalHours -- HolidayClosure
+OperationalHours -- ServiceSpecificHours
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `regularHours`       | Standard hours of operation by day of week
+| `specialHours`       | Non-standard hours for specific dates
+| `holidays`           | Closure dates for holidays
+| `serviceHours`       | Hours for specific services that differ from regular hours
+| `timeZone`           | Time zone for the hours (default: Asia/Kathmandu)
+| `notes`              | Additional notes about operating hours
+| `isOperational`      | Whether the entity is currently operational
+| `is24x7`             | Whether the entity operates 24/7
+| `seasonalVariations` | Seasonal changes to operating hours
+| `effectiveFrom`      | When these hours become effective
+| `effectiveTo`        | When these hours expire
+| `lastUpdated`        | When hours were last updated
+| `lastUpdatedBy`      | Who last updated the hours
+|===
+
+====== OperationalHours Interface
+
+```java
+/**
+ * Represents operating hours for an organization or service
+ */
+public interface OperationalHours {
+    /**
+     * Get regular hours by day of week
+     */
+    Map<DayOfWeek, List<TimeRange>> getRegularHours();
+    
+    /**
+     * Get special hours for specific dates
+     */
+    List<SpecialHours> getSpecialHours();
+    
+    /**
+     * Get holiday closures
+     */
+    List<HolidayClosure> getHolidays();
+    
+    /**
+     * Get service-specific hours
+     */
+    List<ServiceSpecificHours> getServiceHours();
+    
+    /**
+     * Get time zone
+     */
+    String getTimeZone();
+    
+    /**
+     * Get notes about operating hours
+     */
+    String getNotes();
+    
+    /**
+     * Check if currently operational
+     */
+    Boolean isOperational();
+    
+    /**
+     * Check if operating 24/7
+     */
+    Boolean is24x7();
+    
+    /**
+     * Get seasonal variations
+     */
+    Map<String, Object> getSeasonalVariations();
+    
+    /**
+     * Get when these hours become effective
+     */
+    LocalDate getEffectiveFrom();
+    
+    /**
+     * Get when these hours expire
+     */
+    LocalDate getEffectiveTo();
+    
+    /**
+     * Get when hours were last updated
+     */
+    LocalDateTime getLastUpdated();
+    
+    /**
+     * Get who last updated the hours
+     */
+    UUID getLastUpdatedBy();
+    
+    /**
+     * Check if open at a specific date and time
+     */
+    boolean isOpenAt(LocalDateTime dateTime);
+    
+    /**
+     * Get next opening time after a given date and time
+     */
+    LocalDateTime getNextOpeningTime(LocalDateTime after);
+    
+    /**
+     * Get next closing time after a given date and time
+     */
+    LocalDateTime getNextClosingTime(LocalDateTime after);
+    
+    /**
+     * Check if a specific service is available at a given time
+     */
+    boolean isServiceAvailableAt(String serviceName, LocalDateTime dateTime);
+    
+    /**
+     * Get hours formatted according to a pattern
+     */
+    String getFormattedHours(String pattern);
+    
+    /**
+     * Get current operational status (OPEN, CLOSED, etc.)
+     */
+    OperationalStatus getCurrentStatus();
+}
+
+/**
+ * Represents a time range in a day
+ */
+public interface TimeRange {
+    /**
+     * Get start time
+     */
+    LocalTime getStartTime();
+    
+    /**
+     * Get end time
+     */
+    LocalTime getEndTime();
+    
+    /**
+     * Get description of this time range
+     */
+    String getDescription();
+    
+    /**
+     * Check if a time is within this range
+     */
+    boolean contains(LocalTime time);
+    
+    /**
+     * Calculate duration in minutes
+     */
+    int getDurationMinutes();
+}
+```
+
+====== Contextual Use Case for OperationalHours
+
+*Real-World Scenario:* Land Registration Office Hours Management in Nepal
+
+[plantuml]
+----
+@startuml
+actor "District Administration\nOfficer" as Admin
+actor "Government Offices\nDivision" as GOD
+actor "Citizen\n(Nirmala Tamang)" as Citizen
+participant "LandRegistrationOffice" as Office
+participant "OperationalHours" as Hours
+participant "HolidayCalendarService" as Calendar
+participant "PublicNotificationService" as Notify
+
+Admin -> Office : configureOfficeHours()
+activate Office
+Office -> Hours : create()
+activate Hours
+Hours -> Hours : setTimeZone("Asia/Kathmandu")
+Hours -> Hours : setRegularHours(SUNDAY, [8:00-17:00])
+Hours -> Hours : setRegularHours(MONDAY, [8:00-17:00])
+Hours -> Hours : setRegularHours(TUESDAY, [8:00-17:00])
+Hours -> Hours : setRegularHours(WEDNESDAY, [8:00-17:00])
+Hours -> Hours : setRegularHours(THURSDAY, [8:00-17:00])
+Hours -> Hours : setRegularHours(FRIDAY, [8:00-14:00])
+Hours -> Hours : setSaturday(null) // Closed
+note right: Nepal government offices operate Sunday-Friday
+Office <-- Hours : operationalHours
+deactivate Hours
+Admin <-- Office : hoursConfigured
+deactivate Office
+
+Admin -> Office : configureLunchBreak()
+activate Office
+Office -> Hours : createLunchBreakHours()
+activate Hours
+Hours -> Hours : updateRegularHours(SUNDAY, [8:00-13:00, 14:00-17:00])
+Hours -> Hours : updateRegularHours(MONDAY, [8:00-13:00, 14:00-17:00])
+Hours -> Hours : updateRegularHours(TUESDAY, [8:00-13:00, 14:00-17:00])
+Hours -> Hours : updateRegularHours(WEDNESDAY, [8:00-13:00, 14:00-17:00])
+Hours -> Hours : updateRegularHours(THURSDAY, [8:00-13:00, 14:00-17:00])
+Hours -> Hours : updateRegularHours(FRIDAY, [8:00-14:00]) // No lunch break
+Office <-- Hours : updatedHours
+deactivate Hours
+Admin <-- Office : lunchBreakConfigured
+deactivate Office
+
+Admin -> Office : createSpecificServiceHours("Land Title Transfer")
+activate Office
+Office -> Hours : addServiceSpecificHours()
+activate Hours
+Hours -> Hours : createServiceEntry("Land Title Transfer")
+Hours -> Hours : setServiceHours(SUNDAY, [10:00-13:00])
+Hours -> Hours : setServiceHours(TUESDAY, [10:00-13:00])
+Hours -> Hours : setServiceHours(THURSDAY, [10:00-13:00])
+Hours -> Hours : setServiceNotes("Requires prior appointment")
+Office <-- Hours : serviceHoursAdded
+deactivate Hours
+Admin <-- Office : serviceHoursConfigured
+deactivate Office
+
+GOD -> Calendar : synchronizeNationalHolidays()
+activate Calendar
+Calendar -> Calendar : loadNationalHolidaysForYear(2023)
+Calendar -> Calendar : loadLocalFestivalDates(district)
+Office <- Calendar : updateWithNationalHolidays(officeId, holidays)
+deactivate Calendar
+activate Office
+Office -> Hours : addHolidays(nationalHolidays)
+activate Hours
+loop for each holiday
+  Hours -> Hours : addHolidayClosure(holiday.date, holiday.name, holiday.reason)
+end
+Office <-- Hours : holidaysAdded
+deactivate Hours
+deactivate Office
+
+Admin -> Office : addMonsoonSeasonHours()
+activate Office
+Office -> Hours : createSeasonalVariation()
+activate Hours
+Hours -> Hours : createSeasonVariation("Monsoon")
+Hours -> Hours : setSeasonPeriod("June 15 - September 15")
+Hours -> Hours : setSeasonHours(SUNDAY, [10:00-16:00])
+Hours -> Hours : setSeasonHours(MONDAY, [10:00-16:00])
+Hours -> Hours : setSeasonHours(TUESDAY, [10:00-16:00])
+Hours -> Hours : setSeasonHours(WEDNESDAY, [10:00-16:00])
+Hours -> Hours : setSeasonHours(THURSDAY, [10:00-16:00])
+Hours -> Hours : setSeasonHours(FRIDAY, [10:00-13:00])
+Hours -> Hours : setSeasonNotes("Hours reduced during monsoon due to travel difficulties")
+Office <-- Hours : seasonalVariationAdded
+deactivate Hours
+Admin <-- Office : monsoonHoursConfigured
+deactivate Office
+
+Citizen -> Office : checkOperatingHours()
+activate Office
+Office -> Hours : isOpenAt(currentDateTime)
+activate Hours
+Office <-- Hours : isOpen=true
+deactivate Hours
+Citizen <-- Office : "Office is currently open"
+deactivate Office
+
+Citizen -> Office : checkSpecificServiceAvailability("Land Title Transfer")
+activate Office
+Office -> Hours : isServiceAvailableAt("Land Title Transfer", requestDate)
+activate Hours
+Office <-- Hours : isAvailable=false
+deactivate Hours
+Office -> Hours : getNextTimeServiceAvailable("Land Title Transfer", after=now)
+activate Hours
+Office <-- Hours : nextAvailableTime
+deactivate Hours
+Citizen <-- Office : "Service not available now. Next available: Tuesday 10:00 AM"
+deactivate Office
+
+Admin -> Office : temporarilyClose("Staff training")
+activate Office
+Office -> Hours : addSpecialHours()
+activate Hours
+Hours -> Hours : createSpecialHours(THURSDAY, nextWeek)
+Hours -> Hours : setSpecialHoursType(CLOSED)
+Hours -> Hours : setSpecialHoursReason("Staff training session")
+Office <-- Hours : specialHoursAdded
+deactivate Hours
+Office -> Notify : publishOfficeClosureNotice(details)
+activate Notify
+Notify -> Notify : sendSms(subscribedCitizens)
+Notify -> Notify : updateWebsite(closureDetails)
+Notify -> Notify : publishToSocialMedia(closureDetails)
+Office <-- Notify : notificationSent
+deactivate Notify
+Admin <-- Office : temporaryClosureConfigured
+deactivate Office
+@enduml
+----
+
+*Implementation Details:*
+The OperationalHours component in Nepal's Digital Profile system is uniquely designed to handle the country's specific operating hour patterns for government services, which differ significantly from western norms.
+
+In this scenario, a District Administration Officer in Morang district is configuring the operational hours for the local Land Registration Office. The component captures Nepal's standard government working week of Sunday through Friday (with Saturday as the weekly holiday) - a critical difference from many international systems that typically assume Monday-Friday operations.
+
+Specific aspects of this implementation address uniquely Nepali operational patterns. For example, it supports the typical government office lunch break period (1:00 PM - 2:00 PM) during which many services pause. The system also accounts for Friday's half-day schedule (8:00 AM - 2:00 PM without lunch break), a standard practice across Nepali government offices.
+
+The OperationalHours component incorporates Nepal's complex holiday calendar, synchronizing with the national holiday system to automatically include both fixed holidays (like Republic Day) and lunar calendar-based festivals (like Dashain and Tihar) that change dates annually. It also accounts for regional holidays specific to the district, which is important as different regions celebrate different local festivals that impact government operations.
+
+A particularly important feature for Nepal is the support for seasonal variations. During the monsoon season (June-September), offices in areas with difficult road access often adjust their hours to accommodate travel challenges. The system allows for predefined seasonal adjustments that automatically activate during specified date ranges, ensuring citizens receive accurate operational hours information.
+
+The specialized service scheduling for "Land Title Transfer" addresses a real need in Nepali land offices, where specific complex services are often available only on designated days to allow staff to focus their expertise efficiently. This improves service delivery in offices that frequently face resource constraints.
+
+When a citizen like Nirmala Tamang checks the office's operational status, the system not only provides current open/closed information but can advise on service-specific availability. This is especially valuable in rural Nepal where citizens often travel significant distances to access government services, and knowing exactly when specialized services are available prevents wasted journeys.
+
+The public notification capabilities for temporary closures integrate with SMS notification services, which are critical in Nepal where mobile phone penetration is high (over 90%) but internet access is more limited, especially in rural areas where most land registration needs occur.
+
+This OperationalHours implementation acknowledges Nepal's administrative reality where operating hours are affected by diverse factors from religious festivals to seasonal weather conditions, providing a flexible and culturally-appropriate system for managing and communicating government service availability.

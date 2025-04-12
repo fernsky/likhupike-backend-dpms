@@ -1,0 +1,575 @@
+===== `FileAttachment`
+Component for managing file attachments and documents within the system.
+
+[plantuml]
+----
+@startuml
+class FileAttachment {
+  +String fileName
+  +String originalFileName
+  +String contentType
+  +Long fileSize
+  +String fileExtension
+  +StorageLocation storageLocation
+  +String storageId
+  +String checksum
+  +String description
+  +FileStatus status
+  +FileCategory category
+  +LocalDateTime uploadedAt
+  +UUID uploadedBy
+  +Boolean isPubliclyAccessible
+  +Integer retentionPeriodDays
+  +LocalDate expiryDate
+  +VerificationStatus verificationStatus
+  +UUID verifiedBy
+  +LocalDateTime verifiedAt
+  +Map<String, Object> metadata
+  +String localePath
+  +FileProcessingStatus processingStatus
+  +List<String> tags
+  +List<FileVersion> versions
+}
+
+class StorageLocation {
+  +StorageSystem storageSystem
+  +String bucketName
+  +String path
+  +String region
+  +String accessMechanism
+  +Boolean isArchived
+}
+
+class FileVersion {
+  +String versionId
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +String reason
+  +String fileName
+  +String storageId
+  +Long fileSize
+  +String checksum
+  +Boolean isCurrent
+}
+
+enum FileStatus {
+  ACTIVE
+  ARCHIVED
+  EXPIRED
+  DELETED
+  QUARANTINED
+}
+
+enum FileCategory {
+  IDENTITY_DOCUMENT
+  PROPERTY_DOCUMENT
+  VERIFICATION_DOCUMENT
+  CERTIFICATE
+  SUPPORTING_DOCUMENT
+  APPLICATION_FORM
+  MAP_DOCUMENT
+  LEGAL_DOCUMENT
+  FINANCIAL_DOCUMENT
+  CORRESPONDENCE
+}
+
+enum StorageSystem {
+  LOCAL_FILESYSTEM
+  S3_COMPATIBLE
+  AZURE_BLOB
+  DATABASE
+  DISTRIBUTED_STORAGE
+  NEARLINE_ARCHIVE
+  OFFLINE_ARCHIVE
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING_VERIFICATION
+  VERIFIED
+  VERIFICATION_FAILED
+  VERIFICATION_EXPIRED
+}
+
+enum FileProcessingStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+  SCANNING
+  INDEXING
+  OCR_COMPLETE
+}
+
+FileAttachment -- StorageLocation
+FileAttachment -- FileStatus
+FileAttachment -- FileCategory
+FileAttachment -- VerificationStatus
+FileAttachment -- FileProcessingStatus
+FileAttachment -- FileVersion
+StorageLocation -- StorageSystem
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `fileName`             | System-assigned unique file name
+| `originalFileName`     | Original file name provided by the user
+| `contentType`          | MIME type of the file
+| `fileSize`             | Size of the file in bytes
+| `fileExtension`        | File extension
+| `storageLocation`      | Where the file is stored
+| `storageId`            | Identifier in the storage system
+| `checksum`             | MD5/SHA hash of the file for integrity
+| `description`          | User-provided description
+| `status`               | Current status of the file
+| `category`             | Category of the document
+| `uploadedAt`           | When the file was uploaded
+| `uploadedBy`           | Who uploaded the file
+| `isPubliclyAccessible` | Whether file is publicly accessible
+| `retentionPeriodDays`  | How long to retain the file
+| `expiryDate`           | When the file should expire
+| `verificationStatus`   | Verification status of the document
+| `verifiedBy`           | Who verified the document
+| `verifiedAt`           | When the document was verified
+| `metadata`             | Additional contextual information
+| `localePath`           | Path for localized version of content
+| `processingStatus`     | Status of file processing
+| `tags`                 | Tags for categorization
+| `versions`             | Previous versions of the file
+|===
+
+====== FileAttachment Interface
+
+```java
+/**
+ * Represents a file attachment in the system
+ */
+public interface FileAttachment {
+    /**
+     * Get system-assigned file name
+     */
+    String getFileName();
+    
+    /**
+     * Get original file name
+     */
+    String getOriginalFileName();
+    
+    /**
+     * Get content type
+     */
+    String getContentType();
+    
+    /**
+     * Get file size in bytes
+     */
+    Long getFileSize();
+    
+    /**
+     * Get file extension
+     */
+    String getFileExtension();
+    
+    /**
+     * Get storage location
+     */
+    StorageLocation getStorageLocation();
+    
+    /**
+     * Get storage identifier
+     */
+    String getStorageId();
+    
+    /**
+     * Get file checksum
+     */
+    String getChecksum();
+    
+    /**
+     * Get file description
+     */
+    String getDescription();
+    
+    /**
+     * Get file status
+     */
+    FileStatus getStatus();
+    
+    /**
+     * Get file category
+     */
+    FileCategory getCategory();
+    
+    /**
+     * Get upload timestamp
+     */
+    LocalDateTime getUploadedAt();
+    
+    /**
+     * Get uploader ID
+     */
+    UUID getUploadedBy();
+    
+    /**
+     * Check if publicly accessible
+     */
+    Boolean isPubliclyAccessible();
+    
+    /**
+     * Get retention period in days
+     */
+    Integer getRetentionPeriodDays();
+    
+    /**
+     * Get expiry date
+     */
+    LocalDate getExpiryDate();
+    
+    /**
+     * Get verification status
+     */
+    VerificationStatus getVerificationStatus();
+    
+    /**
+     * Get verifier ID
+     */
+    UUID getVerifiedBy();
+    
+    /**
+     * Get verification timestamp
+     */
+    LocalDateTime getVerifiedAt();
+    
+    /**
+     * Get additional metadata
+     */
+    Map<String, Object> getMetadata();
+    
+    /**
+     * Get locale path
+     */
+    String getLocalePath();
+    
+    /**
+     * Get processing status
+     */
+    FileProcessingStatus getProcessingStatus();
+    
+    /**
+     * Get file tags
+     */
+    List<String> getTags();
+    
+    /**
+     * Get file versions
+     */
+    List<FileVersion> getVersions();
+    
+    /**
+     * Get file content as stream
+     */
+    InputStream getContent();
+    
+    /**
+     * Update file content and create new version
+     */
+    void updateContent(InputStream content, String reason);
+    
+    /**
+     * Generate shareable link
+     */
+    String generateShareableLink(Duration validity);
+    
+    /**
+     * Archive the file
+     */
+    void archive();
+    
+    /**
+     * Verify the file
+     */
+    void verify(UUID verifierId, String verificationNotes);
+    
+    /**
+     * Check if file is expired
+     */
+    boolean isExpired();
+    
+    /**
+     * Generate thumbnail if applicable
+     */
+    FileAttachment generateThumbnail();
+    
+    /**
+     * Add a tag to the file
+     */
+    void addTag(String tag);
+}
+
+/**
+ * Location where a file is stored
+ */
+public interface StorageLocation {
+    /**
+     * Get storage system
+     */
+    StorageSystem getStorageSystem();
+    
+    /**
+     * Get bucket name
+     */
+    String getBucketName();
+    
+    /**
+     * Get storage path
+     */
+    String getPath();
+    
+    /**
+     * Get storage region
+     */
+    String getRegion();
+    
+    /**
+     * Get access mechanism
+     */
+    String getAccessMechanism();
+    
+    /**
+     * Check if archived
+     */
+    Boolean isArchived();
+}
+
+/**
+ * A version of a file
+ */
+public interface FileVersion {
+    /**
+     * Get version ID
+     */
+    String getVersionId();
+    
+    /**
+     * Get creation timestamp
+     */
+    LocalDateTime getCreatedAt();
+    
+    /**
+     * Get creator ID
+     */
+    UUID getCreatedBy();
+    
+    /**
+     * Get reason for version
+     */
+    String getReason();
+    
+    /**
+     * Get file name
+     */
+    String getFileName();
+    
+    /**
+     * Get storage ID
+     */
+    String getStorageId();
+    
+    /**
+     * Get file size
+     */
+    Long getFileSize();
+    
+    /**
+     * Get checksum
+     */
+    String getChecksum();
+    
+    /**
+     * Check if current version
+     */
+    Boolean isCurrent();
+}
+```
+
+====== Contextual Use Case for FileAttachment
+
+*Real-World Scenario:* Land Ownership Document Management in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registry Clerk\n(Krishna Sharma)" as Clerk
+actor "Land Owner\n(Prakash Rai)" as Owner
+actor "Verification Officer\n(Sarita Thapa)" as Officer
+participant "LandOwnershipRecord" as Record
+participant "FileAttachment" as File
+participant "SecurityScanner" as Scanner
+participant "AntivirusService" as AV
+participant "OCRService" as OCR
+participant "NotificationService" as Notify
+
+Owner -> Clerk: Submit land ownership certificate
+activate Clerk
+Clerk -> Record: createNewRecord(ownerDetails)
+activate Record
+Record -> Record: initializeRecord()
+Clerk <-- Record: recordInitialized
+deactivate Record
+deactivate Clerk
+
+Clerk -> Record: uploadOwnershipDocument(physicalDoc)
+activate Record
+Record -> File: create()
+activate File
+File -> File: setOriginalFileName("lalpurja_prakash_rai.pdf")
+File -> File: generateUniqueFileName()
+File -> File: setFileName("LD_12345_2023.pdf")
+File -> File: setContentType("application/pdf")
+File -> File: setFileSize(2500000)
+File -> File: setFileExtension("pdf")
+File -> File: setCategory(PROPERTY_DOCUMENT)
+File -> File: setUploadedAt(now())
+File -> File: setUploadedBy(clerkId)
+File -> File: setDescription("Original Land Ownership Certificate (Lalpurja)")
+File -> File: setVerificationStatus(PENDING_VERIFICATION)
+File -> File: setRetentionPeriodDays(36500) // 100 years
+File -> File: setStatus(ACTIVE)
+File -> File: setProcessingStatus(PENDING)
+
+Record <-- File: fileAttachmentCreated
+deactivate File
+Record -> Scanner: submitForScanning(fileId)
+activate Scanner
+Scanner -> AV: scanFile(fileContent)
+activate AV
+Scanner <-- AV: scanResult=CLEAN
+deactivate AV
+Record <-- Scanner: scanningComplete
+deactivate Scanner
+
+Record -> OCR: processDocument(fileId)
+activate OCR
+OCR -> OCR: extractText()
+OCR -> OCR: identifyFields()
+OCR -> OCR: extractLandDetails()
+note right: Extracting plot number, area, boundaries
+
+OCR -> File: updateMetadata(extractedData)
+activate File
+File -> File: setMetadata("plotNumber", "123-456-789")
+File -> File: setMetadata("area", "3-5-2-0") // Bigha-Kattha-Dhur-Dhurki
+File -> File: setMetadata("district", "Jhapa")
+File -> File: setProcessingStatus(PROCESSED)
+OCR <-- File: metadataUpdated
+deactivate File
+Record <-- OCR: processingComplete
+deactivate OCR
+
+Clerk <-- Record: documentUploaded
+deactivate Record
+
+Clerk -> Owner: Issue receipt for document submission
+
+Officer -> Record: reviewSubmittedDocument(recordId)
+activate Record
+Record -> File: getFileById(fileId)
+activate File
+Record <-- File: fileAttachment
+deactivate File
+Officer <-- Record: documentDetails
+deactivate Record
+
+Officer -> Record: verifyDocument(fileId)
+activate Record
+Record -> File: verify(officerId, "Document verified against land registry records")
+activate File
+File -> File: setVerificationStatus(VERIFIED)
+File -> File: setVerifiedBy(officerId)
+File -> File: setVerifiedAt(now())
+File -> File: addTag("verified")
+Record <-- File: documentVerified
+deactivate File
+
+Record -> Notify: sendVerificationNotification(ownerId)
+activate Notify
+Notify -> Notify: createSMS("Your land document has been verified")
+Notify -> Notify: sendEmail(ownerEmail, "Document Verification Complete")
+Record <-- Notify: notificationSent
+deactivate Notify
+Officer <-- Record: verificationComplete
+deactivate Record
+
+Owner -> Record: requestDocumentCopy()
+activate Record
+Record -> File: generateShareableLink(Duration.ofDays(7))
+activate File
+File -> File: createTemporaryAccessToken()
+File -> File: buildSecureUrl()
+Record <-- File: secureLink
+deactivate File
+Owner <-- Record: documentAccessLink
+deactivate Record
+
+note over Record, File
+  Six months later: Annual record review
+end note
+
+Clerk -> Record: updateBoundaryInformation(recordId)
+activate Record
+Record -> File: updateContent(updatedDocument, "Annual boundary verification")
+activate File
+File -> File: saveCurrentVersionAsHistory()
+File -> File: createNewVersion()
+File -> File: setVersionId(UUID.randomUUID())
+File -> File: setCreatedAt(now())
+File -> File: setCreatedBy(clerkId)
+File -> File: setReason("Annual boundary verification")
+File -> File: calculateNewChecksum()
+File -> File: setIsCurrent(true)
+Record <-- File: contentUpdated
+deactivate File
+
+Record -> Notify: notifyOwnerOfUpdate(ownerId)
+activate Notify
+Notify -> Notify: sendLegalUpdateNotification()
+Record <-- Notify: ownerNotified
+deactivate Notify
+Clerk <-- Record: documentUpdated
+deactivate Record
+
+Owner -> Record: viewDocumentHistory()
+activate Record
+Record -> File: getVersions()
+activate File
+Record <-- File: versionHistory
+deactivate File
+Owner <-- Record: documentVersionHistory
+deactivate Record
+@enduml
+----
+
+*Implementation Details:*
+The FileAttachment component in Nepal's Digital Profile system is designed to manage the critical document needs of Nepal's land administration system, with particular attention to the country's document retention requirements, verification processes, and multi-language support.
+
+In this scenario, a land owner (Prakash Rai) is submitting his land ownership certificate (commonly known as "Lalpurja" in Nepal) to a land registry office in Jhapa district. The FileAttachment component handles this process with several Nepal-specific considerations.
+
+When the land registry clerk (Krishna Sharma) receives the physical document, he creates a digital record and uploads a scanned version. The system generates a unique filename following Nepal's government document naming conventions while preserving the original filename that typically includes references to the local term "lalpurja" and the owner's name.
+
+The security scanning process reflects Nepal's increasing focus on digital security in government systems, particularly for sensitive property documents that have historically been targets for fraud. The document undergoes virus scanning before being accepted into the system—an important safeguard as Nepal's digital infrastructure develops.
+
+The OCR processing is particularly valuable in the Nepali context, as it can extract and index key information from the document, including the plot number and area measurements in Nepal's traditional land measurement units (Bigha-Kattha-Dhur-Dhurki in the Terai region). This extraction makes searching and verification more efficient across Nepal's vast land records.
+
+The retention period is set to 100 years (36,500 days), reflecting Nepal's legal requirement for extremely long-term preservation of land records, which must often be referenced across multiple generations of ownership. This long retention period acknowledges the permanent nature of land records in Nepal's legal framework.
+
+The verification process by an authorized officer (Sarita Thapa) reflects Nepal's traditional bureaucratic requirement for official endorsement of documents. The system records exactly who verified the document and when, maintaining the chain of accountability that is central to Nepal's administrative processes.
+
+When the owner requests a document copy, the system generates a temporary, secure link rather than providing unrestricted access to the document. This security measure addresses concerns about unauthorized modifications to land documents—a significant issue in Nepal's land administration history.
+
+The document versioning capabilities come into play during the annual record review, when boundary information is updated. The system maintains a complete history of the document, preserving all versions while clearly marking the current authoritative version. This versioning is crucial in Nepal's land administration context, where historical records may be needed to resolve disputes that can span decades.
+
+The system's notification capabilities ensure that the landowner is informed of document uploads, verifications, and updates—supporting Nepal's push for increased transparency in governance and land administration.
+
+This implementation acknowledges Nepal's paper-heavy administrative heritage while facilitating the transition to digital records management, with careful attention to the security, longevity, and legal requirements specific to land documents in the Nepali context.

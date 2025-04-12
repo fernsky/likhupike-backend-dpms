@@ -1,0 +1,418 @@
+===== `VersionInfo`
+Component tracking versioning information for entities with change history.
+
+[plantuml]
+----
+@startuml
+class VersionInfo {
+  +String versionNumber
+  +Integer majorVersion
+  +Integer minorVersion
+  +Integer patchVersion
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +String changeDescription
+  +VersioningStrategy strategy
+  +String previousVersion
+  +UUID previousVersionId
+  +Boolean isCurrent
+  +Map<String, Object> changeDetails
+  +Set<String> changedFields
+  +UUID baseEntityId
+  +String entityType
+  +Boolean approved
+  +UUID approvedBy
+  +LocalDateTime approvedAt
+}
+
+enum VersioningStrategy {
+  SEMANTIC
+  SEQUENTIAL
+  TIMESTAMP
+  DATE_BASED
+  CUSTOM
+}
+
+VersionInfo -- VersioningStrategy
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `versionNumber`      | Full version identifier string
+| `majorVersion`       | Major version number (for semantic versioning)
+| `minorVersion`       | Minor version number (for semantic versioning)
+| `patchVersion`       | Patch version number (for semantic versioning)
+| `createdAt`          | When this version was created
+| `createdBy`          | Who created this version
+| `changeDescription`  | Description of changes in this version
+| `strategy`           | Versioning strategy used
+| `previousVersion`    | Previous version number
+| `previousVersionId`  | UUID of previous version
+| `isCurrent`          | Whether this is the current version
+| `changeDetails`      | Detailed information about changes
+| `changedFields`      | Fields modified in this version
+| `baseEntityId`       | ID of the base entity being versioned
+| `entityType`         | Type of entity being versioned
+| `approved`           | Whether this version is approved
+| `approvedBy`         | Who approved this version
+| `approvedAt`         | When this version was approved
+|===
+
+====== VersionInfo Interface
+
+```java
+/**
+ * Represents versioning information for an entity
+ */
+public interface VersionInfo {
+    /**
+     * Get version number string
+     */
+    String getVersionNumber();
+    
+    /**
+     * Get major version number
+     */
+    Integer getMajorVersion();
+    
+    /**
+     * Get minor version number
+     */
+    Integer getMinorVersion();
+    
+    /**
+     * Get patch version number
+     */
+    Integer getPatchVersion();
+    
+    /**
+     * Get version creation timestamp
+     */
+    LocalDateTime getCreatedAt();
+    
+    /**
+     * Get who created this version
+     */
+    UUID getCreatedBy();
+    
+    /**
+     * Get description of changes
+     */
+    String getChangeDescription();
+    
+    /**
+     * Get versioning strategy
+     */
+    VersioningStrategy getStrategy();
+    
+    /**
+     * Get previous version number
+     */
+    String getPreviousVersion();
+    
+    /**
+     * Get previous version ID
+     */
+    UUID getPreviousVersionId();
+    
+    /**
+     * Check if this is the current version
+     */
+    Boolean isCurrent();
+    
+    /**
+     * Get detailed change information
+     */
+    Map<String, Object> getChangeDetails();
+    
+    /**
+     * Get fields changed in this version
+     */
+    Set<String> getChangedFields();
+    
+    /**
+     * Get ID of base entity
+     */
+    UUID getBaseEntityId();
+    
+    /**
+     * Get entity type
+     */
+    String getEntityType();
+    
+    /**
+     * Check if version is approved
+     */
+    Boolean isApproved();
+    
+    /**
+     * Get who approved this version
+     */
+    UUID getApprovedBy();
+    
+    /**
+     * Get when this version was approved
+     */
+    LocalDateTime getApprovedAt();
+    
+    /**
+     * Increment version number according to strategy
+     */
+    VersionInfo incrementVersion(VersionChangeType changeType);
+    
+    /**
+     * Calculate difference from previous version
+     */
+    VersionDiff diff(VersionInfo previousVersion);
+    
+    /**
+     * Merge changes from another version
+     */
+    VersionInfo mergeChanges(VersionInfo otherVersion);
+    
+    /**
+     * Get version history chain
+     */
+    List<VersionInfo> getVersionChain();
+    
+    /**
+     * Approve this version
+     */
+    void approve(UUID approvedBy);
+}
+
+/**
+ * Types of version changes
+ */
+public enum VersionChangeType {
+    MAJOR,    // Breaking changes
+    MINOR,    // Non-breaking feature additions
+    PATCH,    // Bug fixes and minor changes
+    REVISION  // Minimal changes
+}
+
+/**
+ * Strategies for versioning
+ */
+public enum VersioningStrategy {
+    SEMANTIC,    // Major.Minor.Patch
+    SEQUENTIAL,  // Incrementing numbers
+    TIMESTAMP,   // Based on timestamp
+    DATE_BASED,  // Based on date
+    CUSTOM       // Custom strategy
+}
+```
+
+====== Contextual Use Case for VersionInfo
+
+*Real-World Scenario:* Managing Policy Document Versions in Government System
+
+[plantuml]
+----
+@startuml
+actor "Policy Analyst\n(Ramesh Basnet)" as Analyst
+actor "Department Head\n(Dr. Kavita Rana)" as Head
+actor "Ministry Secretary\n(Bishnu Paudel)" as Secretary
+participant "PolicyDocument" as Policy
+participant "VersionInfo" as Version
+participant "DiffService" as Diff
+participant "ApprovalWorkflow" as Approval
+participant "AuditService" as Audit
+
+Analyst -> Policy: createNewPolicy("Land Registration Guidelines")
+activate Policy
+Policy -> Version: initialize()
+activate Version
+Version -> Version: setStrategy(SEMANTIC)
+Version -> Version: setVersionNumber("1.0.0")
+Version -> Version: setMajorVersion(1)
+Version -> Version: setMinorVersion(0)
+Version -> Version: setPatchVersion(0)
+Version -> Version: setCreatedAt(now())
+Version -> Version: setCreatedBy(analystId)
+Version -> Version: setEntityType("PolicyDocument")
+Version -> Version: setIsCurrent(true)
+Policy <-- Version: initialVersion
+deactivate Version
+Analyst <-- Policy: policyCreated
+deactivate Policy
+
+Analyst -> Policy: submitForReview()
+activate Policy
+Policy -> Approval: createApprovalRequest(policyId, "Initial review")
+activate Approval
+Policy <-- Approval: approvalRequest
+deactivate Approval
+Analyst <-- Policy: submittedForReview
+deactivate Policy
+
+Head -> Policy: reviewPolicy()
+activate Policy
+Head -> Policy: approveInitialVersion()
+Policy -> Version: approve(headId)
+activate Version
+Version -> Version: setApproved(true)
+Version -> Version: setApprovedBy(headId)
+Version -> Version: setApprovedAt(now())
+Policy <-- Version: versionApproved
+deactivate Version
+Head <-- Policy: policyApproved
+deactivate Policy
+
+Head -> Policy: publishPolicy()
+activate Policy
+Policy -> Policy: setStatus(PUBLISHED)
+Policy -> Audit: logPublication(policyId, "1.0.0", headId)
+Head <-- Policy: policyPublished
+deactivate Policy
+
+note right
+  Six months later, policy revisions needed
+end note
+
+Analyst -> Policy: createRevision()
+activate Policy
+Policy -> Version: getLatestVersion()
+activate Version
+Policy <-- Version: version="1.0.0"
+deactivate Version
+Policy -> Policy: createWorkingCopy()
+Analyst <-- Policy: workingCopyCreated
+deactivate Policy
+
+Analyst -> Policy: updateSection("Registration Process")
+activate Policy
+Policy -> Policy: modifyContent(sectionId, newContent)
+Policy -> Version: incrementVersion(MINOR)
+activate Version
+Version -> Version: createNewVersion()
+Version -> Version: setVersionNumber("1.1.0")
+Version -> Version: setMajorVersion(1)
+Version -> Version: setMinorVersion(1)
+Version -> Version: setPatchVersion(0)
+Version -> Version: setCreatedAt(now())
+Version -> Version: setCreatedBy(analystId)
+Version -> Version: setPreviousVersion("1.0.0")
+Version -> Version: setPreviousVersionId(v1Id)
+Version -> Version: setChangeDescription("Updated registration process to simplify steps")
+Version -> Version: setChangedFields(["content.section3"])
+Version -> Version: setIsCurrent(true)
+Version -> Version: markPreviousAsNonCurrent()
+Policy <-- Version: newVersion
+deactivate Version
+Analyst <-- Policy: sectionUpdated
+deactivate Policy
+
+Head -> Policy: compareVersions("1.0.0", "1.1.0")
+activate Policy
+Policy -> Diff: generateDiff(v1, v1_1)
+activate Diff
+Diff -> Diff: compareContent()
+Diff -> Diff: highlightChanges()
+Policy <-- Diff: diffResult
+deactivate Diff
+Head <-- Policy: versionDifference
+deactivate Policy
+
+Head -> Policy: requestRevisions("Clarify appeal process")
+activate Policy
+Policy -> Version: getLatestVersion()
+activate Version
+Policy <-- Version: version="1.1.0"
+deactivate Version
+Head <-- Policy: currentDraft
+deactivate Policy
+
+Analyst -> Policy: applyFeedback()
+activate Policy
+Policy -> Policy: updateContent(feedbackChanges)
+Policy -> Version: incrementVersion(PATCH)
+activate Version
+Version -> Version: createNewVersion()
+Version -> Version: setVersionNumber("1.1.1")
+Version -> Version: setMajorVersion(1)
+Version -> Version: setMinorVersion(1)
+Version -> Version: setPatchVersion(1)
+Version -> Version: setPreviousVersion("1.1.0")
+Version -> Version: setPreviousVersionId(v1_1Id)
+Version -> Version: setChangeDescription("Clarified appeal process as requested")
+Version -> Version: setChangedFields(["content.section3.appeals"])
+Policy <-- Version: newVersion
+deactivate Version
+Analyst <-- Policy: feedbackApplied
+deactivate Policy
+
+Head -> Policy: approveRevision()
+activate Policy
+Policy -> Version: approve(headId)
+activate Version
+Version -> Version: setApproved(true)
+Version -> Version: setApprovedBy(headId)
+Version -> Version: setApprovedAt(now())
+Policy <-- Version: versionApproved
+deactivate Version
+Head <-- Policy: revisionApproved
+deactivate Policy
+
+Head -> Policy: forwardToSecretary()
+activate Policy
+Policy -> Approval: createFinalApprovalRequest(policyId, "1.1.1")
+activate Approval
+Policy <-- Approval: finalApprovalRequest
+deactivate Approval
+Head <-- Policy: forwardedToSecretary
+deactivate Policy
+
+Secretary -> Policy: reviewPolicy()
+activate Policy
+Secretary -> Diff: compareWithPublished("1.0.0", "1.1.1")
+activate Diff
+Secretary <-- Diff: comprehensiveDiff
+deactivate Diff
+Policy <-- Secretary: review
+deactivate Policy
+
+Secretary -> Policy: approveAndPublish()
+activate Policy
+Policy -> Version: getLatestVersion()
+activate Version
+Policy <-- Version: version="1.1.1"
+deactivate Version
+Policy -> Policy: setStatus(PUBLISHED)
+Policy -> Audit: logPublication(policyId, "1.1.1", secretaryId)
+Secretary <-- Policy: versionPublished
+deactivate Policy
+
+Analyst -> Policy: viewVersionHistory()
+activate Policy
+Policy -> Version: getVersionChain()
+activate Version
+Policy <-- Version: versionHistory=[v1_1_1, v1_1, v1]
+deactivate Version
+Analyst <-- Policy: completeVersionHistory
+deactivate Policy
+@enduml
+----
+
+*Implementation Details:*
+The VersionInfo component in Nepal's Digital Profile system manages document versioning with careful attention to governmental approval workflows and the multi-tiered decision-making processes characteristic of Nepal's bureaucracy.
+
+In this scenario, the Land Management Ministry is developing and maintaining "Land Registration Guidelines," a policy document that standardizes land registration procedures across Nepal. This type of policy document undergoes meticulous version control as it passes through multiple levels of government review and approval.
+
+The system initializes the document with semantic versioning (1.0.0), which aligns with Nepal's documentation practices for policy documents. The VersionInfo component tracks not just version numbers but also approval status—critical in Nepal's governance context where policies require formal approval at multiple levels before implementation.
+
+When policy analyst Ramesh Basnet creates a revision six months later to simplify the registration process, the VersionInfo component increments to version 1.1.0, indicating a minor change that adds functionality without breaking existing processes. The component stores precisely which sections were modified ("content.section3") and maintains a link to the previous version, creating an auditable chain of policy evolution.
+
+The Department Head, Dr. Kavita Rana, uses the VersionInfo's diff capabilities to compare the original published version (1.0.0) with the proposed revision (1.1.0). This comparison highlights specific changes, allowing for targeted review—essential for busy government officials who must efficiently review policy changes.
+
+When Dr. Rana requests clarification on the appeals process, Ramesh makes these changes, and the VersionInfo component increments to version 1.1.1, indicating a patch-level change that doesn't add new functionality but clarifies existing content. This level of detail in version tracking is particularly valuable in Nepal's legal context, where the precise wording of administrative procedures can have significant implications for citizens' rights.
+
+The approval workflow is carefully tracked in the VersionInfo component, capturing who approved each version and when. This creates accountability in the policy development process, with a clear record of which officials endorsed specific versions—an important governance consideration in Nepal's public administration.
+
+When Ministry Secretary Bishnu Paudel conducts the final review, he can see a comprehensive history of the document's evolution, who made which changes, and who has already approved them. This transparency supports Nepal's bureaucratic hierarchy while preventing unauthorized changes to important policy documents.
+
+The VersionInfo component ensures that only one version is marked as current (`isCurrent=true`), maintaining clarity about which version is authoritative—critical for land administration where officials across Nepal's 77 districts must reference the correct procedures. When new versions are published, previous versions remain accessible for reference and audit purposes but are clearly marked as superseded.
+
+This version control implementation acknowledges Nepal's formal hierarchical approval processes while providing mechanisms to efficiently track changes, streamline reviews, and maintain authoritative policy documents that guide government operations.

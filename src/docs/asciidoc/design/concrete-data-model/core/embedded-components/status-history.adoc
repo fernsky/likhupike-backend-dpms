@@ -1,0 +1,393 @@
+===== `StatusHistory`
+Component for tracking and managing status changes over time.
+
+[plantuml]
+----
+@startuml
+class StatusHistory {
+  +List<StatusChange> statusChanges
+  +StatusChange currentStatus
+  +LocalDateTime lastUpdated
+  +UUID lastUpdatedBy
+  +String notes
+  +Map<String, Object> metadata
+  +Boolean isTerminal
+  +Map<String, String> allowedTransitions
+  +Boolean enforceTransitionRules
+  +List<StatusTransitionRule> transitionRules
+}
+
+class StatusChange {
+  +String fromStatus
+  +String toStatus
+  +LocalDateTime changedAt
+  +UUID changedBy
+  +String reason
+  +String actor
+  +TransitionType transitionType
+  +Boolean isAutomatic
+  +Map<String, Object> additionalData
+}
+
+class StatusTransitionRule {
+  +String fromStatus
+  +String toStatus
+  +Boolean isAllowed
+  +List<String> requiredRoles
+  +List<String> conditions
+  +Integer gracePeriodDays
+  +String description
+  +Boolean requiresApproval
+  +String escalationPath
+}
+
+enum TransitionType {
+  NORMAL
+  ESCALATION
+  AUTOMATION
+  OVERRIDE
+  REVERSION
+  EXPIRATION
+  DELEGATION
+}
+
+StatusHistory o-- StatusChange
+StatusHistory o-- StatusTransitionRule
+StatusChange -- TransitionType
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `statusChanges`       | Chronological list of all status changes
+| `currentStatus`       | The current status change record
+| `lastUpdated`         | When the status was last updated
+| `lastUpdatedBy`       | Who last updated the status
+| `notes`               | Additional notes about the status
+| `metadata`            | Extra status-related metadata
+| `isTerminal`          | Whether the current status is a terminal state
+| `allowedTransitions`  | Map of allowed status transitions
+| `enforceTransitionRules` | Whether to enforce transition rules
+| `transitionRules`     | Rules governing status transitions
+|===
+
+====== StatusHistory Interface
+
+```java
+/**
+ * Represents a history of status changes for an entity
+ */
+public interface StatusHistory {
+    /**
+     * Get all status changes
+     */
+    List<StatusChange> getStatusChanges();
+    
+    /**
+     * Get current status change
+     */
+    StatusChange getCurrentStatus();
+    
+    /**
+     * Get when last updated
+     */
+    LocalDateTime getLastUpdated();
+    
+    /**
+     * Get who last updated status
+     */
+    UUID getLastUpdatedBy();
+    
+    /**
+     * Get status notes
+     */
+    String getNotes();
+    
+    /**
+     * Get status metadata
+     */
+    Map<String, Object> getMetadata();
+    
+    /**
+     * Check if current status is terminal
+     */
+    Boolean isTerminal();
+    
+    /**
+     * Get allowed status transitions
+     */
+    Map<String, String> getAllowedTransitions();
+    
+    /**
+     * Check if transitions rules are enforced
+     */
+    Boolean enforceTransitionRules();
+    
+    /**
+     * Get transitions rules
+     */
+    List<StatusTransitionRule> getTransitionRules();
+    
+    /**
+     * Change status to a new status
+     */
+    StatusChange changeStatus(String newStatus, String reason, UUID actor);
+    
+    /**
+     * Check if a specific transition is allowed
+     */
+    boolean isTransitionAllowed(String fromStatus, String toStatus);
+    
+    /**
+     * Get the status at a specific point in time
+     */
+    String getStatusAt(LocalDateTime timestamp);
+    
+    /**
+     * Get the time spent in a specific status
+     */
+    Duration getTimeInStatus(String status);
+    
+    /**
+     * Get the average time spent in each status
+     */
+    Map<String, Duration> getAverageTimeInStatus();
+    
+    /**
+     * Get the total time since first status
+     */
+    Duration getTotalTime();
+    
+    /**
+     * Add a transition rule
+     */
+    void addTransitionRule(StatusTransitionRule rule);
+}
+
+/**
+ * Represents a single status change
+ */
+public interface StatusChange {
+    /**
+     * Get previous status
+     */
+    String getFromStatus();
+    
+    /**
+     * Get new status
+     */
+    String getToStatus();
+    
+    /**
+     * Get when the change occurred
+     */
+    LocalDateTime getChangedAt();
+    
+    /**
+     * Get who made the change
+     */
+    UUID getChangedBy();
+    
+    /**
+     * Get reason for the change
+     */
+    String getReason();
+    
+    /**
+     * Get actor who initiated the change
+     */
+    String getActor();
+    
+    /**
+     * Get type of transition
+     */
+    TransitionType getTransitionType();
+    
+    /**
+     * Check if change was automatic
+     */
+    Boolean isAutomatic();
+    
+    /**
+     * Get additional data about the change
+     */
+    Map<String, Object> getAdditionalData();
+}
+
+/**
+ * Types of status transitions
+ */
+public enum TransitionType {
+    NORMAL,      // Standard status change
+    ESCALATION,  // Status change due to escalation
+    AUTOMATION,  // Automatically triggered change
+    OVERRIDE,    // Change that overrides normal rules
+    REVERSION,   // Change back to a previous status
+    EXPIRATION,  // Change due to time expiration
+    DELEGATION   // Change delegated to another actor
+}
+```
+
+====== Contextual Use Case for StatusHistory
+
+*Real-World Scenario:* Document Verification Workflow in Nepal Government
+
+[plantuml]
+----
+@startuml
+actor "Document Submission\nClerk" as Clerk
+actor "Verification\nOfficer" as VerifyOfficer
+actor "Senior\nOfficer" as SeniorOfficer
+actor "Applicant\n(Birendra Oli)" as Applicant
+participant "DocumentVerification" as DocVerify
+participant "StatusHistory" as Status
+participant "RulesEngine" as Rules
+participant "NotificationService" as Notify
+participant "AuditService" as Audit
+
+Applicant -> Clerk: Submit land ownership document
+Clerk -> DocVerify: createVerificationRequest()
+activate DocVerify
+
+DocVerify -> Status: initialize()
+activate Status
+Status -> Status: setInitialStatus("SUBMITTED")
+Status -> Status: createInitialStatusChange(from=null, to="SUBMITTED")
+Status -> Status: setLastUpdated(now())
+Status -> Status: setLastUpdatedBy(clerkId)
+DocVerify <-- Status: statusHistory
+deactivate Status
+
+Clerk -> DocVerify: assignToVerificationOfficer(officerId)
+DocVerify -> Status: changeStatus("IN_REVIEW", "Assigned for verification", clerkId)
+activate Status
+Status -> Rules: isTransitionAllowed("SUBMITTED", "IN_REVIEW")
+activate Rules
+Status <-- Rules: allowed=true
+deactivate Rules
+Status -> Status: createStatusChange(from="SUBMITTED", to="IN_REVIEW")
+Status -> Status: addMetadata("assignedTo", officerId)
+DocVerify <-- Status: statusUpdated
+deactivate Status
+
+DocVerify -> Notify: sendAssignmentNotification(officerId)
+DocVerify -> Audit: logStatusChange(documentId, "SUBMITTED", "IN_REVIEW", clerkId)
+Clerk <-- DocVerify: verificationCreated
+deactivate DocVerify
+
+VerifyOfficer -> DocVerify: reviewDocument()
+activate DocVerify
+DocVerify -> Status: getCurrentStatus()
+activate Status
+DocVerify <-- Status: current="IN_REVIEW"
+deactivate Status
+
+VerifyOfficer -> DocVerify: requestAdditionalDocuments()
+DocVerify -> Status: changeStatus("ADDITIONAL_DOCS_REQUESTED", "Property sketch missing", officerId)
+activate Status
+Status -> Rules: isTransitionAllowed("IN_REVIEW", "ADDITIONAL_DOCS_REQUESTED")
+activate Rules
+Status <-- Rules: allowed=true
+deactivate Rules
+Status -> Status: createStatusChange(from="IN_REVIEW", to="ADDITIONAL_DOCS_REQUESTED")
+Status -> Status: setNotes("Missing property sketch and neighbor consent")
+DocVerify <-- Status: statusUpdated
+deactivate Status
+
+DocVerify -> Notify: notifyApplicant(applicantId, "ADDITIONAL_DOCS_REQUESTED")
+VerifyOfficer <-- DocVerify: additionalDocsRequested
+deactivate DocVerify
+
+Applicant -> Clerk: Submit additional documents
+Clerk -> DocVerify: recordAdditionalDocuments()
+activate DocVerify
+DocVerify -> Status: changeStatus("IN_REVIEW", "Additional documents received", clerkId)
+activate Status
+Status -> Rules: isTransitionAllowed("ADDITIONAL_DOCS_REQUESTED", "IN_REVIEW")
+activate Rules
+Status <-- Rules: allowed=true
+deactivate Rules
+Status -> Status: createStatusChange(from="ADDITIONAL_DOCS_REQUESTED", to="IN_REVIEW")
+DocVerify <-- Status: statusUpdated
+deactivate Status
+Clerk <-- DocVerify: documentUpdated
+deactivate DocVerify
+
+VerifyOfficer -> DocVerify: verifyDocument(result)
+activate DocVerify
+DocVerify -> Status: changeStatus("VERIFIED", "All documents validated", officerId)
+activate Status
+Status -> Rules: isTransitionAllowed("IN_REVIEW", "VERIFIED")
+activate Rules
+Status <-- Rules: allowed=true
+deactivate Rules
+Status -> Status: createStatusChange(from="IN_REVIEW", to="VERIFIED")
+Status -> Status: setAdditionalData(verificationDetails)
+DocVerify <-- Status: statusUpdated
+deactivate Status
+DocVerify -> Notify: notifyApprovalOfficer(seniorOfficerId)
+VerifyOfficer <-- DocVerify: documentVerified
+deactivate DocVerify
+
+SeniorOfficer -> DocVerify: reviewVerification()
+activate DocVerify
+DocVerify -> Status: getStatusHistory()
+activate Status
+DocVerify <-- Status: fullStatusHistory
+deactivate Status
+
+SeniorOfficer -> DocVerify: approveDocument()
+DocVerify -> Status: changeStatus("APPROVED", "Verification approved", seniorOfficerId)
+activate Status
+Status -> Rules: isTransitionAllowed("VERIFIED", "APPROVED")
+activate Rules
+Status <-- Rules: allowed=true
+deactivate Rules
+Status -> Status: createStatusChange(from="VERIFIED", to="APPROVED")
+Status -> Status: setIsTerminal(true)
+DocVerify <-- Status: statusUpdated
+deactivate Status
+
+DocVerify -> Notify: notifyApplicant(applicantId, "APPROVED")
+DocVerify -> Audit: logFinalStatus(documentId, "APPROVED", seniorOfficerId)
+SeniorOfficer <-- DocVerify: documentApproved
+deactivate DocVerify
+
+Applicant -> DocVerify: checkDocumentStatus()
+activate DocVerify
+DocVerify -> Status: getCurrentStatus()
+activate Status
+DocVerify <-- Status: current="APPROVED"
+deactivate Status
+DocVerify -> Status: getTimeInStatus("IN_REVIEW")
+activate Status
+DocVerify <-- Status: duration=4 days, 3 hours
+deactivate Status
+DocVerify -> Status: getTotalTime()
+activate Status
+DocVerify <-- Status: duration=12 days, 5 hours
+deactivate Status
+Applicant <-- DocVerify: status="APPROVED", processingTime="12 days, 5 hours"
+deactivate DocVerify
+@enduml
+----
+
+*Implementation Details:*
+The StatusHistory component in Nepal's Digital Profile system manages the complex workflow states common in government document processing, reflecting Nepal's multi-tiered verification processes and hierarchical approval structures.
+
+In this scenario, land ownership document verification is being processed for Birendra Oli, a farmer from Chitwan district. Government document verification in Nepal typically follows a hierarchical process with multiple checkpoints, and the StatusHistory component tracks this entire journey while enforcing proper transitions.
+
+The component captures the initial submission status when the document is first received at the Land Revenue Office. A key aspect of Nepal's bureaucratic processes is the clear assignment of responsibility at each stage, which the StatusHistory component tracks through the `changedBy` field and assignment metadata. This accountability is critically important in Nepal's governance systems, where traceability of decisions helps prevent corruption in document processing.
+
+When the Verification Officer requests additional documents - a common occurrence in Nepal's land documentation system where supporting evidence like neighbor consent forms are frequently required - the StatusHistory creates a new status change, recording both the change and the specific reason. The component's metadata capabilities store exactly which documents were requested, creating a paper trail that helps prevent repeated requests for the same documents - a historical issue in Nepali bureaucracy that the digital system aims to solve.
+
+The system enforces proper workflow transitions through the RulesEngine integration, preventing officers from improperly advancing documents through the process. For example, documents cannot jump from "SUBMITTED" directly to "APPROVED" without going through proper verification steps, reinforcing governance protocols and reducing opportunities for improper processing.
+
+Each status change is timestamped, allowing the system to calculate the time spent in each status. This enables performance measurement for government offices, supporting Nepal's Public Service Commission's efforts to improve efficiency in document processing. The StatusHistory data can identify bottlenecks in specific offices or regions, allowing targeted interventions to improve service delivery.
+
+The terminal state tracking is particularly important for land documents, which in Nepal require final approval from authorized senior officers before being considered legally valid. The `isTerminal` flag ensures that once a document reaches this state, it cannot be further modified except through formal correction processes, providing data integrity for these critical legal records.
+
+The StatusHistory component provides transparency to citizens like Birendra, who can see exactly where their document is in the process and how long each stage has taken. This transparency is aligned with Nepal's Right to Information Act and addresses historical challenges of uncertainty in government processing timelines.
+
+This implementation acknowledges Nepal's formal hierarchical approval processes while providing the digital infrastructure to make these processes more efficient, transparent, and accountable.
