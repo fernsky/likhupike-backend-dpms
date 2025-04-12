@@ -1,0 +1,436 @@
+===== `SEOAttributes`
+Component for managing search engine optimization attributes for public-facing content.
+
+[plantuml]
+----
+@startuml
+class SEOAttributes {
+  +String pageTitle
+  +String metaDescription
+  +Set<String> metaKeywords
+  +String canonicalUrl
+  +Map<String, String> openGraphTags
+  +Map<String, String> twitterCards
+  +String structuredData
+  +String robots
+  +Map<String, String> localizedTitles
+  +Map<String, String> localizedDescriptions
+  +Map<String, Set<String>> localizedKeywords
+  +Map<String, String> hreflangs
+  +String focusKeyword
+  +Integer seoScore
+  +SEOStatus status
+  +String slug
+  +String breadcrumb
+  +Map<String, String> customMetaTags
+  +LocalDateTime lastUpdated
+  +UUID lastUpdatedBy
+}
+
+enum SEOStatus {
+  OPTIMIZED
+  NEEDS_IMPROVEMENT
+  POOR
+  NOT_ANALYZED
+  DRAFT
+}
+
+class LocalizedSEO {
+  +String locale
+  +String title
+  +String description
+  +Set<String> keywords
+  +String focusKeyword
+}
+
+SEOAttributes -- SEOStatus
+SEOAttributes -- LocalizedSEO
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `pageTitle`            | Title tag content for the page
+| `metaDescription`      | Meta description content
+| `metaKeywords`         | Keywords for search engines
+| `canonicalUrl`         | Canonical URL for the page
+| `openGraphTags`        | Open Graph protocol tags
+| `twitterCards`         | Twitter card metadata
+| `structuredData`       | JSON-LD structured data
+| `robots`               | Robots meta tag directives
+| `localizedTitles`      | Page titles in different languages
+| `localizedDescriptions`| Descriptions in different languages
+| `localizedKeywords`    | Keywords in different languages
+| `hreflangs`            | Language alternatives for the page
+| `focusKeyword`         | Primary keyword for optimization
+| `seoScore`             | SEO quality score (0-100)
+| `status`               | SEO optimization status
+| `slug`                 | URL-friendly version of the title
+| `breadcrumb`           | Breadcrumb trail for the page
+| `customMetaTags`       | Additional custom meta tags
+| `lastUpdated`          | When SEO attributes were last updated
+| `lastUpdatedBy`        | Who last updated SEO attributes
+|===
+
+====== SEOAttributes Interface
+
+```java
+/**
+ * Represents SEO attributes for content
+ */
+public interface SEOAttributes {
+    /**
+     * Get page title
+     */
+    String getPageTitle();
+    
+    /**
+     * Get meta description
+     */
+    String getMetaDescription();
+    
+    /**
+     * Get meta keywords
+     */
+    Set<String> getMetaKeywords();
+    
+    /**
+     * Get canonical URL
+     */
+    String getCanonicalUrl();
+    
+    /**
+     * Get Open Graph tags
+     */
+    Map<String, String> getOpenGraphTags();
+    
+    /**
+     * Get Twitter Card tags
+     */
+    Map<String, String> getTwitterCards();
+    
+    /**
+     * Get structured data
+     */
+    String getStructuredData();
+    
+    /**
+     * Get robots directives
+     */
+    String getRobots();
+    
+    /**
+     * Get localized titles
+     */
+    Map<String, String> getLocalizedTitles();
+    
+    /**
+     * Get localized descriptions
+     */
+    Map<String, String> getLocalizedDescriptions();
+    
+    /**
+     * Get localized keywords
+     */
+    Map<String, Set<String>> getLocalizedKeywords();
+    
+    /**
+     * Get hreflang values
+     */
+    Map<String, String> getHreflangs();
+    
+    /**
+     * Get focus keyword
+     */
+    String getFocusKeyword();
+    
+    /**
+     * Get SEO score
+     */
+    Integer getSeoScore();
+    
+    /**
+     * Get SEO status
+     */
+    SEOStatus getStatus();
+    
+    /**
+     * Get URL slug
+     */
+    String getSlug();
+    
+    /**
+     * Get breadcrumb trail
+     */
+    String getBreadcrumb();
+    
+    /**
+     * Get custom meta tags
+     */
+    Map<String, String> getCustomMetaTags();
+    
+    /**
+     * Get last update timestamp
+     */
+    LocalDateTime getLastUpdated();
+    
+    /**
+     * Get ID of last updater
+     */
+    UUID getLastUpdatedBy();
+    
+    /**
+     * Set localized SEO attributes
+     */
+    void setLocalizedAttributes(String locale, LocalizedSEO attributes);
+    
+    /**
+     * Generate HTML meta tags
+     */
+    String generateMetaTags();
+    
+    /**
+     * Generate slug from title
+     */
+    void generateSlug();
+    
+    /**
+     * Analyze SEO quality
+     */
+    Integer analyzeSeoQuality();
+    
+    /**
+     * Get SEO attributes for a specific locale
+     */
+    LocalizedSEO getLocalizedAttributes(String locale);
+    
+    /**
+     * Add custom meta tag
+     */
+    void addCustomMetaTag(String name, String content);
+    
+    /**
+     * Generate breadcrumb trail
+     */
+    void generateBreadcrumb(List<String> pathSegments);
+}
+
+/**
+ * Localized SEO attributes
+ */
+public interface LocalizedSEO {
+    /**
+     * Get locale
+     */
+    String getLocale();
+    
+    /**
+     * Get localized title
+     */
+    String getTitle();
+    
+    /**
+     * Get localized description
+     */
+    String getDescription();
+    
+    /**
+     * Get localized keywords
+     */
+    Set<String> getKeywords();
+    
+    /**
+     * Get localized focus keyword
+     */
+    String getFocusKeyword();
+}
+
+/**
+ * SEO optimization status
+ */
+public enum SEOStatus {
+    OPTIMIZED,          // Fully optimized
+    NEEDS_IMPROVEMENT,  // Some issues to fix
+    POOR,               // Many SEO issues
+    NOT_ANALYZED,       // Not yet analyzed
+    DRAFT               // Content is in draft
+}
+```
+
+====== Contextual Use Case for SEOAttributes
+
+*Real-World Scenario:* Digital Land Portal SEO Management in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Content Manager\n(Anita Gurung)" as Manager
+actor "Government Portal\nAdministrator" as Admin
+actor "Citizen\n(searching online)" as Citizen
+participant "LandPortalPage" as Portal
+participant "SEOAttributes" as SEO
+participant "LocalizationService" as Local
+participant "SEOAnalysisService" as Analysis
+participant "SearchEngineService" as Search
+
+Manager -> Portal: createLandRegistrationGuidePage()
+activate Portal
+Portal -> Portal: initializePageContent()
+Portal -> SEO: create()
+activate SEO
+SEO -> SEO: setPageTitle("Land Registration Process in Nepal - Official Guide")
+SEO -> SEO: setMetaDescription("Complete official guide to registering land in Nepal: required documents, fees, and step-by-step procedures for property registration.")
+SEO -> SEO: setMetaKeywords(["land registration", "property registration", "Nepal land records", "Lalpurja"])
+SEO -> SEO: setCanonicalUrl("https://landportal.gov.np/registration-guide")
+SEO -> SEO: setFocusKeyword("land registration Nepal")
+SEO -> SEO: generateSlug()
+SEO -> SEO: setSlug("land-registration-process-nepal")
+SEO -> SEO: setStatus(DRAFT)
+SEO -> SEO: setOpenGraphTags(title, description, image)
+SEO -> SEO: setTwitterCards(title, description, image)
+SEO -> SEO: setRobots("index, follow")
+Portal <-- SEO: seoAttributesInitialized
+deactivate SEO
+Manager <-- Portal: pageCreated
+deactivate Portal
+
+Manager -> Portal: addNepaliLanguageVersion()
+activate Portal
+Portal -> Local: getTranslations("land-registration-guide")
+activate Local
+Portal <-- Local: nepaliTranslations
+deactivate Local
+
+Portal -> SEO: setLocalizedAttributes("ne_NP", nepaliSEO)
+activate SEO
+SEO -> SEO: setLocalizedTitle("ne_NP", "नेपालमा जग्गा दर्ता प्रक्रिया - आधिकारिक निर्देशिका")
+SEO -> SEO: setLocalizedDescription("ne_NP", "नेपालमा जग्गा दर्ता गर्ने पूर्ण आधिकारिक मार्गदर्शन: आवश्यक कागजात, शुल्क, र सम्पत्ति दर्ताको लागि चरण-चरण प्रक्रियाहरू।")
+SEO -> SEO: setLocalizedKeywords("ne_NP", ["जग्गा दर्ता", "सम्पत्ति दर्ता", "नेपाल भूमि अभिलेख", "लालपुर्जा"])
+SEO -> SEO: setLocalizedFocusKeyword("ne_NP", "नेपालमा जग्गा दर्ता")
+SEO -> SEO: updateHreflang("ne_NP", "/ne/jagga-darta-prakriya-nepal")
+Portal <-- SEO: localizationAdded
+deactivate SEO
+Manager <-- Portal: nepaliVersionAdded
+deactivate Portal
+
+Manager -> Portal: addStructuredData()
+activate Portal
+Portal -> SEO: setStructuredData(jsonLdData)
+activate SEO
+SEO -> SEO: parseAndValidateJsonLd()
+SEO -> SEO: storeStructuredData()
+Portal <-- SEO: structuredDataAdded
+deactivate SEO
+Manager <-- Portal: structuredDataAdded
+deactivate Portal
+
+Manager -> Portal: analyzeSEO()
+activate Portal
+Portal -> SEO: analyzeSeoQuality()
+activate SEO
+SEO -> Analysis: analyze(seoAttributes)
+activate Analysis
+Analysis -> Analysis: checkTitleLength()
+Analysis -> Analysis: checkDescriptionLength()
+Analysis -> Analysis: checkKeywordDensity()
+Analysis -> Analysis: checkSlugQuality()
+Analysis -> Analysis: checkMobileFriendliness()
+Analysis -> Analysis: evaluateContentQuality()
+SEO <-- Analysis: score=85, recommendations
+deactivate Analysis
+SEO -> SEO: setSeoScore(85)
+SEO -> SEO: setStatus(NEEDS_IMPROVEMENT)
+Portal <-- SEO: analysisResults
+deactivate SEO
+Manager <-- Portal: seoAnalysisReport
+deactivate Portal
+
+Manager -> Portal: applyRecommendations()
+activate Portal
+Portal -> SEO: updateMetaTags()
+activate SEO
+SEO -> SEO: enhanceKeywords()
+SEO -> SEO: improveMetaDescription()
+SEO -> SEO: updateLastUpdated(now())
+SEO -> SEO: updateLastUpdatedBy(managerId)
+Portal <-- SEO: metaTagsUpdated
+deactivate SEO
+Manager <-- Portal: recommendationsApplied
+deactivate Portal
+
+Manager -> Portal: finalizeAndPublish()
+activate Portal
+Portal -> SEO: setStatus(OPTIMIZED)
+activate SEO
+SEO -> SEO: generateBreadcrumb(["Home", "Services", "Land Registration"])
+SEO -> SEO: finalizeMetaTags()
+Portal <-- SEO: seoFinalized
+deactivate SEO
+Portal -> Portal: publishPage()
+Manager <-- Portal: pagePublished
+deactivate Portal
+
+Admin -> Portal: generateSitemap()
+activate Portal
+Portal -> SEO: getSitemapEntry()
+activate SEO
+SEO -> SEO: buildSitemapXml()
+Portal <-- SEO: sitemapEntry
+deactivate SEO
+Admin <-- Portal: sitemapGenerated
+deactivate Portal
+
+Admin -> Search: submitSitemapToSearchEngines()
+activate Search
+Search -> Search: notifyGoogleOfUpdate()
+Search -> Search: notifyBingOfUpdate()
+Admin <-- Search: submissionConfirmed
+deactivate Search
+
+Citizen -> Search: searchForLandRegistrationProcess
+activate Search
+Search -> Search: processQuery()
+Search -> Portal: crawlPage()
+activate Portal
+Portal -> SEO: getMetaTags()
+activate SEO
+Portal <-- SEO: metaTags
+deactivate SEO
+Search <-- Portal: pageContent
+deactivate Portal
+Citizen <-- Search: searchResultsWithPortalPage
+deactivate Search
+
+Citizen -> Portal: viewPage(language="ne_NP")
+activate Portal
+Portal -> SEO: getLocalizedAttributes("ne_NP")
+activate SEO
+Portal <-- SEO: nepaliSeoAttributes
+deactivate SEO
+Portal -> Portal: renderLocalizedContent()
+Citizen <-- Portal: nepaliVersionOfPage
+deactivate Portal
+@enduml
+----
+
+*Implementation Details:*
+The SEOAttributes component in Nepal's Digital Profile system is designed to optimize the discoverability and accessibility of public-facing content, with specific adaptations for Nepal's multilingual environment and local search engine usage patterns.
+
+In this scenario, a Content Manager (Anita Gurung) at the Department of Land Management is creating and optimizing a guide page about land registration processes for Nepal's Digital Land Portal. This page needs to be discoverable by citizens searching online for information about land registration procedures.
+
+The system initially creates SEO attributes with carefully crafted English-language metadata. The title and description emphasize official status ("Official Guide") to distinguish this authoritative government source from numerous unofficial guides, addressing a common issue in Nepal where citizens struggle to identify official government information online. The keywords include both formal terms ("property registration") and colloquial terms commonly used in Nepal ("Lalpurja" - the local term for land ownership certificates), increasing discoverability for citizens using various search terms.
+
+A critical feature for Nepal's context is the robust multilingual support. When the Content Manager adds a Nepali language version, the SEOAttributes component stores parallel metadata in Nepali, including title, description, and keywords. The system implements proper hreflang annotations to indicate language alternatives, ensuring search engines understand the relationship between the English and Nepali versions. This bilingual implementation acknowledges Nepal's constitutional recognition of both languages and ensures content is accessible to citizens regardless of language preference.
+
+The localized keywords in Nepali include terms commonly used in local dialect ("जग्गा दर्ता", "लालपुर्जा") rather than literal translations of English terms, reflecting how Nepali-speaking citizens actually search online. This cultural adaptation improves local search relevance significantly.
+
+The structured data implementation follows JSON-LD format and includes government organization schema markup, establishing the page's official status and connection to the Nepal government. This helps search engines highlight this content as authoritative in government-related searches.
+
+The SEO analysis process evaluates content quality using parameters relevant to Nepal's digital environment, including mobile-friendliness (essential as over 90% of Nepal's internet users access via mobile devices) and keyword density of terms common in Nepali search patterns.
+
+When the Portal Administrator generates a sitemap and submits it to search engines, the system prioritizes Google (dominant in Nepal) but also notifies other search engines like Bing. The sitemap includes both language versions with appropriate language tags, ensuring proper indexing of the multilingual content.
+
+When a citizen searches for land registration information, the optimized metadata helps the official portal appear prominently in search results. If they select the Nepali version, the system serves the content with all Nepali metadata, providing a fully localized experience.
+
+This implementation acknowledges Nepal's digital reality: a multilingual user base with varying digital literacy levels, who need to find official government information amid numerous unofficial sources. The SEO attributes help bridge this gap by making authoritative content more discoverable through thoughtful optimization for both English and Nepali search patterns.

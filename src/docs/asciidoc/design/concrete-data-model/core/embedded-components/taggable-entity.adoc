@@ -1,0 +1,488 @@
+===== `TaggableEntity`
+Component for managing tags and categorization of entities within the system.
+
+[plantuml]
+----
+@startuml
+class TaggableEntity {
+  +Set<Tag> tags
+  +Set<String> systemTags
+  +Set<String> userTags
+  +Map<String, Set<String>> categoryTags
+  +Integer maxTags
+  +Boolean taggingEnabled
+  +Set<String> suggestedTags
+  +UUID lastTaggedBy
+  +LocalDateTime lastTaggedAt
+  +TaggingPolicy taggingPolicy
+  +Map<String, Integer> tagWeights
+  +Set<String> prohibitedTags
+  +Map<String, Object> tagMetadata
+}
+
+class Tag {
+  +String name
+  +String type
+  +String category
+  +String locale
+  +String description
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +Integer usageCount
+  +TagStatus status
+  +UUID approvedBy
+  +Set<String> synonyms
+  +Boolean isSystemTag
+  +Set<String> relatedTags
+}
+
+enum TaggingPolicy {
+  OPEN
+  MODERATED
+  RESTRICTED
+  SYSTEM_ONLY
+  HIERARCHICAL
+}
+
+enum TagStatus {
+  ACTIVE
+  PENDING_APPROVAL
+  REJECTED
+  DEPRECATED
+  MERGED
+}
+
+TaggableEntity -- Tag
+TaggableEntity -- TaggingPolicy
+Tag -- TagStatus
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `tags`            | Complete set of tags associated with the entity
+| `systemTags`      | Tags applied by the system (read-only for users)
+| `userTags`        | Tags applied by users
+| `categoryTags`    | Tags organized by category
+| `maxTags`         | Maximum number of tags allowed
+| `taggingEnabled`  | Whether tagging is enabled for this entity
+| `suggestedTags`   | System-suggested tags based on entity content
+| `lastTaggedBy`    | Who last modified the tags
+| `lastTaggedAt`    | When tags were last modified
+| `taggingPolicy`   | Policy controlling tag management
+| `tagWeights`      | Relevance weights of tags
+| `prohibitedTags`  | Tags not allowed for this entity
+| `tagMetadata`     | Additional metadata about tagging
+|===
+
+====== TaggableEntity Interface
+
+```java
+/**
+ * Represents an entity that can be tagged
+ */
+public interface TaggableEntity {
+    /**
+     * Get all tags
+     */
+    Set<Tag> getTags();
+    
+    /**
+     * Get system-applied tags
+     */
+    Set<String> getSystemTags();
+    
+    /**
+     * Get user-applied tags
+     */
+    Set<String> getUserTags();
+    
+    /**
+     * Get tags by category
+     */
+    Map<String, Set<String>> getCategoryTags();
+    
+    /**
+     * Get maximum allowed tags
+     */
+    Integer getMaxTags();
+    
+    /**
+     * Check if tagging is enabled
+     */
+    Boolean isTaggingEnabled();
+    
+    /**
+     * Get suggested tags
+     */
+    Set<String> getSuggestedTags();
+    
+    /**
+     * Get who last tagged
+     */
+    UUID getLastTaggedBy();
+    
+    /**
+     * Get when last tagged
+     */
+    LocalDateTime getLastTaggedAt();
+    
+    /**
+     * Get tagging policy
+     */
+    TaggingPolicy getTaggingPolicy();
+    
+    /**
+     * Get tag weights
+     */
+    Map<String, Integer> getTagWeights();
+    
+    /**
+     * Get prohibited tags
+     */
+    Set<String> getProhibitedTags();
+    
+    /**
+     * Get tag metadata
+     */
+    Map<String, Object> getTagMetadata();
+    
+    /**
+     * Add a tag
+     */
+    void addTag(Tag tag);
+    
+    /**
+     * Add a tag by name
+     */
+    void addTag(String tagName, String category);
+    
+    /**
+     * Remove a tag
+     */
+    void removeTag(String tagName);
+    
+    /**
+     * Clear all user tags
+     */
+    void clearUserTags();
+    
+    /**
+     * Check if has specific tag
+     */
+    boolean hasTag(String tagName);
+    
+    /**
+     * Check if has tag in category
+     */
+    boolean hasTagInCategory(String tagName, String category);
+    
+    /**
+     * Get most relevant tags
+     */
+    Set<String> getTopTags(int limit);
+    
+    /**
+     * Generate suggested tags based on content
+     */
+    Set<String> generateSuggestedTags();
+    
+    /**
+     * Import tags from another entity
+     */
+    void importTagsFrom(TaggableEntity other);
+    
+    /**
+     * Validate tags against policy
+     */
+    boolean validateTags();
+    
+    /**
+     * Apply automatic tagging rules
+     */
+    void applyAutoTagging();
+}
+
+/**
+ * Represents a tag in the system
+ */
+public interface Tag {
+    /**
+     * Get tag name
+     */
+    String getName();
+    
+    /**
+     * Get tag type
+     */
+    String getType();
+    
+    /**
+     * Get tag category
+     */
+    String getCategory();
+    
+    /**
+     * Get tag locale
+     */
+    String getLocale();
+    
+    /**
+     * Get tag description
+     */
+    String getDescription();
+    
+    /**
+     * Get creation timestamp
+     */
+    LocalDateTime getCreatedAt();
+    
+    /**
+     * Get creator ID
+     */
+    UUID getCreatedBy();
+    
+    /**
+     * Get usage count
+     */
+    Integer getUsageCount();
+    
+    /**
+     * Get tag status
+     */
+    TagStatus getStatus();
+    
+    /**
+     * Get approver ID
+     */
+    UUID getApprovedBy();
+    
+    /**
+     * Get tag synonyms
+     */
+    Set<String> getSynonyms();
+    
+    /**
+     * Check if system tag
+     */
+    Boolean isSystemTag();
+    
+    /**
+     * Get related tags
+     */
+    Set<String> getRelatedTags();
+    
+    /**
+     * Increment usage count
+     */
+    void incrementUsage();
+    
+    /**
+     * Merge with another tag
+     */
+    Tag mergeWith(Tag other);
+    
+    /**
+     * Translate to another locale
+     */
+    Tag translateTo(String locale);
+}
+
+/**
+ * Policy for tag management
+ */
+public enum TaggingPolicy {
+    OPEN,         // Anyone can add tags
+    MODERATED,    // Tags require approval
+    RESTRICTED,   // Only authorized users can add tags
+    SYSTEM_ONLY,  // Only system can add tags
+    HIERARCHICAL  // Tags must follow hierarchical structure
+}
+
+/**
+ * Status of a tag
+ */
+public enum TagStatus {
+    ACTIVE,           // Tag is active
+    PENDING_APPROVAL, // Tag awaiting approval
+    REJECTED,         // Tag rejected
+    DEPRECATED,       // Tag is deprecated
+    MERGED            // Tag merged into another
+}
+```
+
+====== Contextual Use Case for TaggableEntity
+
+*Real-World Scenario:* Categorizing Land Parcels in Nepal's Digital Cadastre System
+
+[plantuml]
+----
+@startuml
+actor "Land Records\nOfficer" as Officer
+actor "GIS Technical\nTeam" as GIS
+actor "Citizen\n(Surya Maharjan)" as Citizen
+participant "LandParcel" as Parcel
+participant "TaggableEntity" as Taggable
+participant "TagManagementService" as TagService
+participant "AutoTaggingEngine" as AutoTag
+participant "TagSuggestionService" as Suggest
+participant "SearchService" as Search
+
+Officer -> Parcel: registerNewParcel("Bhaktapur-09-456-789")
+activate Parcel
+Parcel -> Parcel: createParcelRecord()
+Parcel -> Taggable: initialize()
+activate Taggable
+Taggable -> Taggable: setTaggingPolicy(MODERATED)
+Taggable -> Taggable: setMaxTags(30)
+Taggable -> Taggable: setTaggingEnabled(true)
+Parcel <-- Taggable: taggingInitialized
+deactivate Taggable
+Officer <-- Parcel: parcelRegistered
+deactivate Parcel
+
+Officer -> Parcel: addSystemAttributes()
+activate Parcel
+Parcel -> AutoTag: analyzeParcel(parcelData)
+activate AutoTag
+AutoTag -> AutoTag: identifyZoning()
+AutoTag -> AutoTag: identifyGeography()
+AutoTag -> AutoTag: identifyAdministrativeRegion()
+Parcel <-- AutoTag: systemTags=["zoning:agricultural", "geography:terai", "district:bhaktapur", "ward:9"]
+deactivate AutoTag
+
+Parcel -> Taggable: addSystemTags(systemTags)
+activate Taggable
+Taggable -> Taggable: validateSystemTags()
+loop for each tag
+  Taggable -> Taggable: addToSystemTags(tag)
+  Taggable -> Taggable: updateCategoryTags(tag)
+end
+Parcel <-- Taggable: systemTagsAdded
+deactivate Taggable
+Officer <-- Parcel: attributesAdded
+deactivate Parcel
+
+GIS -> Parcel: processGeospatialData()
+activate Parcel
+Parcel -> AutoTag: analyzeGeographicalFeatures(geoData)
+activate AutoTag
+AutoTag -> AutoTag: identifyTopography()
+AutoTag -> AutoTag: identifyWaterBodies()
+AutoTag -> AutoTag: identifyRoadAccess()
+Parcel <-- AutoTag: geospatialTags=["topography:flat", "water:irrigation_canal_adjacent", "road:unpaved_access"]
+deactivate AutoTag
+
+Parcel -> Taggable: addSystemTags(geospatialTags)
+activate Taggable
+Taggable -> Taggable: validateSystemTags()
+loop for each tag
+  Taggable -> Taggable: addToSystemTags(tag)
+  Taggable -> Taggable: updateCategoryTags(tag)
+end
+Parcel <-- Taggable: systemTagsAdded
+deactivate Taggable
+GIS <-- Parcel: geospatialDataProcessed
+deactivate Parcel
+
+Officer -> Parcel: classifyLandUse("paddy_field")
+activate Parcel
+Parcel -> Taggable: addTag("paddy_field", "land_use")
+activate Taggable
+Taggable -> TagService: validateTag("paddy_field")
+activate TagService
+Taggable <-- TagService: tagValidated
+deactivate TagService
+Taggable -> Taggable: addToUserTags("paddy_field")
+Taggable -> Taggable: addToCategoryTags("land_use", "paddy_field")
+Taggable -> Taggable: setLastTaggedBy(officerId)
+Taggable -> Taggable: setLastTaggedAt(now())
+Parcel <-- Taggable: tagAdded
+deactivate Taggable
+Officer <-- Parcel: landUseClassified
+deactivate Parcel
+
+Citizen -> Parcel: viewParcel("Bhaktapur-09-456-789")
+activate Parcel
+Parcel -> Taggable: getTags()
+activate Taggable
+Parcel <-- Taggable: allTags
+deactivate Taggable
+Citizen <-- Parcel: parcelDetails
+deactivate Parcel
+
+Citizen -> Search: searchParcels("rice cultivation")
+activate Search
+Search -> TagService: findRelatedTags("rice cultivation")
+activate TagService
+Search <-- TagService: relatedTags=["paddy_field", "agricultural", "irrigation"]
+deactivate TagService
+Search -> Search: queryParcelsWithTags(relatedTags)
+Citizen <-- Search: matchingParcels
+deactivate Search
+
+Officer -> Parcel: updateLandUseCategory()
+activate Parcel
+Parcel -> Suggest: getSuggestedTags(parcelData)
+activate Suggest
+Suggest -> Suggest: analyzeParcelCharacteristics()
+Suggest -> Suggest: compareWithSimilarParcels()
+Parcel <-- Suggest: suggestedTags=["rice_growing", "seasonal_flooding", "traditional_farming"]
+deactivate Suggest
+Parcel -> Taggable: setSuggestedTags(suggestedTags)
+activate Taggable
+Parcel <-- Taggable: suggestionsSet
+deactivate Taggable
+Officer <-- Parcel: tagSuggestionsDisplayed
+deactivate Parcel
+
+Officer -> Parcel: addMultipleTags(selectedTags)
+activate Parcel
+Parcel -> Taggable: addTags(["seasonal_flooding", "traditional_farming"])
+activate Taggable
+loop for each tag
+  Taggable -> TagService: validateTag(tag)
+  activate TagService
+  Taggable <-- TagService: tagValid
+  deactivate TagService
+  Taggable -> Taggable: addToUserTags(tag)
+end
+Taggable -> Taggable: updateLastTaggedInfo(officerId, now())
+Parcel <-- Taggable: tagsAdded
+deactivate Taggable
+Officer <-- Parcel: multipleTags
+deactivate Parcel
+
+Officer -> Parcel: generateTagReport()
+activate Parcel
+Parcel -> Taggable: getCategoryTags()
+activate Taggable
+Parcel <-- Taggable: categorizedTags
+deactivate Taggable
+Parcel -> Parcel: formatTagReport()
+Officer <-- Parcel: tagReport
+deactivate Parcel
+@enduml
+----
+
+*Implementation Details:*
+The TaggableEntity component in Nepal's Digital Profile system enables sophisticated categorization and tagging of entities, with particular adaptation for Nepal's land administration context where accurate parcel classification is critical for governance, taxation, and development planning.
+
+In this scenario, a Land Records Officer in Bhaktapur district is registering and classifying a new land parcel in the digital cadastre system. The TaggableEntity component provides the infrastructure to capture both system-generated and user-defined attributes of this parcel, creating a rich classification that supports Nepal's complex land management needs.
+
+The implementation begins with the initialization of tagging capabilities for the land parcel, setting a MODERATED policy that ensures tag integrity through validation—essential in a government land records system where classification affects legal status and taxation. The system allows up to 30 tags per parcel, accommodating the detailed classification needed for Nepal's diverse land types.
+
+The automatic tagging functionality immediately applies system tags based on administrative location and zoning information. This includes district and ward identification ("district:bhaktapur", "ward:9"), which map to Nepal's administrative divisions, and zoning classification ("zoning:agricultural"), which aligns with Nepal's land use planning frameworks. The categorical organization of tags allows for structured navigation of these attributes, mimicking the hierarchical organization of Nepal's land administration.
+
+When the GIS Technical Team processes geospatial data for the parcel, the system extracts additional geographic features through automated analysis. The resulting tags describe topography ("topography:flat"), proximity to water resources ("water:irrigation_canal_adjacent"), and road access ("road:unpaved_access")—all critical factors in Nepal's land valuation and agricultural planning. These system-generated tags provide objective classification that supports land tax assessment and development planning.
+
+The officer then manually classifies the parcel as a "paddy_field" within the "land_use" category, reflecting its use for rice cultivation—a predominant agricultural activity in Nepal. This classification follows Nepal's traditional land use categorization system and has implications for agricultural subsidies, irrigation planning, and flood risk management. The validation ensures this classification adheres to Nepal's official land use taxonomy.
+
+When a citizen (Surya Maharjan) views the parcel, they see a comprehensive set of tags that provide a complete picture of the land's characteristics and administrative context. This transparency supports informed decision-making for potential land transactions or agricultural investments.
+
+The search functionality demonstrates how tags enhance discoverability, allowing users to find parcels based on agricultural practices like "rice cultivation" even when that exact phrase isn't used in the tags. The system recognizes related tags like "paddy_field" and "irrigation," improving search results through semantic understanding.
+
+The tag suggestion feature helps officers consistently classify similar parcels by recommending tags based on parcel characteristics and comparison with similar land. Suggestions like "seasonal_flooding" and "traditional_farming" help capture nuanced attributes of agricultural land in Nepal's diverse ecological zones.
+
+This TaggableEntity implementation acknowledges Nepal's complex land classification needs, combining administrative, geographical, and use-based attributes into a comprehensive tagging system that supports both official land management functions and citizen information needs.
