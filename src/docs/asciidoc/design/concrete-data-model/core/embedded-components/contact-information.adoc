@@ -1,0 +1,327 @@
+===== `ContactInformation`
+Standardized representation of contact details for individuals and organizations.
+
+[plantuml]
+----
+@startuml
+class ContactInformation {
+  +String primaryPhone
+  +String secondaryPhone
+  +String mobilePhone
+  +String email
+  +String website
+  +String fax
+  +Boolean primaryPhoneVerified
+  +Boolean mobilePhoneVerified
+  +Boolean emailVerified
+  +LocalDateTime phoneVerifiedAt
+  +LocalDateTime emailVerifiedAt
+  +String preferredContactMethod
+  +String localLanguageEmail
+  +LocalDateTime lastVerificationAttempt
+  +Integer verificationAttempts
+  +Map<String, String> socialMediaHandles
+  +Boolean smsNotificationsEnabled
+  +Boolean emailNotificationsEnabled
+  +Boolean isPublic
+}
+
+enum ContactVerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  FAILED
+  EXPIRED
+}
+
+class VerificationAttempt {
+  +String contactType
+  +String contactValue
+  +LocalDateTime attemptedAt
+  +ContactVerificationStatus status
+  +String verificationCode
+  +LocalDateTime expiresAt
+}
+
+ContactInformation -- ContactVerificationStatus
+ContactInformation -- VerificationAttempt
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                    | Description
+| `primaryPhone`           | Main contact phone number
+| `secondaryPhone`         | Alternative phone number
+| `mobilePhone`            | Mobile phone number for SMS
+| `email`                  | Email address
+| `website`                | Website URL (for organizations)
+| `fax`                    | Fax number (still common in Nepal government offices)
+| `primaryPhoneVerified`   | Whether primary phone has been verified
+| `mobilePhoneVerified`    | Whether mobile phone has been verified
+| `emailVerified`          | Whether email has been verified
+| `phoneVerifiedAt`        | When phone verification occurred
+| `emailVerifiedAt`        | When email verification occurred
+| `preferredContactMethod` | Preferred method of contact (PHONE, EMAIL, SMS)
+| `localLanguageEmail`     | Email in local script (for display purposes)
+| `lastVerificationAttempt`| Time of last verification attempt
+| `verificationAttempts`   | Number of verification attempts
+| `socialMediaHandles`     | Map of social media platform to handle
+| `smsNotificationsEnabled`| Whether SMS notifications are enabled
+| `emailNotificationsEnabled` | Whether email notifications are enabled
+| `isPublic`              | Whether this contact info can be publicly displayed
+|===
+
+====== ContactInformation Interface
+
+```java
+/**
+ * Represents contact information within the system
+ */
+public interface ContactInformation {
+    /**
+     * Get the primary phone number
+     */
+    String getPrimaryPhone();
+    
+    /**
+     * Get the secondary phone number
+     */
+    String getSecondaryPhone();
+    
+    /**
+     * Get the mobile phone number
+     */
+    String getMobilePhone();
+    
+    /**
+     * Get the email address
+     */
+    String getEmail();
+    
+    /**
+     * Get the website URL
+     */
+    String getWebsite();
+    
+    /**
+     * Get the fax number
+     */
+    String getFax();
+    
+    /**
+     * Check if primary phone is verified
+     */
+    Boolean isPrimaryPhoneVerified();
+    
+    /**
+     * Check if mobile phone is verified
+     */
+    Boolean isMobilePhoneVerified();
+    
+    /**
+     * Check if email is verified
+     */
+    Boolean isEmailVerified();
+    
+    /**
+     * Get phone verification date/time
+     */
+    LocalDateTime getPhoneVerifiedAt();
+    
+    /**
+     * Get email verification date/time
+     */
+    LocalDateTime getEmailVerifiedAt();
+    
+    /**
+     * Get preferred contact method
+     */
+    String getPreferredContactMethod();
+    
+    /**
+     * Get email in local language script
+     */
+    String getLocalLanguageEmail();
+    
+    /**
+     * Get time of last verification attempt
+     */
+    LocalDateTime getLastVerificationAttempt();
+    
+    /**
+     * Get number of verification attempts
+     */
+    Integer getVerificationAttempts();
+    
+    /**
+     * Get social media handles
+     */
+    Map<String, String> getSocialMediaHandles();
+    
+    /**
+     * Check if SMS notifications are enabled
+     */
+    Boolean isSmsNotificationsEnabled();
+    
+    /**
+     * Check if email notifications are enabled
+     */
+    Boolean isEmailNotificationsEnabled();
+    
+    /**
+     * Check if contact info is public
+     */
+    Boolean isPublic();
+    
+    /**
+     * Initialize verification for a contact method
+     */
+    VerificationAttempt initiateVerification(String contactType);
+    
+    /**
+     * Confirm verification with code
+     */
+    boolean confirmVerification(String contactType, String verificationCode);
+    
+    /**
+     * Validate the contact details
+     */
+    ValidationResult validate();
+    
+    /**
+     * Format phone number according to Nepal standards
+     */
+    String formatPhoneNumber(String phoneNumber);
+    
+    /**
+     * Get best contact method based on verification status
+     */
+    String getBestContactMethod();
+}
+
+/**
+ * Contact verification status
+ */
+public enum ContactVerificationStatus {
+    UNVERIFIED,
+    PENDING,
+    VERIFIED,
+    FAILED,
+    EXPIRED
+}
+```
+
+====== Contextual Use Case for ContactInformation
+
+*Real-World Scenario:* Government Office Contact Management System
+
+[plantuml]
+----
+@startuml
+actor "Admin Officer\n(Suman Gurung)" as Admin
+actor "Program Officer\n(Anita Sharma)" as Officer
+actor "Citizen\n(Gopal Pradhan)" as Citizen
+participant "ContactInformation" as Contact
+participant "VerificationService" as Verification
+participant "NotificationService" as Notification
+participant "ContactHistory" as History
+
+Admin -> Contact: createOfficeContact()
+activate Contact
+Contact -> Contact: setPrimaryPhone("01-4123456")
+Contact -> Contact: setMobilePhone("9851012345")
+Contact -> Contact: setEmail("info@mohp.gov.np")
+Contact -> Contact: setWebsite("mohp.gov.np")
+Contact -> Contact: setFax("01-4123457")
+Contact -> Contact: setPreferredContactMethod("EMAIL")
+Contact -> Contact: setSocialMediaHandles({"facebook": "MoHPNepal", "twitter": "@MoHPNepal"})
+Contact -> Contact: setIsPublic(true)
+Contact -> Contact: setPrimaryPhoneVerified(true)
+Contact -> Contact: setMobilePhoneVerified(true)
+Contact -> Contact: setEmailVerified(true)
+Admin <-- Contact: officeContactInfo
+deactivate Contact
+
+Admin -> Officer: Assign as department contact
+
+Officer -> Contact: updateDepartmentContact()
+activate Contact
+Contact -> Contact: setMobilePhone("9851054321")
+Contact -> Contact: setEmail("immunization@mohp.gov.np")
+Officer <-- Contact: updatedContactInfo
+deactivate Contact
+
+Officer -> Verification: verifyNewContactDetails()
+activate Verification
+Verification -> Contact: initiateVerification("email")
+activate Contact
+Contact -> Contact: setLastVerificationAttempt(now())
+Contact -> Contact: incrementVerificationAttempts()
+Verification <-- Contact: verificationAttempt
+deactivate Contact
+
+Verification -> Notification: sendVerificationEmail(email, code)
+activate Notification
+Notification -> Notification: generateVerificationEmail("Your verification code is: 123456")
+Notification -> Notification: prioritizeGovernmentDomain(mohp.gov.np)
+Verification <-- Notification: emailSent
+deactivate Notification
+
+Officer -> Verification: submitVerificationCode("123456")
+Verification -> Contact: confirmVerification("email", "123456")
+activate Contact
+Contact -> Contact: setEmailVerified(true)
+Contact -> Contact: setEmailVerifiedAt(now())
+Verification <-- Contact: verificationSuccessful
+deactivate Contact
+Officer <-- Verification: emailVerified
+deactivate Verification
+
+Officer -> Contact: enableNotifications()
+activate Contact
+Contact -> Contact: setSmsNotificationsEnabled(true)
+Contact -> Contact: setEmailNotificationsEnabled(true)
+Officer <-- Contact: notificationsEnabled
+deactivate Contact
+
+Citizen -> Officer: Request department contact information
+Officer -> Contact: getPublicContactInfo()
+activate Contact
+Contact -> Contact: filterPublicFields()
+Officer <-- Contact: publicContactInfo
+deactivate Contact
+Officer -> Citizen: Provide department contact details
+
+Admin -> History: trackContactChanges()
+activate History
+History -> History: recordContactChange(oldContact, newContact, officer)
+Admin <-- History: changeHistory
+deactivate History
+
+Admin -> Contact: prepareContactsForAnnualReport()
+activate Contact
+Contact -> Contact: getVerifiedContactsOnly()
+Admin <-- Contact: verifiedContacts
+deactivate Contact
+@enduml
+----
+
+*Implementation Details:*
+The ContactInformation component in Nepal's Digital Profile system is designed to handle the unique communication needs of government offices and citizens, accommodating both modern and traditional contact methods while ensuring verification and security.
+
+In this scenario, Suman Gurung, an Administrative Officer at the Ministry of Health and Population (MoHP), is setting up the contact information for the Immunization Department. This reflects the common practice in Nepal's government where each department within a ministry has its own contact points for specific services.
+
+The system captures multiple contact methods - reflecting Nepal's communication landscape where landlines, mobile phones, email, fax, and increasingly social media are all used for official communication. Importantly, fax numbers are still maintained for many government offices, particularly for formal communication between departments.
+
+The ContactInformation component implements verification workflows for each contact method. When Program Officer Anita Sharma updates the department's contact information with her direct mobile number and email, the system initiates a verification process. Email verification receives special handling for government domains (like mohp.gov.np), with expedited delivery and prioritization to ensure government communications aren't delayed.
+
+The component distinguishes between verified and unverified contact methods - critical in Nepal's context where official communications must use verified channels. This verification status is tracked with timestamps and attempt counts to prevent verification abuse.
+
+A key feature for Nepal's context is the ability to mark contact information as public or private. Public information appears on government websites and publications, while private contact details are only visible within the government system. This separation helps officials manage the high volume of public inquiries while maintaining internal communication channels.
+
+The ContactInformation component also supports Nepal's growing use of social media for government communication, storing handles for platforms like Facebook and Twitter that ministries increasingly use for public outreach.
+
+For rural areas with limited internet connectivity, the system prioritizes SMS notifications by tracking whether each contact method has notifications enabled. This allows citizens to receive important updates via text message when email isn't practical.
+
+The implementation balances the need for multiple contact points with verification and security, while accommodating Nepal's diverse communication infrastructure that spans from traditional government office landlines to modern digital channels.

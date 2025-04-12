@@ -1,0 +1,667 @@
+===== Auditing
+
+Auditing is consistently applied throughout the Digital Profile system to maintain comprehensive records of all system interactions, data changes, user activities, and security events for accountability, compliance, and troubleshooting.
+
+====== Auditing Architecture
+
+[plantuml]
+----
+@startuml
+package "Auditing Framework" {
+  interface AuditLogger {
+    +logDataChange(dataChange: DataChangeEvent)
+    +logSystemEvent(systemEvent: SystemEvent)
+    +logSecurityEvent(securityEvent: SecurityEvent)
+    +logUserActivity(userActivity: UserActivityEvent)
+  }
+  
+  class AuditManager {
+    -auditLoggers: List<AuditLogger>
+    +registerLogger(logger: AuditLogger)
+    +logChange(change: AuditableEvent)
+    +getAuditTrail(filter: AuditTrailFilter): AuditTrail
+  }
+  
+  class DatabaseAuditLogger
+  class FileSystemAuditLogger
+  class BlockchainAuditLogger
+  class ThirdPartyAuditLogger
+  
+  AuditLogger <|.. DatabaseAuditLogger
+  AuditLogger <|.. FileSystemAuditLogger
+  AuditLogger <|.. BlockchainAuditLogger
+  AuditLogger <|.. ThirdPartyAuditLogger
+  
+  AuditManager o-- AuditLogger
+}
+
+abstract class AuditableEvent {
+  +eventId: UUID
+  +timestamp: LocalDateTime
+  +userId: UUID
+  +userIdentifier: String
+  +ipAddress: String
+  +userAgent: String
+  +eventType: AuditEventType
+  +correlationId: String
+  +sessionId: String
+  +applicationModule: String
+  +entityId: String
+  +entityType: String
+  +severityLevel: SeverityLevel
+}
+
+class DataChangeEvent {
+  +changeType: ChangeType
+  +entitySnapshot: String
+  +previousState: Map<String, Any?>
+  +newState: Map<String, Any?>
+  +changedFields: List<String>
+  +changeReason: String
+}
+
+class SystemEvent {
+  +systemEventType: SystemEventType
+  +details: String
+  +component: String
+  +status: EventStatus
+  +duration: Long
+}
+
+class SecurityEvent {
+  +securityEventType: SecurityEventType
+  +outcome: SecurityOutcome
+  +targetResource: String
+  +permission: String
+  +attemptDetails: String
+}
+
+class UserActivityEvent {
+  +activityType: ActivityType
+  +details: String
+  +businessProcess: String
+  +outcomeStatus: OutcomeStatus
+}
+
+class AuditTrail {
+  +events: List<AuditableEvent>
+  +totalEvents: Long
+  +startTime: LocalDateTime
+  +endTime: LocalDateTime
+  +filteredBy: AuditTrailFilter
+}
+
+class AuditTrailFilter {
+  +eventTypes: List<AuditEventType>
+  +userIds: List<UUID>
+  +entityTypes: List<String>
+  +entityIds: List<String>
+  +timeRange: DateTimeRange
+  +severityLevels: List<SeverityLevel>
+  +changeTypes: List<ChangeType>
+  +orderBy: String
+  +maxResults: Int
+  +keywords: List<String>
+}
+
+enum AuditEventType {
+  DATA_CHANGE
+  SYSTEM_EVENT
+  SECURITY_EVENT
+  USER_ACTIVITY
+}
+
+enum ChangeType {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+  BULK_OPERATION
+  STATUS_CHANGE
+  OWNERSHIP_CHANGE
+  APPROVAL
+  REJECTION
+  ATTACHMENT
+}
+
+enum SystemEventType {
+  STARTUP
+  SHUTDOWN
+  BACKUP
+  RESTORE
+  MAINTENANCE
+  CONFIG_CHANGE
+  INTEGRATION
+  BATCH_JOB
+  ERROR
+  WARNING
+}
+
+enum SecurityEventType {
+  LOGIN
+  LOGOUT
+  LOGIN_FAILURE
+  PASSWORD_CHANGE
+  ACCESS_DENIED
+  ROLE_CHANGE
+  PERMISSION_CHANGE
+  SUSPICIOUS_ACTIVITY
+  DATA_EXPORT
+  PRIVILEGED_OPERATION
+}
+
+enum ActivityType {
+  SEARCH
+  VIEW
+  REPORT
+  EXPORT
+  IMPORT
+  WORKFLOW_ACTION
+  BATCH_OPERATION
+  SUBMISSION
+}
+
+enum SeverityLevel {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum OutcomeStatus {
+  SUCCESS
+  FAILURE
+  PARTIAL
+  PENDING
+}
+
+enum SecurityOutcome {
+  SUCCESS
+  FAILURE
+  WARNING
+  BLOCKED
+}
+
+enum EventStatus {
+  SUCCESS
+  FAILURE
+  WARNING
+  IN_PROGRESS
+}
+
+AuditableEvent <|-- DataChangeEvent
+AuditableEvent <|-- SystemEvent
+AuditableEvent <|-- SecurityEvent
+AuditableEvent <|-- UserActivityEvent
+
+AuditableEvent -- AuditEventType
+DataChangeEvent -- ChangeType
+SystemEvent -- SystemEventType
+SystemEvent -- EventStatus
+SecurityEvent -- SecurityEventType
+SecurityEvent -- SecurityOutcome
+UserActivityEvent -- ActivityType
+UserActivityEvent -- OutcomeStatus
+AuditableEvent -- SeverityLevel
+@enduml
+----
+
+====== Auditing Process Flow
+
+[plantuml]
+----
+@startuml
+start
+:User or system initiates action;
+
+fork
+  :Intercept action through AOP;
+  :Extract action context;
+  :Create appropriate audit event;
+  :Enrich event with metadata;
+  :Submit to AuditManager;
+fork again
+  :Action proceeds;
+end fork
+
+:AuditManager receives event;
+
+fork
+  :Route to DatabaseAuditLogger;
+  :Store in audit tables;
+fork again
+  :Route to FileSystemAuditLogger;
+  :Write to secure log files;
+fork again
+  if (Is high-sensitivity event?) then (yes)
+    :Route to BlockchainAuditLogger;
+    :Create tamper-proof record;
+  endif
+fork again
+  if (Requires external reporting?) then (yes)
+    :Route to ThirdPartyAuditLogger;
+    :Submit to compliance systems;
+  endif
+end fork
+
+:Apply retention policies;
+:Update audit statistics;
+
+:Action completes;
+
+stop
+@enduml
+----
+
+====== Contextual Use Case for Auditing
+
+*Real-World Scenario:* Land Ownership Change Auditing in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registration Officer\n(Binita Thapa)" as Officer
+actor "Property Seller\n(Ram Bahadur)" as Seller
+actor "Property Buyer\n(Sita Sharma)" as Buyer
+actor "Auditor\n(Prakash Ghimire)" as Auditor
+participant "LandTransactionController" as Controller
+participant "LandTransactionService" as Service
+participant "AuditManager" as AuditMgr
+participant "AuditAspect" as AuditAspect
+participant "DatabaseAuditLogger" as DbLogger
+participant "BlockchainAuditLogger" as BlockchainLogger
+participant "AuditTrailService" as AuditTrail
+
+Seller -> Officer : Submit property transfer request with documents
+Buyer -> Officer : Submit buyer identification and payment proof
+Officer -> Controller : initiateTransfer(transferRequest)
+activate Controller
+
+Controller -> AuditAspect : [Before Advice]
+activate AuditAspect
+AuditAspect -> AuditAspect : captureInitialState()
+Controller <-- AuditAspect
+deactivate AuditAspect
+
+Controller -> Service : processTransfer(transferRequest)
+activate Service
+
+Service -> Service : validateTransaction()
+Service -> Service : applyTransfer()
+Service -> Service : recordTransfer()
+
+Controller <-- Service : transferResult
+deactivate Service
+
+Controller -> AuditAspect : [After Advice]
+activate AuditAspect
+AuditAspect -> AuditAspect : captureResultState()
+AuditAspect -> AuditAspect : createDataChangeEvent()
+
+AuditAspect -> AuditMgr : logChange(dataChangeEvent)
+activate AuditMgr
+
+AuditMgr -> DbLogger : logDataChange()
+activate DbLogger
+AuditMgr <-- DbLogger : logged
+deactivate DbLogger
+
+AuditMgr -> BlockchainLogger : logDataChange()
+activate BlockchainLogger
+BlockchainLogger -> BlockchainLogger : createLandTransferAuditBlock()
+AuditMgr <-- BlockchainLogger : blockchainReceipt
+deactivate BlockchainLogger
+
+Controller <-- AuditAspect
+deactivate AuditAspect
+deactivate AuditMgr
+
+Officer <-- Controller : transferConfirmation
+deactivate Controller
+
+Officer -> Seller : Provide transfer completion certificate
+Officer -> Buyer : Provide new ownership certificate
+
+== Later: Audit Review ==
+
+Auditor -> AuditTrail : requestAuditTrail(landParcelId)
+activate AuditTrail
+
+AuditTrail -> AuditMgr : getAuditTrail(landParcelFilter)
+activate AuditMgr
+AuditMgr -> DbLogger : queryAuditEvents(filter)
+activate DbLogger
+AuditMgr <-- DbLogger : auditEventRecords
+deactivate DbLogger
+
+AuditMgr -> BlockchainLogger : verifyAuditIntegrity(blockchainReferences)
+activate BlockchainLogger
+AuditMgr <-- BlockchainLogger : integrityVerification
+deactivate BlockchainLogger
+
+AuditTrail <-- AuditMgr : completeAuditTrail
+deactivate AuditMgr
+
+Auditor <-- AuditTrail : auditTrailReport
+deactivate AuditTrail
+
+Auditor -> Auditor : verifyLandTransferCompliance()
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Land Registration system implements a comprehensive auditing framework that tracks all land ownership transfers, a critical function in a country where land ownership is the primary store of wealth and family status. This auditing system is designed to prevent fraud, maintain a permanent record of transactions, and enable transparent reviews of land administration.
+
+In the Tanahun District Land Revenue Office, Land Registration Officer Binita Thapa processes a land transfer request where Ram Bahadur is selling his ancestral land (parcel #451-78) to Sita Sharma. This transaction, representing a significant transfer of economic and social value, is automatically tracked through multiple audit layers to ensure authenticity and accountability.
+
+When Officer Binita initiates the transfer through the system, the AuditAspect intercepts the operation before it begins and captures the current state of the land record, including its existing ownership details, boundary information, and any encumbrances. This creates a snapshot of the "before" state that will be included in the audit trail.
+
+After the LandTransactionService completes the transfer operation—updating ownership records, calculating transfer taxes, and generating digital certificates—the AuditAspect again intercepts the operation to capture the "after" state. It then creates a comprehensive DataChangeEvent that includes:
+
+1. The specific fields that changed (ownership, transaction date, official stamps)
+2. The previous owner's details (Ram Bahadur)
+3. The new owner's details (Sita Sharma) 
+4. The transaction amount (NPR 1,500,000)
+5. The official responsible for the change (Binita Thapa)
+6. The reason for change ("Property Sale")
+7. Digital signatures of all documents involved
+
+The audit event is sent to the AuditManager, which routes it to multiple specialized loggers. The DatabaseAuditLogger stores the complete record in the secure audit database with proper indexing for future retrieval. Simultaneously, for land transactions specifically, the BlockchainAuditLogger creates a tamper-proof record on a distributed ledger shared across multiple government agencies, including the Department of Land Management, the Supreme Court, and the Commission for Investigation of Abuse of Authority. This blockchain implementation, unique to high-value and fraud-sensitive transactions in Nepal, ensures that even system administrators cannot alter the audit trail.
+
+Later, when government auditor Prakash Ghimire conducts a routine review of land transactions in Tanahun district, he can request the complete audit trail for parcel #451-78. The AuditTrailService retrieves all events related to this parcel, including ownership changes, boundary adjustments, tax payments, and document submissions. The system automatically verifies the blockchain records against the database records to confirm no tampering has occurred. Prakash receives a comprehensive report showing:
+
+1. The complete chain of ownership from original registration to current owner
+2. All officers who processed each transaction
+3. Whether proper procedures were followed (dual verification, document scanning)
+4. Timestamps of each step in the workflow
+5. Verification that appropriate taxes were assessed and paid
+
+This audit implementation addresses several critical needs specific to Nepal's context:
+1. It provides an immutable record in a context where paper records can be damaged by natural disasters or deliberately altered
+2. It creates transparency in a domain historically vulnerable to corruption
+3. It enables linking across previously siloed government systems
+4. It supports both online and offline transaction modes with eventual audit consistency
+5. It maintains audit trails even during high-volume periods (like fiscal year-end)
+
+By implementing this multi-layered auditing approach, the Land Registration system has improved trust in government land records, reduced fraudulent claims by 37% in pilot districts, and supported easier resolution of ownership disputes.
+
+====== Core Interfaces and Classes
+
+```kotlin
+/**
+ * Interface for all audit loggers
+ */
+interface AuditLogger {
+    /**
+     * Check if this logger supports a specific event type
+     */
+    fun supportsEventType(eventType: AuditEventType): Boolean
+    
+    /**
+     * Log a data change event
+     */
+    fun logDataChange(dataChangeEvent: DataChangeEvent)
+    
+    /**
+     * Log a system event
+     */
+    fun logSystemEvent(systemEvent: SystemEvent)
+    
+    /**
+     * Log a security event
+     */
+    fun logSecurityEvent(securityEvent: SecurityEvent)
+    
+    /**
+     * Log a user activity event
+     */
+    fun logUserActivity(userActivityEvent: UserActivityEvent)
+}
+
+/**
+ * Base class for all audit events
+ */
+abstract class AuditableEvent {
+    var eventId: UUID = UUID.randomUUID()
+    var timestamp: LocalDateTime? = null
+    var userId: UUID? = null
+    var userIdentifier: String = "system"
+    var ipAddress: String? = null
+    var userAgent: String? = null
+    var eventType: AuditEventType = AuditEventType.SYSTEM_EVENT
+    var correlationId: String? = null
+    var sessionId: String? = null
+    var applicationModule: String? = null
+    var entityId: String = ""
+    var entityType: String = ""
+    var severityLevel: SeverityLevel = SeverityLevel.INFO
+    var metadata: MutableMap<String, Any?> = mutableMapOf()
+}
+
+/**
+ * Event representing a data change
+ */
+class DataChangeEvent : AuditableEvent() {
+    var changeType: ChangeType = ChangeType.UPDATE
+    var entitySnapshot: String = ""
+    var previousState: Map<String, Any?> = emptyMap()
+    var newState: Map<String, Any?> = emptyMap()
+    var changedFields: List<String> = emptyList()
+    var changeReason: String = ""
+}
+
+/**
+ * Annotation for marking methods that should be audited
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Audited(
+    val eventType: AuditEventType,
+    val changeType: ChangeType = ChangeType.UPDATE,
+    val activityType: ActivityType = ActivityType.WORKFLOW_ACTION,
+    val systemEventType: SystemEventType = SystemEventType.MAINTENANCE,
+    val captureState: Boolean = true,
+    val captureInitialState: Boolean = true,
+    val entityType: String = "",
+    val entityIdParam: String = "",
+    val entityIdResult: String = "",
+    val severityLevel: SeverityLevel = SeverityLevel.INFO,
+    val metadata: Array<AuditMetadata> = []
+)
+
+/**
+ * Annotation for specifying metadata to capture
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class AuditMetadata(
+    val key: String,
+    val value: String
+)
+
+/**
+ * Interface for blockchain integration
+ */
+interface BlockchainService {
+    /**
+     * Record an audit event in the blockchain
+     */
+    fun recordAuditEvent(record: BlockchainAuditRecord): String
+    
+    /**
+     * Get audit events for a specific entity
+     */
+    fun getAuditEventsForEntity(entityType: String, entityId: String): List<BlockchainAuditRecord>
+    
+    /**
+     * Verify a blockchain record
+     */
+    fun verifyRecord(transactionId: String): Boolean
+}
+```
+
+====== Audit Configuration
+
+```kotlin
+/**
+ * Configuration for the audit system
+ */
+class AuditConfiguration {
+    /**
+     * Entity types that require high-sensitivity auditing (e.g. blockchain)
+     */
+    val highSensitivityEntityTypes: Set<String> = setOf(
+        "LandParcel",
+        "LandOwnership", 
+        "CitizenRecord",
+        "CitizenIdentity",
+        "VitalRecord"
+    )
+    
+    /**
+     * Whether to store all events in the central audit repository
+     */
+    val centralRepositoryEnabled: Boolean = true
+    
+    /**
+     * Path for tamper-evident log files
+     */
+    val tamperEvidentLogPath: String = "/secure/audit/tamper-evident.log"
+    
+    /**
+     * Whether to apply retention policies immediately after logging
+     */
+    val applyRetentionPoliciesImmediately: Boolean = false
+    
+    /**
+     * Check if an entity type should be audited in blockchain
+     */
+    fun isBlockchainAuditedEntityType(entityType: String): Boolean {
+        return highSensitivityEntityTypes.contains(entityType)
+    }
+    
+    /**
+     * Check if a user activity type should be audited
+     */
+    fun isUserActivityAudited(activityType: ActivityType): Boolean {
+        // All activity types except SEARCH are audited
+        return activityType != ActivityType.SEARCH
+    }
+    
+    /**
+     * Check if a system event type should be audited
+     */
+    fun isSystemEventAudited(systemEventType: SystemEventType): Boolean {
+        return true
+    }
+    
+    /**
+     * Get retention policy for an entity type
+     */
+    fun getRetentionPolicyForEntityType(entityType: String): RetentionPolicy? {
+        // Default policies for different entity types
+        return when (entityType) {
+            "LandParcel" -> RetentionPolicy(
+                Duration.ofDays(3650), // 10 years
+                RetentionStrategy.ARCHIVE
+            )
+            "CitizenRecord" -> RetentionPolicy(
+                Duration.ofDays(7300), // 20 years
+                RetentionStrategy.ARCHIVE
+            )
+            else -> RetentionPolicy(
+                Duration.ofDays(1825), // 5 years
+                RetentionStrategy.DELETE
+            )
+        }
+    }
+}
+```
+
+====== Nepal-Specific Blockchain Implementation
+
+In Nepal's context, the BlockchainAuditLogger addresses the specific challenges of land record fraud and tampering:
+
+```kotlin
+/**
+ * Record for blockchain audit storage
+ */
+data class BlockchainAuditRecord(
+    val eventId: String,
+    val eventType: String,
+    val entityType: String,
+    val entityId: String,
+    val userIdentifier: String,
+    val timestamp: String,
+    val eventData: String,
+    val hash: String
+)
+
+/**
+ * Result of blockchain verification
+ */
+data class BlockchainVerificationResult(
+    val verified: Boolean,
+    val reason: String,
+    val discrepancies: List<AuditDiscrepancy> = emptyList()
+)
+
+/**
+ * Represents a discrepancy in audit records
+ */
+data class AuditDiscrepancy(
+    val description: String,
+    val affectedEvents: List<String>,
+    val field: String? = null,
+    val expectedValue: String? = null,
+    val actualValue: String? = null
+)
+
+/**
+ * Specialized audit logger that writes to blockchain
+ */
+interface BlockchainAuditLogger : AuditLogger {
+    /**
+     * Verify the integrity of audit trail data
+     */
+    fun verifyEntityAuditIntegrity(
+        entityType: String,
+        entityId: String,
+        databaseEvents: List<AuditEventEntity>
+    ): BlockchainVerificationResult
+}
+```
+
+====== Audit Perspective for Different User Types
+
+The audit system provides different perspectives based on user roles in Nepal's context:
+
+|===
+| User Role | Audit Perspective | Primary Use Case
+| Land Registration Officer | Activity-Based | Track daily registration tasks, verify procedures followed, backup for paper records
+| District Supervisor | Resource-Based | Monitor transaction patterns, identify potential fraud, ensure compliance
+| Provincial Auditor | Timeline-Based | Investigate specific cases, verify decision chains, produce compliance reports
+| Central Oversight Committee | Statistical | Analyze volumes, measure effectiveness, identify systemic issues
+| CIAA Investigator | Security-Based | Investigate reported corruption, verify who accessed what and when
+| Citizen | Transparency | Self-service verification of own property transactions and history
+|===
+
+====== Nepal-Specific Audit Requirements
+
+The audit system accommodates Nepal's unique geopolitical and technological challenges:
+
+1. **Remote Office Support**: For offices in remote areas, all transactions are captured in tamper-evident local logs during internet outages, syncing with central systems when connectivity is restored
+
+2. **Offline Authentication**: Special protocols validate audit entries created under offline operation, preserving the chain of accountability
+
+3. **Disaster Resilience**: Audit trails are replicated across geographic zones to protect against earthquakes and other natural disasters
+
+4. **Multilingual Support**: Audit reports can be generated in both Nepali and English to serve diverse stakeholders
+
+5. **Paper-Digital Bridge**: Each digital transaction references corresponding paper documents through unique identifiers to maintain continuity with traditional systems
+
+6. **Power Fluctuation Handling**: The audit system includes battery-backed transaction logging to prevent data loss during frequent power outages
+
+7. **Citizen Access**: A specialized read-only interface allows citizens to access audit trails of their own property with identity verification, promoting transparency
+
+These Nepal-specific adaptations ensure the audit system works effectively within the country's unique operational context.

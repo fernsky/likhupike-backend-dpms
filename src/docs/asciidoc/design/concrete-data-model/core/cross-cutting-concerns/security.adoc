@@ -1,0 +1,987 @@
+===== Security
+
+Security is consistently applied throughout the Digital Profile system to protect sensitive data, prevent unauthorized access, and ensure system integrity.
+
+====== Security Architecture
+
+[plantuml]
+----
+@startuml
+package "Security Framework" {
+  class SecurityConfig {
+    +configure(HttpSecurity http)
+    +passwordEncoder()
+    +authenticationManager()
+  }
+  
+  class JwtAuthenticationFilter {
+    +doFilterInternal()
+    +extractToken()
+    +validateToken()
+  }
+  
+  class CustomAuthenticationProvider {
+    +authenticate()
+    +supports()
+  }
+  
+  interface UserDetailsService {
+    +loadUserByUsername()
+  }
+  
+  class CustomUserDetailsService
+  
+  class RoleBasedAccessController {
+    +hasRole(role)
+    +hasAnyRole(roles)
+    +hasPermission(permission)
+  }
+}
+
+package "Authentication Components" {
+  class JwtTokenProvider {
+    +generateToken()
+    +validateToken()
+    +getUsername()
+    +getExpiration()
+    +getRoles()
+  }
+  
+  class MfaService {
+    +generateOtpSecret()
+    +verifyOtpCode()
+    +getQrCodeUrl()
+  }
+  
+  class OfflineAuthService {
+    +generateOfflineToken()
+    +verifyOfflineToken()
+    +reconcileOfflineActivity()
+  }
+}
+
+package "Authorization Components" {
+  class AccessControlService {
+    +hasPermission()
+    +grantPermission()
+    +revokePermission()
+    +getEffectivePermissions()
+  }
+  
+  class PermissionEvaluator {
+    +hasPermission()
+    +hasPermissionForObject()
+  }
+  
+  class RbacService {
+    +hasRole()
+    +getRoles()
+    +getPermissionsForRole()
+  }
+}
+
+package "Security Infrastructure" {
+  class SecurityAuditLogger {
+    +logAuthenticationSuccess()
+    +logAuthenticationFailure()
+    +logAuthorizationFailure()
+    +logSecurityEvent()
+  }
+  
+  class SecurityEventPublisher {
+    +publishEvent()
+  }
+  
+  class SecurityMetricsCollector {
+    +recordAuthenticationAttempt()
+    +recordAuthorizationCheck()
+    +getMetrics()
+  }
+}
+
+UserDetailsService <|.. CustomUserDetailsService
+SecurityConfig --> CustomUserDetailsService
+SecurityConfig --> JwtAuthenticationFilter
+SecurityConfig --> CustomAuthenticationProvider
+JwtAuthenticationFilter --> JwtTokenProvider
+CustomAuthenticationProvider --> MfaService
+CustomAuthenticationProvider --> OfflineAuthService
+RoleBasedAccessController --> RbacService
+RoleBasedAccessController --> AccessControlService
+AccessControlService --> PermissionEvaluator
+@enduml
+----
+
+====== Authentication Flow
+
+[plantuml]
+----
+@startuml
+actor User
+participant "Login\nController" as Login
+participant "Authentication\nManager" as AuthMgr
+participant "Authentication\nProvider" as AuthProv
+participant "User Details\nService" as UserSvc
+participant "Password\nEncoder" as PwdEnc
+participant "MFA\nService" as MFA
+participant "JWT Token\nProvider" as JWT
+participant "Security\nAudit Logger" as Audit
+
+User -> Login : login(username, password)
+activate Login
+
+Login -> AuthMgr : authenticate(credentials)
+activate AuthMgr
+
+AuthMgr -> AuthProv : authenticate(credentials)
+activate AuthProv
+
+AuthProv -> UserSvc : loadUserByUsername(username)
+activate UserSvc
+AuthProv <-- UserSvc : userDetails
+deactivate UserSvc
+
+AuthProv -> PwdEnc : matches(rawPassword, encodedPassword)
+activate PwdEnc
+AuthProv <-- PwdEnc : passwordMatches
+deactivate PwdEnc
+
+alt Password does not match
+  AuthProv -> Audit : logAuthenticationFailure(username, "INVALID_CREDENTIALS")
+  Login <-- AuthProv : throw AuthenticationException
+  Login -> User : return 401 Unauthorized
+  deactivate Login
+else Password matches
+  alt MFA required
+    AuthProv -> AuthProv : checkMfaRequired(user)
+    AuthProv -> Login : requireSecondFactor(user)
+    Login -> User : return 200 OK with MFA challenge
+    
+    User -> Login : verifyMfa(username, otpCode)
+    Login -> MFA : verifyOtpCode(user.otpSecret, otpCode)
+    activate MFA
+    Login <-- MFA : codeValid
+    deactivate MFA
+    
+    alt MFA invalid
+      Login -> Audit : logAuthenticationFailure(username, "INVALID_MFA")
+      Login -> User : return 401 Unauthorized
+    else MFA valid
+      Login -> JWT : generateToken(userDetails)
+      activate JWT
+      Login <-- JWT : token
+      deactivate JWT
+      
+      Login -> Audit : logAuthenticationSuccess(username)
+      
+      Login -> User : return 200 OK with token
+    end
+  else MFA not required
+    AuthProv -> JWT : generateToken(userDetails)
+    activate JWT
+    AuthProv <-- JWT : token
+    deactivate JWT
+    
+    AuthMgr <-- AuthProv : authentication
+    deactivate AuthProv
+    
+    Login <-- AuthMgr : authentication
+    deactivate AuthMgr
+    
+    Login -> Audit : logAuthenticationSuccess(username)
+    
+    Login -> User : return 200 OK with token
+  end
+end
+
+deactivate Login
+@enduml
+----
+
+====== Offline Authentication Process
+
+[plantuml]
+----
+@startuml
+actor "Field Officer" as Officer
+participant "Mobile\nApp" as Mobile
+participant "Offline Auth\nService" as Offline
+participant "Credential\nStore" as Store
+participant "Sync\nService" as Sync
+participant "Authentication\nService" as Auth
+participant "Audit\nService" as Audit
+
+== Pre-offline preparation ==
+Officer -> Mobile : Login while online
+Mobile -> Auth : authenticate(credentials)
+activate Auth
+Mobile <-- Auth : token
+deactivate Auth
+
+Mobile -> Offline : requestOfflineAccess(duration)
+activate Offline
+Offline -> Offline : generateOfflineCredentials()
+Offline -> Store : storeCredentials(offlineToken, duration)
+Mobile <-- Offline : offlineCredentials
+deactivate Offline
+
+Mobile -> Mobile : storeSecurely(offlineCredentials)
+
+== During offline operation ==
+Officer -> Mobile : Login while offline
+activate Mobile
+Mobile -> Store : retrieveOfflineCredentials()
+activate Store
+Mobile <-- Store : offlineCredentials
+deactivate Store
+
+Mobile -> Offline : validateOfflineCredentials(credentials)
+activate Offline
+Mobile <-- Offline : validationResult
+deactivate Offline
+
+alt Valid offline credentials
+  Mobile -> Mobile : grantOfflineAccess(limitedPermissions)
+  Mobile -> Mobile : recordOfflineActivity(timestamp, action)
+  Officer <-- Mobile : Access Granted (Offline Mode)
+else Invalid offline credentials
+  Mobile -> Mobile : recordFailedAttempt(timestamp)
+  Officer <-- Mobile : Access Denied
+end
+deactivate Mobile
+
+== Reconnection & Synchronization ==
+Officer -> Mobile : Connect to network
+Mobile -> Sync : syncOfflineActivity(offlineActions)
+activate Sync
+Sync -> Auth : validateOfflineActions(offlineActions)
+activate Auth
+Sync <-- Auth : validationResult
+deactivate Auth
+
+Sync -> Audit : recordSynchronizedActivities()
+activate Audit
+Sync <-- Audit : recorded
+deactivate Audit
+
+Mobile <-- Sync : synchronizationResult
+deactivate Sync
+
+alt Sync successful
+  Mobile -> Officer : All offline activities synchronized
+else Sync with conflicts
+  Mobile -> Officer : Conflicts detected requiring resolution
+end
+@enduml
+----
+
+====== Contextual Use Case for Security
+
+*Real-World Scenario:* Multi-layered Security for Land Records Access in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Officer\n(Asha Tamang)" as Officer
+actor "Landowner\n(Krishna Thapa)" as Owner
+actor "System Admin\n(Rajesh Karki)" as Admin
+
+participant "Authentication\nService" as Auth
+participant "MFA\nService" as MFA
+participant "UserProfile\nService" as Profile
+participant "LandParcel\nService" as Land
+participant "Permission\nEvaluator" as Perm
+participant "Audit\nLogger" as Audit
+
+== Secure Staff Authentication ==
+Officer -> Auth : login(username, password)
+activate Auth
+Auth -> Profile : loadUserByUsername(username)
+activate Profile
+Auth <-- Profile : userDetails
+deactivate Profile
+
+Auth -> Auth : validateCredentials(password)
+Auth -> MFA : requestMfaChallenge()
+activate MFA
+Auth <-- MFA : otpChallenge
+deactivate MFA
+
+Officer <-- Auth : mfaRequired
+deactivate Auth
+
+Officer -> Auth : validateMfa(otpCode)
+activate Auth
+Auth -> MFA : verifyOtpCode(otpCode)
+activate MFA
+Auth <-- MFA : validationResult
+deactivate MFA
+
+alt Valid OTP
+  Auth -> Auth : generateSessionToken()
+  Auth -> Audit : logSuccessfulLogin(officer, location, deviceType)
+  Officer <-- Auth : authenticationSuccessful(token)
+else Invalid OTP
+  Auth -> Audit : logFailedLogin(username, "INVALID_MFA", attemptCount)
+  Officer <-- Auth : authenticationFailed
+end
+deactivate Auth
+
+== Owner Identity Verification ==
+Owner -> Officer : Request land record access with ID
+Officer -> Profile : validateIdentity(citizenshipNumber)
+activate Profile
+Officer <-- Profile : identityConfirmed
+deactivate Profile
+
+== Strict Authorization Protocol ==
+Officer -> Land : requestLandRecord(parcelId)
+activate Land
+
+Land -> Perm : evaluatePermission(officer, "VIEW_LAND_RECORD", parcelId)
+activate Perm
+Land <-- Perm : hasPermission
+deactivate Perm
+
+alt Has permission
+  Land -> Land : retrieveRecord(parcelId)
+  Land -> Audit : logRecordAccess(officer, parcelId, "VIEW")
+  Officer <-- Land : landRecordData
+else Permission denied
+  Land -> Audit : logUnauthorizedAttempt(officer, parcelId, "VIEW")
+  Officer <-- Land : accessDenied
+end
+deactivate Land
+
+== Administrative Operations ==
+Admin -> Land : modifyLandOwnership(parcelId, newOwnerData)
+activate Land
+
+Land -> Perm : evaluatePermission(admin, "MODIFY_OWNERSHIP", parcelId)
+activate Perm
+Land <-- Perm : hasPermission
+deactivate Perm
+
+alt Has permission
+  Land -> Land : requireAdditionalApproval(admin, "OWNERSHIP_CHANGE")
+  Land -> Audit : logSensitiveOperation(admin, parcelId, "OWNERSHIP_CHANGE")
+  Admin <-- Land : requestSubmitted(approvalWorkflowId)
+else Permission denied
+  Land -> Audit : logUnauthorizedAttempt(admin, parcelId, "OWNERSHIP_CHANGE")
+  Admin <-- Land : accessDenied
+end
+deactivate Land
+@enduml
+----
+
+*Implementation Details:*
+The Digital Profile system implements a comprehensive security model tailored to Nepal's unique context, addressing challenges such as intermittent connectivity, varying literacy levels, and the highly sensitive nature of land records in a country where land ownership directly impacts social standing, economic security, and sometimes personal safety.
+
+Land Officer Asha Tamang at the Lalitpur District Land Office begins her workday with a secure authentication process. The system requires standard username/password authentication followed by mandatory Multi-Factor Authentication using a locally-optimized TOTP (Time-based One-Time Password) solution. For officers in remote areas with limited mobile connectivity, the system supports offline MFA verification with time-limited offline access credentials that are synchronized when connectivity is restored.
+
+When landowner Krishna Thapa visits to check his property records, Nepal's strict identity verification process is followed. Asha verifies Krishna's citizenship card against the digital profile system. Behind the scenes, PermissionEvaluator assesses Asha's role-based permissions (LAND_OFFICER role with VIEW_LAND_RECORD permission) and contextual permissions (officers can only access records within their assigned geographic jurisdiction).
+
+All access requests are subject to comprehensive audit logging that captures the officer's identity, location, action performed, timestamp, and even the device type - critical for maintaining chain of custody for legally sensitive land records. For remote offices with unreliable connectivity, the system implements a secure local audit log that synchronizes with the central system when connectivity is restored.
+
+The security framework implements Nepal-specific administrative segregation of duties, requiring multi-level approvals for sensitive operations like ownership transfers. When System Administrator Rajesh Karki attempts to modify land ownership records directly - even with his elevated permissions - the system enforces an additional approval workflow that requires verification by a separate designated authority, preventing potential misuse of administrative access.
+
+The security model also addresses Nepal's digital divide challenge through tiered authentication mechanisms. While government officials use full biometric and MFA verification, the system adapts for citizens with limited technology access through alternatives like branch office verification and agency-based access, ensuring security doesn't become a barrier to service accessibility.
+
+This multi-layered security approach is tailored to the unique needs of Nepal, where land records represent not just property but often family heritage spanning generations, requiring exceptional care in access control and modification.
+
+====== Core Security Interfaces
+
+```java
+/**
+ * Interface for authentication providers
+ */
+public interface AuthenticationProvider {
+    /**
+     * Authenticates a user based on provided credentials
+     */
+    Authentication authenticate(Authentication authentication) throws AuthenticationException;
+    
+    /**
+     * Indicates whether this provider can authenticate the given credentials
+     */
+    boolean supports(Class<?> authentication);
+}
+
+/**
+ * Interface for JWT token processing
+ */
+public interface JwtTokenProvider {
+    /**
+     * Generate a JWT token for the authenticated user
+     */
+    String generateToken(Authentication authentication);
+    
+    /**
+     * Validate a JWT token
+     */
+    boolean validateToken(String token);
+    
+    /**
+     * Extract username from JWT token
+     */
+    String getUsernameFromToken(String token);
+    
+    /**
+     * Extract authorities/roles from JWT token
+     */
+    Collection<? extends GrantedAuthority> getAuthoritiesFromToken(String token);
+}
+
+/**
+ * Interface for Multi-Factor Authentication services
+ */
+public interface MfaService {
+    /**
+     * Generate a new secret key for TOTP generation
+     */
+    String generateSecretKey();
+    
+    /**
+     * Generate the QR code URL for TOTP setup
+     */
+    String generateQrCodeUrl(String username, String secretKey);
+    
+    /**
+     * Verify a TOTP code against a user's secret key
+     */
+    boolean verifyCode(String secretKey, String code);
+    
+    /**
+     * Determine if a user requires MFA based on policy
+     */
+    boolean isMfaRequired(UserProfile userProfile);
+}
+
+/**
+ * Interface for permissions management
+ */
+public interface PermissionService {
+    /**
+     * Check if the current user has the specified permission for a domain object
+     */
+    boolean hasPermission(Object domainObject, String permission);
+    
+    /**
+     * Check if the current user has the specified permission for a domain object type and identifier
+     */
+    boolean hasPermission(String targetType, Serializable targetId, String permission);
+    
+    /**
+     * Grant a permission to a user for a specific object
+     */
+    void grantPermission(UserProfile user, Object domainObject, String permission);
+    
+    /**
+     * Revoke a permission from a user for a specific object
+     */
+    void revokePermission(UserProfile user, Object domainObject, String permission);
+}
+
+/**
+ * Interface for security auditing
+ */
+public interface SecurityAuditService {
+    /**
+     * Log a successful authentication
+     */
+    void logAuthenticationSuccess(String username, String ipAddress, String userAgent);
+    
+    /**
+     * Log a failed authentication
+     */
+    void logAuthenticationFailure(String username, String reason, String ipAddress, String userAgent);
+    
+    /**
+     * Log an access control check
+     */
+    void logAccessCheck(String username, Object resource, String permission, boolean granted);
+    
+    /**
+     * Log a sensitive operation
+     */
+    void logSensitiveOperation(String username, String operation, Object resource, String outcome);
+}
+```
+
+====== Nepal-Specific Security Configuration
+
+```java
+/**
+ * Security configuration class tailored for Nepal's context
+ */
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final JwtAuthenticationFilter jwtFilter;
+    private final CustomAuthenticationProvider authProvider;
+    private final OfflineAuthenticationProvider offlineAuthProvider;
+    private final AccessDeniedHandler customAccessDeniedHandler;
+    private final AuthenticationEntryPoint customAuthEntryPoint;
+    
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .csrf().disable()
+            .exceptionHandling()
+                .accessDeniedHandler(customAccessDeniedHandler)
+                .authenticationEntryPoint(customAuthEntryPoint)
+            .and()
+            .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .authorizeRequests()
+                // Public endpoints
+                .antMatchers("/api/v1/auth/**").permitAll()
+                .antMatchers("/api/v1/public/**").permitAll()
+                
+                // Citizen endpoints
+                .antMatchers("/api/v1/citizen/profile/**").hasRole("CITIZEN")
+                
+                // Administrative endpoints with geographic scoping
+                .antMatchers("/api/v1/admin/province/**").hasAnyRole("PROVINCE_ADMIN", "FEDERAL_ADMIN")
+                .antMatchers("/api/v1/admin/district/**").hasAnyRole("DISTRICT_ADMIN", "PROVINCE_ADMIN", "FEDERAL_ADMIN")
+                .antMatchers("/api/v1/admin/municipality/**").hasAnyRole("MUNICIPALITY_ADMIN", "DISTRICT_ADMIN", "PROVINCE_ADMIN", "FEDERAL_ADMIN")
+                .antMatchers("/api/v1/admin/ward/**").hasAnyRole("WARD_ADMIN", "MUNICIPALITY_ADMIN", "DISTRICT_ADMIN", "PROVINCE_ADMIN", "FEDERAL_ADMIN")
+                
+                // Land management endpoints
+                .antMatchers("/api/v1/land/registry/**").hasAnyRole("LAND_OFFICER", "LAND_ADMIN")
+                .antMatchers("/api/v1/land/transaction/**").hasAnyRole("LAND_OFFICER", "LAND_ADMIN")
+                .antMatchers("/api/v1/land/dispute/**").hasAnyRole("LAND_OFFICER", "LAND_ADMIN", "LEGAL_OFFICER")
+                
+                // Other secured endpoints
+                .anyRequest().authenticated()
+            .and()
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+    
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(authProvider)
+            .authenticationProvider(offlineAuthProvider);
+    }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+    
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+}
+```
+
+====== Role-Based Access Control with Geographic Scoping
+
+Nepal's administrative structure requires geographic scoping of permissions:
+
+```java
+/**
+ * Custom permission evaluator for Nepal's administrative hierarchy
+ */
+@Component
+public class GeographicScopedPermissionEvaluator implements PermissionEvaluator {
+
+    private final UserProfileRepository userRepo;
+    private final ProvinceRepository provinceRepo;
+    private final DistrictRepository districtRepo;
+    private final MunicipalityRepository municipalityRepo;
+    
+    @Override
+    public boolean hasPermission(Authentication auth, Object targetDomainObject, Object permission) {
+        if (auth == null || targetDomainObject == null || !(permission instanceof String)) {
+            return false;
+        }
+        
+        UserProfile user = userRepo.findByUsername(auth.getName()).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        
+        // Global Administrators bypass geographic scoping
+        if (hasGlobalAdminRole(user)) {
+            return true;
+        }
+        
+        // Handle different entity types with geographic scoping
+        if (targetDomainObject instanceof Province) {
+            return evaluateProvincePermission(user, (Province) targetDomainObject, permission.toString());
+        } else if (targetDomainObject instanceof District) {
+            return evaluateDistrictPermission(user, (District) targetDomainObject, permission.toString());
+        } else if (targetDomainObject instanceof Municipality) {
+            return evaluateMunicipalityPermission(user, (Municipality) targetDomainObject, permission.toString());
+        } else if (targetDomainObject instanceof Ward) {
+            return evaluateWardPermission(user, (Ward) targetDomainObject, permission.toString());
+        } else if (targetDomainObject instanceof LandParcel) {
+            return evaluateLandParcelPermission(user, (LandParcel) targetDomainObject, permission.toString());
+        }
+        
+        return false;
+    }
+    
+    @Override
+    public boolean hasPermission(Authentication auth, Serializable targetId, String targetType, Object permission) {
+        // Implementation to load entity by ID and type, then delegate to the other method
+        // ...
+    }
+    
+    // Check if user has administrative jurisdiction over a province
+    private boolean evaluateProvincePermission(UserProfile user, Province province, String permission) {
+        // Federal admins have access to all provinces
+        if (hasRole(user, "ROLE_FEDERAL_ADMIN")) {
+            return true;
+        }
+        
+        // Province admins only have access to their assigned province
+        if (hasRole(user, "ROLE_PROVINCE_ADMIN")) {
+            return user.getAssignedProvinceId() != null && user.getAssignedProvinceId().equals(province.getId());
+        }
+        
+        // For view permissions, all authenticated users can view province data
+        if (permission.equals("VIEW")) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // Similar methods for district, municipality, ward and land parcel permissions
+    // ...
+}
+```
+
+====== Multi-Factor Authentication for Nepal
+
+```java
+/**
+ * MFA service implementation tailored for Nepal's connectivity challenges
+ */
+@Service
+public class NepalContextMfaService implements MfaService {
+    
+    private final Clock clock;
+    private final UserProfileRepository userRepo;
+    private final OfflineMfaTokenRepository tokenRepo;
+    private final LocationService locationService;
+    
+    @Override
+    public String generateSecretKey() {
+        byte[] buffer = new byte[20];
+        new SecureRandom().nextBytes(buffer);
+        return new Base32().encodeToString(buffer);
+    }
+    
+    @Override
+    public String generateQrCodeUrl(String username, String secretKey) {
+        String company = "Nepal Digital Profile";
+        return String.format(
+            "otpauth://totp/%s:%s?secret=%s&issuer=%s", 
+            company, username, secretKey, company
+        );
+    }
+    
+    @Override
+    public boolean verifyCode(String secretKey, String code) {
+        // Basic TOTP verification
+        try {
+            Totp totp = new Totp(secretKey, clock);
+            return totp.verify(code);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean isMfaRequired(UserProfile userProfile) {
+        // MFA is always required for administrative roles
+        if (userProfile.hasAdministrativeRole()) {
+            return true;
+        }
+        
+        // MFA is required for any user handling land transactions
+        if (userProfile.hasRole("ROLE_LAND_OFFICER")) {
+            return true;
+        }
+        
+        // Check user preferences - they may have opted in
+        if (userProfile.isMfaEnabled()) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Generate offline MFA tokens for users in remote areas with limited connectivity
+     */
+    public List<OfflineMfaToken> generateOfflineTokens(UserProfile user, int count, Duration validity) {
+        List<OfflineMfaToken> tokens = new ArrayList<>();
+        
+        // Generate specified number of offline tokens
+        for (int i = 0; i < count; i++) {
+            String tokenValue = generateSecureRandomToken();
+            
+            OfflineMfaToken token = new OfflineMfaToken();
+            token.setUserId(user.getId());
+            token.setTokenValue(tokenValue);
+            token.setCreatedAt(LocalDateTime.now());
+            token.setExpiresAt(LocalDateTime.now().plus(validity));
+            token.setUsed(false);
+            
+            tokens.add(tokenRepo.save(token));
+        }
+        
+        return tokens;
+    }
+    
+    /**
+     * Verify an offline MFA token
+     */
+    public boolean verifyOfflineToken(String username, String tokenValue) {
+        UserProfile user = userRepo.findByUsername(username).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        
+        OfflineMfaToken token = tokenRepo.findByUserIdAndTokenValue(user.getId(), tokenValue).orElse(null);
+        if (token == null || token.isUsed() || token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            return false;
+        }
+        
+        // Mark token as used
+        token.setUsed(true);
+        token.setUsedAt(LocalDateTime.now());
+        tokenRepo.save(token);
+        
+        return true;
+    }
+    
+    /**
+     * Check if user should use offline MFA based on location
+     */
+    public boolean shouldUseOfflineMfa(UserProfile user) {
+        // If user's assigned location is in a remote area with poor connectivity
+        if (user.getAssignedLocationId() != null) {
+            Location location = locationService.getLocationById(user.getAssignedLocationId());
+            return location != null && location.getConnectivityLevel() == ConnectivityLevel.LIMITED;
+        }
+        return false;
+    }
+}
+```
+
+====== Secure Document Access Control
+
+```java
+/**
+ * Service for secure document access with Nepal-specific controls
+ */
+@Service
+public class SecureDocumentService {
+    
+    private final DocumentRepository documentRepo;
+    private final PermissionService permissionService;
+    private final UserProfileService userService;
+    private final SecurityAuditService auditService;
+    
+    /**
+     * Retrieve a document with all applicable security checks
+     */
+    public Document getDocument(UUID documentId) {
+        Document document = documentRepo.findById(documentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Document", documentId.toString()));
+            
+        UserProfile currentUser = userService.getCurrentUser();
+        
+        // Check basic access permission
+        if (!permissionService.hasPermission(document, "VIEW")) {
+            auditService.logAccessCheck(currentUser.getUsername(), document, "VIEW", false);
+            throw new AccessDeniedException("You do not have permission to view this document");
+        }
+        
+        // For sensitive documents, check additional conditions
+        if (document.getSensitivityLevel() == SensitivityLevel.HIGH) {
+            // Require elevated role for high sensitivity
+            if (!currentUser.hasAnyRole("ROLE_SENIOR_OFFICER", "ROLE_MANAGER", "ROLE_ADMIN")) {
+                auditService.logAccessCheck(currentUser.getUsername(), document, "VIEW_SENSITIVE", false);
+                throw new AccessDeniedException("This document requires elevated privileges");
+            }
+            
+            // For land ownership documents, verify geographic jurisdiction
+            if (document.getDocumentType() == DocumentType.LAND_OWNERSHIP) {
+                if (!hasJurisdictionOverDocument(currentUser, document)) {
+                    auditService.logAccessCheck(currentUser.getUsername(), document, "VIEW_OUTSIDE_JURISDICTION", false);
+                    throw new AccessDeniedException("This document is outside your administrative jurisdiction");
+                }
+            }
+        }
+        
+        // Log successful access
+        auditService.logAccessCheck(currentUser.getUsername(), document, "VIEW", true);
+        
+        // For sensitive documents, also log the specific sensitive access
+        if (document.getSensitivityLevel() == SensitivityLevel.HIGH) {
+            auditService.logSensitiveOperation(
+                currentUser.getUsername(),
+                "ACCESS_SENSITIVE_DOCUMENT", 
+                document,
+                "SUCCESS"
+            );
+        }
+        
+        return document;
+    }
+    
+    /**
+     * Check if user has jurisdiction over document based on Nepal's administrative hierarchy
+     */
+    private boolean hasJurisdictionOverDocument(UserProfile user, Document document) {
+        // Implementation based on Nepal's administrative boundaries
+        // ...
+    }
+
+    /**
+     * Upload a document with proper security controls
+     */
+    public Document uploadDocument(DocumentUploadRequest request, MultipartFile file) {
+        UserProfile currentUser = userService.getCurrentUser();
+        
+        // Create document entity
+        Document document = new Document();
+        document.setName(request.getName());
+        document.setDocumentType(request.getDocumentType());
+        document.setSensitivityLevel(request.getSensitivityLevel());
+        document.setDescription(request.getDescription());
+        document.setUploadedBy(currentUser.getId());
+        document.setUploadedAt(LocalDateTime.now());
+        
+        // Save the document file securely
+        String storagePath = saveDocumentSecurely(file, document.getSensitivityLevel());
+        document.setStoragePath(storagePath);
+        
+        // Apply default access control based on sensitivity
+        if (document.getSensitivityLevel() == SensitivityLevel.HIGH) {
+            // For high sensitivity, only the uploader and their superiors have access initially
+            document.setAccessRestricted(true);
+            
+            // Admin users in the same geographic jurisdiction get access
+            List<UserProfile> jurisdictionAdmins = userService.getAdminsInJurisdiction(currentUser);
+            for (UserProfile admin : jurisdictionAdmins) {
+                permissionService.grantPermission(admin, document, "VIEW");
+            }
+        } else {
+            // For standard documents, apply regular departmental access
+            document.setAccessRestricted(false);
+            // Department members get access
+            if (currentUser.getDepartmentId() != null) {
+                permissionService.grantDepartmentPermission(
+                    currentUser.getDepartmentId(), 
+                    document, 
+                    "VIEW"
+                );
+            }
+        }
+        
+        // Owner always gets full access
+        permissionService.grantPermission(currentUser, document, "FULL_CONTROL");
+        
+        // Save the document metadata
+        document = documentRepo.save(document);
+        
+        // Audit the upload
+        auditService.logSensitiveOperation(
+            currentUser.getUsername(),
+            "UPLOAD_DOCUMENT",
+            document,
+            "SUCCESS"
+        );
+        
+        return document;
+    }
+    
+    /**
+     * Save document with encryption based on sensitivity level
+     */
+    private String saveDocumentSecurely(MultipartFile file, SensitivityLevel sensitivityLevel) {
+        // Implementation with proper encryption and secure storage
+        // ...
+    }
+}
+```
+
+====== Nepal-Specific Security Challenges and Solutions
+
+The security framework addresses several Nepal-specific challenges:
+
+|===
+| Challenge | Solution Implementation
+| Intermittent Internet Connectivity | Offline authentication support with cryptographically secure offline tokens that have limited validity and are reconciled upon reconnection
+| Geographic Administrative Boundaries | Security permissions scoped to Nepal's administrative hierarchy (Province, District, Municipality, Ward)
+| Multi-Language Support | Security error messages and authentication interfaces in both Nepali and English
+| Digital Literacy Variations | Tiered authentication options (biometric, OTP, in-person) based on user capabilities
+| Power Outages | Session recovery mechanisms with secure state preservation
+| Remote Office Support | Delegated authentication for remote offices with cryptographic audit trails
+| Legal Land Document Requirements | Enhanced audit trails that meet legal requirements for chain of custody in land record access
+|===
+
+====== Security Audit and Monitoring
+
+The security framework includes specialized monitoring for Nepal's digital government services:
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Security Dashboard for Kathmandu Office" as Dashboard {
+  + Authentication Summary
+  + Geographic Access Heatmap
+  + Failed Login Attempts
+  + Sensitive Operations
+}
+
+note right of Dashboard::AuthenticationSummary
+  - 235 Successful Logins
+  - 12 Failed Logins
+  - 3 MFA Failures
+  - 8 Offline Authentication Events
+end note
+
+note right of Dashboard::GeographicAccessHeatmap
+  Shows access patterns across Nepal's
+  provinces highlighting anomalies
+  where officials access data outside
+  their jurisdiction
+end note
+
+note right of Dashboard::FailedLoginAttempts
+  - 4 Password Failures
+  - 3 MFA Failures
+  - 2 Expired Sessions
+  - 3 Permission Denials
+end note
+
+note right of Dashboard::SensitiveOperations
+  - 12 Land Records Modified
+  - 3 Ownership Transfers
+  - 2 Administrative Overrides
+  - 5 Sensitive Document Views
+end note
+@enduml
+----
+
+The dashboard provides:
+1. Real-time authentication monitoring across all government offices
+2. Geographic visualization of access patterns to detect jurisdiction violations
+3. Alerts for suspicious access patterns based on time, location, and frequency
+4. Comprehensive audit trails for all sensitive operations with legal compliance
+5. Offline activity reconciliation for remote office oversight

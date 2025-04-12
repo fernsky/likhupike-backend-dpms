@@ -1,0 +1,1049 @@
+===== Internationalization
+
+Internationalization (i18n) is consistently applied throughout the Digital Profile system to support Nepal's linguistic diversity and ensure accessibility for all citizens regardless of language preference.
+
+====== Internationalization Architecture
+
+[plantuml]
+----
+@startuml
+package "Internationalization Framework" {
+  interface TranslationService {
+    +translate(key: String, locale: Locale): String
+    +translate(key: String, args: Map<String, Object>, locale: Locale): String
+    +translatePlural(key: String, count: Int, locale: Locale): String
+    +hasTranslation(key: String, locale: Locale): Boolean
+    +getSupportedLocales(): Set<Locale>
+    +getDefaultLocale(): Locale
+  }
+  
+  interface MessageSource {
+    +getMessage(code: String, args: Object[], defaultMessage: String, locale: Locale): String
+    +getMessage(code: String, args: Object[], locale: Locale): String
+  }
+  
+  interface TranslationRepository {
+    +findByKeyAndLocale(key: String, locale: String): Translation
+    +findByKeyPrefix(prefix: String, locale: String): List<Translation>
+    +findAllByLocale(locale: String): List<Translation>
+    +save(translation: Translation): Translation
+    +deleteByKey(key: String): void
+  }
+  
+  class Translation {
+    +id: UUID
+    +key: String
+    +locale: String
+    +text: String
+    +lastUpdated: LocalDateTime
+    +status: TranslationStatus
+    +context: String
+    +pluralForms: Map<PluralCategory, String>
+  }
+  
+  enum TranslationStatus {
+    NEW
+    TRANSLATED
+    NEEDS_REVIEW
+    APPROVED
+    OUTDATED
+  }
+  
+  enum PluralCategory {
+    ZERO
+    ONE
+    TWO
+    FEW
+    MANY
+    OTHER
+  }
+  
+  class LocaleResolver {
+    +resolveLocale(request: HttpServletRequest): Locale
+    +setLocale(request: HttpServletRequest, response: HttpServletResponse, locale: Locale): void
+  }
+  
+  interface LocalizedEntityService {
+    +getLocalizedEntity(id: UUID, entityType: String, locale: Locale): LocalizedEntity
+    +updateTranslation(id: UUID, entityType: String, field: String, locale: Locale, value: String): void
+    +getTranslationStatus(id: UUID, entityType: String): Map<String, Map<Locale, TranslationStatus>>
+  }
+  
+  interface ScriptConverter {
+    +convertToUnicode(text: String, sourceScript: Script): String
+    +convertFromUnicode(text: String, targetScript: Script): String
+    +isNepaliScript(text: String): Boolean
+    +isLatinScript(text: String): Boolean
+  }
+  
+  class CharacterSetValidator {
+    +isValidNepali(text: String): Boolean
+    +isValidLatin(text: String): Boolean
+    +sanitizeForScript(text: String, script: Script): String
+  }
+  
+  class TranslationCacheManager {
+    +getTranslation(key: String, locale: Locale): String
+    +cacheTranslation(key: String, locale: Locale, text: String): void
+    +invalidateCache(key: String): void
+    +invalidateCache(locale: Locale): void
+  }
+  
+  class TranslationSynchronizer {
+    +syncTranslations(sourceSystem: String): SyncResult
+    +exportTranslations(targetSystem: String, locale: Locale): ExportResult
+    +importTranslations(source: File, locale: Locale): ImportResult
+  }
+
+  class MultiScriptSearchService {
+    +search(query: String, script: Script): SearchResults
+    +indexContent(content: String, entityId: UUID, entityType: String): void
+    +searchWithScriptConversion(query: String): SearchResults
+  }
+}
+
+MessageSource <|.. TranslationService
+TranslationService o-- TranslationRepository
+TranslationRepository o-- Translation
+Translation -- TranslationStatus
+Translation -- PluralCategory
+TranslationService o-- TranslationCacheManager
+TranslationService o-- ScriptConverter
+TranslationService o-- CharacterSetValidator
+LocalizedEntityService -- TranslationService
+@enduml
+----
+
+====== Internationalization Flow
+
+[plantuml]
+----
+@startuml
+participant "Client" as Client
+participant "LocaleResolver" as Resolver
+participant "Controller" as Controller
+participant "TranslationService" as Translation
+participant "TranslationCacheManager" as Cache
+participant "TranslationRepository" as Repo
+participant "ScriptConverter" as Script
+
+Client -> Resolver : HTTP Request with Accept-Language header
+activate Resolver
+Resolver -> Resolver : Extract locale from header/cookie/parameter
+Client <-- Resolver : resolved locale
+deactivate Resolver
+
+Client -> Controller : request data
+activate Controller
+
+Controller -> Translation : translate("greeting.welcome", locale)
+activate Translation
+
+Translation -> Cache : getTranslation("greeting.welcome", locale)
+activate Cache
+Translation <-- Cache : cached translation or null
+deactivate Cache
+
+alt Cache hit
+  Controller <-- Translation : translated text
+else Cache miss
+  Translation -> Repo : findByKeyAndLocale("greeting.welcome", locale)
+  activate Repo
+  Translation <-- Repo : translation or null
+  deactivate Repo
+  
+  alt Translation found
+    Translation -> Cache : cacheTranslation(key, locale, text)
+    activate Cache
+    Translation <-- Cache
+    deactivate Cache
+    
+    Controller <-- Translation : translated text
+  else Translation not found for locale
+    Translation -> Translation : tryFallbackLocales(key, locale)
+    
+    alt Fallback found
+      Controller <-- Translation : fallback text
+    else No fallback
+      Translation -> Translation : getDefaultTranslation(key)
+      Controller <-- Translation : default text
+    end
+  end
+end
+
+deactivate Translation
+
+Client <-- Controller : localized response
+deactivate Controller
+
+Client -> Controller : request with mixed script content
+activate Controller
+
+Controller -> Script : convertToUnicode(text, Script.DEVANAGARI)
+activate Script
+Controller <-- Script : normalized text
+deactivate Script
+
+Client <-- Controller : script-aware response
+deactivate Controller
+@enduml
+----
+
+====== Translation Management Flow
+
+[plantuml]
+----
+@startuml
+actor "Translation\nManager" as Manager
+participant "TranslationUI" as UI
+participant "TranslationController" as Controller
+participant "TranslationService" as Service
+participant "TranslationRepository" as Repo
+participant "TranslationValidator" as Validator
+participant "NotificationService" as Notify
+
+Manager -> UI : Add new key for translation
+UI -> Controller : createTranslationKey(key, defaultText)
+activate Controller
+
+Controller -> Service : createTranslationKey(key, defaultText)
+activate Service
+
+Service -> Repo : findByKey(key)
+activate Repo
+Service <-- Repo : null (not found)
+deactivate Repo
+
+Service -> Repo : save(new Translation(key))
+activate Repo
+Service <-- Repo : savedTranslation
+deactivate Repo
+
+Controller <-- Service : keyCreated
+deactivate Service
+
+Manager <-- Controller : Success
+deactivate Controller
+
+Manager -> UI : Add Nepali translation
+UI -> Controller : addTranslation(key, "ne", nepaliText)
+activate Controller
+
+Controller -> Service : addTranslation(key, "ne", nepaliText)
+activate Service
+
+Service -> Validator : validateTranslation(nepaliText, "ne")
+activate Validator
+Service <-- Validator : validationResult
+deactivate Validator
+
+alt Valid translation
+  Service -> Repo : findByKeyAndLocale(key, "ne")
+  activate Repo
+  Service <-- Repo : existingTranslation
+  deactivate Repo
+  
+  Service -> Service : updateTranslation(existingTranslation, nepaliText)
+  Service -> Repo : save(translation)
+  activate Repo
+  Service <-- Repo : savedTranslation
+  deactivate Repo
+  
+  Controller <-- Service : translationAdded
+  deactivate Service
+  
+  Manager <-- Controller : Success
+else Invalid translation
+  Controller <-- Service : validationError
+  deactivate Service
+  
+  Manager <-- Controller : Validation Error
+end
+deactivate Controller
+
+Manager -> UI : Bulk import translations
+UI -> Controller : importTranslations(file)
+activate Controller
+
+Controller -> Service : importTranslations(file)
+activate Service
+
+Service -> Service : parseFile(file)
+Service -> Service : validateBulkTranslations(translations)
+
+loop for each valid translation
+  Service -> Repo : save(translation)
+end
+
+Controller <-- Service : importResult
+deactivate Service
+
+Manager <-- Controller : Import Results
+deactivate Controller
+
+@enduml
+----
+
+====== Contextual Use Case for Internationalization
+
+*Real-World Scenario:* Multilingual Land Registration Service in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registration\nOfficer" as Officer
+actor "Citizen\n(Sherpa woman)" as Citizen
+participant "Land Registration\nPortal" as Portal
+participant "LocaleResolver" as Resolver
+participant "LandController" as Controller
+participant "LandService" as Service
+participant "TranslationService" as Translation
+participant "ScriptConverter" as Script
+participant "LocalizedValidationService" as Validation
+
+Citizen -> Portal : Access land registration service
+Portal -> Resolver : Detect preferred language
+activate Resolver
+note right
+  User agent indicates Nepali
+  as preferred language
+end note
+Portal <-- Resolver : locale = "ne"
+deactivate Resolver
+
+Portal -> Translation : translate(UI elements, "ne")
+activate Translation
+Portal <-- Translation : Nepali UI elements
+deactivate Translation
+
+Portal -> Citizen : Display UI in Nepali
+
+Citizen -> Officer : Explain needs in Sherpa language
+Officer -> Portal : Switch to Sherpa interface
+Portal -> Translation : setLocale("xsr")
+activate Translation
+Portal <-- Translation : Interface in Sherpa
+deactivate Translation
+
+Portal -> Citizen : Display UI in Sherpa
+
+Citizen -> Portal : Fill registration form in Sherpa
+Portal -> Controller : submitRegistration(formData, "xsr")
+activate Controller
+
+Controller -> Script : detectScript(formData.name)
+activate Script
+Controller <-- Script : Script.TIBETAN
+deactivate Script
+
+Controller -> Script : convertToUnicode(formData.name, Script.TIBETAN)
+activate Script
+Controller <-- Script : normalizedName
+deactivate Script
+
+Controller -> Service : validateRegistration(formData)
+activate Service
+
+Service -> Validation : validateWithLocale(formData, "xsr")
+activate Validation
+Service <-- Validation : validationResults
+deactivate Validation
+
+alt Valid Input
+  Service -> Service : processRegistration(formData)
+  Controller <-- Service : registrationComplete
+  deactivate Service
+  
+  Controller -> Translation : translate("registration.success", "xsr")
+  activate Translation
+  Controller <-- Translation : successMessage
+  deactivate Translation
+  
+  Portal <-- Controller : Success (in Sherpa)
+else Invalid Input
+  Controller <-- Service : validationErrors
+  deactivate Service
+  
+  Controller -> Translation : translateErrors(validationErrors, "xsr")
+  activate Translation
+  Controller <-- Translation : localizedErrors
+  deactivate Translation
+  
+  Portal <-- Controller : Validation errors (in Sherpa)
+end
+deactivate Controller
+
+Portal -> Citizen : Display result in Sherpa
+
+Officer -> Portal : Generate certificate
+Portal -> Controller : generateCertificate(registrationId)
+activate Controller
+
+Controller -> Service : generateCertificate(registrationId)
+activate Service
+
+Service -> Service : createBilingualCertificate()
+note right
+  Certificate contains both
+  Nepali (official) and Sherpa text
+end note
+
+Controller <-- Service : bilingualCertificate
+deactivate Service
+
+Portal <-- Controller : Certificate PDF
+deactivate Controller
+
+Officer -> Citizen : Explain certificate contents
+@enduml
+----
+
+*Implementation Details:*
+The Digital Profile system implements a comprehensive internationalization strategy to address Nepal's linguistic diversity, where over 123 languages are spoken across different communities.
+
+In this scenario, a Sherpa woman from Solukhumbu district visits a land registration office to register her inherited property. The system detects Nepali (ne) as the default language based on browser settings, but the officer notices she's more comfortable speaking Sherpa (xsr). Using the language selector, the interface is switched to Sherpa, one of 12 officially supported languages in the system.
+
+When the citizen enters her name and address in Tibetan script (commonly used for written Sherpa), the system's ScriptConverter normalizes the text to Unicode, ensuring proper storage and display. The form's validation messages appear in Sherpa, making the process more accessible. Fields requiring specific formats (like land parcel identifiers) show examples in both Sherpa and Nepali.
+
+The system maintains translations for all UI elements, validation messages, and document templates through the TranslationRepository, with carefully managed fallbacks when specific phrases aren't available in rarer languages. It seamlessly handles Nepal's complex language requirements, including Devanagari script (for Nepali), Tibetan script (for Sherpa and related languages), and various other scripts.
+
+The final certificate is generated in both languages—Nepali as the legally binding official language and Sherpa for the citizen's understanding. This bilingual approach ensures both legal compliance and accessibility. The certificate includes a QR code linking to an online version available in all supported languages.
+
+This implementation recognizes the importance of language access as a fundamental equity issue in Nepal's diverse society, enabling citizens to interact with government services in their preferred language while maintaining legal and technical consistency.
+
+====== Core Interfaces
+
+```java
+/**
+ * Main interface for translation services
+ */
+public interface TranslationService {
+    /**
+     * Get translation for a key in the specified locale
+     */
+    String translate(String key, Locale locale);
+    
+    /**
+     * Get translation with variable substitution
+     */
+    String translate(String key, Map<String, Object> args, Locale locale);
+    
+    /**
+     * Get appropriate plural form translation based on count
+     */
+    String translatePlural(String key, int count, Locale locale);
+    
+    /**
+     * Check if translation exists for key and locale
+     */
+    boolean hasTranslation(String key, Locale locale);
+    
+    /**
+     * Get all supported locales
+     */
+    Set<Locale> getSupportedLocales();
+    
+    /**
+     * Get system default locale
+     */
+    Locale getDefaultLocale();
+}
+
+/**
+ * Interface for persistent translation storage
+ */
+public interface TranslationRepository {
+    /**
+     * Find translation by key and locale
+     */
+    Translation findByKeyAndLocale(String key, String locale);
+    
+    /**
+     * Find all translations with key starting with prefix
+     */
+    List<Translation> findByKeyPrefix(String prefix, String locale);
+    
+    /**
+     * Find all translations for a locale
+     */
+    List<Translation> findAllByLocale(String locale);
+    
+    /**
+     * Save a translation
+     */
+    Translation save(Translation translation);
+    
+    /**
+     * Delete a translation by key
+     */
+    void deleteByKey(String key);
+}
+
+/**
+ * Interface for script conversion between different writing systems
+ */
+public interface ScriptConverter {
+    /**
+     * Convert text from a source script to Unicode
+     */
+    String convertToUnicode(String text, Script sourceScript);
+    
+    /**
+     * Convert Unicode text to a target script
+     */
+    String convertFromUnicode(String text, Script targetScript);
+    
+    /**
+     * Check if text is in Nepali script
+     */
+    boolean isNepaliScript(String text);
+    
+    /**
+     * Check if text is in Latin script
+     */
+    boolean isLatinScript(String text);
+}
+
+/**
+ * Interface for localized entity management
+ */
+public interface LocalizedEntityService {
+    /**
+     * Get localized version of an entity
+     */
+    <T extends LocalizedEntity> T getLocalizedEntity(UUID id, String entityType, Locale locale);
+    
+    /**
+     * Update translation for an entity field
+     */
+    void updateTranslation(UUID id, String entityType, String field, Locale locale, String value);
+    
+    /**
+     * Get translation status for all fields of an entity
+     */
+    Map<String, Map<Locale, TranslationStatus>> getTranslationStatus(UUID id, String entityType);
+}
+
+/**
+ * Interface for translation validation
+ */
+public interface TranslationValidator {
+    /**
+     * Validate translation text for a locale
+     */
+    ValidationResult validateTranslation(String text, String locale);
+    
+    /**
+     * Check if translation maintains the same variables as the source
+     */
+    ValidationResult validatePlaceholders(String source, String translation);
+    
+    /**
+     * Validate translation length constraints
+     */
+    ValidationResult validateLength(String text, String key);
+}
+```
+
+====== Key Data Structures
+
+```java
+/**
+ * Entity representing a single translation
+ */
+public class Translation {
+    /**
+     * Unique identifier
+     */
+    private UUID id;
+    
+    /**
+     * Translation key
+     */
+    private String key;
+    
+    /**
+     * Locale identifier (e.g., "ne" for Nepali)
+     */
+    private String locale;
+    
+    /**
+     * Translated text
+     */
+    private String text;
+    
+    /**
+     * When translation was last updated
+     */
+    private LocalDateTime lastUpdated;
+    
+    /**
+     * Current status of this translation
+     */
+    private TranslationStatus status;
+    
+    /**
+     * Optional context information for translators
+     */
+    private String context;
+    
+    /**
+     * Plural forms for this translation key
+     */
+    private Map<PluralCategory, String> pluralForms;
+}
+
+/**
+ * Status of a translation
+ */
+public enum TranslationStatus {
+    /**
+     * Newly created, not yet translated
+     */
+    NEW,
+    
+    /**
+     * Translated but not reviewed
+     */
+    TRANSLATED,
+    
+    /**
+     * Flagged for review (e.g., after source text changed)
+     */
+    NEEDS_REVIEW,
+    
+    /**
+     * Reviewed and approved
+     */
+    APPROVED,
+    
+    /**
+     * Source text has changed, translation needs update
+     */
+    OUTDATED
+}
+
+/**
+ * Plural categories according to CLDR
+ */
+public enum PluralCategory {
+    ZERO,
+    ONE,
+    TWO,
+    FEW,
+    MANY,
+    OTHER
+}
+
+/**
+ * Writing scripts supported in Nepal
+ */
+public enum Script {
+    /**
+     * Used for Nepali and other Indo-Aryan languages
+     */
+    DEVANAGARI,
+    
+    /**
+     * Used for English and romanized Nepali
+     */
+    LATIN,
+    
+    /**
+     * Used for Sherpa, Tamang, and other Tibeto-Burman languages
+     */
+    TIBETAN,
+    
+    /**
+     * Used for Newari (traditional script)
+     */
+    NEPAL_BHASA,
+    
+    /**
+     * Used for Limbu language
+     */
+    LIMBU,
+    
+    /**
+     * Used for various languages of Nepal
+     */
+    PRACTICAL_UNICODE
+}
+```
+
+====== Nepal-Specific Language Support
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Nepal Language Strategy" as Strategy {
+  + Official Language: Nepali (ne)
+  + Provincial Languages: 7 (per province)
+  + Additional Supported Languages: 12
+  + Emergency Language Support: 25+
+  + Interface Languages: 5
+  + Documentation Languages: 3
+}
+
+note bottom of Strategy
+  The system prioritizes different levels of language
+  support based on Nepal's linguistic diversity and
+  constitutional provisions for language rights
+end note
+
+RECTANGLE "Tier 1: Fully Supported" as Tier1 {
+  + Nepali (ne)
+  + English (en)
+  + Nepal Bhasa / Newari (new)
+  + Maithili (mai)
+  + Bhojpuri (bho)
+}
+
+note bottom of Tier1
+  Complete UI, documentation, validation
+  messages, and data entry support
+end note
+
+RECTANGLE "Tier 2: Interface & Critical Services" as Tier2 {
+  + Tharu (thl)
+  + Tamang (taj)
+  + Sherpa (xsr)
+  + Gurung (gvr)
+  + Magar (mrd)
+  + Awadhi (awa)
+  + Limbu (lif)
+}
+
+note bottom of Tier2
+  Complete UI, critical service forms, and
+  essential information support
+end note
+
+RECTANGLE "Tier 3: Basic Support" as Tier3 {
+  + Rajbanshi (rjs)
+  + Rai languages (collective)
+  + Bajjika (bjj)
+  + Doteli (dty)
+  + Urdu (ur)
+  + Tibet (bod)
+  + 12+ others
+}
+
+note bottom of Tier3
+  Core information, consent forms,
+  and essential service interfaces
+end note
+
+Strategy --> Tier1
+Strategy --> Tier2
+Strategy --> Tier3
+@enduml
+----
+
+====== Plural Rules Support
+
+Nepal's languages have different plural rules that the system must support:
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Nepali Plural Rules" as NepaliPlural {
+  one: n = 1
+  other: n != 1
+}
+
+RECTANGLE "English Plural Rules" as EnglishPlural {
+  one: n = 1
+  other: n != 1
+}
+
+RECTANGLE "Sherpa Plural Rules" as SherpaPlural {
+  one: n = 1
+  other: n != 1
+}
+
+RECTANGLE "Tibetan Plural Rules" as TibetanPlural {
+  other: true
+}
+
+note bottom of NepaliPlural
+  Nepali distinguishes between singular
+  and plural forms like English
+end note
+
+note right of TibetanPlural
+  Tibetan (and some Tibeto-Burman languages
+  of Nepal) do not grammatically mark plurals
+  in the same way as Indo-European languages
+end note
+
+RECTANGLE "Plural Rule Example" as Example {
+  Key: "document.count"
+  
+  English (en): 
+    one: "1 document"
+    other: "{count} documents"
+    
+  Nepali (ne):
+    one: "१ कागजात"
+    other: "{count} कागजातहरू"
+    
+  Tibetan (bod):
+    other: "ཡིག་ཆ་ {count}"
+}
+@enduml
+----
+
+====== Character Support for Nepali Languages
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Devanagari Script" as Devanagari {
+  Character Set: Unicode Block "Devanagari"
+  Primary Languages: Nepali, Maithili, Bhojpuri
+  Numerals: ०, १, २, ३, ४, ५, ६, ७, ८, ९
+  Example: "नेपाली नागरिक प्रोफाइल प्रणाली"
+}
+
+RECTANGLE "Tibetan Script" as Tibetan {
+  Character Set: Unicode Block "Tibetan"
+  Primary Languages: Sherpa, Tibetan
+  Example: "བོད་སྐད་"
+}
+
+RECTANGLE "Limbu Script" as Limbu {
+  Character Set: Unicode Block "Limbu"
+  Primary Languages: Limbu
+  Example: "ᤛᤡᤖᤡᤈᤅᤠ"
+}
+
+RECTANGLE "Latin Script" as Latin {
+  Character Set: Unicode Block "Basic Latin"
+  Primary Languages: English, Romanized Nepali
+  Example: "Nepali Digital Profile System"
+}
+
+note bottom of Devanagari
+  The system supports all necessary conjuncts (ligatures)
+  required for proper Nepali orthography
+end note
+
+note right of Latin
+  Latin script is used for English and
+  also for romanized versions of Nepali
+  languages using the IAST transliteration system
+end note
+@enduml
+----
+
+====== Internationalization Implementation in User Interface
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Multilingual User Interface" as UI {
+  + Language Selector Component
+  + Interface Direction Support (LTR/RTL)
+  + Script-Aware Input Fields
+  + Locale-Sensitive Date Formats
+  + Multilingual Search
+  + Script Toggle
+  + Help Content in Multiple Languages
+}
+
+note bottom of UI
+  The UI automatically adapts to language selection,
+  adjusting not just translations but also layout,
+  directionality, and input behaviors
+end note
+
+RECTANGLE "Language Selector" as Selector {
+  + Language Name (in own script)
+  + Language Name (in Latin script)
+  + Flag/Icon
+  + Coverage Indicator
+  + Save Preference Option
+}
+
+RECTANGLE "Interface Components" as Components {
+  + Multilingual Form Labels
+  + Validation Messages
+  + Help Text
+  + Error Messages
+  + Notifications
+  + Reports
+  + Navigation
+}
+
+RECTANGLE "Date & Number Handling" as Formatting {
+  + Nepali Calendar Support (BS)
+  + Gregorian Calendar Support (AD)
+  + Nepali Numerals Toggle
+  + Locale-Specific Number Formatting
+  + Currency Formatting
+}
+
+UI --> Selector
+UI --> Components
+UI --> Formatting
+@enduml
+----
+
+====== Translation Management Dashboard
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Translation Management Interface" as TMI {
+  + Translation Progress by Language
+  + Content Sections
+  + Translation Search
+  + Import/Export Tools
+  + Translator Assignment
+  + Review Workflow
+}
+
+note bottom of TMI
+  The dashboard allows translation managers
+  to track, manage, and coordinate translation
+  efforts across multiple languages
+end note
+
+RECTANGLE "Progress Indicators" as Progress {
+  Nepali: ████████████ 100%
+  English: ████████████ 100%
+  Maithili: ██████████░░ 85%
+  Bhojpuri: ███████░░░░░ 60%
+  Tamang: ████░░░░░░░░░ 35%
+  Limbu: ██░░░░░░░░░░░ 15%
+}
+
+RECTANGLE "Translation Workflow" as Workflow {
+  + Extract new strings
+  + Assign to translators
+  + Translate
+  + Review
+  + Approve
+  + Deploy
+  + Monitor usage
+}
+
+RECTANGLE "Quality Controls" as Quality {
+  + Missing Variables Check
+  + Length Validation
+  + Cultural Appropriateness Review
+  + Consistency Check
+  + Context Notes
+  + Automated Tests
+}
+
+TMI --> Progress
+TMI --> Workflow
+TMI --> Quality
+@enduml
+----
+
+====== Nepal-Specific Internationalization Challenges and Solutions
+
+|===
+| Challenge | Solution Implementation
+| Multiple Official Languages | Tier-based language support with complete coverage for 5 core languages and partial coverage for 20+ others
+| Complex Script Rendering | Unicode-compliant rendering engine with support for Devanagari conjuncts and other Indic language features
+| Mixed Script Usage | Automatic script detection and conversion capabilities to handle mixed input
+| Transliteration Needs | Bidirectional transliteration between Devanagari and Latin scripts for flexible data entry
+| Calendar Systems | Support for both Bikram Sambat (BS) and Gregorian (AD) calendars with automatic conversion
+| Numerical Representation | Toggle between Arabic numerals (1, 2, 3) and Devanagari numerals (१, २, ३) with consistent storage
+| Name Ordering Conventions | Culturally-aware name formatting respecting different ethnic naming traditions
+| Provincial Language Requirements | Province-specific language support to meet constitutional requirements
+| Resource Constraints | Efficient translation management workflow prioritizing high-impact content
+| Low Literacy Contexts | Voice output support for essential content in major languages
+|===
+
+====== Translation Workflow
+
+[plantuml]
+----
+@startuml
+start
+:New content added to system;
+
+:Extract translatable strings;
+
+:Create translation keys;
+
+:Add English and Nepali translations;
+
+:Deploy base system;
+
+fork
+  :Prioritize 5 core language translations;
+fork again
+  :Prioritize high-traffic content areas;
+end fork
+
+:Assign to translation team;
+
+:Translate in Translation Management System;
+
+:Technical review for variables and length;
+
+:Linguistic review for accuracy;
+
+:Cultural review for appropriateness;
+
+:Approval;
+
+:Deploy translations;
+
+:Monitor feedback;
+
+stop
+@enduml
+----
+
+====== Content Translation Category Priorities
+
+[plantuml]
+----
+@startuml
+rectangle "P1: Critical Information" {
+  file "Consent Forms"
+  file "Legal Notices"
+  file "Emergency Instructions"
+  file "Rights Statements"
+}
+
+rectangle "P2: Core Functionality" {
+  file "Navigation"
+  file "Main Forms"
+  file "Status Messages"
+  file "Error Messages"
+  file "Validation Messages"
+}
+
+rectangle "P3: Supporting Content" {
+  file "Help Documentation"
+  file "Field Descriptions"
+  file "Secondary Interfaces"
+}
+
+rectangle "P4: Ancillary Content" {
+  file "Reports"
+  file "Statistics"
+  file "Administrative Interfaces"
+}
+@enduml
+----
+
+This comprehensive internationalization framework ensures the Digital Profile system is accessible to Nepal's linguistically diverse population, supporting constitutional requirements for language inclusion while maintaining pragmatic implementation priorities.

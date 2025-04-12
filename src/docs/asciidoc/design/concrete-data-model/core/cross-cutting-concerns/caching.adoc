@@ -1,0 +1,1240 @@
+===== Caching
+
+Caching is consistently applied throughout the Digital Profile system to improve performance, reduce database load, and enable offline functionality in areas with limited connectivity.
+
+====== Caching Architecture
+
+[plantuml]
+----
+@startuml
+package "Caching Framework" {
+  interface CacheManager {
+    +getCache(name: String): Cache
+    +getCacheNames(): Collection<String>
+  }
+  
+  interface Cache {
+    +getName(): String
+    +get(key: Object): ValueWrapper
+    +put(key: Object, value: Object)
+    +evict(key: Object)
+    +clear()
+    +getNativeCache(): Object
+  }
+  
+  class CacheConfiguration {
+    +configureCache()
+    +cacheManager()
+    +keyGenerator()
+    +cacheErrorHandler()
+  }
+  
+  interface CachingService {
+    +cacheable(key: String, supplier: Function): T
+    +evict(key: String)
+    +evictAllStartingWith(keyPrefix: String)
+    +updateCache(key: String, value: Object)
+  }
+  
+  class LocalCacheManager {
+    -caches: Map<String, Cache>
+    +getCache(name: String): Cache
+    +getCacheNames(): Collection<String>
+  }
+  
+  class MultiLevelCacheManager {
+    -localCacheManager: CacheManager
+    -remoteCacheManager: CacheManager
+    +getCache(name: String): Cache
+    +getCacheNames(): Collection<String>
+  }
+  
+  class OfflineCacheManager {
+    -persistentCache: PersistentCache
+    -onlineCache: CacheManager
+    +getCache(name: String): Cache
+    +getCacheNames(): Collection<String>
+    +syncWithRemote()
+  }
+  
+  CacheManager <|.. LocalCacheManager
+  CacheManager <|.. MultiLevelCacheManager
+  CacheManager <|.. OfflineCacheManager
+  MultiLevelCacheManager o-- CacheManager
+  OfflineCacheManager o-- CacheManager
+  CacheConfiguration --> CacheManager
+}
+
+package "Cache Implementation Types" {
+  class CaffeineCache {
+    -name: String
+    -nativeCache: Caffeine<Object, Object>
+    +get(key: Object): ValueWrapper
+    +put(key: Object, value: Object)
+  }
+  
+  class RedisCacheAdapter {
+    -name: String
+    -redisOperations: RedisOperations
+    +get(key: Object): ValueWrapper
+    +put(key: Object, value: Object)
+  }
+  
+  class PersistentCache {
+    -name: String
+    -storageProvider: StorageProvider
+    +get(key: Object): ValueWrapper
+    +put(key: Object, value: Object)
+    +persist()
+    +load()
+  }
+  
+  interface Cache
+  
+  Cache <|.. CaffeineCache
+  Cache <|.. RedisCacheAdapter
+  Cache <|.. PersistentCache
+}
+
+package "Cache Aspects" {
+  class CacheEvictionAspect {
+    +evictCacheOnEntityUpdate()
+  }
+  
+  class CacheableOperationAspect {
+    +cacheableOperation()
+  }
+  
+  class CachePutAspect {
+    +cachePutOperation()
+  }
+}
+
+package "Cache Synchronization" {
+  class CacheSynchronizationService {
+    +syncOfflineCache()
+    +scheduleSyncJobs()
+    +onConnectivityRestored()
+  }
+  
+  class NetworkMonitor {
+    +checkConnectivity()
+    +registerConnectivityListener()
+  }
+  
+  CacheSynchronizationService --> NetworkMonitor
+  CacheSynchronizationService --> OfflineCacheManager
+}
+@enduml
+----
+
+====== Caching Flow
+
+[plantuml]
+----
+@startuml
+participant "Client" as Client
+participant "Service Layer" as Service
+participant "CacheAspect" as Aspect
+participant "CacheManager" as CacheManager
+participant "L1 Cache\n(Local Memory)" as L1
+participant "L2 Cache\n(Distributed)" as L2
+participant "Repository" as Repo
+participant "Database" as DB
+
+Client -> Service : request data
+activate Service
+
+Service -> Aspect : invoke service method
+activate Aspect
+
+Aspect -> CacheManager : get(cacheKey)
+activate CacheManager
+
+CacheManager -> L1 : get(cacheKey)
+activate L1
+CacheManager <-- L1 : not found / null
+deactivate L1
+
+CacheManager -> L2 : get(cacheKey)
+activate L2
+CacheManager <-- L2 : not found / null
+deactivate L2
+
+Aspect <-- CacheManager : cache miss
+deactivate CacheManager
+
+Aspect -> Service : proceed with method execution
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : execute query
+activate DB
+Repo <-- DB : data
+deactivate DB
+Service <-- Repo : entity
+deactivate Repo
+
+Aspect <-- Service : result 
+deactivate Service
+
+Aspect -> CacheManager : put(cacheKey, result)
+activate CacheManager
+
+CacheManager -> L1 : put(cacheKey, result)
+activate L1
+CacheManager <-- L1 : success
+deactivate L1
+
+CacheManager -> L2 : put(cacheKey, result)
+activate L2
+CacheManager <-- L2 : success
+deactivate L2
+
+Aspect <-- CacheManager : success
+deactivate CacheManager
+
+Client <-- Aspect : result
+deactivate Aspect
+deactivate Service
+
+note right of Client
+  Subsequent requests for the same data
+  will be served from cache without
+  hitting the database
+end note
+
+Client -> Service : same request again
+activate Service
+
+Service -> Aspect : invoke service method
+activate Aspect
+
+Aspect -> CacheManager : get(cacheKey)
+activate CacheManager
+
+CacheManager -> L1 : get(cacheKey)
+activate L1
+CacheManager <-- L1 : cached data
+deactivate L1
+
+Aspect <-- CacheManager : cache hit
+deactivate CacheManager
+
+Client <-- Aspect : cached result
+deactivate Aspect
+deactivate Service
+@enduml
+----
+
+====== Offline Caching Flow
+
+[plantuml]
+----
+@startuml
+participant "Mobile Client" as Client
+participant "OfflineCacheManager" as OfflineCache
+participant "PersistentStorage" as Storage
+participant "NetworkMonitor" as Network
+participant "RemoteService" as Remote
+participant "SyncService" as Sync
+
+== Initial Data Load (Online) ==
+
+Client -> Network : checkConnectivity()
+activate Network
+Client <-- Network : online
+deactivate Network
+
+Client -> Remote : loadInitialData()
+activate Remote
+Client <-- Remote : data
+deactivate Remote
+
+Client -> OfflineCache : cacheForOffline(data)
+activate OfflineCache
+OfflineCache -> Storage : store(data)
+activate Storage
+OfflineCache <-- Storage : success
+deactivate Storage
+Client <-- OfflineCache : success
+deactivate OfflineCache
+
+== Offline Operation ==
+
+Client -> Network : checkConnectivity()
+activate Network
+Client <-- Network : offline
+deactivate Network
+
+Client -> OfflineCache : getData()
+activate OfflineCache
+OfflineCache -> Storage : retrieve()
+activate Storage
+OfflineCache <-- Storage : cached data
+deactivate Storage
+Client <-- OfflineCache : cached data
+deactivate OfflineCache
+
+Client -> Client : perform offline operations
+Client -> OfflineCache : storeOfflineChange(change)
+activate OfflineCache
+OfflineCache -> Storage : storeChange(change)
+activate Storage
+OfflineCache <-- Storage : success
+deactivate Storage
+Client <-- OfflineCache : success
+deactivate OfflineCache
+
+== Reconnection & Synchronization ==
+
+Network -> Client : connectivityRestored
+activate Client
+
+Client -> Sync : syncOfflineChanges()
+activate Sync
+
+Sync -> OfflineCache : getPendingChanges()
+activate OfflineCache
+OfflineCache -> Storage : retrievePendingChanges()
+activate Storage
+OfflineCache <-- Storage : pendingChanges
+deactivate Storage
+Sync <-- OfflineCache : pendingChanges
+deactivate OfflineCache
+
+loop for each pending change
+  Sync -> Remote : applyChange(change)
+  activate Remote
+  
+  alt Change Applied Successfully
+    Sync <-- Remote : success
+    Sync -> OfflineCache : markChangeAsSynced(change)
+    activate OfflineCache
+    OfflineCache -> Storage : updateChangeStatus(change, SYNCED)
+    activate Storage
+    OfflineCache <-- Storage : success
+    deactivate Storage
+    Sync <-- OfflineCache : success
+    deactivate OfflineCache
+  else Conflict Detected
+    Sync <-- Remote : conflict
+    Sync -> Sync : resolveConflict(change, serverState)
+    Sync -> OfflineCache : updateWithResolvedState(resolution)
+    activate OfflineCache
+    OfflineCache -> Storage : updateWithResolution(resolution)
+    activate Storage
+    OfflineCache <-- Storage : success
+    deactivate Storage
+    Sync <-- OfflineCache : success
+    deactivate OfflineCache
+  end
+  
+  deactivate Remote
+end
+
+Client <-- Sync : syncReport
+deactivate Sync
+
+Client -> Client : updateUI with latest data
+deactivate Client
+@enduml
+----
+
+====== Contextual Use Case for Caching
+
+*Real-World Scenario:* Cache Implementation for Remote Land Offices in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registration\nOfficer" as Officer
+participant "Land Office\nApplication" as App
+participant "CacheManager" as Cache
+participant "OfflineCacheManager" as OfflineCache
+participant "NetworkMonitor" as Network
+participant "Central Land\nRegistry" as Central
+participant "Local Storage" as Storage
+participant "SyncService" as Sync
+
+== Morning Office Preparation ==
+
+Officer -> App : Login at start of day
+activate App
+
+App -> Network : checkConnectivity()
+activate Network
+App <-- Network : limited connectivity (3G)
+deactivate Network
+
+App -> Central : authenticateUser(credentials)
+activate Central
+App <-- Central : authenticated
+deactivate Central
+
+App -> App : loadEssentialData()
+App -> Cache : primeCache(dataTypes)
+activate Cache
+
+Cache -> OfflineCache : preloadCriticalData()
+activate OfflineCache
+
+OfflineCache -> Central : fetchParcelData(district)
+activate Central
+OfflineCache <-- Central : parcelData (slow transfer)
+deactivate Central
+
+OfflineCache -> Central : fetchOwnershipData(district)
+activate Central
+OfflineCache <-- Central : ownershipData (slow transfer)
+deactivate Central
+
+OfflineCache -> Storage : storeCriticalData(data)
+activate Storage
+OfflineCache <-- Storage : stored
+deactivate Storage
+
+Cache <-- OfflineCache : cacheReady
+deactivate OfflineCache
+
+App <-- Cache : cachePrimed
+deactivate Cache
+
+== Working During Connectivity Loss ==
+
+Network -> App : connectivityLost
+activate App
+
+Officer -> App : search for parcel "P-123456"
+App -> Cache : getParcel("P-123456")
+activate Cache
+Cache -> OfflineCache : get("parcel:P-123456")
+activate OfflineCache
+OfflineCache -> Storage : retrieve("parcel:P-123456")
+activate Storage
+OfflineCache <-- Storage : parcelData
+deactivate Storage
+Cache <-- OfflineCache : parcelData
+deactivate OfflineCache
+App <-- Cache : parcelData
+deactivate Cache
+
+Officer -> App : view ownership history
+App -> Cache : getOwnershipHistory("P-123456")
+activate Cache
+Cache -> OfflineCache : get("ownership:P-123456")
+activate OfflineCache
+OfflineCache -> Storage : retrieve("ownership:P-123456")
+activate Storage
+OfflineCache <-- Storage : ownershipHistory
+deactivate Storage
+Cache <-- OfflineCache : ownershipHistory
+deactivate OfflineCache
+App <-- Cache : ownershipHistory
+deactivate Cache
+
+Officer -> App : record ownership transfer
+App -> Cache : markOfflineOperation(transfer)
+activate Cache
+Cache -> OfflineCache : queueOfflineOperation(transfer)
+activate OfflineCache
+OfflineCache -> Storage : storeOfflineOperation(transfer)
+activate Storage
+OfflineCache <-- Storage : stored
+deactivate Storage
+Cache <-- OfflineCache : queued
+deactivate OfflineCache
+App <-- Cache : operationQueued
+deactivate Cache
+
+== Reconnection & Synchronization ==
+
+Network -> App : connectivityRestored
+activate App
+
+App -> Sync : synchronizeOfflineOperations()
+activate Sync
+
+Sync -> OfflineCache : getPendingOperations()
+activate OfflineCache
+OfflineCache -> Storage : retrievePendingOperations()
+activate Storage
+OfflineCache <-- Storage : pendingOperations
+deactivate Storage
+Sync <-- OfflineCache : pendingOperations
+deactivate OfflineCache
+
+loop for each pending operation
+  Sync -> Central : applyOperation(operation)
+  activate Central
+  
+  alt Operation Successful
+    Sync <-- Central : success
+    Sync -> Cache : invalidate(relatedKeys)
+    activate Cache
+    Cache -> OfflineCache : evict(keys)
+    activate OfflineCache
+    OfflineCache -> Storage : remove(keys)
+    activate Storage
+    OfflineCache <-- Storage : removed
+    deactivate Storage
+    Cache <-- OfflineCache : evicted
+    deactivate OfflineCache
+    Sync <-- Cache : invalidated
+    deactivate Cache
+  else Conflict Detected
+    Sync <-- Central : conflict
+    Sync -> App : notifyConflict(operation, serverState)
+  end
+  
+  deactivate Central
+end
+
+App <-- Sync : syncCompleted
+deactivate Sync
+
+Officer <-- App : synchronization report
+deactivate App
+@enduml
+----
+
+*Implementation Details:*
+The Digital Profile system implements a robust multi-level caching strategy tailored to Nepal's challenging network landscape. In rural land offices like the one in Solukhumbu District, network connectivity is intermittent. The application uses a sophisticated offline caching system that enables continuous work regardless of connection status.
+
+When Land Officer Deepak Tamang arrives at the office each morning, the system performs an intelligent data preloading routine. It identifies parcels scheduled for transactions that day and prioritizes downloading their data when connectivity is available, typically during early morning hours when network traffic is lighter. Using a background process, the system caches land parcel boundaries, ownership histories, and transaction templates in both memory (for fast access) and persistent storage (for offline operation).
+
+When network connectivity drops—a daily occurrence in this mountainous region—the OfflineCacheManager automatically transitions to serving data from the persistent cache without disrupting the officer's workflow. The system uses a Time-To-Live (TTL) policy for different data types based on their volatility: parcel boundaries have a 30-day TTL, while ownership data has a 24-hour TTL to maintain data integrity.
+
+For write operations like ownership transfers, the system employs a transactional caching pattern, storing the operation details in a write-behind queue with a cryptographic signature for integrity. These pending changes include all necessary validation data to verify that the transaction remains valid even when committed later.
+
+When connectivity returns, the SyncService intelligently synchronizes these operations with the central registry in Kathmandu, using a conflict resolution strategy that respects the official land record business rules. Each synchronized record refreshes the local cache, and the system selectively invalidates affected cache entries rather than clearing the entire cache, minimizing subsequent network traffic.
+
+The caching implementation includes power-failure resilience, crucial in Nepal where electricity outages are common. The persistent cache uses a journaling approach that prevents data corruption, and the system automatically verifies cache integrity when restarting after a power loss.
+
+This multi-level caching strategy has enabled the land registration office to maintain a 97% uptime for critical services despite only having stable internet connectivity for approximately 60% of working hours, significantly improving citizen service delivery in this remote region.
+
+====== Core Interfaces
+
+```java
+/**
+ * Main cache management interface
+ */
+public interface CacheManager {
+    /**
+     * Get the cache with the specified name
+     */
+    Cache getCache(String name);
+    
+    /**
+     * Get the names of all managed caches
+     */
+    Collection<String> getCacheNames();
+}
+
+/**
+ * Interface for cache operations
+ */
+public interface Cache {
+    /**
+     * Get the cache name
+     */
+    String getName();
+    
+    /**
+     * Get a cached item by key
+     */
+    ValueWrapper get(Object key);
+    
+    /**
+     * Store an item in the cache
+     */
+    void put(Object key, Object value);
+    
+    /**
+     * Remove an item from the cache
+     */
+    void evict(Object key);
+    
+    /**
+     * Clear all items from the cache
+     */
+    void clear();
+    
+    /**
+     * Get the native cache implementation
+     */
+    Object getNativeCache();
+}
+
+/**
+ * Interface for offline-capable caching
+ */
+public interface OfflineCapableCache extends Cache {
+    /**
+     * Store an item for offline use
+     */
+    void putOffline(Object key, Object value, OfflinePriority priority);
+    
+    /**
+     * Queue a write operation for later synchronization
+     */
+    void queueOfflineOperation(OfflineOperation operation);
+    
+    /**
+     * Get pending offline operations
+     */
+    List<OfflineOperation> getPendingOperations();
+    
+    /**
+     * Synchronize with the remote cache
+     */
+    SyncResult synchronize();
+    
+    /**
+     * Check if cache is in offline mode
+     */
+    boolean isOffline();
+}
+
+/**
+ * Interface for multi-level cache implementation
+ */
+public interface MultiLevelCache extends Cache {
+    /**
+     * Get the cache levels in this multi-level cache
+     */
+    List<Cache> getCacheLevels();
+    
+    /**
+     * Put an item in a specific cache level
+     */
+    void putInLevel(Object key, Object value, int level);
+    
+    /**
+     * Get cache statistics across levels
+     */
+    CacheLevelStatistics getStatistics();
+}
+
+/**
+ * Interface for connectivity monitoring
+ */
+public interface ConnectivityMonitor {
+    /**
+     * Check if the system has network connectivity
+     */
+    boolean hasConnection();
+    
+    /**
+     * Get the current connectivity type
+     */
+    ConnectivityType getConnectionType();
+    
+    /**
+     * Register a listener for connectivity changes
+     */
+    void registerListener(ConnectivityChangeListener listener);
+    
+    /**
+     * Check if connection is suitable for distributed caching
+     */
+    boolean isDistributedCachingAvailable();
+}
+
+/**
+ * Interface for cache eviction strategies
+ */
+public interface CacheEvictionStrategy {
+    /**
+     * Evict items matching a pattern
+     */
+    void evictByPattern(String pattern);
+    
+    /**
+     * Evict items related to an entity
+     */
+    void evictEntityCache(String entityType, String entityId);
+    
+    /**
+     * Intelligently clear low-priority caches when memory is constrained
+     */
+    void executeIntelligentEviction();
+}
+
+/**
+ * Interface for cache synchronization
+ */
+public interface CacheSynchronizationService {
+    /**
+     * Sync offline operations with the central system
+     */
+    SyncResult syncOfflineOperations();
+    
+    /**
+     * Schedule automatic sync attempts
+     */
+    void scheduleAutomaticSync(Duration interval);
+    
+    /**
+     * Handle connectivity restoration
+     */
+    void onConnectivityRestored(ConnectivityType type);
+    
+    /**
+     * Get sync status
+     */
+    SyncStatus getSyncStatus();
+}
+```
+
+====== Key Data Structures
+
+```java
+/**
+ * Value wrapper returned from cache
+ */
+public interface ValueWrapper {
+    /**
+     * Get the actual value
+     */
+    Object get();
+}
+
+/**
+ * Priorities for offline caching
+ */
+public enum OfflinePriority {
+    HIGH,    // Critical data needed for operations (e.g. land parcel boundaries)
+    MEDIUM,  // Important but not critical (e.g. ownership history)
+    LOW,     // Nice to have (e.g. transaction templates)
+    NONE     // Don't store offline
+}
+
+/**
+ * Types of connectivity
+ */
+public enum ConnectivityType {
+    ETHERNET(100),    // Wired connection in main offices
+    FIBER(90),        // Fiber connection in district offices
+    WIFI(70),         // WiFi in municipal offices
+    LTE(50),          // 4G in urban areas
+    MOBILE_3G(30),    // 3G in semi-urban areas
+    MOBILE_2G(10),    // 2G in rural areas
+    SATELLITE(5),     // Satellite in remote locations
+    NONE(0);          // No connectivity
+    
+    private final int qualityScore;
+    
+    ConnectivityType(int qualityScore) {
+        this.qualityScore = qualityScore;
+    }
+    
+    public int getQualityScore() {
+        return qualityScore;
+    }
+}
+
+/**
+ * Result of a cache synchronization operation
+ */
+public interface SyncResult {
+    /**
+     * Check if sync was successful
+     */
+    boolean isSuccess();
+    
+    /**
+     * Get number of items synchronized
+     */
+    int getSyncedItemCount();
+    
+    /**
+     * Get number of conflicts encountered
+     */
+    int getConflictCount();
+    
+    /**
+     * Get error messages if any
+     */
+    List<String> getErrors();
+    
+    /**
+     * Get detailed message about the sync operation
+     */
+    String getMessage();
+}
+
+/**
+ * Represents an offline operation queued for synchronization
+ */
+public interface OfflineOperation {
+    /**
+     * Get operation ID
+     */
+    UUID getId();
+    
+    /**
+     * Get operation timestamp
+     */
+    LocalDateTime getTimestamp();
+    
+    /**
+     * Get operation type
+     */
+    OfflineOperationType getType();
+    
+    /**
+     * Get operation status
+     */
+    OfflineOperationStatus getStatus();
+    
+    /**
+     * Get user ID who initiated the operation
+     */
+    String getUserId();
+    
+    /**
+     * Get operation payload
+     */
+    String getPayload();
+    
+    /**
+     * Get client-side signature for verification
+     */
+    String getClientSignature();
+}
+
+/**
+ * Status of an offline operation
+ */
+public enum OfflineOperationStatus {
+    PENDING,      // Waiting to be synchronized
+    IN_PROGRESS,  // Currently being synchronized
+    COMPLETED,    // Successfully synchronized
+    FAILED,       // Failed to synchronize
+    CONFLICT      // Conflict detected during synchronization
+}
+
+/**
+ * Types of offline operations
+ */
+public enum OfflineOperationType {
+    LAND_REGISTRATION,
+    LAND_TRANSFER,
+    CITIZEN_REGISTRATION,
+    DOCUMENT_UPLOAD
+}
+```
+
+====== Cache Configuration Interfaces
+
+```java
+/**
+ * Interface for cache configuration
+ */
+public interface CacheConfiguration {
+    /**
+     * Get the cache type for a cache name
+     */
+    CacheType getCacheType(String name);
+    
+    /**
+     * Get the time-to-live in seconds for a cache
+     */
+    int getTtl(String name);
+    
+    /**
+     * Check if offline caching is enabled for a cache
+     */
+    boolean isOfflineEnabled(String name);
+    
+    /**
+     * Get the maximum size for a cache
+     */
+    int getMaxSize(String name);
+    
+    /**
+     * Get path for persistent storage
+     */
+    String getPersistentStoragePath();
+    
+    /**
+     * Get maximum persistent size for a cache in MB
+     */
+    int getMaxPersistentSize(String name);
+    
+    /**
+     * Get offline priority for a cache
+     */
+    OfflinePriority getOfflinePriority(String name);
+}
+
+/**
+ * Cache types supported by the system
+ */
+public enum CacheType {
+    LOCAL,        // In-memory cache only
+    DISTRIBUTED,  // Distributed cache (e.g. Redis)
+    PERSISTENT,   // Persistent local storage
+    MULTI_LEVEL   // Combination of different cache types
+}
+
+/**
+ * Interface for cache error handling
+ */
+public interface CacheErrorHandler {
+    /**
+     * Handle cache get errors
+     */
+    void handleCacheGetError(RuntimeException exception, Cache cache, Object key);
+    
+    /**
+     * Handle cache put errors
+     */
+    void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value);
+    
+    /**
+     * Handle cache evict errors
+     */
+    void handleCacheEvictError(RuntimeException exception, Cache cache, Object key);
+    
+    /**
+     * Handle cache clear errors
+     */
+    void handleCacheClearError(RuntimeException exception, Cache cache);
+}
+
+/**
+ * Interface for cache key generation
+ */
+public interface KeyGenerator {
+    /**
+     * Generate a cache key from method invocation
+     */
+    Object generate(Object target, Method method, Object... params);
+}
+```
+
+====== Nepal-Specific Cache Profiles
+
+The Digital Profile system implements caching profiles optimized for Nepal's varied infrastructure:
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Urban Office Profile" as Urban {
+  CacheType = DISTRIBUTED
+  Memory allocation = Large
+  TTL = Long
+  Offline capabilities = Minimal
+}
+
+note bottom of Urban
+  District offices in cities with
+  reliable power and internet:
+  Kathmandu, Pokhara, Biratnagar
+end note
+
+RECTANGLE "Rural Office Profile" as Rural {
+  CacheType = MULTI_LEVEL
+  Memory allocation = Medium
+  TTL = Moderate
+  Offline capabilities = Full
+}
+
+note bottom of Rural
+  Local offices with intermittent
+  connectivity: Dolakha, Humla,
+  Gulmi, Sankhuwasbha
+end note
+
+RECTANGLE "Field Device Profile" as Field {
+  CacheType = PERSISTENT
+  Memory allocation = Small
+  TTL = Aggressive
+  Offline capabilities = Extensive
+}
+
+note bottom of Field
+  Mobile devices for field operations
+  in remote areas: Surveyor tablets,
+  Cadastral field units
+end note
+
+RECTANGLE "Central System Profile" as Central {
+  CacheType = DISTRIBUTED
+  Memory allocation = Very Large
+  TTL = Long for static data
+  Offline capabilities = None
+}
+
+note bottom of Central
+  Main data center servers in
+  Kathmandu with redundant power
+  and connectivity
+end note
+@enduml
+----
+
+====== Cache Expiration Strategy
+
+[plantuml]
+----
+@startuml
+state "Cache Entry" as CacheEntry
+
+state Valid {
+  state "Recently Accessed" as Recent
+  state "Accessed Occasionally" as Occasional
+  state "Rarely Accessed" as Rare
+  
+  Recent --> Occasional : time passes
+  Occasional --> Rare : time passes
+}
+
+CacheEntry --> Valid : put(key, value)
+
+Valid --> "Expired" : TTL exceeded
+"Expired" --> Valid : revalidate and refresh
+
+Valid --> "Evicted (Memory Pressure)" : memory constraints
+Valid --> "Evicted (Programmatic)" : explicit eviction
+
+"Expired" --> "Removed" : expired + no access
+"Evicted (Memory Pressure)" --> "Removed" : not reloaded
+"Evicted (Programmatic)" --> "Removed" : not reloaded
+
+"Removed" --> Valid : re-requested
+
+note right of Valid
+  Nepal context: TTL varies by:
+  - Office connectivity quality
+  - Data update frequency
+  - Criticality of data
+end note
+
+note bottom of "Evicted (Memory Pressure)"
+  Memory constraints more common
+  in rural offices with older
+  hardware. System prioritizes
+  land parcel and citizen data.
+end note
+@enduml
+----
+
+====== Connectivity-Adaptive Behavior
+
+The cache system adapts to different connectivity scenarios found in Nepal:
+
+[plantuml]
+----
+@startuml
+scale 0.8
+!define RECTANGLE class
+
+RECTANGLE "Connectivity Monitor Dashboard" as Dashboard {
+  + Connection Type: 3G (Unstable)
+  + Signal Strength: Medium (3/5)
+  + Bandwidth: 1.2 Mbps
+  + Latency: 250ms
+  + Stability: Fluctuating
+}
+
+note bottom of Dashboard
+  Rural office in Jajarkot District
+  experiencing typical monsoon season
+  connectivity challenges
+end note
+
+RECTANGLE "Adaptive Cache Strategy" as Strategy {
+  + Cache Level: L1 + Persistent Storage
+  + Data Pre-loading: Maximum
+  + Sync Frequency: Every 30 minutes
+  + Batch Size: Small (2MB)
+  + Compression: High
+}
+
+note bottom of Strategy
+  System automatically adjusted:
+  - Disabled Redis distributed cache
+  - Increased local storage allocation
+  - Prioritized citizen data caching
+  - Reduced image quality for documents
+end note
+
+Dashboard --> Strategy : Adapts cache\nstrategy based on\nconnectivity quality
+@enduml
+----
+
+====== Offline Operation Support
+
+[plantuml]
+----
+@startuml
+participant "Land Officer\nApp" as App
+participant "OfflineCapableCache" as Cache
+participant "OfflineOperationStore" as Store
+participant "LocalStorageProvider" as Storage
+participant "NetworkMonitor" as Network
+participant "SyncScheduler" as Scheduler
+
+App -> Network : checkConnectivity()
+activate Network
+App <-- Network : offline
+deactivate Network
+
+App -> App : userRequestsLandTransfer()
+
+App -> Cache : checkOfflineCapability("landTransfer")
+activate Cache
+App <-- Cache : SUPPORTED_OFFLINE
+deactivate Cache
+
+App -> Cache : queueOfflineOperation(landTransferOp)
+activate Cache
+Cache -> Store : storeOperation(operation)
+activate Store
+Store -> Storage : persistOperation(operation)
+activate Storage
+Store <-- Storage : success
+deactivate Storage
+Cache <-- Store : success
+deactivate Store
+App <-- Cache : operationQueued
+deactivate Cache
+
+App -> Scheduler : scheduleSyncWhenOnline()
+activate Scheduler
+App <-- Scheduler : scheduled
+deactivate Scheduler
+
+App -> App : showOfflineOperationStatus()
+
+note right of App
+  The system enables critical operations
+  to continue during connectivity loss,
+  creating resilience for Nepal's rural
+  land offices during monsoon season
+  and power outages.
+end note
+@enduml
+----
+
+====== Performance Monitoring
+
+[plantuml]
+----
+@startuml
+skinparam handwritten true
+skinparam backgroundColor #FFFFF0
+
+title Cache Performance - Hetauda District Office
+
+node "Daily Statistics" {
+  frame "Cache Hit Rate" {
+    [parcelCache: 92%] #palegreen
+    [ownershipCache: 85%] #palegreen
+    [citizenCache: 78%] #khaki
+    [queryCache: 62%] #salmon
+  }
+  
+  frame "Cache Operations" {
+    [Gets: 12,458] #white
+    [Puts: 3,245] #white
+    [Evictions: 1,873] #white
+  }
+  
+  frame "Memory Usage" {
+    [Local Cache: 256MB/512MB] #palegreen
+    [Persistent: 1.2GB/2GB] #khaki
+  }
+  
+  frame "Sync Status" {
+    [Last Sync: 10:45 AM] #white
+    [Pending Ops: 23] #khaki
+    [Conflicts: 2] #salmon
+  }
+}
+
+note bottom
+  This monitoring dashboard helps office administrators
+  identify cache performance issues and optimize settings
+  for Nepal's varied infrastructure environments.
+end note
+@enduml
+----
+
+====== Nepal-Specific Caching Challenges and Solutions
+
+|===
+| Challenge | Solution Implementation
+| Intermittent Internet Connectivity | Offline caching with persistent storage and synchronized commit when connectivity is restored
+| Varying Infrastructure Quality | Dynamic cache configuration based on office infrastructure detection
+| Power Outages | Transaction journaling with automatic recovery on system restart
+| Low Bandwidth in Remote Areas | Prioritized caching with compressed data transfers
+| Multiple Administrative Levels | Hierarchical cache invalidation respecting administrative boundaries
+| Seasonal Accessibility Issues | Automatic pre-caching during good connectivity periods ahead of monsoon season
+| System Integration Challenges | Standardized cache synchronization events that maintain consistency across systems
+| Paper-Digital Synchronization | Cache-backed printing system for offline document generation
+|===
+
+====== Land Office Caching Strategy
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+frame "District Land Office Cache Strategy" {
+  RECTANGLE "Critical Cache Layer" as Critical {
+    + Citizen Basic Info
+    + Land Parcel Boundaries
+    + Ownership Records
+    + Office Templates
+  }
+  
+  RECTANGLE "Important Cache Layer" as Important {
+    + Historical Transactions
+    + Document Metadata
+    + Survey Records
+    + Reference Code Tables
+  }
+  
+  RECTANGLE "Standard Cache Layer" as Standard {
+    + User Interface Assets
+    + Search Results
+    + Reports and Statistics
+    + Non-Critical Reference Data
+  }
+}
+
+Critical --> Important : Lower\nPriority
+Important --> Standard : Lower\nPriority
+
+note bottom of Critical
+  Highest priority data, always
+  cached for offline access.
+  Maximum TTL (30 days).
+  Uses persistent storage.
+end note
+
+note bottom of Important
+  Medium priority, cached when
+  bandwidth allows.
+  Medium TTL (7 days).
+  Evicted first during constraints.
+end note
+
+note bottom of Standard
+  Lowest priority, cached only in
+  high bandwidth environments.
+  Short TTL (24 hours).
+  Not persisted for offline use.
+end note
+@enduml
+----
+
+This caching implementation addresses the unique challenges of Nepal's digital landscape, enabling the Digital Profile system to function effectively despite infrastructure limitations through intelligent, multi-level, and offline-capable caching strategies.

@@ -1,0 +1,359 @@
+===== `DateRange`
+Component representing a time period with start and end dates, supporting multiple calendar systems.
+
+[plantuml]
+----
+@startuml
+class DateRange {
+  +LocalDate startDate
+  +LocalDate endDate
+  +Boolean includeStartDate
+  +Boolean includeEndDate
+  +LocalDate effectiveDate
+  +LocalDate expiryDate
+  +DateRangeType type
+  +String description
+  +Boolean isRecurring
+  +RecurrencePattern recurrencePattern
+  +CalendarSystem calendarSystem
+  +Map<String, LocalDate> alternateCalendarDates
+  +Boolean isActive
+}
+
+enum DateRangeType {
+  FIXED
+  OPEN_ENDED
+  PERPETUAL
+  FISCAL_YEAR
+  SEASONAL
+  TEMPORARY
+  RECURRING
+}
+
+enum CalendarSystem {
+  GREGORIAN
+  BIKRAM_SAMBAT
+  NEPAL_SAMBAT
+}
+
+class RecurrencePattern {
+  +RecurrenceType type
+  +Integer interval
+  +Set<DayOfWeek> daysOfWeek
+  +Set<Integer> daysOfMonth
+  +Set<Integer> monthsOfYear
+  +LocalDate until
+  +Integer maxOccurrences
+}
+
+enum RecurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+DateRange -- DateRangeType
+DateRange -- CalendarSystem
+DateRange -- RecurrencePattern
+RecurrencePattern -- RecurrenceType
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                   | Description
+| `startDate`             | Beginning date of the range
+| `endDate`               | Ending date of the range (null for open-ended)
+| `includeStartDate`      | Whether start date is inclusive
+| `includeEndDate`        | Whether end date is inclusive
+| `effectiveDate`         | When this date range becomes effective
+| `expiryDate`            | When this date range expires
+| `type`                  | Type of date range (FIXED, OPEN_ENDED, etc.)
+| `description`           | Human-readable description of the range
+| `isRecurring`           | Whether this range recurs
+| `recurrencePattern`     | Pattern of recurrence if recurring
+| `calendarSystem`        | Primary calendar system (GREGORIAN, BIKRAM_SAMBAT)
+| `alternateCalendarDates`| Equivalent dates in alternate calendar systems
+| `isActive`              | Whether this date range is currently active
+|===
+
+====== DateRange Interface
+
+```java
+/**
+ * Represents a range of dates
+ */
+public interface DateRange {
+    /**
+     * Get the start date
+     */
+    LocalDate getStartDate();
+    
+    /**
+     * Get the end date
+     */
+    LocalDate getEndDate();
+    
+    /**
+     * Check if start date is inclusive
+     */
+    Boolean getIncludeStartDate();
+    
+    /**
+     * Check if end date is inclusive
+     */
+    Boolean getIncludeEndDate();
+    
+    /**
+     * Get when this date range becomes effective
+     */
+    LocalDate getEffectiveDate();
+    
+    /**
+     * Get when this date range expires
+     */
+    LocalDate getExpiryDate();
+    
+    /**
+     * Get the type of date range
+     */
+    DateRangeType getType();
+    
+    /**
+     * Get human-readable description
+     */
+    String getDescription();
+    
+    /**
+     * Check if this range recurs
+     */
+    Boolean isRecurring();
+    
+    /**
+     * Get recurrence pattern
+     */
+    RecurrencePattern getRecurrencePattern();
+    
+    /**
+     * Get primary calendar system
+     */
+    CalendarSystem getCalendarSystem();
+    
+    /**
+     * Get dates in alternate calendar systems
+     */
+    Map<String, LocalDate> getAlternateCalendarDates();
+    
+    /**
+     * Check if date range is active
+     */
+    Boolean isActive();
+    
+    /**
+     * Check if a date is within this range
+     */
+    boolean includes(LocalDate date);
+    
+    /**
+     * Calculate duration in days
+     */
+    long getDurationDays();
+    
+    /**
+     * Convert to another calendar system
+     */
+    DateRange convertTo(CalendarSystem targetSystem);
+    
+    /**
+     * Get formatted date range string
+     */
+    String getFormattedRange(String format);
+    
+    /**
+     * Get all occurrences if recurring
+     */
+    List<DateRange> getOccurrences(LocalDate from, LocalDate to);
+}
+
+/**
+ * Types of date ranges
+ */
+public enum DateRangeType {
+    FIXED,
+    OPEN_ENDED,
+    PERPETUAL,
+    FISCAL_YEAR,
+    SEASONAL,
+    TEMPORARY,
+    RECURRING
+}
+
+/**
+ * Calendar systems used in Nepal
+ */
+public enum CalendarSystem {
+    GREGORIAN,
+    BIKRAM_SAMBAT,
+    NEPAL_SAMBAT
+}
+```
+
+====== Contextual Use Case for DateRange
+
+*Real-World Scenario:* Fiscal Year Management with Bikram Sambat Calendar
+
+[plantuml]
+----
+@startuml
+actor "Budget Officer\n(Rajiv Khadka)" as Budget
+actor "Finance Ministry\nOfficial" as Ministry
+actor "Municipality\nAccountant" as Accountant
+participant "DateRange" as DateRange
+participant "CalendarService" as Calendar
+participant "FiscalYearService" as Fiscal
+participant "DualCalendarSystem" as Dual
+
+Ministry -> Fiscal: configureFiscalYear()
+activate Fiscal
+
+Fiscal -> DateRange: createFiscalYear()
+activate DateRange
+DateRange -> DateRange: setType(FISCAL_YEAR)
+DateRange -> DateRange: setDescription("Fiscal Year 2080/81")
+DateRange -> DateRange: setCalendarSystem(BIKRAM_SAMBAT)
+DateRange -> DateRange: setStartDate(toLocalDate("2080-04-01"))
+DateRange -> DateRange: setEndDate(toLocalDate("2081-03-32"))
+DateRange -> DateRange: setIncludeStartDate(true)
+DateRange -> DateRange: setIncludeEndDate(true)
+Fiscal <-- DateRange: fiscalYearBS
+deactivate DateRange
+
+Fiscal -> Calendar: convertToGregorian(bsStartDate, bsEndDate)
+activate Calendar
+Calendar -> Calendar: convertBSToAD("2080-04-01") // Shrawan 1, 2080
+Calendar -> Calendar: convertBSToAD("2081-03-32") // Ashad 32, 2081
+Fiscal <-- Calendar: gregorianDates // July 17, 2023 to July 15, 2024
+deactivate Calendar
+
+Fiscal -> DateRange: createAlternateCalendarFiscalYear()
+activate DateRange
+DateRange -> DateRange: setType(FISCAL_YEAR)
+DateRange -> DateRange: setDescription("Fiscal Year 2023/24")
+DateRange -> DateRange: setCalendarSystem(GREGORIAN)
+DateRange -> DateRange: setStartDate(gregorianStartDate)
+DateRange -> DateRange: setEndDate(gregorianEndDate)
+DateRange -> DateRange: setAlternateCalendarDates({
+  "BIKRAM_SAMBAT": {
+    "startDate": bsStartDate,
+    "endDate": bsEndDate
+  }
+})
+Fiscal <-- DateRange: fiscalYearAD
+deactivate DateRange
+
+Fiscal -> Dual: registerFiscalYearPair(fiscalYearBS, fiscalYearAD)
+Ministry <-- Fiscal: fiscalYearConfigured
+deactivate Fiscal
+
+Budget -> Fiscal: getActiveFiscalYear()
+activate Fiscal
+Fiscal -> DateRange: getActiveFiscalYear(BIKRAM_SAMBAT)
+activate DateRange
+DateRange -> DateRange: findByTypeAndActive(FISCAL_YEAR, true)
+Fiscal <-- DateRange: activeFiscalYear
+deactivate DateRange
+Budget <-- Fiscal: currentFiscalYear
+deactivate Fiscal
+
+Budget -> DateRange: isTodayInFiscalYear()
+activate DateRange
+DateRange -> Calendar: getTodayInBS()
+activate Calendar
+DateRange <-- Calendar: todayBS
+deactivate Calendar
+DateRange -> DateRange: includes(todayBS)
+Budget <-- DateRange: inCurrentFiscalYear=true
+deactivate DateRange
+
+Accountant -> Fiscal: getQuarterlyDateRanges()
+activate Fiscal
+Fiscal -> DateRange: createQuarterlyRanges(fiscalYear)
+activate DateRange
+
+DateRange -> DateRange: createQ1Range()
+DateRange -> DateRange: setStartDate(toLocalDate("2080-04-01"))
+DateRange -> DateRange: setEndDate(toLocalDate("2080-06-30"))
+DateRange -> DateRange: setDescription("First Quarter (Shrawan-Ashwin)")
+
+DateRange -> DateRange: createQ2Range()
+DateRange -> DateRange: setStartDate(toLocalDate("2080-07-01"))
+DateRange -> DateRange: setEndDate(toLocalDate("2080-09-29"))
+DateRange -> DateRange: setDescription("Second Quarter (Kartik-Poush)")
+
+DateRange -> DateRange: createQ3Range()
+DateRange -> DateRange: setStartDate(toLocalDate("2080-10-01"))
+DateRange -> DateRange: setEndDate(toLocalDate("2080-12-30"))
+DateRange -> DateRange: setDescription("Third Quarter (Magh-Chaitra)")
+
+DateRange -> DateRange: createQ4Range()
+DateRange -> DateRange: setStartDate(toLocalDate("2081-01-01"))
+DateRange -> DateRange: setEndDate(toLocalDate("2081-03-32"))
+DateRange -> DateRange: setDescription("Fourth Quarter (Baisakh-Ashad)")
+
+Fiscal <-- DateRange: quarterlyRanges
+deactivate DateRange
+Accountant <-- Fiscal: fiscalQuarters
+deactivate Fiscal
+
+Accountant -> DateRange: getDaysRemaining()
+activate DateRange
+DateRange -> Calendar: getTodayInBS()
+activate Calendar
+DateRange <-- Calendar: todayBS
+deactivate Calendar
+DateRange -> DateRange: calculateDaysBetween(today, endDate)
+Accountant <-- DateRange: daysRemaining=95
+deactivate DateRange
+
+Ministry -> Fiscal: configureFestivalHolidays()
+activate Fiscal
+Fiscal -> DateRange: createRecurringHoliday("Dashain")
+activate DateRange
+DateRange -> DateRange: setType(RECURRING)
+DateRange -> DateRange: setIsRecurring(true)
+DateRange -> DateRange: setCalendarSystem(BIKRAM_SAMBAT)
+
+note right
+  Dashain follows lunar calendar,
+  so dates vary each year
+end note
+
+RecurrencePattern -> RecurrencePattern: setType(YEARLY)
+RecurrencePattern -> RecurrencePattern: setMonthsOfYear([6]) // Ashwin
+RecurrencePattern -> RecurrencePattern: setDaysOfMonth([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+
+DateRange -> DateRange: setRecurrencePattern(pattern)
+Fiscal <-- DateRange: dashainHoliday
+deactivate DateRange
+Ministry <-- Fiscal: holidayConfigured
+deactivate Fiscal
+@enduml
+----
+
+*Implementation Details:*
+The DateRange component in Nepal's Digital Profile system is uniquely designed to handle Nepal's official Bikram Sambat (BS) calendar alongside the Gregorian calendar, a critical requirement for government financial systems where the fiscal year and many official dates follow the BS calendar.
+
+In this scenario, Rajiv Khadka, a Budget Officer at the Ministry of Finance, is configuring the new fiscal year. Nepal's fiscal year runs from Shrawan 1 to Ashad 32 in the BS calendar (approximately mid-July to mid-July in the Gregorian calendar) and forms the foundation of all government financial planning, reporting, and budgeting cycles.
+
+The DateRange component provides first-class support for the BS calendar, allowing direct entry of dates in the format familiar to Nepali officials (e.g., 2080-04-01 for Shrawan 1, 2080 BS). This eliminates the error-prone process of manual conversion from the Gregorian calendar. Simultaneously, the component automatically generates Gregorian equivalents for integration with international systems and reporting.
+
+A distinctive feature is the handling of "Ashad 32" - the extra day added to the last month of the Nepali fiscal year to maintain alignment with the solar year. While seemingly unusual to systems designed for Gregorian calendars where months have fixed lengths, the DateRange component properly handles this Nepal-specific calendar quirk.
+
+The component creates quarterly date ranges for financial reporting periods, mapping to the traditional Nepali divisions of the fiscal year: Shrawan-Ashwin (Q1), Kartik-Poush (Q2), Magh-Chaitra (Q3), and Baisakh-Ashad (Q4). These quarters align with seasonal patterns and traditional administrative cycles in Nepal.
+
+For holiday management, the DateRange component handles recurring events through its RecurrencePattern capability. This is particularly important for Nepal's major festivals like Dashain, which follow a lunar calendar and occur on different Gregorian dates each year, but consistent dates in the lunar-adjusted BS calendar. The system can properly plan for these holidays in government operations scheduling.
+
+The implementation supports queries about the active fiscal year, days remaining in a period, and whether the current date falls within a specific range - all while respecting the BS calendar for display to users while maintaining Gregorian calendar data for system interoperability.
+
+This dual-calendar support is essential in Nepal, where citizens and government officials think in BS dates for official purposes, yet systems must often communicate with international standards using Gregorian dates. The DateRange component bridges this cultural and technical divide seamlessly.

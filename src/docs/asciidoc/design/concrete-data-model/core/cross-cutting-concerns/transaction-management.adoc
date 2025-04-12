@@ -1,0 +1,1136 @@
+===== Transaction Management
+
+Transaction management is consistently applied throughout the Digital Profile system to ensure data integrity, consistency, and reliability across operations.
+
+====== Transaction Management Architecture
+
+[plantuml]
+----
+@startuml
+package "Transaction Management Framework" {
+  interface PlatformTransactionManager {
+    +getTransaction()
+    +commit()
+    +rollback()
+  }
+  
+  class TransactionTemplate {
+    +execute()
+    +executeWithoutResult()
+  }
+  
+  class TransactionInterceptor {
+    +invoke()
+  }
+  
+  class TransactionAspect {
+    +transactionPointcut()
+    +transactionAdvice()
+  }
+  
+  interface TransactionDefinition {
+    +getIsolationLevel()
+    +getPropagationBehavior()
+    +getTimeout()
+    +isReadOnly()
+  }
+  
+  class DefaultTransactionDefinition
+  
+  interface TransactionSynchronization {
+    +beforeCommit()
+    +beforeCompletion()
+    +afterCommit()
+    +afterCompletion()
+    +flush()
+  }
+  
+  class TransactionSynchronizationManager {
+    +{static} registerSynchronization()
+    +{static} bindResource()
+    +{static} unbindResource()
+    +{static} getResource()
+    +{static} isActualTransactionActive()
+  }
+  
+  class OfflineTransactionManager {
+    +createOfflineTransaction()
+    +syncOfflineTransaction()
+    +abortOfflineTransaction()
+    +getOfflineTransactionStatus()
+  }
+  
+  class DistributedTransactionManager {
+    +startGlobalTransaction()
+    +includeResource()
+    +prepare()
+    +commitGlobalTransaction()
+    +rollbackGlobalTransaction()
+  }
+}
+
+TransactionDefinition <|.. DefaultTransactionDefinition
+PlatformTransactionManager --> TransactionDefinition
+TransactionTemplate --> PlatformTransactionManager
+TransactionInterceptor --> PlatformTransactionManager
+TransactionAspect --> TransactionInterceptor
+TransactionSynchronizationManager --> TransactionSynchronization
+OfflineTransactionManager --> PlatformTransactionManager
+DistributedTransactionManager --> PlatformTransactionManager
+@enduml
+----
+
+====== Transaction Flow
+
+[plantuml]
+----
+@startuml
+participant "Service Method" as Service
+participant "TransactionAspect" as Aspect
+participant "TransactionManager" as TxManager
+participant "TransactionSynchronization" as TxSync
+participant "Database" as DB
+participant "Message Broker" as Broker
+participant "Cache" as Cache
+
+Service -> Aspect : invoke service method
+activate Aspect
+
+Aspect -> TxManager : begin transaction
+activate TxManager
+note right
+  Set isolation level
+  and propagation behavior
+end note
+Aspect <-- TxManager : transaction status
+deactivate TxManager
+
+Aspect -> Service : proceed with method execution
+activate Service
+
+Service -> DB : read/write operations
+activate DB
+Service <-- DB : data
+deactivate DB
+
+Service -> Broker : prepare message
+activate Broker
+Service <-- Broker
+deactivate Broker
+
+Service -> Cache : invalidate cached data
+activate Cache
+Service <-- Cache
+deactivate Cache
+
+Aspect <-- Service : method result
+deactivate Service
+
+alt Success
+  Aspect -> TxSync : beforeCommit
+  activate TxSync
+  Aspect <-- TxSync
+  deactivate TxSync
+  
+  Aspect -> TxManager : commit transaction
+  activate TxManager
+  TxManager -> DB : commit
+  activate DB
+  TxManager <-- DB
+  deactivate DB
+  Aspect <-- TxManager
+  deactivate TxManager
+  
+  Aspect -> TxSync : afterCommit
+  activate TxSync
+  TxSync -> Broker : send prepared message
+  activate Broker
+  TxSync <-- Broker
+  deactivate Broker
+  Aspect <-- TxSync
+  deactivate TxSync
+else Exception
+  Aspect -> TxManager : rollback transaction
+  activate TxManager
+  TxManager -> DB : rollback
+  activate DB
+  TxManager <-- DB
+  deactivate DB
+  Aspect <-- TxManager
+  deactivate TxManager
+  
+  Aspect -> TxSync : afterCompletion
+  activate TxSync
+  Aspect <-- TxSync
+  deactivate TxSync
+end
+
+Service <-- Aspect : result or exception
+deactivate Aspect
+@enduml
+----
+
+====== Offline Transaction Flow
+
+[plantuml]
+----
+@startuml
+actor "Field Officer" as Officer
+participant "Mobile App" as App
+participant "OfflineTransactionManager" as OTM
+participant "Local Storage" as Storage
+participant "Network Monitor" as Network
+participant "Sync Service" as Sync
+participant "Server Transaction\nManager" as STM
+participant "Database" as DB
+
+Officer -> App : Initiate operation while offline
+activate App
+
+App -> Network : Check connectivity
+activate Network
+App <-- Network : Offline status
+deactivate Network
+
+App -> OTM : beginOfflineTransaction()
+activate OTM
+OTM -> Storage : Create transaction record
+activate Storage
+OTM <-- Storage : Transaction ID
+deactivate Storage
+App <-- OTM : Offline transaction context
+deactivate OTM
+
+App -> App : Execute business logic
+App -> OTM : Record operation details
+activate OTM
+OTM -> Storage : Store operations with parameters
+activate Storage
+OTM <-- Storage : Success
+deactivate Storage
+App <-- OTM
+deactivate OTM
+
+App -> OTM : commitOfflineTransaction()
+activate OTM
+OTM -> Storage : Mark transaction as ready for sync
+activate Storage
+OTM <-- Storage : Success
+deactivate Storage
+App <-- OTM : Success
+deactivate OTM
+
+Officer <-- App : Operation completed (offline)
+deactivate App
+
+== Later, when connectivity is restored ==
+
+Network -> Sync : Connectivity restored event
+activate Sync
+
+Sync -> Storage : Get pending transactions
+activate Storage
+Sync <-- Storage : Pending transactions
+deactivate Storage
+
+loop for each pending transaction
+  Sync -> OTM : syncOfflineTransaction(transactionId)
+  activate OTM
+  
+  OTM -> Storage : Get transaction details
+  activate Storage
+  OTM <-- Storage : Transaction operations
+  deactivate Storage
+  
+  OTM -> STM : beginTransaction()
+  activate STM
+  OTM <-- STM : Transaction context
+  deactivate STM
+  
+  loop for each operation
+    OTM -> STM : Execute operation with parameters
+    activate STM
+    STM -> DB : Execute operation
+    activate DB
+    STM <-- DB : Result
+    deactivate DB
+    OTM <-- STM : Operation result
+    deactivate STM
+  end
+  
+  alt Success
+    OTM -> STM : commitTransaction()
+    activate STM
+    STM -> DB : Commit
+    activate DB
+    STM <-- DB : Success
+    deactivate DB
+    OTM <-- STM : Success
+    deactivate STM
+    
+    OTM -> Storage : Mark transaction as completed
+    activate Storage
+    OTM <-- Storage : Success
+    deactivate Storage
+    
+    Sync <-- OTM : Sync successful
+  else Conflict or Error
+    OTM -> STM : rollbackTransaction()
+    activate STM
+    STM -> DB : Rollback
+    activate DB
+    STM <-- DB : Success
+    deactivate DB
+    OTM <-- STM : Success
+    deactivate STM
+    
+    OTM -> Storage : Mark transaction as failed
+    activate Storage
+    OTM <-- Storage : Success
+    deactivate Storage
+    
+    Sync <-- OTM : Sync failed
+  end
+  deactivate OTM
+end
+
+Sync -> App : Notify sync completion
+deactivate Sync
+
+App -> Officer : Display sync results
+@enduml
+----
+
+====== Contextual Use Case for Transaction Management
+
+*Real-World Scenario:* Land Ownership Transfer with Multiple Resources in Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registry\nOfficer" as Officer
+actor "Seller\n(Ram Bahadur)" as Seller
+actor "Buyer\n(Sita Sharma)" as Buyer
+participant "LandTransferController" as Controller
+participant "LandTransferService" as Service
+participant "TransactionManager" as TxManager
+participant "LandParcelRepository" as ParcelRepo
+participant "OwnershipRepository" as OwnerRepo
+participant "DocumentRepository" as DocRepo
+participant "PaymentService" as Payment
+participant "NotificationService" as Notify
+
+Officer -> Controller : initiateTransfer(transferData)
+activate Controller
+
+Controller -> Service : transferLandOwnership(transferData)
+activate Service
+
+Service -> TxManager : begin transaction
+activate TxManager
+note right: PROPAGATION_REQUIRED,\nISOLATION_SERIALIZABLE
+Service <-- TxManager : transaction status
+deactivate TxManager
+
+Service -> ParcelRepo : findById(parcelId)
+activate ParcelRepo
+Service <-- ParcelRepo : landParcel
+deactivate ParcelRepo
+
+Service -> OwnerRepo : findCurrentOwner(parcelId)
+activate OwnerRepo
+Service <-- OwnerRepo : currentOwner
+deactivate OwnerRepo
+
+Service -> Service : validateOwnership(currentOwner, seller)
+Service -> Service : validateLegalDocuments(documents)
+
+Service -> Payment : processTransferFee(transferData)
+activate Payment
+Service <-- Payment : paymentReceipt
+deactivate Payment
+
+Service -> OwnerRepo : updateOwnership(parcelId, newOwner)
+activate OwnerRepo
+Service <-- OwnerRepo : ownershipRecord
+deactivate OwnerRepo
+
+Service -> DocRepo : storeTransferDocuments(documents)
+activate DocRepo
+Service <-- DocRepo : documentIds
+deactivate DocRepo
+
+Service -> ParcelRepo : updateParcelHistory(parcelId, transferData)
+activate ParcelRepo
+Service <-- ParcelRepo : updated
+deactivate ParcelRepo
+
+alt Success
+  Service -> TxManager : commit transaction
+  activate TxManager
+  Service <-- TxManager : success
+  deactivate TxManager
+  
+  Service -> Notify : sendTransferNotification(seller, buyer, parcelId)
+  activate Notify
+  Service <-- Notify
+  deactivate Notify
+  
+  Controller <-- Service : transferResult
+else Exception
+  Service -> TxManager : rollback transaction
+  activate TxManager
+  Service <-- TxManager : rolledBack
+  deactivate TxManager
+  
+  Controller <-- Service : throw TransferException
+end
+
+deactivate Service
+
+Officer <-- Controller : Display result
+deactivate Controller
+
+alt Successful Transfer
+  Officer -> Seller : Provide transfer confirmation
+  Officer -> Buyer : Issue new ownership certificate
+else Failed Transfer
+  Officer -> Seller : Explain issue and required corrections
+  Officer -> Buyer : Explain issue and required corrections
+end
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Land Registration system implements a robust transaction management framework to ensure the integrity of critical land records, an essential requirement in a country where land ownership holds significant social, economic, and cultural importance.
+
+When Officer Bhim Prasad processes a land transfer at the Lalitpur Land Revenue Office, where Ram Bahadur is selling his ancestral land to Sita Sharma, the system enforces strict transactional boundaries. The transaction begins with `ISOLATION_SERIALIZABLE` to prevent phantom reads or other concurrent modifications during this critical operation, as land transfers in Nepal must be strictly atomic to prevent traditional land disputes that have plagued rural communities.
+
+The transaction encompasses multiple resources: updating the land parcel record, transferring ownership, storing signed digital documents (including digitized versions of the handwritten Nepali deeds), processing government fees, and updating tax records. All of these operations must succeed together or fail together to maintain the legal integrity of land records.
+
+Nepal's context requires special transaction handling for several key reasons:
+
+1. **Power Reliability Challenges:** With frequent power outages in district offices, the transaction design includes durable writes and recovery mechanisms.
+
+2. **Offline Operations:** For remote offices in mountainous regions with intermittent connectivity, offline transaction capabilities allow field officers to record transactions locally. These are synchronized with the central system when connectivity is restored, with special conflict resolution protocols for cases where paper records may have been processed at multiple offices.
+
+3. **Dual-Process Requirements:** Nepal law requires both digital and paper records, so the transaction system ensures printable receipts and certificates are generated at appropriate stages, with transaction IDs linking digital and paper worlds.
+
+4. **Transaction Verification:** To prevent corruption, each land transfer transaction requires digital verification from at least two officers (the "four-eyes principle"), which is modeled as a two-phase transaction with separate commit steps.
+
+5. **Cultural Sensitivity:** The system handles special cases for communal and religious land holdings which may involve multiple parties in the transaction and specialized permission workflows.
+
+In the unfortunate event of a system failure during the transfer process, the transaction management guarantees that Ram Bahadur's ownership remains intact and no partial or inconsistent state is recorded. This is crucial in Nepal's context where land records are the primary proof of wealth and social standing.
+
+After successful completion, the system generates both digital records and paper certificates in both Nepali and English languages. A confirmation SMS is automatically sent to both parties, an important feature for accessibility in areas where digital literacy is still developing but mobile phone usage is widespread.
+
+This implementation addresses Nepal's specific needs for reliable land record management that must operate efficiently across varying infrastructure conditions while maintaining absolute data integrity.
+
+====== Core Interfaces and Classes
+
+```java
+/**
+ * Interface for transaction management
+ */
+public interface TransactionManager {
+
+    /**
+     * Get current transaction or create a new one based on transaction definition
+     */
+    TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException;
+
+    /**
+     * Commit the current transaction
+     */
+    void commit(TransactionStatus status) throws TransactionException;
+
+    /**
+     * Roll back the current transaction
+     */
+    void rollback(TransactionStatus status) throws TransactionException;
+}
+
+/**
+ * Interface for transaction definitions
+ */
+public interface TransactionDefinition {
+
+    /**
+     * Return the propagation behavior
+     */
+    int getPropagationBehavior();
+
+    /**
+     * Return the isolation level
+     */
+    int getIsolationLevel();
+
+    /**
+     * Return the transaction timeout
+     */
+    int getTimeout();
+
+    /**
+     * Return whether this transaction is read-only
+     */
+    boolean isReadOnly();
+    
+    /**
+     * Return the name of this transaction
+     */
+    String getName();
+
+    // Propagation behavior constants
+    int PROPAGATION_REQUIRED = 0;
+    int PROPAGATION_SUPPORTS = 1;
+    int PROPAGATION_MANDATORY = 2;
+    int PROPAGATION_REQUIRES_NEW = 3;
+    int PROPAGATION_NOT_SUPPORTED = 4;
+    int PROPAGATION_NEVER = 5;
+    int PROPAGATION_NESTED = 6;
+
+    // Isolation level constants
+    int ISOLATION_DEFAULT = -1;
+    int ISOLATION_READ_UNCOMMITTED = 1;
+    int ISOLATION_READ_COMMITTED = 2;
+    int ISOLATION_REPEATABLE_READ = 4;
+    int ISOLATION_SERIALIZABLE = 8;
+}
+
+/**
+ * Interface for transaction status
+ */
+public interface TransactionStatus {
+
+    /**
+     * Return whether the current transaction is new
+     */
+    boolean isNewTransaction();
+
+    /**
+     * Set the transaction rollback-only
+     */
+    void setRollbackOnly();
+
+    /**
+     * Return whether the transaction is rollback-only
+     */
+    boolean isRollbackOnly();
+
+    /**
+     * Return whether this transaction is completed
+     */
+    boolean isCompleted();
+}
+
+/**
+ * Interface for transaction synchronization
+ */
+public interface TransactionSynchronization {
+
+    /**
+     * Called before transaction commit
+     */
+    void beforeCommit(boolean readOnly);
+
+    /**
+     * Called before transaction completion
+     */
+    void beforeCompletion();
+
+    /**
+     * Called after transaction commit
+     */
+    void afterCommit();
+
+    /**
+     * Called after transaction completion
+     */
+    void afterCompletion(int status);
+
+    /**
+     * Called during the flushing phase of transaction commit
+     */
+    default void flush() {
+        // No-op by default
+    }
+
+    // Status constants
+    int STATUS_COMMITTED = 0;
+    int STATUS_ROLLED_BACK = 1;
+    int STATUS_UNKNOWN = 2;
+}
+```
+
+====== Nepal-Specific Transaction Management Implementation
+
+The Digital Profile system implements transaction management that addresses Nepal's unique challenges:
+
+```java
+/**
+ * Transaction manager that handles offline operations for areas with poor connectivity
+ */
+public class NepalOfflineTransactionManager implements PlatformTransactionManager {
+
+    private final PlatformTransactionManager delegate;
+    private final OfflineTransactionRepository offlineRepository;
+    private final ConnectivityService connectivityService;
+    
+    @Override
+    public TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException {
+        if (connectivityService.isOnline()) {
+            // Use regular transaction management when online
+            return delegate.getTransaction(definition);
+        } else {
+            // Create offline transaction when offline
+            OfflineTransaction offlineTransaction = offlineRepository.createTransaction();
+            return new OfflineTransactionStatus(offlineTransaction, definition);
+        }
+    }
+    
+    @Override
+    public void commit(TransactionStatus status) throws TransactionException {
+        if (status instanceof OfflineTransactionStatus) {
+            OfflineTransactionStatus offlineStatus = (OfflineTransactionStatus) status;
+            
+            // Store transaction in offline queue
+            offlineRepository.markForSync(offlineStatus.getTransaction().getId());
+            
+            // Schedule sync when connectivity is restored
+            connectivityService.registerSyncRequest(() -> {
+                syncOfflineTransaction(offlineStatus.getTransaction().getId());
+            });
+        } else {
+            delegate.commit(status);
+        }
+    }
+    
+    @Override
+    public void rollback(TransactionStatus status) throws TransactionException {
+        if (status instanceof OfflineTransactionStatus) {
+            OfflineTransactionStatus offlineStatus = (OfflineTransactionStatus) status;
+            
+            // Abort offline transaction
+            offlineRepository.markAsAborted(offlineStatus.getTransaction().getId());
+        } else {
+            delegate.rollback(status);
+        }
+    }
+    
+    /**
+     * Synchronize an offline transaction when connectivity is restored
+     */
+    public SyncResult syncOfflineTransaction(String transactionId) {
+        OfflineTransaction transaction = offlineRepository.findById(transactionId);
+        if (transaction == null || transaction.getStatus() != OfflineTransactionStatus.PENDING_SYNC) {
+            return SyncResult.NOT_FOUND;
+        }
+        
+        try {
+            // Start a new online transaction
+            DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+            def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            def.setIsolationLevel(transaction.getIsolationLevel());
+            
+            TransactionStatus status = delegate.getTransaction(def);
+            
+            try {
+                // Replay all operations from offline transaction
+                for (OfflineOperation operation : transaction.getOperations()) {
+                    operation.replay();
+                }
+                
+                // Commit the online transaction
+                delegate.commit(status);
+                
+                // Mark offline transaction as synchronized
+                offlineRepository.markAsSynced(transactionId);
+                
+                return SyncResult.SUCCESS;
+            } catch (Exception e) {
+                // Rollback on error
+                delegate.rollback(status);
+                
+                // Mark offline transaction as failed
+                offlineRepository.markAsFailed(transactionId, e.getMessage());
+                
+                return SyncResult.FAILED;
+            }
+        } catch (Exception e) {
+            // Handle synchronization errors
+            offlineRepository.markAsFailed(transactionId, e.getMessage());
+            return SyncResult.FAILED;
+        }
+    }
+}
+
+/**
+ * Transaction definition that enforces Nepal's government standards for data integrity
+ */
+public class NepalGovernmentTransactionDefinition extends DefaultTransactionDefinition {
+    
+    private final TransactionType transactionType;
+    
+    public NepalGovernmentTransactionDefinition(TransactionType transactionType) {
+        this.transactionType = transactionType;
+        
+        // Configure based on transaction type
+        switch (transactionType) {
+            case LAND_REGISTRATION:
+            case LAND_TRANSFER:
+            case OWNERSHIP_CHANGE:
+                // High-value transactions require serializable isolation
+                setIsolationLevel(ISOLATION_SERIALIZABLE);
+                setTimeout(60); // 1-minute timeout
+                break;
+                
+            case DOCUMENT_UPDATE:
+            case METADATA_CHANGE:
+                // Less critical operations can use repeatable read
+                setIsolationLevel(ISOLATION_REPEATABLE_READ);
+                setTimeout(30); // 30-second timeout
+                break;
+                
+            case READ_ONLY_OPERATION:
+                // Read-only operations
+                setReadOnly(true);
+                setIsolationLevel(ISOLATION_READ_COMMITTED);
+                break;
+        }
+        
+        // Always create new transaction for auditing purposes
+        setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
+        
+        // Set name for monitoring
+        setName(transactionType.name());
+    }
+}
+
+/**
+ * Enum defining transaction types in the Nepali government context
+ */
+public enum TransactionType {
+    LAND_REGISTRATION,
+    LAND_TRANSFER,
+    OWNERSHIP_CHANGE,
+    DOCUMENT_UPDATE,
+    METADATA_CHANGE,
+    READ_ONLY_OPERATION
+}
+```
+
+====== Conflict Resolution Strategy
+
+Nepal's digital infrastructure presents unique challenges with offline transactions. The system implements specialized conflict resolution:
+
+```java
+/**
+ * Conflict resolution service for offline transactions
+ */
+public class OfflineTransactionConflictResolver {
+
+    private final UserNotificationService notificationService;
+    private final AuditService auditService;
+    
+    /**
+     * Resolve conflicts between offline transactions and current state
+     */
+    public ConflictResolution resolveConflict(OfflineTransaction transaction, ConflictType conflictType) {
+        ConflictResolution resolution = new ConflictResolution();
+        
+        switch (conflictType) {
+            case OWNERSHIP_CHANGED:
+                // Land ownership changed before offline transaction synced
+                resolution.setResolutionStrategy(ResolutionStrategy.MANUAL_REVIEW);
+                resolution.setRequiredAction("Review changed ownership");
+                
+                // Notify district office
+                notificationService.notifyOfficeAdmin(
+                    transaction.getOfficeId(),
+                    "Ownership conflict detected",
+                    "Land parcel #" + transaction.getEntityId() + " has ownership conflict"
+                );
+                break;
+                
+            case RECORD_UPDATED:
+                // Record updated between offline operation and sync
+                resolution.setResolutionStrategy(ResolutionStrategy.MERGE);
+                resolution.setRequiredAction("Merge changes with current state");
+                break;
+                
+            case DUPLICATE_OPERATION:
+                // Operation already performed online
+                resolution.setResolutionStrategy(ResolutionStrategy.IGNORE);
+                resolution.setRequiredAction("Skip duplicate transaction");
+                break;
+                
+            case VALIDATION_FAILED:
+                // Validation rules changed since offline operation
+                resolution.setResolutionStrategy(ResolutionStrategy.RETRY_WITH_VALIDATION);
+                resolution.setRequiredAction("Validate against current rules");
+                break;
+        }
+        
+        // Audit the conflict and resolution
+        auditService.logConflictResolution(transaction.getId(), conflictType, resolution);
+        
+        return resolution;
+    }
+}
+
+/**
+ * Types of conflicts that can occur with offline transactions
+ */
+public enum ConflictType {
+    OWNERSHIP_CHANGED,
+    RECORD_UPDATED,
+    DUPLICATE_OPERATION,
+    VALIDATION_FAILED
+}
+
+/**
+ * Resolution strategies for transaction conflicts
+ */
+public enum ResolutionStrategy {
+    MANUAL_REVIEW,   // Requires human intervention
+    MERGE,           // Automatically merge changes
+    RETRY,           // Retry the transaction
+    IGNORE,          // Ignore the conflict
+    RETRY_WITH_VALIDATION  // Retry with current validation rules
+}
+```
+
+====== Transaction Monitoring and Metrics
+
+```java
+/**
+ * Transaction monitoring for Nepal's multi-tiered administrative structure
+ */
+public class TransactionMonitoringService {
+
+    private final MeterRegistry meterRegistry;
+    
+    /**
+     * Record transaction metrics
+     */
+    public void recordTransaction(String transactionName, TransactionType type, 
+                                 String officeId, long durationMs, boolean successful) {
+        // Record transaction count
+        meterRegistry.counter("transactions.count", 
+            Tags.of(
+                Tag.of("transaction", transactionName),
+                Tag.of("type", type.name()),
+                Tag.of("office", officeId),
+                Tag.of("status", successful ? "success" : "failure")
+            )
+        ).increment();
+        
+        // Record transaction duration
+        meterRegistry.timer("transactions.duration",
+            Tags.of(
+                Tag.of("transaction", transactionName),
+                Tag.of("type", type.name()),
+                Tag.of("office", officeId)
+            )
+        ).record(durationMs, TimeUnit.MILLISECONDS);
+    }
+    
+    /**
+     * Record offline transaction metrics
+     */
+    public void recordOfflineTransaction(String transactionName, String officeId, 
+                                        OfflineTransactionStatus status) {
+        meterRegistry.counter("transactions.offline",
+            Tags.of(
+                Tag.of("transaction", transactionName),
+                Tag.of("office", officeId),
+                Tag.of("status", status.name())
+            )
+        ).increment();
+    }
+    
+    /**
+     * Generate transaction health report for an office
+     */
+    public OfficeTransactionReport generateOfficeReport(String officeId, LocalDate date) {
+        // Implementation to generate report from metrics
+        return new OfficeTransactionReport();
+    }
+}
+```
+
+====== Transaction Performance Optimization
+
+For Nepal's varied infrastructure environments, transaction performance is optimized differently:
+
+```java
+/**
+ * Transaction optimization based on infrastructure capabilities
+ */
+public class TransactionOptimizationService {
+
+    private final OfficeCapabilityRepository officeRepository;
+    private final TransactionTemplate transactionTemplate;
+    
+    /**
+     * Get optimized transaction definition for an office
+     */
+    public TransactionDefinition getOptimizedDefinition(String officeId, TransactionType type) {
+        OfficeCapability capability = officeRepository.findByOfficeId(officeId);
+        
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        
+        // Set timeout based on connectivity quality
+        switch (capability.getConnectivityLevel()) {
+            case HIGH:
+                def.setTimeout(30); // 30 seconds
+                break;
+            case MEDIUM:
+                def.setTimeout(60); // 1 minute
+                break;
+            case LOW:
+                def.setTimeout(120); // 2 minutes
+                break;
+            case INTERMITTENT:
+                def.setTimeout(300); // 5 minutes
+                break;
+        }
+        
+        // Adjust isolation level based on transaction type and infrastructure
+        if (type == TransactionType.LAND_TRANSFER || type == TransactionType.OWNERSHIP_CHANGE) {
+            // Critical transactions always use serializable
+            def.setIsolationLevel(TransactionDefinition.ISOLATION_SERIALIZABLE);
+        } else if (capability.getDatabasePerformance() == PerformanceLevel.HIGH) {
+            // High-performance systems can use stricter isolation
+            def.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        } else {
+            // Lower-performance systems use more relaxed isolation where appropriate
+            def.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+        }
+        
+        return def;
+    }
+    
+    /**
+     * Execute transaction with optimized settings
+     */
+    public <T> T executeOptimized(String officeId, TransactionType type, 
+                                 TransactionCallback<T> callback) {
+        TransactionDefinition def = getOptimizedDefinition(officeId, type);
+        return transactionTemplate.execute(def, callback);
+    }
+}
+
+/**
+ * Infrastructure capability levels
+ */
+public enum PerformanceLevel {
+    HIGH,
+    MEDIUM,
+    LOW
+}
+
+/**
+ * Connectivity quality levels
+ */
+public enum ConnectivityLevel {
+    HIGH,
+    MEDIUM,
+    LOW,
+    INTERMITTENT
+}
+```
+
+====== Transaction Declaration in Code
+
+The transaction requirements are clearly defined in services:
+
+```java
+/**
+ * Land registration service with transaction management
+ */
+@Service
+public class LandRegistrationService {
+
+    private final PlatformTransactionManager transactionManager;
+    private final LandParcelRepository parcelRepository;
+    private final OwnershipRepository ownershipRepository;
+    private final DocumentRepository documentRepository;
+    
+    /**
+     * Register new land parcel
+     */
+    @Transactional(
+        transactionManager = "jpaTransactionManager",
+        isolation = Isolation.SERIALIZABLE,
+        propagation = Propagation.REQUIRES_NEW,
+        timeout = 60,
+        rollbackFor = {LandRegistrationException.class, DataIntegrityViolationException.class}
+    )
+    public LandRegistrationResult registerLandParcel(LandParcelRegistrationRequest request) {
+        // Implementation with proper transaction boundaries
+    }
+    
+    /**
+     * Transfer land ownership - demonstrates programmatic transaction management
+     */
+    public LandTransferResult transferLandOwnership(LandTransferRequest request) {
+        // Create transaction definition
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setName("landOwnershipTransfer");
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        def.setIsolationLevel(TransactionDefinition.ISOLATION_SERIALIZABLE);
+        def.setTimeout(120); // 2 minutes
+        
+        // Begin transaction
+        TransactionStatus status = transactionManager.getTransaction(def);
+        
+        try {
+            // Implementation with explicit transaction management
+            
+            // Commit transaction
+            transactionManager.commit(status);
+            return result;
+        } catch (Exception e) {
+            // Rollback transaction
+            transactionManager.rollback(status);
+            throw new LandTransferException("Failed to transfer land ownership", e);
+        }
+    }
+    
+    /**
+     * Update land details - demonstrates template-based transaction management
+     */
+    public LandUpdateResult updateLandDetails(String parcelId, LandDetailsUpdateRequest request) {
+        return new TransactionTemplate(transactionManager).execute(status -> {
+            // Implementation using TransactionTemplate
+            return result;
+        });
+    }
+}
+```
+
+====== Distributed Transaction Management
+
+The system supports distributed transactions for integrated operations:
+
+```java
+/**
+ * Manages distributed transactions across multiple government systems
+ */
+public class GovernmentSystemsTransactionCoordinator {
+
+    private final JtaTransactionManager transactionManager;
+    private final LandSystemClient landSystem;
+    private final TaxSystemClient taxSystem;
+    private final DocumentSystemClient documentSystem;
+    
+    /**
+     * Execute a coordinated transaction across multiple government systems
+     */
+    public CoordinatedTransactionResult executeCoordinatedTransaction(
+            CoordinatedTransactionRequest request) {
+        
+        UserTransaction tx = transactionManager.getUserTransaction();
+        
+        try {
+            // Start global transaction
+            tx.begin();
+            
+            // Execute operations on multiple systems
+            LandSystemResponse landResponse = landSystem.processRequest(request.getLandRequest());
+            TaxSystemResponse taxResponse = taxSystem.processRequest(request.getTaxRequest());
+            DocumentSystemResponse docResponse = documentSystem.processRequest(request.getDocumentRequest());
+            
+            // Build result
+            CoordinatedTransactionResult result = new CoordinatedTransactionResult();
+            result.setLandResponse(landResponse);
+            result.setTaxResponse(taxResponse);
+            result.setDocumentResponse(docResponse);
+            
+            // Commit global transaction
+            tx.commit();
+            
+            return result;
+        } catch (Exception e) {
+            try {
+                // Rollback global transaction
+                tx.rollback();
+            } catch (SystemException se) {
+                // Log rollback failure
+                logger.error("Failed to rollback transaction", se);
+            }
+            
+            throw new CoordinatedTransactionException("Transaction failed", e);
+        }
+    }
+}
+```
+
+====== Nepal-Specific Transaction Challenges and Solutions
+
+|===
+| Challenge | Solution Implementation
+| Intermittent Internet Connectivity | Offline transaction support with local persistence and synchronized commit when connectivity is restored
+| Varying Infrastructure Quality | Dynamic transaction timeout and isolation level based on office infrastructure capabilities
+| Power Outages | Transaction journaling with automatic recovery on system restart
+| Low Bandwidth in Remote Areas | Optimized transaction payloads with compressed data transfers
+| Multiple Administrative Levels | Role-based transaction authorization with multi-level approval workflows
+| Seasonal Accessibility Issues | Long-running transaction support for monsoon-affected areas
+| System Integration Challenges | Compensating transactions for integration with legacy government systems
+| Paper-Digital Synchronization | Transaction receipts with QR codes linking to digital transaction records
+|===
+
+====== Transaction Monitoring Dashboard
+
+The transaction management system includes specialized monitoring for Nepal's government offices:
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Transaction Dashboard for Kathmandu Central Office" as Dashboard {
+  + Transaction Summary
+  + System Health
+  + Offline Transaction Queue
+  + Failed Transactions
+}
+
+note right of Dashboard::TransactionSummary
+  - 523 Successful Transactions Today
+  - 12 Pending Transactions
+  - 3 Failed Transactions
+  - Avg. Response Time: 1.2s
+end note
+
+note right of Dashboard::SystemHealth
+  - Database: Healthy
+  - Message Broker: Healthy
+  - Cache: Warning (High Utilization)
+  - Offline Transaction Manager: Healthy
+end note
+
+note right of Dashboard::OfflineTransactionQueue
+  - Dhading District Office: 23 pending
+  - Sindhupalchok Office: 12 pending
+  - Okhaldhunga Office: 7 pending
+  - Next Sync Time: 2 minutes
+end note
+
+note right of Dashboard::FailedTransactions
+  - 2 Land Transfers (Validation Error)
+  - 1 Document Registration (Timeout)
+  - Oldest Failure: 45 minutes ago
+end note
+@enduml
+----
+
+The dashboard provides:
+1. Real-time tracking of transaction volumes and performance across all administrative levels
+2. Visibility into offline transaction queues from remote offices
+3. Proactive alerts for transaction failures requiring administrative intervention
+4. Performance metrics to identify optimization opportunities in different regions
+
+This comprehensive transaction management framework ensures data integrity across Nepal's challenging and diverse operational environment, while maintaining the strict consistency requirements of a government land management system.

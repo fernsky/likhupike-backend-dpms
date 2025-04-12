@@ -1,0 +1,1235 @@
+===== Pagination
+
+Pagination is consistently applied throughout the Digital Profile system to efficiently manage large data sets, optimize resource usage, and provide a consistent user experience across all interfaces.
+
+====== Pagination Architecture
+
+[plantuml]
+----
+@startuml
+package "Pagination Framework" {
+  class PageRequest {
+    +page: Int
+    +size: Int
+    +sort: Sort
+    +direction: SortDirection
+    +getTotalPages(totalElements: Long): Int
+    +getOffset(): Int
+    +getLimit(): Int
+    +next(): PageRequest
+    +previous(): PageRequest
+    +first(): PageRequest
+    +withSort(sort: Sort): PageRequest
+  }
+  
+  class Sort {
+    +properties: List<String>
+    +direction: SortDirection
+    +toString(): String
+    +withDirection(direction: SortDirection): Sort
+    +by(property: String): Sort
+  }
+  
+  enum SortDirection {
+    ASC
+    DESC
+  }
+  
+  class Page<T> {
+    +content: List<T>
+    +pageRequest: PageRequest
+    +totalElements: Long
+    +isEmpty(): Boolean
+    +getTotalPages(): Int
+    +isFirst(): Boolean
+    +isLast(): Boolean
+    +hasNext(): Boolean
+    +hasPrevious(): Boolean
+    +getPageLinks(): PageLinks
+  }
+  
+  class PageLinks {
+    +self: String
+    +first: String
+    +previous: String?
+    +next: String?
+    +last: String
+  }
+  
+  class PaginationUtils {
+    +{static} createPageLinks(page: Page<*>, baseUrl: String): PageLinks
+    +{static} parseSortString(sortParam: String): Sort
+    +{static} applyDefaultPagination<T>(query: Query<T>, pageRequest: PageRequest): Query<T>
+  }
+  
+  interface PaginationAdapter<T, R> {
+    +toPage(result: R, pageRequest: PageRequest): Page<T>
+  }
+  
+  interface PaginatedRepository<T, ID> {
+    +findAll(pageRequest: PageRequest): Page<T>
+    +findBy(criteria: Criteria, pageRequest: PageRequest): Page<T>
+    +count(): Long
+    +count(criteria: Criteria): Long
+  }
+  
+  class PageableParameterResolver {
+    +resolvePageRequest(page: Int?, size: Int?, sort: String?): PageRequest
+    +validatePageSize(size: Int): Int
+    +validatePageNumber(page: Int): Int
+  }
+}
+
+PageRequest o-- Sort
+Page o-- PageRequest
+Page o-- PageLinks
+PageableParameterResolver --> PageRequest : creates
+PaginationUtils ..> PageLinks : creates
+@enduml
+----
+
+====== Pagination Flow
+
+[plantuml]
+----
+@startuml
+participant "API Client" as Client
+participant "Controller" as Controller
+participant "PageableParameterResolver" as Resolver
+participant "Service" as Service
+participant "Repository" as Repo
+participant "PaginationUtils" as Utils
+participant "DB" as DB
+
+Client -> Controller : request(page=2, size=20, sort="name,asc")
+activate Controller
+
+Controller -> Resolver : resolvePageRequest(2, 20, "name,asc")
+activate Resolver
+Resolver -> Resolver : validatePageSize(20)
+Resolver -> Resolver : validatePageNumber(2)
+Resolver -> Resolver : parseSortString("name,asc")
+Controller <-- Resolver : pageRequest
+deactivate Resolver
+
+Controller -> Service : findEntities(criteria, pageRequest)
+activate Service
+
+Service -> Repo : findBy(criteria, pageRequest)
+activate Repo
+
+Repo -> Utils : applyDefaultPagination(query, pageRequest)
+activate Utils
+Repo <-- Utils : paginatedQuery
+deactivate Utils
+
+Repo -> DB : execute paginatedQuery
+activate DB
+Repo <-- DB : results
+deactivate DB
+
+Repo -> DB : execute count query
+activate DB
+Repo <-- DB : totalCount
+deactivate DB
+
+Repo -> Repo : createPage(results, pageRequest, totalCount)
+Service <-- Repo : page
+deactivate Repo
+
+Service -> Utils : createPageLinks(page, baseUrl)
+activate Utils
+Service <-- Utils : pageLinks
+deactivate Utils
+
+Controller <-- Service : pagedResult
+deactivate Service
+
+Controller -> Controller : formatResponse(page)
+Client <-- Controller : paginatedResponse
+deactivate Controller
+@enduml
+----
+
+====== Contextual Use Case for Pagination
+
+*Real-World Scenario:* Paginating Citizen Records in Nepal's Land Registry System
+
+[plantuml]
+----
+@startuml
+actor "Registry Officer\n(Anita Sharma)" as Officer
+participant "Land Registry\nApplication" as App
+participant "CitizenController" as Controller
+participant "CitizenService" as Service
+participant "CitizenRepository" as Repo
+participant "PaginationUtils" as Utils
+participant "Database" as DB
+
+Officer -> App : Search citizens by district (Kathmandu)
+App -> Controller : GET /citizens?district=kathmandu&page=0&size=25
+activate Controller
+
+Controller -> Controller : validateAccessPermission()
+Controller -> Service : findByDistrict("kathmandu", PageRequest(0, 25))
+activate Service
+
+Service -> Repo : findByDistrict("kathmandu", PageRequest(0, 25))
+activate Repo
+
+Repo -> Utils : applyDefaultPagination(query, pageRequest)
+activate Utils
+Utils -> Utils : setSortIfNotSpecified("familyName")
+Utils -> Utils : applyLocalizedCollation("ne")
+Repo <-- Utils : configuredQuery
+deactivate Utils
+
+Repo -> DB : execute query
+activate DB
+Repo <-- DB : first 25 records (of 12,752 total)
+deactivate DB
+
+Repo -> DB : count citizens in Kathmandu
+activate DB
+Repo <-- DB : 12,752
+deactivate DB
+
+Service <-- Repo : Page<Citizen>(content=25 records, total=12,752)
+deactivate Repo
+
+Service -> Utils : createPageLinks(page, "/citizens?district=kathmandu")
+activate Utils
+Service <-- Utils : pageLinks
+deactivate Utils
+
+Controller <-- Service : citizenPage
+deactivate Service
+
+Controller -> Controller : enrichWithMetadata(citizenPage)
+App <-- Controller : JSON response with pagination metadata
+deactivate Controller
+
+App -> App : Display first 25 citizens
+App -> App : Show "Page 1 of 511"
+App -> App : Enable "Next Page" button
+
+Officer -> App : Click "Next Page"
+App -> Controller : GET /citizens?district=kathmandu&page=1&size=25
+@enduml
+----
+
+*Implementation Details:*
+In the Land Registry Office in Kathmandu, Officer Anita Sharma needs to review citizen records for land ownership verification. The system houses over 12,000 citizen records for Kathmandu district alone, making efficient pagination essential.
+
+When Anita searches for citizens in Kathmandu district, the CitizenController receives the request with pagination parameters. The controller uses the PageableParameterResolver to create a standardized PageRequest object. The system applies Nepal-specific sorting rules, including proper collation for Nepali text (respecting देवनागरी script ordering).
+
+The CitizenRepository executes the query with pagination parameters, fetching only 25 records at a time to ensure responsive performance even over limited bandwidth connections common in Nepal's government offices. A separate count query determines the total number of matching records to calculate the total pages.
+
+The service layer enriches the result with HATEOAS-style navigation links, allowing the client application to easily retrieve next/previous pages without having to construct complex URLs. This is especially important for maintaining state when network connections are intermittent.
+
+The application displays the first 25 citizens with clear pagination controls showing "Page 1 of 511" and navigation buttons. When Anita clicks "Next Page," the application follows the pre-generated link to retrieve the next page of results. This approach minimizes data transfer and optimizes performance for government offices that often face bandwidth and hardware constraints.
+
+The system intelligently handles offline scenarios by temporarily caching pagination state, allowing officers to continue reviewing previously loaded pages even during brief connectivity interruptions - a critical feature for rural land offices in Nepal.
+
+====== Core Interfaces and Classes
+
+```java
+/**
+ * Main pagination request class that encapsulates pagination parameters
+ */
+public class PageRequest {
+    private final int page;
+    private final int size;
+    private final Sort sort;
+    
+    /**
+     * Creates a new PageRequest with the given parameters
+     */
+    public PageRequest(int page, int size) {
+        this(page, size, Sort.unsorted());
+    }
+    
+    /**
+     * Creates a new PageRequest with the given parameters
+     */
+    public PageRequest(int page, int size, Sort sort) {
+        this.page = Math.max(0, page);
+        this.size = Math.max(1, size);
+        this.sort = sort;
+    }
+    
+    /**
+     * Creates a new PageRequest with default values
+     */
+    public static PageRequest of(int page, int size) {
+        return new PageRequest(page, size);
+    }
+    
+    /**
+     * Creates a new PageRequest with sorting
+     */
+    public static PageRequest of(int page, int size, Sort sort) {
+        return new PageRequest(page, size, sort);
+    }
+    
+    /**
+     * Creates a new PageRequest with sorting by the given property
+     */
+    public static PageRequest of(int page, int size, String property) {
+        return new PageRequest(page, size, Sort.by(property));
+    }
+    
+    /**
+     * Creates a new PageRequest with sorting by the given property and direction
+     */
+    public static PageRequest of(int page, int size, String property, SortDirection direction) {
+        return new PageRequest(page, size, Sort.by(property).withDirection(direction));
+    }
+    
+    /**
+     * Calculate the total number of pages based on total elements
+     */
+    public int getTotalPages(long totalElements) {
+        return size == 0 ? 1 : (int) Math.ceil((double) totalElements / size);
+    }
+    
+    /**
+     * Get the offset for database queries
+     */
+    public int getOffset() {
+        return page * size;
+    }
+    
+    /**
+     * Get the page number
+     */
+    public int getPage() {
+        return page;
+    }
+    
+    /**
+     * Get the page size
+     */
+    public int getSize() {
+        return size;
+    }
+    
+    /**
+     * Get the sort specification
+     */
+    public Sort getSort() {
+        return sort;
+    }
+    
+    /**
+     * Create a new PageRequest for the next page
+     */
+    public PageRequest next() {
+        return new PageRequest(page + 1, size, sort);
+    }
+    
+    /**
+     * Create a new PageRequest for the previous page
+     */
+    public PageRequest previous() {
+        return new PageRequest(Math.max(0, page - 1), size, sort);
+    }
+    
+    /**
+     * Create a new PageRequest for the first page
+     */
+    public PageRequest first() {
+        return new PageRequest(0, size, sort);
+    }
+    
+    /**
+     * Create a new PageRequest with the same pagination but different sort
+     */
+    public PageRequest withSort(Sort sort) {
+        return new PageRequest(page, size, sort);
+    }
+}
+
+/**
+ * Represents a page of results
+ */
+public class Page<T> {
+    private final List<T> content;
+    private final PageRequest pageRequest;
+    private final long totalElements;
+    private PageLinks links;
+    
+    /**
+     * Creates a new Page with the given parameters
+     */
+    public Page(List<T> content, PageRequest pageRequest, long totalElements) {
+        this.content = content;
+        this.pageRequest = pageRequest;
+        this.totalElements = totalElements;
+    }
+    
+    /**
+     * Get the page content
+     */
+    public List<T> getContent() {
+        return content;
+    }
+    
+    /**
+     * Check if the page is empty
+     */
+    public boolean isEmpty() {
+        return content.isEmpty();
+    }
+    
+    /**
+     * Get the total number of pages
+     */
+    public int getTotalPages() {
+        return pageRequest.getTotalPages(totalElements);
+    }
+    
+    /**
+     * Get the total number of elements
+     */
+    public long getTotalElements() {
+        return totalElements;
+    }
+    
+    /**
+     * Get the page size
+     */
+    public int getSize() {
+        return pageRequest.getSize();
+    }
+    
+    /**
+     * Get the page number
+     */
+    public int getNumber() {
+        return pageRequest.getPage();
+    }
+    
+    /**
+     * Check if this is the first page
+     */
+    public boolean isFirst() {
+        return pageRequest.getPage() == 0;
+    }
+    
+    /**
+     * Check if this is the last page
+     */
+    public boolean isLast() {
+        return getNumber() == getTotalPages() - 1;
+    }
+    
+    /**
+     * Check if there is a next page
+     */
+    public boolean hasNext() {
+        return getNumber() + 1 < getTotalPages();
+    }
+    
+    /**
+     * Check if there is a previous page
+     */
+    public boolean hasPrevious() {
+        return getNumber() > 0;
+    }
+    
+    /**
+     * Get the navigation links for this page
+     */
+    public PageLinks getLinks() {
+        return links;
+    }
+    
+    /**
+     * Set the navigation links for this page
+     */
+    public void setLinks(PageLinks links) {
+        this.links = links;
+    }
+    
+    /**
+     * Get the page request
+     */
+    public PageRequest getPageRequest() {
+        return pageRequest;
+    }
+}
+
+/**
+ * Represents the navigation links for a page
+ */
+public class PageLinks {
+    private final String self;
+    private final String first;
+    private final String previous;
+    private final String next;
+    private final String last;
+    
+    /**
+     * Creates a new PageLinks with the given parameters
+     */
+    public PageLinks(String self, String first, String previous, String next, String last) {
+        this.self = self;
+        this.first = first;
+        this.previous = previous;
+        this.next = next;
+        this.last = last;
+    }
+    
+    /**
+     * Get the link to the current page
+     */
+    public String getSelf() {
+        return self;
+    }
+    
+    /**
+     * Get the link to the first page
+     */
+    public String getFirst() {
+        return first;
+    }
+    
+    /**
+     * Get the link to the previous page, or null if there is no previous page
+     */
+    public String getPrevious() {
+        return previous;
+    }
+    
+    /**
+     * Get the link to the next page, or null if there is no next page
+     */
+    public String getNext() {
+        return next;
+    }
+    
+    /**
+     * Get the link to the last page
+     */
+    public String getLast() {
+        return last;
+    }
+}
+
+/**
+ * Utility methods for pagination
+ */
+public class PaginationUtils {
+    /**
+     * Create page links for a page
+     */
+    public static <T> PageLinks createPageLinks(Page<T> page, String baseUrl) {
+        // Add query parameters separator if base URL doesn't have any
+        baseUrl = baseUrl.contains("?") ? baseUrl + "&" : baseUrl + "?";
+        
+        // Build links
+        String self = baseUrl + "page=" + page.getNumber() + "&size=" + page.getSize();
+        String first = baseUrl + "page=0&size=" + page.getSize();
+        String last = baseUrl + "page=" + (page.getTotalPages() - 1) + "&size=" + page.getSize();
+        
+        // Only include previous/next links if they exist
+        String previous = page.hasPrevious() ? 
+            baseUrl + "page=" + (page.getNumber() - 1) + "&size=" + page.getSize() : null;
+        String next = page.hasNext() ? 
+            baseUrl + "page=" + (page.getNumber() + 1) + "&size=" + page.getSize() : null;
+            
+        return new PageLinks(self, first, previous, next, last);
+    }
+    
+    /**
+     * Parse a sort string into a Sort object
+     * Format: property1,direction1;property2,direction2
+     */
+    public static Sort parseSortString(String sortParam) {
+        if (sortParam == null || sortParam.isEmpty()) {
+            return Sort.unsorted();
+        }
+        
+        List<String> sortFields = Arrays.asList(sortParam.split(";"));
+        
+        if (sortFields.isEmpty()) {
+            return Sort.unsorted();
+        }
+        
+        List<String> properties = new ArrayList<>();
+        SortDirection direction = SortDirection.ASC;
+        
+        for (String field : sortFields) {
+            String[] parts = field.split(",");
+            
+            if (parts.length > 0) {
+                properties.add(parts[0]);
+                
+                if (parts.length > 1 && "desc".equalsIgnoreCase(parts[1])) {
+                    direction = SortDirection.DESC;
+                }
+            }
+        }
+        
+        return Sort.by(properties.toArray(new String[0])).withDirection(direction);
+    }
+}
+
+/**
+ * Resolves and validates pagination parameters from HTTP requests
+ */
+public class PageableParameterResolver {
+    private final int defaultPageSize;
+    private final int maxPageSize;
+    
+    /**
+     * Creates a new PageableParameterResolver with the given parameters
+     */
+    public PageableParameterResolver(int defaultPageSize, int maxPageSize) {
+        this.defaultPageSize = defaultPageSize;
+        this.maxPageSize = maxPageSize;
+    }
+    
+    /**
+     * Resolve a PageRequest from the given parameters
+     */
+    public PageRequest resolvePageRequest(Integer page, Integer size, String sort) {
+        int pageNumber = page != null ? validatePageNumber(page) : 0;
+        int pageSize = size != null ? validatePageSize(size) : defaultPageSize;
+        Sort sortObj = sort != null ? PaginationUtils.parseSortString(sort) : Sort.unsorted();
+        
+        return new PageRequest(pageNumber, pageSize, sortObj);
+    }
+    
+    /**
+     * Validate the page size
+     */
+    public int validatePageSize(int size) {
+        if (size <= 0) {
+            return defaultPageSize;
+        }
+        
+        return Math.min(size, maxPageSize);
+    }
+    
+    /**
+     * Validate the page number
+     */
+    public int validatePageNumber(int page) {
+        return Math.max(0, page);
+    }
+}
+```
+
+====== Nepal-Specific Implementation
+
+The pagination framework includes several adaptations for Nepal's specific context:
+
+```java
+/**
+ * Nepal-specific pagination settings and extensions
+ */
+@Configuration
+public class NepalPaginationConfiguration {
+    /**
+     * Configure default pagination settings for Nepal
+     */
+    @Bean
+    public PageableParameterResolver pageableParameterResolver() {
+        // Smaller default page size for areas with limited bandwidth
+        return new PageableParameterResolver(15, 100);
+    }
+    
+    /**
+     * Nepali language-aware sorting implementation
+     */
+    @Bean
+    public NepaliSortProvider nepaliSortProvider() {
+        return new NepaliSortProvider();
+    }
+    
+    /**
+     * Offline pagination support for intermittent connectivity
+     */
+    @Bean
+    public OfflinePaginationSupport offlinePaginationSupport() {
+        return new OfflinePaginationSupport();
+    }
+    
+    /**
+     * Configuration for paper fallback reports
+     */
+    @Bean
+    public PaginatedReportGenerator paginatedReportGenerator() {
+        return new PaginatedReportGenerator();
+    }
+}
+
+/**
+ * Provides proper collation for Nepali text
+ */
+public class NepaliSortProvider {
+    private final Collator nepaliCollator;
+    
+    public NepaliSortProvider() {
+        // Initialize collator for Nepali language
+        nepaliCollator = Collator.getInstance(new Locale("ne"));
+        nepaliCollator.setStrength(Collator.PRIMARY);
+    }
+    
+    /**
+     * Apply Nepali collation to a Sort object
+     */
+    public Sort withNepaliCollation(Sort sort) {
+        // Apply Nepali-specific collation for text fields
+        // This handles proper sorting of Devanagari script
+        return sort;
+    }
+    
+    /**
+     * Get comparator for Nepali text
+     */
+    public Comparator<String> getNepaliComparator() {
+        return nepaliCollator::compare;
+    }
+    
+    /**
+     * Sort a list using Nepali collation rules
+     */
+    public <T> List<T> sortWithNepaliCollation(List<T> list, Function<T, String> textExtractor) {
+        list.sort((a, b) -> nepaliCollator.compare(textExtractor.apply(a), textExtractor.apply(b)));
+        return list;
+    }
+}
+
+/**
+ * Support for offline pagination in areas with intermittent connectivity
+ */
+public class OfflinePaginationSupport {
+    private final Map<String, CachedPaginationState<?>> paginationStateCache = new ConcurrentHashMap<>();
+    
+    /**
+     * Cache pagination state for offline access
+     */
+    public <T> void cachePageData(String cacheKey, Page<T> page) {
+        paginationStateCache.put(cacheKey, new CachedPaginationState<>(
+            page.getContent(),
+            page.getTotalElements(),
+            page.getPageRequest()
+        ));
+    }
+    
+    /**
+     * Retrieve cached pagination state
+     */
+    @SuppressWarnings("unchecked")
+    public <T> Optional<Page<T>> getCachedPage(String cacheKey, PageRequest pageRequest) {
+        CachedPaginationState<?> state = paginationStateCache.get(cacheKey);
+        
+        if (state == null) {
+            return Optional.empty();
+        }
+        
+        // Check if requested page is within cached data
+        if (state.pageRequest.getPage() == pageRequest.getPage() && 
+            state.pageRequest.getSize() == pageRequest.getSize()) {
+            
+            return Optional.of(new Page<>((List<T>) state.content, pageRequest, state.totalElements));
+        }
+        
+        return Optional.empty();
+    }
+    
+    /**
+     * Clear cached pagination state
+     */
+    public void clearCache(String cacheKey) {
+        paginationStateCache.remove(cacheKey);
+    }
+    
+    /**
+     * Internal class for storing cached pagination state
+     */
+    private static class CachedPaginationState<T> {
+        private final List<T> content;
+        private final long totalElements;
+        private final PageRequest pageRequest;
+        
+        public CachedPaginationState(List<T> content, long totalElements, PageRequest pageRequest) {
+            this.content = content;
+            this.totalElements = totalElements;
+            this.pageRequest = pageRequest;
+        }
+    }
+}
+
+/**
+ * Generates paginated paper reports from digital data
+ * Important for Nepal context where paper backups are required
+ */
+public class PaginatedReportGenerator {
+    /**
+     * Generate a paginated paper report
+     */
+    public <T> File generatePaginatedReport(Page<T> page, ReportTemplate template) {
+        // Implementation for generating paper reports
+        // with standardized page headers, footers, page numbers
+        return null; // Placeholder
+    }
+    
+    /**
+     * Generate a paginated report for all pages
+     */
+    public <T> File generateCompletePaginatedReport(Supplier<Page<T>> pageSupplier, ReportTemplate template) {
+        // Generate complete report across all pages
+        return null; // Placeholder
+    }
+}
+```
+
+====== RESTful API Implementation
+
+```java
+/**
+ * Example controller demonstrating RESTful pagination
+ */
+@RestController
+@RequestMapping("/api/citizens")
+public class CitizenController {
+    private final CitizenService citizenService;
+    private final PageableParameterResolver pageableResolver;
+    
+    @Autowired
+    public CitizenController(CitizenService citizenService, PageableParameterResolver pageableResolver) {
+        this.citizenService = citizenService;
+        this.pageableResolver = pageableResolver;
+    }
+    
+    /**
+     * Get a paginated list of citizens
+     */
+    @GetMapping
+    public ResponseEntity<PagedResponse<CitizenDTO>> getCitizens(
+        @RequestParam(required = false) Integer page,
+        @RequestParam(required = false) Integer size,
+        @RequestParam(required = false) String sort,
+        @RequestParam(required = false) String district,
+        HttpServletRequest request
+    ) {
+        // Resolve pagination parameters
+        PageRequest pageRequest = pageableResolver.resolvePageRequest(page, size, sort);
+        
+        // Get citizens with pagination
+        Page<CitizenDTO> citizenPage;
+        if (district != null) {
+            citizenPage = citizenService.findByDistrict(district, pageRequest);
+        } else {
+            citizenPage = citizenService.findAll(pageRequest);
+        }
+        
+        // Create page links
+        String baseUrl = request.getRequestURL().toString();
+        if (request.getQueryString() != null) {
+            // Remove pagination params from base URL
+            String queryString = request.getQueryString()
+                .replaceAll("&?page=[^&]*", "")
+                .replaceAll("&?size=[^&]*", "");
+            
+            if (!queryString.isEmpty()) {
+                baseUrl += "?" + queryString;
+            }
+        }
+        
+        PageLinks links = PaginationUtils.createPageLinks(citizenPage, baseUrl);
+        citizenPage.setLinks(links);
+        
+        // Create response
+        PagedResponse<CitizenDTO> response = new PagedResponse<>(
+            citizenPage.getContent(),
+            citizenPage.getNumber(),
+            citizenPage.getSize(),
+            citizenPage.getTotalElements(),
+            citizenPage.getTotalPages(),
+            citizenPage.getLinks()
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+}
+
+/**
+ * Standard response format for paginated API responses
+ */
+public class PagedResponse<T> {
+    private List<T> content;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
+    private PageLinks links;
+    
+    public PagedResponse(List<T> content, int page, int size, long totalElements, 
+                         int totalPages, PageLinks links) {
+        this.content = content;
+        this.page = page;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = totalPages;
+        this.links = links;
+    }
+    
+    // Getters and setters
+}
+```
+
+====== Database Repository Implementation
+
+```java
+/**
+ * Base repository interface for paginated data access
+ */
+public interface PaginatedRepository<T, ID> {
+    /**
+     * Find all entities with pagination
+     */
+    Page<T> findAll(PageRequest pageRequest);
+    
+    /**
+     * Find entities matching criteria with pagination
+     */
+    Page<T> findBy(Criteria criteria, PageRequest pageRequest);
+    
+    /**
+     * Count all entities
+     */
+    long count();
+    
+    /**
+     * Count entities matching criteria
+     */
+    long count(Criteria criteria);
+}
+
+/**
+ * Example JPA implementation of PaginatedRepository
+ */
+@Repository
+public class JpaCitizenRepository implements PaginatedRepository<Citizen, UUID> {
+    private final EntityManager entityManager;
+    private final NepaliSortProvider nepaliSortProvider;
+    
+    @Autowired
+    public JpaCitizenRepository(EntityManager entityManager, NepaliSortProvider nepaliSortProvider) {
+        this.entityManager = entityManager;
+        this.nepaliSortProvider = nepaliSortProvider;
+    }
+    
+    @Override
+    public Page<Citizen> findAll(PageRequest pageRequest) {
+        // Create query
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Citizen> query = cb.createQuery(Citizen.class);
+        Root<Citizen> root = query.from(Citizen.class);
+        query.select(root);
+        
+        // Apply sorting
+        if (pageRequest.getSort() != null && !pageRequest.getSort().isEmpty()) {
+            applySort(query, cb, root, pageRequest.getSort());
+        }
+        
+        // Execute query with pagination
+        TypedQuery<Citizen> typedQuery = entityManager.createQuery(query);
+        typedQuery.setFirstResult(pageRequest.getOffset());
+        typedQuery.setMaxResults(pageRequest.getSize());
+        List<Citizen> citizens = typedQuery.getResultList();
+        
+        // Count total elements
+        long total = count();
+        
+        // Create page
+        return new Page<>(citizens, pageRequest, total);
+    }
+    
+    @Override
+    public Page<Citizen> findBy(Criteria criteria, PageRequest pageRequest) {
+        // Implementation similar to findAll but with criteria
+        return null; // Placeholder
+    }
+    
+    @Override
+    public long count() {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+        Root<Citizen> root = query.from(Citizen.class);
+        query.select(cb.count(root));
+        return entityManager.createQuery(query).getSingleResult();
+    }
+    
+    @Override
+    public long count(Criteria criteria) {
+        // Implementation similar to count but with criteria
+        return 0; // Placeholder
+    }
+    
+    /**
+     * Apply sort to query
+     */
+    private void applySort(CriteriaQuery<Citizen> query, CriteriaBuilder cb, 
+                           Root<Citizen> root, Sort sort) {
+        List<Order> orders = new ArrayList<>();
+        
+        for (String property : sort.getProperties()) {
+            Path<Object> path = root.get(property);
+            
+            // Apply Nepali collation for text fields
+            if (path.getJavaType() == String.class) {
+                // For JPA this would use special Nepali collation if available
+                orders.add(sort.getDirection() == SortDirection.ASC ? 
+                    cb.asc(path) : cb.desc(path));
+            } else {
+                orders.add(sort.getDirection() == SortDirection.ASC ? 
+                    cb.asc(path) : cb.desc(path));
+            }
+        }
+        
+        query.orderBy(orders);
+    }
+    
+    /**
+     * Find citizens by district with pagination
+     */
+    public Page<Citizen> findByDistrict(String district, PageRequest pageRequest) {
+        // Create query
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Citizen> query = cb.createQuery(Citizen.class);
+        Root<Citizen> root = query.from(Citizen.class);
+        
+        // Add district criteria
+        query.select(root)
+             .where(cb.equal(root.get("district"), district));
+        
+        // Apply sorting
+        if (pageRequest.getSort() != null && !pageRequest.getSort().isEmpty()) {
+            applySort(query, cb, root, pageRequest.getSort());
+        }
+        
+        // Execute query with pagination
+        TypedQuery<Citizen> typedQuery = entityManager.createQuery(query);
+        typedQuery.setFirstResult(pageRequest.getOffset());
+        typedQuery.setMaxResults(pageRequest.getSize());
+        List<Citizen> citizens = typedQuery.getResultList();
+        
+        // Count total elements
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<Citizen> countRoot = countQuery.from(Citizen.class);
+        countQuery.select(cb.count(countRoot))
+                  .where(cb.equal(countRoot.get("district"), district));
+        long total = entityManager.createQuery(countQuery).getSingleResult();
+        
+        // Create page
+        return new Page<>(citizens, pageRequest, total);
+    }
+}
+```
+
+====== Pagination Behavior for Different Connection Speeds
+
+The Digital Profile system implements adaptive pagination based on connection speed to provide the best user experience:
+
+|===
+| Connection Type | Default Page Size | Max Page Size | Includes Full Count | Image Quality
+| Fast Fiber/4G | 25 | 100 | Yes | High
+| Standard Broadband | 20 | 50 | Yes | Medium
+| DSL/3G | 15 | 30 | Yes | Low
+| Slow 2G/EDGE | 10 | 20 | No (estimate) | Thumbnails only
+| Offline Mode | 10 | 10 | Cached | Cached only
+|===
+
+====== Pagination User Interface Guidelines
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Pagination UI Guidelines" as PUI {
+  + Accessibility Requirements
+  + Connection-Aware Behavior
+  + Multilingual Support
+  + Fallback Mechanisms
+}
+
+note right of PUI::AccessibilityRequirements
+  - All page navigation must be keyboard accessible
+  - Current page must be properly announced to screen readers
+  - Jump-to-page must be provided for large data sets
+  - Use aria-current for current page indicators
+end note
+
+note right of PUI::ConnectionAwareBehavior
+  - Switch to smaller page size automatically when
+    connection is slow (detected below 1 Mbps)
+  - Load only next/previous page buttons initially
+  - Lazy-load page numbers when scrolled into view
+  - Show connection status indicator
+end note
+
+note right of PUI::MultilingualSupport
+  - Page navigation must be translatable
+  - Use numerical indicators that work in all scripts
+  - Support RTL layout changes
+  - Icons must be culturally appropriate
+end note
+
+note right of PUI::FallbackMechanisms
+  - Provide offline access to current page
+  - Enable print-friendly view of current page
+  - Support export of visible records
+  - Provide quick filters to reduce result set
+end note
+@enduml
+----
+
+====== Nepal-Specific Pagination Challenges and Solutions
+
+|===
+| Challenge | Solution Implementation
+| Intermittent Connectivity | Offline caching of current page data and metadata with sync on reconnection
+| Varying Bandwidth | Adaptive page sizes based on detected connection quality
+| Multi-script Support | Proper UTF-8 encoding and collation for both Latin and Devanagari text
+| Power Outages | Auto-save pagination state for recovery after unexpected interruptions
+| Digital Literacy Variations | Consistent pagination controls across all interfaces with clear visual indicators
+| Paper Requirements | Integrated printing with page numbers and timestamps on printed records
+| Remote Office Access | Reduced data size with minimal metadata for low-bandwidth scenarios
+|===
+
+====== Mobile-Specific Pagination Implementations
+
+For mobile applications, particularly important in Nepal where smartphone access is growing faster than desktop:
+
+```kotlin
+/**
+ * Mobile-specific pagination adapter for Android
+ */
+class MobilePaginationAdapter(
+    private val recyclerView: RecyclerView,
+    private val adapter: RecyclerView.Adapter<*>,
+    private val loadNextPage: (Int) -> Unit
+) : RecyclerView.OnScrollListener() {
+    private var loading = false
+    private var lastPage = false
+    private var currentPage = 0
+    
+    init {
+        recyclerView.addOnScrollListener(this)
+    }
+    
+    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        super.onScrolled(recyclerView, dx, dy)
+        
+        if (loading || lastPage) {
+            return
+        }
+        
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+        val visibleItemCount = layoutManager.childCount
+        val totalItemCount = layoutManager.itemCount
+        val firstVisibleItem = layoutManager.findFirstVisibleItemPosition()
+        
+        // Load next page when approaching end of current page
+        if ((visibleItemCount + firstVisibleItem + 5) >= totalItemCount) {
+            loadNextPage(currentPage + 1)
+            loading = true
+        }
+    }
+    
+    /**
+     * Update adapter with new data
+     */
+    fun updateData(newData: List<Any>, newPage: Int, isLastPage: Boolean) {
+        currentPage = newPage
+        lastPage = isLastPage
+        loading = false
+        
+        // Update adapter with new data
+        // Implementation depends on specific adapter
+    }
+}
+```
+
+====== Caching Implementation for Intermittent Connectivity
+
+Especially important in Nepal's remote locations with unreliable internet:
+
+```java
+/**
+ * Cache configuration for pagination data
+ */
+@Configuration
+@EnableCaching
+public class PaginationCacheConfig {
+    @Bean
+    public CacheManager paginationCacheManager() {
+        SimpleCacheManager cacheManager = new SimpleCacheManager();
+        
+        // Configure caches
+        Cache pageCache = new ConcurrentMapCache("pageCache",
+            CacheBuilder.newBuilder()
+                .expireAfterWrite(30, TimeUnit.MINUTES)
+                .maximumSize(100)
+                .build()
+                .asMap(),
+            false);
+        
+        cacheManager.setCaches(Collections.singletonList(pageCache));
+        return cacheManager;
+    }
+}
+
+/**
+ * Service layer with caching for pagination results
+ */
+@Service
+public class CachedCitizenService {
+    private final CitizenRepository citizenRepository;
+    
+    @Autowired
+    public CachedCitizenService(CitizenRepository citizenRepository) {
+        this.citizenRepository = citizenRepository;
+    }
+    
+    /**
+     * Find citizens by district with caching
+     */
+    @Cacheable(value = "pageCache", key = "'citizens:district:' + #district + ':page:' + #pageRequest.page + ':size:' + #pageRequest.size")
+    public Page<CitizenDTO> findByDistrict(String district, PageRequest pageRequest) {
+        Page<Citizen> citizenPage = citizenRepository.findByDistrict(district, pageRequest);
+        
+        // Map to DTOs
+        List<CitizenDTO> content = citizenPage.getContent().stream()
+            .map(this::mapToDTO)
+            .collect(Collectors.toList());
+        
+        return new Page<>(content, pageRequest, citizenPage.getTotalElements());
+    }
+    
+    /**
+     * Map entity to DTO
+     */
+    private CitizenDTO mapToDTO(Citizen citizen) {
+        // Mapping implementation
+        return new CitizenDTO();
+    }
+    
+    /**
+     * Clear cache for a district
+     */
+    @CacheEvict(value = "pageCache", key = "'citizens:district:' + #district + '*'")
+    public void clearDistrictCache(String district) {
+        // Cache for district will be cleared
+    }
+}
+```
+
+This comprehensive pagination framework ensures efficient data access across Nepal's diverse connectivity landscape, from high-speed connections in Kathmandu to intermittent networks in remote mountain districts, while maintaining a consistent user experience.

@@ -1,0 +1,942 @@
+===== Validation
+
+Input validation is consistently applied throughout the Digital Profile system to ensure data integrity, prevent security vulnerabilities, and provide meaningful feedback to users.
+
+====== Validation Approach
+
+[plantuml]
+----
+@startuml
+package "Validation Framework" {
+  interface Validator {
+    +validate(object: Any): ValidationResult
+    +supports(clazz: Class<*>): Boolean
+  }
+  
+  class ValidationManager {
+    -validators: List<Validator>
+    +validate(object: Any): ValidationResult
+    +registerValidator(validator: Validator)
+  }
+  
+  class DomainObjectValidator
+  class RequestDTOValidator 
+  class IdentifierValidator
+  class AddressValidator
+  class GeoCoordinateValidator
+  
+  Validator <|.. DomainObjectValidator
+  Validator <|.. RequestDTOValidator
+  Validator <|.. IdentifierValidator
+  Validator <|.. AddressValidator
+  Validator <|.. GeoCoordinateValidator
+  
+  ValidationManager o-- Validator
+}
+
+class ValidationResult {
+  +isValid: Boolean
+  +errors: List<ValidationError>
+  +addError(field: String, message: String)
+  +hasErrors(): Boolean
+  +getErrorMessages(): List<String>
+  +getErrorsForField(field: String): List<ValidationError>
+}
+
+class ValidationError {
+  +field: String
+  +message: String
+  +errorCode: String
+  +severity: ErrorSeverity
+  +parameters: Map<String, Object>
+}
+
+enum ErrorSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+ValidationResult --o ValidationError
+ValidationError -- ErrorSeverity
+@enduml
+----
+
+====== Validation Process Flow
+
+[plantuml]
+----
+@startuml
+start
+:Receive input data;
+:Select appropriate validators;
+:Execute validation rules;
+
+if (Validation passed?) then (yes)
+  :Proceed with operation;
+else (no)
+  if (Severity = CRITICAL?) then (yes)
+    :Abort operation;
+    :Log security event;
+  else (no)
+    if (Errors fixable?) then (yes)
+      :Apply automatic fixes;
+      :Log corrections;
+    else (no)
+      :Return validation errors;
+    endif
+  endif
+  
+  :Provide feedback to user;
+endif
+
+stop
+@enduml
+----
+
+====== Contextual Use Case for Validation
+
+*Real-World Scenario:* Land Parcel Registration in Rural Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registration Officer\n(Anita Sharma)" as Officer
+actor "Landowner\n(Krishna Tamang)" as Landowner
+participant "LandParcelController" as Controller
+participant "ValidationManager" as Validator
+participant "LandParcelValidator" as ParcelValidator
+participant "GeometryValidator" as GeoValidator
+participant "OwnershipValidator" as OwnerValidator
+participant "LandParcelService" as Service
+
+Landowner -> Officer : Submit land registration
+activate Officer
+
+Officer -> Controller : registerParcel(registrationForm)
+activate Controller
+
+Controller -> Validator : validate(landParcelDTO)
+activate Validator
+
+Validator -> ParcelValidator : validate(landParcelDTO)
+activate ParcelValidator
+ParcelValidator -> ParcelValidator : validateParcelIdentifier()
+ParcelValidator -> ParcelValidator : validateLandType()
+ParcelValidator -> ParcelValidator : validateAreaConsistency()
+Validator <-- ParcelValidator : fieldValidations
+deactivate ParcelValidator
+
+Validator -> GeoValidator : validate(landParcelDTO.geometry)
+activate GeoValidator
+GeoValidator -> GeoValidator : validateGeometryFormat()
+GeoValidator -> GeoValidator : validateCoordinateSystem()
+GeoValidator -> GeoValidator : checkSelfIntersection()
+GeoValidator -> GeoValidator : validateMinimumArea()
+Validator <-- GeoValidator : geometryValidations
+deactivate GeoValidator
+
+Validator -> OwnerValidator : validate(landParcelDTO.ownership)
+activate OwnerValidator
+OwnerValidator -> OwnerValidator : validateOwnerIdentity()
+OwnerValidator -> OwnerValidator : validateOwnershipPercentages()
+OwnerValidator -> OwnerValidator : checkDeceased()
+Validator <-- OwnerValidator : ownershipValidations
+deactivate OwnerValidator
+
+Validator -> Validator : combineResults()
+Validator -> Validator : applyAutomaticFixes()
+
+Controller <-- Validator : validationResult
+deactivate Validator
+
+alt Valid data
+  Controller -> Service : createLandParcel(landParcelDTO)
+  Controller <-- Service : landParcel
+  Officer <-- Controller : registrationSuccess
+else Invalid with fixable errors
+  Controller -> Controller : applyFixes(validationResult)
+  Controller -> Service : createLandParcel(fixedDTO)
+  Controller <-- Service : landParcel
+  
+  Officer <-- Controller : registrationSuccessWithWarnings
+else Invalid with critical errors
+  Officer <-- Controller : validationErrors
+  
+  Officer -> Landowner : Request corrected information
+  Landowner -> Officer : Provide corrected details
+  
+  note right
+    Repeats validation process
+    with corrected information
+  end note
+end
+
+deactivate Controller
+deactivate Officer
+@enduml
+----
+
+*Implementation Details:*
+In the Nepal Land Registration System, validation plays a crucial role in ensuring that land records are accurate, legally sound, and free of inconsistencies. The system implements a comprehensive validation framework that handles both technical validation (like geometry checking) and domain-specific validation (like ownership verification).
+
+In the remote Sankhuwasabha district office, Land Registration Officer Anita Sharma is processing a land parcel registration submitted by Krishna Tamang. The digital system applies multiple validation layers to ensure the registration meets all requirements before it's officially recorded in the land registry.
+
+First, the `LandParcelValidator` verifies basic attributes: it confirms the parcel identifier follows Nepal's cadastral numbering system (ward number, sheet number, parcel number), validates that the declared land type (agricultural, residential, etc.) matches zoning regulations for the area, and checks that the reported area is consistent with the calculated area from the boundary geometry.
+
+The `GeometryValidator` then performs specialized validation for the parcel's boundary coordinates. It verifies that the geometry uses the Nepal coordinate reference system (NDCRS2000), checks for self-intersections in the polygon (which would create invalid parcel shapes), and confirms the parcel meets the minimum size requirements for the declared land type (e.g., 80 square meters for residential plots in rural municipalities).
+
+Finally, the `OwnershipValidator` performs complex social and legal validation. It verifies Krishna's identity against citizenship records, ensures the total ownership percentages sum to exactly 100% (important for joint ownership cases), and verifies that no deceased individuals are listed as current owners by checking against vital records.
+
+The validations include automatic fixes for common issues:
+1. Auto-correction of minor coordinate discrepancies within acceptable tolerances
+2. Standardization of parcel identifiers to the official format
+3. Rounding of area calculations to standard precision
+
+When the validation detects critical issues, such as a severe boundary discrepancy or a fraudulent identity claim, the system aborts the registration process and logs a security event for investigation. For moderate issues, such as inconsistent area declarations, the system provides clear error messages that Anita can relay to Krishna, who then provides the corrected information.
+
+The validation framework provides dual-language error messages in both Nepali and English, and adapts the level of technical detail based on whether the errors are being shown to the officer or citizen. This contextual validation system has significantly reduced land registration errors and disputes in rural Nepal, where traditional paper-based systems were prone to inconsistencies.
+
+====== Technical Implementation
+
+```kotlin
+class LandParcelRegistrationDTO {
+    var parcelIdentifier: String = ""
+    var landType: LandType = LandType.UNSPECIFIED
+    var declaredAreaSqm: Double = 0.0
+    var geometry: Geometry? = null
+    var ownership: List<OwnershipDTO> = emptyList()
+    var municipalityCode: String = ""
+    var wardNumber: Int = 0
+    // Other properties...
+}
+
+class LandParcelValidator : Validator {
+    override fun supports(clazz: Class<*>): Boolean {
+        return clazz == LandParcelRegistrationDTO::class.java
+    }
+    
+    override fun validate(object: Any): ValidationResult {
+        if (!supports(object.javaClass)) {
+            throw IllegalArgumentException("Validator doesn't support ${object.javaClass.name}")
+        }
+        
+        val dto = object as LandParcelRegistrationDTO
+        val result = ValidationResult()
+        
+        // Validate parcel identifier format (Province-District-Municipality-Ward-Sheet-Parcel)
+        val identifierPattern = Regex("^\\d{1}-\\d{2}-\\d{3}-\\d{2}-\\d{3}-\\d{4}$")
+        if (!dto.parcelIdentifier.matches(identifierPattern)) {
+            result.addError(
+                field = "parcelIdentifier",
+                code = "invalid.identifier.format",
+                message = "Parcel identifier does not match required format: P-DD-MMM-WW-SSS-PPPP",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Validate land type
+        if (dto.landType == LandType.UNSPECIFIED) {
+            result.addError(
+                field = "landType",
+                code = "required.landType",
+                message = "Land type must be specified",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Check if declared area is positive
+        if (dto.declaredAreaSqm <= 0) {
+            result.addError(
+                field = "declaredAreaSqm",
+                code = "invalid.area.negative",
+                message = "Declared area must be greater than zero",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Validate municipality code
+        municipalityRepository.findByCode(dto.municipalityCode) ?: result.addError(
+            field = "municipalityCode",
+            code = "invalid.municipality",
+            message = "Municipality with code ${dto.municipalityCode} not found",
+            severity = ErrorSeverity.ERROR
+        )
+        
+        // Validate ward number
+        if (dto.wardNumber <= 0) {
+            result.addError(
+                field = "wardNumber",
+                code = "invalid.ward",
+                message = "Ward number must be greater than zero",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Calculate area from geometry and compare with declared area
+        dto.geometry?.let {
+            val calculatedArea = geoService.calculateAreaInSquareMeters(it)
+            val areaDifference = abs(calculatedArea - dto.declaredAreaSqm)
+            val percentageDifference = (areaDifference / calculatedArea) * 100
+            
+            if (percentageDifference > 5) {
+                result.addError(
+                    field = "declaredAreaSqm",
+                    code = "inconsistent.area",
+                    message = "Declared area differs from calculated area by more than 5%",
+                    parameters = mapOf(
+                        "calculatedArea" to calculatedArea,
+                        "declaredArea" to dto.declaredAreaSqm,
+                        "difference" to percentageDifference
+                    ),
+                    severity = ErrorSeverity.WARNING
+                )
+            }
+        } ?: result.addError(
+            field = "geometry",
+            code = "required.geometry",
+            message = "Parcel geometry is required",
+            severity = ErrorSeverity.ERROR
+        )
+        
+        // Validate ownership
+        if (dto.ownership.isEmpty()) {
+            result.addError(
+                field = "ownership",
+                code = "required.ownership",
+                message = "At least one owner must be specified",
+                severity = ErrorSeverity.ERROR
+            )
+        } else {
+            val totalPercentage = dto.ownership.sumOf { it.ownershipPercentage }
+            if (abs(totalPercentage - 100.0) > 0.01) {
+                result.addError(
+                    field = "ownership",
+                    code = "invalid.ownership.percentage",
+                    message = "Total ownership percentage must equal 100%",
+                    parameters = mapOf("totalPercentage" to totalPercentage),
+                    severity = ErrorSeverity.ERROR
+                )
+            }
+            
+            // Check for duplicate owners
+            val ownerIds = dto.ownership.map { it.citizenId }
+            if (ownerIds.size != ownerIds.distinct().size) {
+                result.addError(
+                    field = "ownership",
+                    code = "duplicate.owners",
+                    message = "Duplicate owners detected",
+                    severity = ErrorSeverity.ERROR
+                )
+            }
+        }
+        
+        return result
+    }
+}
+
+class GeometryValidator : Validator {
+    override fun supports(clazz: Class<*>): Boolean {
+        return clazz == Geometry::class.java
+    }
+    
+    override fun validate(object: Any): ValidationResult {
+        if (!supports(object.javaClass)) {
+            throw IllegalArgumentException("Validator doesn't support ${object.javaClass.name}")
+        }
+        
+        val geometry = object as Geometry
+        val result = ValidationResult()
+        
+        // Validate geometry type (must be Polygon or MultiPolygon)
+        if (geometry.geometryType != "Polygon" && geometry.geometryType != "MultiPolygon") {
+            result.addError(
+                field = "geometryType",
+                code = "invalid.geometry.type",
+                message = "Geometry must be Polygon or MultiPolygon",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Validate coordinate system (must be NDCRS2000)
+        if (geometry.crs?.name != "NDCRS2000") {
+            result.addError(
+                field = "crs",
+                code = "invalid.crs",
+                message = "Coordinate system must be NDCRS2000",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Check for self-intersection
+        if (geoService.hasSelfIntersections(geometry)) {
+            result.addError(
+                field = "coordinates",
+                code = "invalid.geometry.selfintersection",
+                message = "Geometry has self-intersections",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Validate geometry is closed (first and last point are the same)
+        if (!geoService.isGeometryClosed(geometry)) {
+            result.addError(
+                field = "coordinates",
+                code = "invalid.geometry.notclosed",
+                message = "Polygon must be closed (first and last points must be the same)",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Validate minimum number of points (at least 4 for a triangle plus closing point)
+        if (!geoService.hasMinimumPoints(geometry, 4)) {
+            result.addError(
+                field = "coordinates",
+                code = "invalid.geometry.tooFewPoints",
+                message = "Polygon must have at least 4 points (3 distinct points plus closing point)",
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Validate area is within reasonable bounds based on land parcel type
+        val area = geoService.calculateAreaInSquareMeters(geometry)
+        
+        // Practical minimum size checks (different by municipality type)
+        val municipalityType = contextService.getCurrentMunicipalityType()
+        val minAreaSqm = when (municipalityType) {
+            MunicipalityType.METROPOLITAN -> 80.0  // Urban areas have smaller minimum sizes
+            MunicipalityType.SUB_METROPOLITAN -> 80.0
+            MunicipalityType.MUNICIPALITY -> 95.0
+            MunicipalityType.RURAL_MUNICIPALITY -> 130.0
+            else -> 130.0
+        }
+        
+        if (area < minAreaSqm) {
+            result.addError(
+                field = "area",
+                code = "invalid.area.tooSmall",
+                message = "Parcel area is smaller than minimum allowed for ${municipalityType.name}",
+                parameters = mapOf(
+                    "area" to area,
+                    "minimumRequired" to minAreaSqm,
+                    "municipalityType" to municipalityType
+                ),
+                severity = ErrorSeverity.ERROR
+            )
+        }
+        
+        // Check for likely measurement or digitization errors
+        val boundingBox = geoService.calculateBoundingBox(geometry)
+        val aspectRatio = geoService.calculateAspectRatio(boundingBox)
+        
+        // Flag extremely thin parcels as likely errors
+        if (aspectRatio > 100) {
+            result.addError(
+                field = "geometry",
+                code = "suspicious.geometry.aspectRatio",
+                message = "Parcel has a suspicious shape (extremely thin)",
+                parameters = mapOf("aspectRatio" to aspectRatio),
+                severity = ErrorSeverity.WARNING
+            )
+        }
+        
+        return result
+    }
+}
+
+class OwnershipValidator : Validator {
+    override fun supports(clazz: Class<*>): Boolean {
+        return clazz == List::class.java && listContainsType(clazz, OwnershipDTO::class.java)
+    }
+    
+    private fun listContainsType(clazz: Class<*>, itemType: Class<*>): Boolean {
+        // Implementation to check if List contains items of specified type
+        return true // Simplified for example
+    }
+    
+    override fun validate(object: Any): ValidationResult {
+        if (!supports(object.javaClass)) {
+            throw IllegalArgumentException("Validator doesn't support ${object.javaClass.name}")
+        }
+        
+        @Suppress("UNCHECKED_CAST")
+        val ownerships = object as List<OwnershipDTO>
+        val result = ValidationResult()
+        
+        for ((index, ownership) in ownerships.withIndex()) {
+            // Validate citizen exists
+            val citizen = citizenRepository.findById(ownership.citizenId)
+            if (citizen == null) {
+                result.addError(
+                    field = "ownership[$index].citizenId",
+                    code = "invalid.citizen.notFound",
+                    message = "Citizen with ID ${ownership.citizenId} not found",
+                    severity = ErrorSeverity.ERROR
+                )
+                continue
+            }
+            
+            // Validate citizen is not deceased
+            if (citizen.status == CitizenStatus.DECEASED) {
+                result.addError(
+                    field = "ownership[$index].citizenId",
+                    code = "invalid.citizen.deceased",
+                    message = "Citizen ${citizen.fullName} is deceased and cannot be registered as owner",
+                    severity = ErrorSeverity.ERROR
+                )
+            }
+            
+            // Validate citizen is of legal age (18+)
+            if (citizen.dateOfBirth != null) {
+                val age = Period.between(citizen.dateOfBirth, LocalDate.now()).years
+                if (age < 18) {
+                    result.addError(
+                        field = "ownership[$index].citizenId",
+                        code = "invalid.citizen.underage",
+                        message = "Citizen ${citizen.fullName} is underage (${age} years)",
+                        parameters = mapOf("age" to age),
+                        severity = ErrorSeverity.WARNING
+                    )
+                }
+            }
+            
+            // Validate ownership percentage
+            if (ownership.ownershipPercentage <= 0 || ownership.ownershipPercentage > 100) {
+                result.addError(
+                    field = "ownership[$index].ownershipPercentage",
+                    code = "invalid.percentage.range",
+                    message = "Ownership percentage must be between 0 and 100",
+                    severity = ErrorSeverity.ERROR
+                )
+            }
+            
+            // Validate ownership rights match citizen gender for certain cultural/religious land types
+            // (Traditional Guthi or Religious land types may have gender-specific ownership rules)
+            if (ownership.rightType == OwnershipRightType.RELIGIOUS_TRUSTEE && 
+                citizen.gender != Gender.MALE && landType == LandType.RELIGIOUS_GUTHI) {
+                result.addError(
+                    field = "ownership[$index].rightType",
+                    code = "invalid.right.genderRestriction",
+                    message = "Religious trustee for this land type traditionally requires male gender",
+                    severity = ErrorSeverity.WARNING
+                )
+            }
+        }
+        
+        return result
+    }
+}
+
+class ValidationManager {
+    private val validators = mutableListOf<Validator>()
+    
+    fun registerValidator(validator: Validator) {
+        validators.add(validator)
+    }
+    
+    fun validate(object: Any): ValidationResult {
+        val result = ValidationResult()
+        
+        // Find all applicable validators
+        val applicableValidators = validators.filter { it.supports(object.javaClass) }
+        
+        // If no validators found, return empty result
+        if (applicableValidators.isEmpty()) {
+            return result
+        }
+        
+        // Apply each validator and combine results
+        for (validator in applicableValidators) {
+            val validationResult = validator.validate(object)
+            result.merge(validationResult)
+        }
+        
+        // Apply automatic fixes if possible
+        if (result.hasErrors(ErrorSeverity.WARNING) && !result.hasErrors(ErrorSeverity.ERROR, ErrorSeverity.CRITICAL)) {
+            applyAutomaticFixes(object, result)
+        }
+        
+        return result
+    }
+    
+    private fun applyAutomaticFixes(object: Any, result: ValidationResult) {
+        // Apply automatic fixes based on validation errors
+        when (object) {
+            is LandParcelRegistrationDTO -> {
+                // Fix parcel identifier format if needed
+                if (result.hasErrorCode("invalid.identifier.format")) {
+                    val components = object.parcelIdentifier.split("-")
+                    if (components.size == 6) {
+                        object.parcelIdentifier = components.mapIndexed { index, value ->
+                            when (index) {
+                                0 -> value.padStart(1, '0')  // Province
+                                1 -> value.padStart(2, '0')  // District
+                                2 -> value.padStart(3, '0')  // Municipality
+                                3 -> value.padStart(2, '0')  // Ward
+                                4 -> value.padStart(3, '0')  // Sheet
+                                5 -> value.padStart(4, '0')  // Parcel
+                                else -> value
+                            }
+                        }.joinToString("-")
+                        
+                        // Remove the error since we fixed it
+                        result.removeError("parcelIdentifier", "invalid.identifier.format")
+                        result.addInfo(
+                            field = "parcelIdentifier",
+                            message = "Parcel identifier format automatically corrected"
+                        )
+                    }
+                }
+                
+                // Fix declared area if it's within reasonable limits
+                val areaError = result.getErrorsForField("declaredAreaSqm")
+                    .find { it.code == "inconsistent.area" }
+                
+                areaError?.let {
+                    val calculatedArea = it.parameters["calculatedArea"] as Double
+                    val difference = it.parameters["difference"] as Double
+                    
+                    // If difference is between 5% and 10%, we can auto-correct
+                    if (difference <= 10) {
+                        object.declaredAreaSqm = calculatedArea
+                        result.removeError("declaredAreaSqm", "inconsistent.area")
+                        result.addInfo(
+                            field = "declaredAreaSqm",
+                            message = "Declared area automatically adjusted to match calculated area"
+                        )
+                    }
+                }
+            }
+            is Geometry -> {
+                // Fix coordinate precision issues
+                if (result.hasErrorCode("suspicious.geometry.precision")) {
+                    geoService.standardizeCoordinatePrecision(object)
+                    result.removeError("geometry", "suspicious.geometry.precision")
+                    result.addInfo(
+                        field = "geometry",
+                        message = "Coordinate precision standardized"
+                    )
+                }
+            }
+        }
+    }
+}
+
+class ValidationResult {
+    private val errors = mutableListOf<ValidationError>()
+    private val infos = mutableListOf<ValidationInfo>()
+    
+    val isValid: Boolean
+        get() = !hasErrors(ErrorSeverity.ERROR, ErrorSeverity.CRITICAL)
+    
+    fun addError(field: String, code: String, message: String, parameters: Map<String, Any> = emptyMap(), severity: ErrorSeverity = ErrorSeverity.ERROR) {
+        errors.add(ValidationError(field, code, message, parameters, severity))
+    }
+    
+    fun addInfo(field: String, message: String) {
+        infos.add(ValidationInfo(field, message))
+    }
+    
+    fun hasErrors(): Boolean = errors.isNotEmpty()
+    
+    fun hasErrors(vararg severities: ErrorSeverity): Boolean {
+        return errors.any { it.severity in severities }
+    }
+    
+    fun hasErrorCode(code: String): Boolean {
+        return errors.any { it.code == code }
+    }
+    
+    fun getErrorsForField(field: String): List<ValidationError> {
+        return errors.filter { it.field == field }
+    }
+    
+    fun getErrorMessages(): List<String> {
+        return errors.map { it.message }
+    }
+    
+    fun removeError(field: String, code: String) {
+        errors.removeIf { it.field == field && it.code == code }
+    }
+    
+    fun merge(other: ValidationResult) {
+        errors.addAll(other.errors)
+        infos.addAll(other.infos)
+    }
+    
+    // Additional helper methods...
+}
+
+data class ValidationError(
+    val field: String,
+    val code: String,
+    val message: String,
+    val parameters: Map<String, Any> = emptyMap(),
+    val severity: ErrorSeverity = ErrorSeverity.ERROR
+)
+
+data class ValidationInfo(
+    val field: String,
+    val message: String
+)
+
+enum class ErrorSeverity {
+    INFO,       // Informational only, no action needed
+    WARNING,    // Minor issue, may proceed with caution
+    ERROR,      // Serious issue, operation should not proceed
+    CRITICAL    // Security or data integrity issue, immediate attention required
+}
+```
+
+====== Integration with Jakarta Validation (Bean Validation)
+
+The validation framework integrates with Jakarta Validation annotations for declarative validation:
+
+```kotlin
+class LandParcelRegistrationDTO {
+    @NotBlank(message = "Parcel identifier is required")
+    @Pattern(
+        regexp = "^\\d{1}-\\d{2}-\\d{3}-\\d{2}-\\d{3}-\\d{4}$",
+        message = "Parcel identifier must match format: P-DD-MMM-WW-SSS-PPPP"
+    )
+    var parcelIdentifier: String = ""
+    
+    @NotNull(message = "Land type is required")
+    var landType: LandType = LandType.UNSPECIFIED
+    
+    @PositiveOrZero(message = "Declared area cannot be negative")
+    var declaredAreaSqm: Double = 0.0
+    
+    @NotNull(message = "Geometry is required")
+    var geometry: Geometry? = null
+    
+    @Size(min = 1, message = "At least one owner must be specified")
+    @Valid
+    var ownership: List<OwnershipDTO> = emptyList()
+    
+    @NotBlank(message = "Municipality code is required")
+    var municipalityCode: String = ""
+    
+    @Positive(message = "Ward number must be positive")
+    var wardNumber: Int = 0
+}
+
+class OwnershipDTO {
+    @NotNull(message = "Citizen ID is required")
+    var citizenId: UUID? = null
+    
+    @NotNull(message = "Ownership type is required")
+    var ownershipType: OwnershipType = OwnershipType.UNSPECIFIED
+    
+    @DecimalMin(value = "0.01", message = "Ownership percentage must be greater than 0")
+    @DecimalMax(value = "100.0", message = "Ownership percentage cannot exceed 100")
+    var ownershipPercentage: Double = 0.0
+    
+    @NotNull(message = "Right type is required")
+    var rightType: OwnershipRightType = OwnershipRightType.UNSPECIFIED
+}
+```
+
+====== Context-Specific Validation
+
+The system adapts validation based on geographical and regulatory context:
+
+```kotlin
+class ContextAwareValidator {
+    @Autowired
+    private lateinit var provinceRepository: ProvinceRepository
+    
+    @Autowired
+    private lateinit var contextService: ContextService
+    
+    fun getMinimumLandSizeForContext(landType: LandType): Double {
+        val provinceId = contextService.getCurrentProvinceId()
+        val municipalityType = contextService.getCurrentMunicipalityType()
+        val province = provinceRepository.findById(provinceId).orElseThrow()
+        
+        // Different provinces have different minimum land size requirements
+        return when (province.provinceCode) {
+            "1" -> getProvince1Requirements(landType, municipalityType)
+            "2" -> getProvince2Requirements(landType, municipalityType)
+            "3" -> getBagmatiRequirements(landType, municipalityType)
+            "4" -> getGandakiRequirements(landType, municipalityType)
+            "5" -> getLumbiniRequirements(landType, municipalityType)
+            "6" -> getKarnaliRequirements(landType, municipalityType)
+            "7" -> getSudurpaschimRequirements(landType, municipalityType)
+            else -> getDefaultRequirements(landType, municipalityType)
+        }
+    }
+    
+    private fun getBagmatiRequirements(landType: LandType, municipalityType: MunicipalityType): Double {
+        return when (landType) {
+            LandType.RESIDENTIAL -> when (municipalityType) {
+                MunicipalityType.METROPOLITAN -> 80.0      // Kathmandu, Lalitpur
+                MunicipalityType.SUB_METROPOLITAN -> 90.0  // Bharatpur
+                MunicipalityType.MUNICIPALITY -> 110.0
+                else -> 180.0
+            }
+            LandType.AGRICULTURAL -> when (municipalityType) {
+                MunicipalityType.METROPOLITAN -> 250.0
+                MunicipalityType.SUB_METROPOLITAN -> 250.0
+                MunicipalityType.MUNICIPALITY -> 250.0
+                else -> 508.72 // 1 Ropani
+            }
+            else -> 130.0
+        }
+    }
+    
+    // Other province-specific implementations...
+}
+```
+
+====== Validation Message Localization
+
+Validation messages are localized to support Nepal's multilingual population:
+
+```kotlin
+@Configuration
+public class ValidationMessageConfiguration {
+    @Bean
+    public LocalValidatorFactoryBean getValidator() {
+        LocalValidatorFactoryBean bean = new LocalValidatorFactoryBean();
+        bean.setValidationMessageSource(messageSource());
+        return bean;
+    }
+    
+    @Bean
+    public MessageSource messageSource() {
+        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:validation/messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        return messageSource;
+    }
+}
+```
+
+Example validation message properties for Nepali localization:
+
+```properties
+# validation/messages_ne.properties
+invalid.identifier.format=पार्सल आइडेन्टिफायर आवश्यक ढाँचा मिलेन: P-DD-MMM-WW-SSS-PPPP
+required.landType=जग्गाको प्रकार तोक्नु आवश्यक छ
+invalid.area.negative=घोषित क्षेत्रफल शून्य भन्दा ठूलो हुनुपर्छ
+invalid.municipality=नगरपालिका कोड {0} भेटिएन
+invalid.ward=वडा नम्बर शून्य भन्दा ठूलो हुनुपर्छ
+```
+
+====== Security-Focused Validation
+
+```kotlin
+class SecurityValidator : Validator {
+    override fun supports(clazz: Class<*>): Boolean {
+        return true // Applies to all objects
+    }
+    
+    override fun validate(object: Any): ValidationResult {
+        val result = ValidationResult()
+        
+        // Recursively scan all string properties for security issues
+        val properties = object.javaClass.declaredFields
+            .filter { it.type == String::class.java }
+            .onEach { it.isAccessible = true }
+        
+        for (property in properties) {
+            val value = property.get(object) as? String ?: continue
+            
+            // Check for SQL injection attempts
+            if (containsSqlInjection(value)) {
+                result.addError(
+                    field = property.name,
+                    code = "security.sqlInjection",
+                    message = "Input contains potential SQL injection attempt",
+                    severity = ErrorSeverity.CRITICAL
+                )
+            }
+            
+            // Check for XSS attempts
+            if (containsXssAttempt(value)) {
+                result.addError(
+                    field = property.name,
+                    code = "security.xss",
+                    message = "Input contains potential XSS attempt",
+                    severity = ErrorSeverity.CRITICAL
+                )
+            }
+            
+            // Check for path traversal
+            if (containsPathTraversal(value)) {
+                result.addError(
+                    field = property.name,
+                    code = "security.pathTraversal",
+                    message = "Input contains potential path traversal attempt",
+                    severity = ErrorSeverity.CRITICAL
+                )
+            }
+        }
+        
+        return result
+    }
+    
+    private fun containsSqlInjection(value: String): Boolean {
+        val sqlPatterns = listOf(
+            "\\bOR\\s+1=1\\b",
+            "\\bUNION\\s+SELECT\\b",
+            "\\bDROP\\s+TABLE\\b",
+            "\\bDELETE\\s+FROM\\b",
+            "\\bINSERT\\s+INTO\\b",
+            "--",
+            ";--",
+            ";\\s*$"
+        )
+        
+        return sqlPatterns.any { pattern -> 
+            Regex(pattern, RegexOption.IGNORE_CASE).containsMatchIn(value)
+        }
+    }
+    
+    private fun containsXssAttempt(value: String): Boolean {
+        val xssPatterns = listOf(
+            "<script[^>]*>.*?</script>",
+            "javascript:",
+            "onerror=",
+            "onload=",
+            "eval\\(",
+            "document\\.cookie"
+        )
+        
+        return xssPatterns.any { pattern -> 
+            Regex(pattern, RegexOption.IGNORE_CASE).containsMatchIn(value)
+        }
+    }
+    
+    private fun containsPathTraversal(value: String): Boolean {
+        val traversalPatterns = listOf(
+            "\\.\\./",
+            "\\.\\.\\\\",
+            "/etc/passwd",
+            "C:\\\\Windows\\\\System32"
+        )
+        
+        return traversalPatterns.any { pattern -> 
+            Regex(pattern, RegexOption.IGNORE_CASE).containsMatchIn(value)
+        }
+    }
+}
+```
+
+====== Validation Outcomes by Region in Nepal
+
+The system's contextual validation is sensitive to Nepal's regional diversity:
+
+| Province | Metropolitan Areas | Rural Areas | Special Considerations |
+|---------|-------------------|------------|------------------------|
+| Province 1 | 80 sqm min for residential | 130 sqm min for residential | Mountainous areas have elevation validation |
+| Madhesh Province | 90 sqm min for residential | 180 sqm min for residential | Flood plain validation enforced |
+| Bagmati Province | 80 sqm min for residential | 180 sqm min for residential | Cultural site buffer zones validated |
+| Gandaki Province | 85 sqm min for residential | 130 sqm min for residential | Landslide risk validation enforced |
+| Lumbini Province | 90 sqm min for residential | 180 sqm min for residential | Agricultural land preservation rules |
+| Karnali Province | 95 sqm min for residential | 130 sqm min for residential | Remote area special validations |
+| Sudurpaschim Province | 90 sqm min for residential | 180 sqm min for residential | Protected area validations |
+
+This regional sensitivity ensures that validation rules match the actual conditions and regulations in each part of Nepal's diverse geography, from dense urban centers to remote mountain villages.

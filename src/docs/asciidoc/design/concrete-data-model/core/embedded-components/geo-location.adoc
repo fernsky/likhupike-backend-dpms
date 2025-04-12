@@ -1,0 +1,331 @@
+===== `GeoLocation`
+Representation of geographic coordinates with altitude and accuracy data.
+
+[plantuml]
+----
+@startuml
+class GeoLocation {
+  +Double latitude
+  +Double longitude
+  +Double altitude
+  +Double accuracy
+  +LocalDateTime capturedAt
+  +String source
+  +CoordinateSystem coordinateSystem
+  +GeolocationType type
+  +Double horizontalAccuracy
+  +Double verticalAccuracy
+  +Integer satelliteCount
+  +Double heading
+  +Double speed
+  +Map<String, Object> metadata
+  +Boolean verified
+  +String verifiedBy
+  +LocalDateTime verifiedAt
+}
+
+enum CoordinateSystem {
+  WGS84
+  NEPAL_MODIFIED_UTM
+  EVEREST_1830
+  INDIA_NEPAL
+}
+
+enum GeolocationType {
+  POINT
+  ENTRANCE
+  CENTROID
+  ROOFTOP
+  APPROXIMATE
+  ADMINISTRATIVE
+  MANUALLY_PLACED
+}
+
+GeoLocation -- CoordinateSystem
+GeoLocation -- GeolocationType
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `latitude`           | Decimal latitude coordinate
+| `longitude`          | Decimal longitude coordinate
+| `altitude`           | Altitude in meters above sea level
+| `accuracy`           | Overall accuracy in meters
+| `capturedAt`         | When coordinates were captured
+| `source`             | Source of coordinates (GPS, SURVEY, MAP, etc.)
+| `coordinateSystem`   | Coordinate reference system used
+| `type`               | Type of geolocation point
+| `horizontalAccuracy` | Horizontal accuracy in meters
+| `verticalAccuracy`   | Vertical accuracy in meters
+| `satelliteCount`     | Number of satellites used for GPS coordinates
+| `heading`            | Direction of movement in degrees
+| `speed`              | Speed in meters per second
+| `metadata`           | Additional location metadata
+| `verified`           | Whether location has been verified
+| `verifiedBy`         | Who verified the location
+| `verifiedAt`         | When the location was verified
+|===
+
+====== GeoLocation Interface
+
+```java
+/**
+ * Represents a geographic location with coordinates
+ */
+public interface GeoLocation {
+    /**
+     * Get the latitude coordinate
+     */
+    Double getLatitude();
+    
+    /**
+     * Get the longitude coordinate
+     */
+    Double getLongitude();
+    
+    /**
+     * Get the altitude in meters
+     */
+    Double getAltitude();
+    
+    /**
+     * Get the accuracy in meters
+     */
+    Double getAccuracy();
+    
+    /**
+     * Get the capture timestamp
+     */
+    LocalDateTime getCapturedAt();
+    
+    /**
+     * Get the source of coordinates
+     */
+    String getSource();
+    
+    /**
+     * Get the coordinate system used
+     */
+    CoordinateSystem getCoordinateSystem();
+    
+    /**
+     * Get the type of geolocation point
+     */
+    GeolocationType getType();
+    
+    /**
+     * Get the horizontal accuracy in meters
+     */
+    Double getHorizontalAccuracy();
+    
+    /**
+     * Get the vertical accuracy in meters
+     */
+    Double getVerticalAccuracy();
+    
+    /**
+     * Get the number of satellites used for GPS
+     */
+    Integer getSatelliteCount();
+    
+    /**
+     * Get the heading in degrees
+     */
+    Double getHeading();
+    
+    /**
+     * Get the speed in meters per second
+     */
+    Double getSpeed();
+    
+    /**
+     * Get additional metadata
+     */
+    Map<String, Object> getMetadata();
+    
+    /**
+     * Check if location is verified
+     */
+    Boolean isVerified();
+    
+    /**
+     * Get who verified the location
+     */
+    String getVerifiedBy();
+    
+    /**
+     * Get when location was verified
+     */
+    LocalDateTime getVerifiedAt();
+    
+    /**
+     * Calculate distance to another location in meters
+     */
+    double distanceTo(GeoLocation other);
+    
+    /**
+     * Convert coordinates to a different system
+     */
+    GeoLocation convertToSystem(CoordinateSystem targetSystem);
+    
+    /**
+     * Get formatted coordinates as string
+     */
+    String getFormattedCoordinates(String format);
+    
+    /**
+     * Check if coordinates are within Nepal's boundaries
+     */
+    boolean isWithinNepal();
+}
+
+/**
+ * Coordinate reference systems used in Nepal
+ */
+public enum CoordinateSystem {
+    WGS84,
+    NEPAL_MODIFIED_UTM,
+    EVEREST_1830,
+    INDIA_NEPAL
+}
+
+/**
+ * Types of geolocation points
+ */
+public enum GeolocationType {
+    POINT,
+    ENTRANCE,
+    CENTROID,
+    ROOFTOP,
+    APPROXIMATE,
+    ADMINISTRATIVE,
+    MANUALLY_PLACED
+}
+```
+
+====== Contextual Use Case for GeoLocation
+
+*Real-World Scenario:* Remote Health Post Mapping in Himalayan Region
+
+[plantuml]
+----
+@startuml
+actor "Survey Engineer\n(Mingma Sherpa)" as Surveyor
+actor "Health Ministry\nOfficial" as Official
+actor "District Health\nCoordinator" as Coordinator
+participant "GeoLocation" as Geo
+participant "SurveyApp" as App
+participant "CoordinateService" as Coords
+participant "HealthFacility" as Facility
+participant "EmergencyResponseSystem" as Emergency
+
+Surveyor -> App: Start health post survey
+activate App
+
+App -> Geo: captureCoordinates()
+activate Geo
+Geo -> Geo: startGPSCapture()
+note right: High altitude affects GPS accuracy
+Geo -> Geo: setLatitude(27.7784)
+Geo -> Geo: setLongitude(86.7139)
+Geo -> Geo: setAltitude(3820)
+Geo -> Geo: setAccuracy(8.5)
+Geo -> Geo: setHorizontalAccuracy(6.2)
+Geo -> Geo: setVerticalAccuracy(12.8)
+Geo -> Geo: setSatelliteCount(7)
+Geo -> Geo: setSource("TRIMBLE_GPS_PROFESSIONAL")
+Geo -> Geo: setCapturedAt(now())
+Geo -> Geo: setType(ROOFTOP)
+App <-- Geo: currentCoordinates
+deactivate Geo
+
+App -> Surveyor: Display coordinates with accuracy warning
+note right: "Warning: Vertical accuracy exceeds standards due to terrain"
+
+Surveyor -> App: Take multiple readings for accuracy
+loop 5 times
+  App -> Geo: captureCoordinates()
+  App <-- Geo: additionalReading
+  App -> App: averageReadings()
+end
+
+Surveyor -> App: Confirm final coordinates
+
+App -> Geo: finalizeCoordinates()
+activate Geo
+Geo -> Geo: setAccuracy(5.2) // Improved after averaging
+Geo -> Geo: setMetadata({"terrain": "MOUNTAINOUS", "weather": "CLEAR", "obstructions": "SURROUNDING_PEAKS"})
+App <-- Geo: finalizedCoordinates
+deactivate Geo
+
+App -> Coords: convertCoordinates(NEPAL_MODIFIED_UTM)
+activate Coords
+Coords -> Coords: transformWGS84ToNepalUTM(coordinates)
+App <-- Coords: convertedCoordinates
+deactivate Coords
+
+App -> Geo: updateCoordinateSystem(NEPAL_MODIFIED_UTM)
+activate Geo
+Geo -> Geo: setCoordinateSystem(NEPAL_MODIFIED_UTM)
+App <-- Geo: updatedGeoLocation
+deactivate Geo
+
+Surveyor -> App: Submit for verification
+App -> Official: Send for verification
+
+Official -> Geo: verify(coordinates)
+activate Geo
+Geo -> Geo: setVerified(true)
+Geo -> Geo: setVerifiedBy("Bhim Acharya, Senior Surveyor")
+Geo -> Geo: setVerifiedAt(now())
+Official <-- Geo: verifiedCoordinates
+deactivate Geo
+
+Official -> Facility: registerHealthPost()
+activate Facility
+Facility -> Facility: createNewFacility("Khumjung Health Post")
+Facility -> Facility: setLocation(verifiedCoordinates)
+Facility -> Facility: setElevationCategory(HIGH_ALTITUDE)
+Facility -> Facility: calculateNearestRoadAccessPoint()
+note right: 4.2km to nearest road
+Official <-- Facility: registeredFacility
+deactivate Facility
+
+Coordinator -> Emergency: updateEmergencyRoutes()
+activate Emergency
+Emergency -> Emergency: calculateHelicopterLandingZones(healthPostCoordinates)
+Emergency -> Emergency: estimateResponseTimes(coordinates)
+Emergency -> Emergency: mapSeasonalAccessibility(coordinates)
+note right: Route impassable during winter months
+Coordinator <-- Emergency: updatedEmergencyPlan
+deactivate Emergency
+
+Coordinator -> Facility: generateAccessMap()
+activate Facility
+Facility -> Facility: createRouteFromNearest(coordinates)
+Facility -> Facility: generateTrekkingDirections()
+Facility -> Facility: calculatePorterRequirements() 
+note right: Medical supplies require 3 porters from nearest road
+Coordinator <-- Facility: accessibilityReport
+deactivate Facility
+@enduml
+----
+
+*Implementation Details:*
+The GeoLocation component in Nepal's Digital Profile system is specifically designed to address the challenges of capturing accurate geographic coordinates in a country with extreme variations in elevation, from 60 meters in the southern plains to over 8,000 meters in the Himalayan region.
+
+In this scenario, Mingma Sherpa, a Survey Engineer with the Department of Survey, is mapping the exact location of a health post in Khumjung village in the Everest region. This remote health facility serves several mountain communities and accurate coordinates are essential for health service planning, emergency response, and medical supply logistics.
+
+The GeoLocation component captures not just basic latitude and longitude, but comprehensive information needed in Nepal's challenging terrain: altitude data is critical in mountainous regions where vertical distance significantly impacts access times; accuracy measurements are recorded separately for horizontal and vertical dimensions, acknowledging that altitude measurements are typically less accurate than horizontal ones in mountainous terrain.
+
+The system supports multiple coordinate systems used in Nepal. While WGS84 (the GPS standard) is captured initially, the coordinates are converted to Nepal Modified UTM, the official system used by Nepal's Survey Department for government records. This conversion is essential for integration with Nepal's official mapping data.
+
+Given Nepal's rugged terrain, the GeoLocation component includes metadata about the surrounding environment that affects coordinate accuracy and physical accessibility. In this case, surrounding peaks are noted as obstructions that may affect both GPS signal quality and helicopter access routes for medical emergencies.
+
+The verification process reflects Nepal's administrative requirements, where survey data must be certified by an authorized official before being used in official records. The component tracks who verified the coordinates and when.
+
+Once verified, the health facility's GeoLocation data becomes critical for multiple systems: the Health Facility Registry uses it to calculate accessibility metrics vital for resource allocation; the Emergency Response System uses it to plan helicopter evacuation routes and identify suitable landing zones in the mountainous terrain; the District Health Office uses it to plan porter routes for delivering medical supplies during seasons when road access is impossible.
+
+This implementation acknowledges Nepal's realities where GPS accuracy varies dramatically by region, where multiple coordinate systems must be supported for different government departments, and where location information must include elevation data to be meaningful for planning and operations in mountainous areas.

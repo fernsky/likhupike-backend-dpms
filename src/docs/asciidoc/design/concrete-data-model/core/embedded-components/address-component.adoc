@@ -1,0 +1,336 @@
+===== `AddressComponent`
+Standardized representation of physical addresses with Nepal-specific properties.
+
+[plantuml]
+----
+@startuml
+class AddressComponent {
+  +String streetAddress
+  +String extendedAddress
+  +String locality
+  +String region
+  +String postalCode
+  +String country
+  +Integer wardNumber
+  +UUID municipalityId
+  +UUID districtId
+  +UUID provinceId
+  +Boolean verified
+  +String formattedAddress
+  +AddressType addressType
+  +String localLanguageAddress
+  +LocalDate verifiedAt
+  +String verifiedBy
+  +Boolean isPrimary
+  +Boolean isInternational
+  +String landmark
+  +AddressFormat addressFormat
+}
+
+enum AddressType {
+  RESIDENTIAL
+  BUSINESS
+  MAILING
+  TEMPORARY
+  PERMANENT
+  LEGAL
+  BIRTH_PLACE
+}
+
+class AddressFormat {
+  +String template
+  +List<String> requiredFields
+  +String localityLabel
+  +String regionLabel
+  +String postalCodeLabel
+  +Boolean wardRequired
+  +String wardLabel
+  +Boolean streetRequired
+  +String streetLabel
+}
+
+AddressComponent -- AddressType
+AddressComponent -- AddressFormat
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `streetAddress`       | Primary street address (e.g., "123 Durbar Marg")
+| `extendedAddress`     | Additional address details (e.g., "Apartment 4B")
+| `locality`            | Village, town, settlement or city name
+| `region`              | Region, state, or province name
+| `postalCode`          | Postal code or ZIP code
+| `country`             | Country name (defaults to "Nepal")
+| `wardNumber`          | Administrative ward number (specific to Nepal)
+| `municipalityId`      | Reference to Municipality entity
+| `districtId`          | Reference to District entity
+| `provinceId`          | Reference to Province entity
+| `verified`            | Whether address has been officially verified
+| `formattedAddress`    | Full formatted address string according to local standards
+| `addressType`         | Type of address (e.g., RESIDENTIAL, BUSINESS)
+| `localLanguageAddress`| Address in local script (e.g., Devanagari)
+| `verifiedAt`          | When the address was verified
+| `verifiedBy`          | Who verified the address
+| `isPrimary`           | Whether this is the primary address
+| `isInternational`     | Whether this is an international address
+| `landmark`            | Nearby landmark for easier navigation
+| `addressFormat`       | Format specification for address rendering
+|===
+
+====== AddressComponent Interface
+
+```java
+/**
+ * Represents a physical address within the system
+ */
+public interface AddressComponent {
+    /**
+     * Get the street address line
+     */
+    String getStreetAddress();
+    
+    /**
+     * Get extended address information (apartment, suite, etc.)
+     */
+    String getExtendedAddress();
+    
+    /**
+     * Get the locality (village, town, or city)
+     */
+    String getLocality();
+    
+    /**
+     * Get the region (state or province)
+     */
+    String getRegion();
+    
+    /**
+     * Get the postal code
+     */
+    String getPostalCode();
+    
+    /**
+     * Get the country
+     */
+    String getCountry();
+    
+    /**
+     * Get the ward number (Nepal-specific)
+     */
+    Integer getWardNumber();
+    
+    /**
+     * Get the municipality ID reference
+     */
+    UUID getMunicipalityId();
+    
+    /**
+     * Get the district ID reference
+     */
+    UUID getDistrictId();
+    
+    /**
+     * Get the province ID reference
+     */
+    UUID getProvinceId();
+    
+    /**
+     * Check if address has been verified
+     */
+    Boolean isVerified();
+    
+    /**
+     * Get formatted address according to local standards
+     */
+    String getFormattedAddress();
+    
+    /**
+     * Get address type
+     */
+    AddressType getAddressType();
+    
+    /**
+     * Get address in local language script
+     */
+    String getLocalLanguageAddress();
+    
+    /**
+     * Get address verification date
+     */
+    LocalDate getVerifiedAt();
+    
+    /**
+     * Get who verified the address
+     */
+    String getVerifiedBy();
+    
+    /**
+     * Check if this is the primary address
+     */
+    Boolean isPrimary();
+    
+    /**
+     * Check if this is an international address
+     */
+    Boolean isInternational();
+    
+    /**
+     * Get nearby landmark
+     */
+    String getLandmark();
+    
+    /**
+     * Get the address format specification
+     */
+    AddressFormat getAddressFormat();
+    
+    /**
+     * Set the formatted address string
+     */
+    void setFormattedAddress(String formattedAddress);
+    
+    /**
+     * Format this address according to a specified format
+     */
+    String formatAddress(AddressFormat format);
+    
+    /**
+     * Validate this address according to a specified format
+     */
+    ValidationResult validate(AddressFormat format);
+    
+    /**
+     * Convert this address to a different format
+     */
+    AddressComponent convertToFormat(AddressFormat targetFormat);
+}
+
+/**
+ * Types of addresses supported in the system
+ */
+public enum AddressType {
+    RESIDENTIAL,
+    BUSINESS,
+    MAILING,
+    TEMPORARY,
+    PERMANENT,
+    LEGAL,
+    BIRTH_PLACE
+}
+```
+
+====== Contextual Use Case for AddressComponent
+
+*Real-World Scenario:* Municipality Office Address Registration in Rural Nepal
+
+[plantuml]
+----
+@startuml
+actor "Municipal Clerk\n(Ramesh Shrestha)" as Clerk
+actor "Citizen\n(Maya Tamang)" as Citizen
+actor "Ward Officer\n(Binod Acharya)" as Ward
+participant "AddressComponent" as Address
+participant "AddressService" as Service
+participant "AddressVerification\nService" as Verification
+participant "GeocodingService" as Geocoding
+
+Citizen -> Clerk: Submit property registration request
+activate Clerk
+
+Clerk -> Service: createNewAddress()
+activate Service
+Service -> Address: create()
+activate Address
+Address -> Address: setAddressType(RESIDENTIAL)
+Address -> Address: setStreetAddress("Bagar Road")
+Address -> Address: setLocality("Ramche")
+Address -> Address: setWardNumber(4)
+Address -> Address: setMunicipalityId(ramechhapMunId)
+Address -> Address: setDistrictId(ramechhapDistId)
+Address -> Address: setProvinceId(bagmatiProvId)
+Address -> Address: setIsPrimary(true)
+Address -> Address: setLandmark("Near Ganesh Temple")
+Service <-- Address: addressComponent
+deactivate Address
+Clerk <-- Service: addressForm
+deactivate Service
+
+Clerk -> Service: validateAddress(addressComponent)
+activate Service
+Service -> Address: validate()
+activate Address
+Address -> Address: verifyRequiredFields()
+Address -> Address: validateWardNumber()
+Address -> Address: validateHierarchy() 
+note right: Checks if ward exists in municipality
+Service <-- Address: validationResult
+deactivate Address
+Clerk <-- Service: addressValid=true
+deactivate Service
+
+Clerk -> Service: generateLocalLanguageVersion(addressComponent)
+activate Service
+Service -> Address: setLocalLanguageAddress("बागर रोड, रामचे-४, रामेछाप नगरपालिका, रामेछाप जिल्ला, बागमती प्रदेश")
+Clerk <-- Service: addressWithLocalLanguage
+deactivate Service
+
+Clerk -> Citizen: Verify address details
+Citizen -> Clerk: Confirm details are correct
+
+Clerk -> Service: requestAddressVerification(addressComponent)
+activate Service
+Service -> Ward: assignVerificationTask(addressComponent)
+Ward <-- Service: verificationRequest
+deactivate Service
+
+Ward -> Verification: conductPhysicalVerification(addressComponent)
+activate Verification
+Ward <-- Verification: fieldVerificationResults
+deactivate Verification
+
+Ward -> Service: confirmAddressVerification(addressComponent)
+activate Service
+Service -> Address: setVerified(true)
+activate Address
+Address -> Address: setVerifiedAt(today)
+Address -> Address: setVerifiedBy(wardOfficerName)
+Service <-- Address: verifiedAddress
+deactivate Address
+Ward <-- Service: verificationRecorded
+deactivate Service
+
+Ward -> Geocoding: geocodeAddress(addressComponent)
+activate Geocoding
+Geocoding -> Geocoding: matchToMap()
+Ward <-- Geocoding: coordinates
+deactivate Geocoding
+
+Ward -> Service: attachCoordinates(addressComponent, coordinates)
+activate Service
+Service -> Address: updateWithCoordinates(coordinates)
+Ward <-- Service: addressWithCoordinates
+deactivate Service
+
+Ward -> Citizen: Issue address verification certificate
+Clerk -> Citizen: Complete property registration with verified address
+@enduml
+----
+
+*Implementation Details:*
+The AddressComponent in Nepal's Digital Profile system is specifically designed to handle the unique addressing challenges in Nepal, where formal street names and house numbers are often absent, particularly in rural areas.
+
+In this scenario, Maya Tamang is registering her property in Ramechhap Municipality, located in the hilly region of Bagmati Province. The municipal clerk Ramesh creates a new address record for her property, which lacks a formal house number but is located on "Bagar Road" in Ward 4 of Ramechhap Municipality.
+
+The system implements Nepal's administrative hierarchy by capturing not just the address components but also references to the Municipality, District, and Province entities. This hierarchical referencing allows the system to generate properly formatted addresses according to Nepal's standards, which typically follow the pattern: "Street (if available), Ward-Number, Municipality, District, Province."
+
+The AddressComponent enforces this structure by validating that the ward number exists within the specified municipality, and that the municipality exists within the district. This validation is crucial in Nepal's context, where administrative boundaries have been redrawn multiple times during federalization reforms.
+
+The address is created in both Latin script and Devanagari (for Nepali language), supporting Nepal's bilingual government communications. The Devanagari version is particularly important as many citizens, especially in rural areas like Ramechhap, are more familiar with documents in Nepali script.
+
+A unique feature of the Nepal implementation is the inclusion of nearby landmarks ("Near Ganesh Temple") which is essential for navigation in areas lacking formal addressing systems. This field is considered mandatory for rural addresses in the validation rules.
+
+The address verification process reflects Nepal's current practices where a local ward officer physically visits the location to confirm details. Once verified, the address gains official status and can be used for government services, property registration, and utility connections. The verification includes attaching GPS coordinates to the address, gradually building a spatial database of verified locations across Nepal.
+
+This implementation bridges the gap between traditional Nepali addressing practices and the need for standardized digital representation, enabling consistent addressing across government systems while accommodating local realities.

@@ -1,0 +1,1345 @@
+===== Performance Monitoring
+
+Performance monitoring is consistently implemented throughout the Digital Profile system to ensure optimal operation across Nepal's varied infrastructure environments, identify bottlenecks, and maintain responsive service delivery.
+
+====== Performance Monitoring Architecture
+
+[plantuml]
+----
+@startuml
+package "Performance Monitoring Framework" {
+  interface MetricsCollector {
+    +recordExecutionTime(operation: String, durationMs: Long)
+    +incrementCounter(name: String, tags: Map<String, String>)
+    +recordValue(name: String, value: Double, tags: Map<String, String>)
+    +startTimer(operation: String): Timer
+    +registerGauge(name: String, supplier: Supplier<Number>)
+    +recordCpuUsage(percentUsage: Double)
+    +recordMemoryUsage(usedBytes: Long, maxBytes: Long)
+  }
+  
+  interface Timer {
+    +stop(): long
+  }
+  
+  interface PerformanceMonitor {
+    +startTransaction(name: String): Transaction
+    +endTransaction(transaction: Transaction)
+    +recordEvent(name: String, attributes: Map<String, String>)
+    +recordException(exception: Throwable, attributes: Map<String, String>)
+    +setCustomAttribute(key: String, value: String)
+    +ignoreTransaction()
+  }
+  
+  interface Transaction {
+    +addAttribute(key: String, value: String)
+    +setTransactionName(category: String, name: String)
+    +ignoreApdex()
+    +ignore()
+  }
+  
+  interface TraceManager {
+    +startSpan(name: String): Span
+    +getCurrentSpan(): Span
+    +withSpan(span: Span, runnable: Runnable)
+    +createTraceLink(): String
+  }
+  
+  interface Span {
+    +addEvent(name: String)
+    +addAttribute(key: String, value: String)
+    +setStatus(status: SpanStatus)
+    +recordException(exception: Throwable)
+    +end()
+  }
+  
+  enum SpanStatus {
+    OK
+    ERROR
+  }
+  
+  interface HealthCheckRegistry {
+    +register(name: String, healthCheck: HealthCheck)
+    +runHealthChecks(): Map<String, HealthCheckResult>
+    +getNames(): Set<String>
+  }
+  
+  interface HealthCheck {
+    +check(): HealthCheckResult
+  }
+  
+  class HealthCheckResult {
+    +status: HealthStatus
+    +message: String
+    +timestamp: Instant
+    +details: Map<String, Object>
+  }
+  
+  enum HealthStatus {
+    UP
+    DOWN
+    WARNING
+    UNKNOWN
+  }
+  
+  class PerformanceMonitoringConfig {
+    +isEnabled: boolean
+    +sampleRate: double
+    +slowThresholdMs: long
+    +verySlowThresholdMs: long
+    +logSlowTransactions: boolean
+    +excludedPaths: List<String>
+  }
+  
+  class AdaptiveMonitoring {
+    +adjustSamplingRate(currentLoad: double)
+    +setConnectionQualityMode(quality: ConnectionQuality)
+    +getMonitoringLevel(): MonitoringLevel
+    +shouldCollectDetailedMetrics(): boolean
+  }
+  
+  enum ConnectionQuality {
+    HIGH_BANDWIDTH
+    MEDIUM_BANDWIDTH
+    LOW_BANDWIDTH
+    INCONSISTENT
+    OFFLINE
+  }
+  
+  enum MonitoringLevel {
+    MINIMAL
+    BASIC
+    STANDARD
+    DETAILED
+    DIAGNOSTIC
+  }
+  
+  class RegionalAdaptationService {
+    +getRegionalSettings(regionCode: String): RegionalSettings
+    +adjustForLocation(settings: PerformanceMonitoringConfig, location: String)
+    +getInfrastructureProfile(officeId: String): InfrastructureProfile
+  }
+  
+  class NepalInfrastructureProfiles {
+    +URBAN_HIGHSPEED: InfrastructureProfile
+    +URBAN_STANDARD: InfrastructureProfile
+    +SEMI_URBAN: InfrastructureProfile
+    +RURAL_CONNECTED: InfrastructureProfile
+    +RURAL_LIMITED: InfrastructureProfile
+    +REMOTE_INTERMITTENT: InfrastructureProfile
+    +getProfileForDistrict(districtId: String): InfrastructureProfile
+  }
+}
+
+package "Monitoring Implementations" {
+  class PrometheusMetricsCollector {
+    -registry: CollectorRegistry
+    -counters: Map<String, Counter>
+    -gauges: Map<String, Gauge>
+    -histograms: Map<String, Histogram>
+  }
+  
+  class ElasticAPM {
+    -tracer: Tracer
+    -currentTransaction: Transaction
+  }
+  
+  class OpenTelemetryTracing {
+    -tracer: Tracer
+    -propagators: ContextPropagators
+  }
+  
+  class ActuatorHealthRegistry {
+    -healthChecks: Map<String, HealthIndicator>
+  }
+  
+  class MobilePerformanceCollector {
+    -batteryAwareCollection: boolean
+    -compressMetrics: boolean
+    -batchSendIntervalMs: long
+  }
+}
+
+package "Specific Monitors" {
+  class DatabasePerformanceMonitor {
+    +monitorQuery(sql: String, parameters: Object[]): QueryStats
+    +recordConnectionAcquisition(durationMs: long)
+    +recordStatementExecution(sql: String, durationMs: long)
+    +checkSlowQueries()
+  }
+  
+  class ApiPerformanceMonitor {
+    +monitorRequest(request: HttpServletRequest, handler: Object): RequestContext
+    +endRequestMonitoring(context: RequestContext, response: HttpServletResponse)
+    +recordPayloadSize(bytes: long)
+    +analyzeStatusCodes()
+  }
+  
+  class InfrastructureMonitor {
+    +recordCpuUsage()
+    +recordMemoryUsage()
+    +recordDiskUsage()
+    +recordNetworkLatency(destination: String)
+    +recordNetworkBandwidth(bytesPerSecond: long)
+    +checkResourceAvailability()
+  }
+  
+  class IntegrationPerformanceMonitor {
+    +startIntegrationOperation(systemName: String, operationType: String): OperationContext
+    +endIntegrationOperation(context: OperationContext)
+    +recordSyncOperation(system: String, recordCount: int, durationMs: long)
+    +recordExternalSystemLatency(system: String, latencyMs: long)
+  }
+  
+  class OfflineOperationMonitor {
+    +recordOfflineOperation(operationType: String, details: Map<String, String>)
+    +recordSyncAttempt(success: boolean, recordCount: int, durationMs: long)
+    +recordDataTransferRate(bytesPerSecond: long)
+    +getOfflineOperationStats(): OfflineStats
+  }
+}
+
+package "Visualization and Alerting" {
+  class PerformanceDashboard {
+    +getSystemOverview(): SystemOverview
+    +getDailyTrends(): TrendData
+    +getDatabaseMetrics(): DatabaseMetrics
+    +getApiMetrics(): ApiMetrics
+    +getRegionalComparison(): RegionalComparison
+    +getUserExperienceMetrics(): UxMetrics
+  }
+  
+  class AlertManager {
+    +evaluateAlertConditions()
+    +sendAlert(type: AlertType, message: String, severity: AlertSeverity)
+    +getActiveAlerts(): List<Alert>
+    +acknowledgeAlert(alertId: String)
+    +resolveAlert(alertId: String)
+  }
+  
+  class ThresholdManager {
+    +getThreshold(metricName: String): Threshold
+    +updateThreshold(metricName: String, threshold: Threshold)
+    +evaluateThresholdViolation(metricName: String, value: double): boolean
+    +getRecommendedThresholds(metrics: List<String>): Map<String, Threshold>
+  }
+  
+  class PerformanceReportGenerator {
+    +generateDailyReport(): Report
+    +generateWeeklyReport(): Report
+    +generateMonthlyReport(): Report
+    +generateCustomReport(startDate: LocalDate, endDate: LocalDate): Report
+    +exportReport(report: Report, format: ExportFormat): File
+  }
+}
+
+MetricsCollector <|.. PrometheusMetricsCollector
+PerformanceMonitor <|.. ElasticAPM
+TraceManager <|.. OpenTelemetryTracing
+HealthCheckRegistry <|.. ActuatorHealthRegistry
+
+DatabasePerformanceMonitor o-- MetricsCollector
+ApiPerformanceMonitor o-- MetricsCollector
+ApiPerformanceMonitor o-- TraceManager
+InfrastructureMonitor o-- MetricsCollector
+IntegrationPerformanceMonitor o-- MetricsCollector
+IntegrationPerformanceMonitor o-- TraceManager
+OfflineOperationMonitor o-- MetricsCollector
+
+PerformanceDashboard o-- MetricsCollector
+AlertManager o-- ThresholdManager
+PerformanceReportGenerator o-- MetricsCollector
+
+AdaptiveMonitoring -- ConnectionQuality
+AdaptiveMonitoring -- MonitoringLevel
+RegionalAdaptationService -- NepalInfrastructureProfiles
+@enduml
+----
+
+====== Performance Monitoring Flow
+
+[plantuml]
+----
+@startuml
+participant "Client" as Client
+participant "API Gateway" as Gateway
+participant "RequestInterceptor" as Interceptor
+participant "ApiPerformanceMonitor" as ApiMonitor
+participant "Controller" as Controller
+participant "Service" as Service
+participant "DatabasePerformanceMonitor" as DbMonitor
+participant "Repository" as Repository
+participant "Database" as DB
+participant "MetricsCollector" as Metrics
+
+Client -> Gateway : HTTP Request
+activate Gateway
+
+Gateway -> Interceptor : preHandle()
+activate Interceptor
+
+Interceptor -> ApiMonitor : monitorRequest()
+activate ApiMonitor
+ApiMonitor -> ApiMonitor : startTimer()
+ApiMonitor -> ApiMonitor : createRequestContext()
+Interceptor <-- ApiMonitor : requestContext
+deactivate ApiMonitor
+
+Gateway <-- Interceptor
+deactivate Interceptor
+
+Gateway -> Controller : request
+activate Controller
+
+Controller -> Service : businessOperation()
+activate Service
+
+Service -> DbMonitor : monitorQuery()
+activate DbMonitor
+DbMonitor -> DbMonitor : startTimer()
+Service <-- DbMonitor : queryContext
+deactivate DbMonitor
+
+Service -> Repository : findData()
+activate Repository
+Repository -> DB : execute query
+activate DB
+Repository <-- DB : result
+deactivate DB
+Service <-- Repository : data
+deactivate Repository
+
+Service -> DbMonitor : endQuery(queryContext)
+activate DbMonitor
+DbMonitor -> Metrics : recordExecutionTime("db.query", duration)
+activate Metrics
+DbMonitor <-- Metrics
+deactivate Metrics
+Service <-- DbMonitor
+deactivate DbMonitor
+
+Controller <-- Service : result
+deactivate Service
+
+Gateway <-- Controller : response
+deactivate Controller
+
+Gateway -> Interceptor : postHandle()
+activate Interceptor
+
+Interceptor -> ApiMonitor : endRequestMonitoring(requestContext)
+activate ApiMonitor
+ApiMonitor -> ApiMonitor : stopTimer()
+ApiMonitor -> Metrics : recordExecutionTime("api.request", duration)
+activate Metrics
+ApiMonitor <-- Metrics
+deactivate Metrics
+ApiMonitor -> Metrics : incrementCounter("api.requests", tags)
+activate Metrics
+ApiMonitor <-- Metrics
+deactivate Metrics
+Interceptor <-- ApiMonitor
+deactivate ApiMonitor
+
+Gateway <-- Interceptor
+deactivate Interceptor
+
+Client <-- Gateway : HTTP Response
+deactivate Gateway
+@enduml
+----
+
+====== Distributed Tracing Flow
+
+[plantuml]
+----
+@startuml
+participant "Mobile Client" as Client
+participant "API Gateway" as Gateway
+participant "TraceManager" as Tracer
+participant "UserService" as User
+participant "DocumentService" as Document
+participant "StorageService" as Storage
+participant "External\nSystem" as External
+
+Client -> Gateway : Request with trace header
+activate Gateway
+
+Gateway -> Tracer : startSpan("process-request")
+activate Tracer
+Gateway <-- Tracer : requestSpan
+deactivate Tracer
+
+Gateway -> User : getUser(userId)
+activate User
+
+User -> Tracer : startSpan("get-user")
+activate Tracer
+User <-- Tracer : userSpan
+deactivate Tracer
+
+User -> User : process
+User -> Tracer : endSpan(userSpan)
+activate Tracer
+User <-- Tracer
+deactivate Tracer
+
+Gateway <-- User : user
+deactivate User
+
+Gateway -> Document : getDocuments(userId)
+activate Document
+
+Document -> Tracer : startSpan("get-documents")
+activate Tracer
+Document <-- Tracer : documentSpan
+deactivate Tracer
+
+Document -> Storage : fetchFiles(docIds)
+activate Storage
+
+Storage -> Tracer : startSpan("fetch-files")
+activate Tracer
+Storage <-- Tracer : storageSpan
+deactivate Tracer
+
+Storage -> External : apiCall()
+activate External
+Storage <-- External : files
+deactivate External
+
+Storage -> Tracer : endSpan(storageSpan)
+activate Tracer
+Storage <-- Tracer
+deactivate Tracer
+
+Document <-- Storage : files
+deactivate Storage
+
+Document -> Tracer : endSpan(documentSpan)
+activate Tracer
+Document <-- Tracer
+deactivate Tracer
+
+Gateway <-- Document : documents
+deactivate Document
+
+Gateway -> Tracer : endSpan(requestSpan)
+activate Tracer
+Gateway <-- Tracer
+deactivate Tracer
+
+Client <-- Gateway : Complete response with trace ID
+deactivate Gateway
+
+note right of Client
+  Trace visualization shows complete
+  request flow across all services
+  with timing information
+end note
+@enduml
+----
+
+====== Health Check Implementation
+
+[plantuml]
+----
+@startuml
+participant "HealthCheckController" as Controller
+participant "HealthCheckRegistry" as Registry
+participant "DatabaseHealthCheck" as DB
+participant "NetworkHealthCheck" as Network
+participant "ExternalSystemHealthCheck" as External
+participant "OfflineStatusCheck" as Offline
+participant "ResourceHealthCheck" as Resource
+
+Controller -> Registry : runHealthChecks()
+activate Registry
+
+Registry -> DB : check()
+activate DB
+DB -> DB : testConnection()
+DB -> DB : measureResponseTime()
+Registry <-- DB : status=UP
+deactivate DB
+
+Registry -> Network : check()
+activate Network
+Network -> Network : pingInternalServices()
+Network -> Network : checkInternetConnectivity()
+Registry <-- Network : status=WARNING, details="Limited bandwidth"
+deactivate Network
+
+Registry -> External : check()
+activate External
+External -> External : testExternalSystemConnectivity()
+Registry <-- External : status=UP
+deactivate External
+
+Registry -> Offline : check()
+activate Offline
+Offline -> Offline : checkOfflineCapability()
+Offline -> Offline : checkSyncStatus()
+Registry <-- Offline : status=UP
+deactivate Offline
+
+Registry -> Resource : check()
+activate Resource
+Resource -> Resource : checkDiskSpace()
+Resource -> Resource : checkMemory()
+Resource -> Resource : checkCpu()
+Registry <-- Resource : status=WARNING, details="Disk space low"
+deactivate Resource
+
+Controller <-- Registry : healthCheckResults
+deactivate Registry
+
+Controller -> Controller : calculateOverallHealth()
+Controller -> Controller : formatHealthResponse()
+@enduml
+----
+
+====== Adaptive Monitoring Based on Location
+
+[plantuml]
+----
+@startuml
+participant "Application" as App
+participant "RegionalAdaptationService" as Regional
+participant "NepalInfrastructureProfiles" as Profiles
+participant "AdaptiveMonitoring" as Adaptive
+participant "MetricsCollector" as Metrics
+participant "MonitoringScheduler" as Scheduler
+
+App -> Regional : getInfrastructureProfile("Solukhumbu")
+activate Regional
+
+Regional -> Profiles : getProfileForDistrict("Solukhumbu")
+activate Profiles
+Regional <-- Profiles : REMOTE_INTERMITTENT
+deactivate Profiles
+
+App <-- Regional : profile
+deactivate Regional
+
+App -> Adaptive : setConnectionQualityMode(profile.connectionQuality)
+activate Adaptive
+Adaptive -> Adaptive : adjustSamplingRate(0.1) // Low sampling for intermittent
+Adaptive -> Adaptive : determineMonitoringLevel() // MINIMAL level
+App <-- Adaptive : configured
+deactivate Adaptive
+
+App -> Scheduler : configureMonitoringSchedule(profile)
+activate Scheduler
+Scheduler -> Scheduler : reduceSamplingFrequency()
+Scheduler -> Scheduler : prioritizeCriticalMetrics()
+Scheduler -> Scheduler : configureOfflineStorage()
+App <-- Scheduler : scheduled
+deactivate Scheduler
+
+...Some time later, app detects connectivity change...
+
+App -> Adaptive : setConnectionQualityMode(ConnectionQuality.MEDIUM_BANDWIDTH)
+activate Adaptive
+Adaptive -> Adaptive : adjustSamplingRate(0.5) // Medium sampling
+Adaptive -> Adaptive : determineMonitoringLevel() // STANDARD level
+App <-- Adaptive : reconfigured
+deactivate Adaptive
+
+App -> Scheduler : adjustMonitoringSchedule(ConnectionQuality.MEDIUM_BANDWIDTH)
+activate Scheduler
+Scheduler -> Scheduler : increaseSamplingFrequency()
+Scheduler -> Scheduler : enableAdditionalMetrics()
+Scheduler -> Scheduler : scheduleSyncOfStoredMetrics()
+App <-- Scheduler : adjusted
+deactivate Scheduler
+
+App -> Metrics : syncStoredMetrics()
+activate Metrics
+Metrics -> Metrics : retrieveStoredMetrics()
+Metrics -> Metrics : batchSendToCollector()
+App <-- Metrics : syncComplete
+deactivate Metrics
+@enduml
+----
+
+====== Contextual Use Case for Performance Monitoring
+
+*Real-World Scenario:* Monitoring and Optimizing Land Registration Service in Rural Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registration\nOfficer" as Officer
+participant "Land Registration\nSystem" as LRS
+participant "PerformanceMonitor" as Monitor
+participant "RegionalAdaptationService" as Regional
+participant "DatabasePerformanceMonitor" as DB
+participant "NetworkMonitor" as Network
+participant "AlertManager" as Alert
+participant "OfflineModeManager" as Offline
+
+== Morning System Assessment ==
+
+Officer -> LRS : Login at start of day
+LRS -> Monitor : startTransaction("officer.login")
+activate Monitor
+LRS <-- Monitor : transaction
+deactivate Monitor
+
+LRS -> Regional : detectRegionalProfile("Jajarkot")
+activate Regional
+Regional -> Regional : assessCurrentConnectivity() // 2G network detected
+LRS <-- Regional : RURAL_LIMITED profile with 2G connectivity
+deactivate Regional
+
+LRS -> Monitor : setCustomAttribute("office", "Jajarkot")
+LRS -> Monitor : setCustomAttribute("connectivity", "2G")
+activate Monitor
+LRS <-- Monitor
+deactivate Monitor
+
+LRS -> Monitor : recordValue("network.latency", 1850) // 1.85s latency
+activate Monitor
+Monitor -> Alert : evaluateThreshold("network.latency", 1850)
+activate Alert
+Alert -> Alert : threshold exceeded (> 1000ms)
+Monitor <-- Alert : WARNING level alert
+deactivate Alert
+LRS <-- Monitor
+deactivate Monitor
+
+LRS -> Officer : Display bandwidth warning
+LRS -> Offline : prepareOfflineCapability()
+activate Offline
+LRS <-- Offline : offlineMode prepared
+deactivate Offline
+
+== Transaction Processing in Limited Connectivity ==
+
+Officer -> LRS : Process land registration
+LRS -> Monitor : startTransaction("land.registration")
+activate Monitor
+LRS <-- Monitor : transaction
+deactivate Monitor
+
+LRS -> DB : executeQuery(registrationCheck)
+activate DB
+DB -> Monitor : recordExecutionTime("db.query.registration_check", 450)
+activate Monitor
+DB <-- Monitor
+deactivate Monitor
+LRS <-- DB : queryResult
+deactivate DB
+
+LRS -> Network : checkConnectivity()
+activate Network
+LRS <-- Network : unstable (dropped to EDGE connectivity)
+deactivate Network
+
+LRS -> Offline : switchToOfflineMode()
+activate Offline
+LRS <-- Offline : offlineModeActive
+deactivate Offline
+
+Officer -> LRS : Complete registration form
+LRS -> Offline : queueOperation(registrationData)
+activate Offline
+LRS <-- Offline : operationQueued
+deactivate Offline
+
+LRS -> Monitor : recordEvent("offline.operation.queued", attributes)
+activate Monitor
+LRS <-- Monitor
+deactivate Monitor
+
+== Connectivity Restored and Synchronization ==
+
+Network -> LRS : connectivityRestored (3G)
+LRS -> Monitor : recordEvent("connectivity.restored", attributes)
+activate Monitor
+LRS <-- Monitor
+deactivate Monitor
+
+LRS -> Offline : synchronizeQueuedOperations()
+activate Offline
+
+Offline -> Monitor : startTransaction("offline.sync")
+activate Monitor
+Offline <-- Monitor : syncTransaction
+deactivate Monitor
+
+Offline -> DB : processBatch(queuedOperations)
+activate DB
+DB -> Monitor : recordExecutionTime("db.batch.registration_sync", 2250)
+activate Monitor
+DB <-- Monitor
+deactivate Monitor
+Offline <-- DB : batchProcessed
+deactivate DB
+
+Offline -> Monitor : recordValue("sync.record_count", 5)
+activate Monitor
+Offline <-- Monitor
+deactivate Monitor
+
+Offline -> Monitor : endTransaction(syncTransaction)
+activate Monitor
+Offline <-- Monitor
+deactivate Monitor
+
+LRS <-- Offline : syncComplete with 5 records processed
+deactivate Offline
+
+LRS -> Officer : Display sync completion notification
+@enduml
+----
+
+*Implementation Details:*
+The Digital Profile system implements a context-aware performance monitoring system for Nepal's challenging infrastructure landscape. In the land registration office in Jajarkot district, which experiences intermittent connectivity and limited bandwidth, the performance monitoring adapts to local conditions.
+
+When Land Officer Deepak logs in each morning, the system automatically detects the office location and current network conditions. Using the `RegionalAdaptationService`, it identifies this location as a `RURAL_LIMITED` infrastructure profile, currently operating on a 2G network. The `AdaptiveMonitoring` component immediately adjusts the sampling rate to minimal levels and prioritizes only critical metrics to preserve bandwidth.
+
+The system detects high network latency (1850ms) which exceeds the threshold for acceptable performance. This triggers the `AlertManager` to generate a warning, but rather than sending it to a central monitoring system (which would consume precious bandwidth), it's stored locally and displayed to the officer with adaptive recommendations.
+
+As Officer Deepak begins processing a land registration transaction, each database query is monitored by the `DatabasePerformanceMonitor`, recording execution times. When the network suddenly degrades to EDGE connectivity, the `NetworkMonitor` detects this change, and the system transitions to offline mode, guided by performance metrics that indicated pre-emptive caching would be beneficial.
+
+The registration continues in offline mode, with operations queued for later synchronization. The `OfflineOperationMonitor` tracks these queued operations, providing visibility into the transaction state without requiring connectivity.
+
+When connectivity is restored, the system detects a 3G signal and begins synchronization. The `PerformanceMonitor` tracks this process as a distinct transaction, measuring batch processing time and record counts. These metrics help the system optimize future offline operations based on observed performance patterns.
+
+This context-aware approach allows government services to operate effectively across Nepal's diverse infrastructure landscape, from high-speed fiber in Kathmandu to intermittent connectivity in remote mountain districts, while still maintaining visibility into performance for continuous improvement.
+
+====== Core Interfaces
+
+```java
+/**
+ * Main interface for collecting metrics
+ */
+public interface MetricsCollector {
+    /**
+     * Record execution time for an operation
+     */
+    void recordExecutionTime(String operation, long durationMs);
+    
+    /**
+     * Increment a counter with tags
+     */
+    void incrementCounter(String name, Map<String, String> tags);
+    
+    /**
+     * Record a value with tags
+     */
+    void recordValue(String name, double value, Map<String, String> tags);
+    
+    /**
+     * Start a timer for operation
+     */
+    Timer startTimer(String operation);
+    
+    /**
+     * Register a gauge that will be sampled for its current value
+     */
+    void registerGauge(String name, Supplier<Number> supplier);
+    
+    /**
+     * Record CPU usage percentage
+     */
+    void recordCpuUsage(double percentUsage);
+    
+    /**
+     * Record memory usage
+     */
+    void recordMemoryUsage(long usedBytes, long maxBytes);
+}
+
+/**
+ * Timer interface for measuring operation duration
+ */
+public interface Timer {
+    /**
+     * Stop the timer and return elapsed time in milliseconds
+     */
+    long stop();
+}
+
+/**
+ * Interface for application performance monitoring
+ */
+public interface PerformanceMonitor {
+    /**
+     * Start a transaction
+     */
+    Transaction startTransaction(String name);
+    
+    /**
+     * End a transaction
+     */
+    void endTransaction(Transaction transaction);
+    
+    /**
+     * Record an event within the current transaction
+     */
+    void recordEvent(String name, Map<String, String> attributes);
+    
+    /**
+     * Record an exception
+     */
+    void recordException(Throwable exception, Map<String, String> attributes);
+    
+    /**
+     * Set a custom attribute on the current transaction
+     */
+    void setCustomAttribute(String key, String value);
+    
+    /**
+     * Ignore the current transaction in APM metrics
+     */
+    void ignoreTransaction();
+}
+
+/**
+ * Transaction interface for APM
+ */
+public interface Transaction {
+    /**
+     * Add attribute to transaction
+     */
+    void addAttribute(String key, String value);
+    
+    /**
+     * Set transaction name
+     */
+    void setTransactionName(String category, String name);
+    
+    /**
+     * Set transaction to be ignored for Apdex calculations
+     */
+    void ignoreApdex();
+    
+    /**
+     * Ignore this transaction completely
+     */
+    void ignore();
+}
+
+/**
+ * Interface for distributed tracing
+ */
+public interface TraceManager {
+    /**
+     * Start a new span
+     */
+    Span startSpan(String name);
+    
+    /**
+     * Get the current active span
+     */
+    Span getCurrentSpan();
+    
+    /**
+     * Execute runnable within the context of the span
+     */
+    void withSpan(Span span, Runnable runnable);
+    
+    /**
+     * Create a link to the current trace for troubleshooting
+     */
+    String createTraceLink();
+}
+
+/**
+ * Span interface for distributed tracing
+ */
+public interface Span {
+    /**
+     * Add event to span
+     */
+    void addEvent(String name);
+    
+    /**
+     * Add attribute to span
+     */
+    void addAttribute(String key, String value);
+    
+    /**
+     * Set span status
+     */
+    void setStatus(SpanStatus status);
+    
+    /**
+     * Record exception in span
+     */
+    void recordException(Throwable exception);
+    
+    /**
+     * End the span
+     */
+    void end();
+}
+
+/**
+ * Interface for health check registry
+ */
+public interface HealthCheckRegistry {
+    /**
+     * Register a health check
+     */
+    void register(String name, HealthCheck healthCheck);
+    
+    /**
+     * Run all registered health checks
+     */
+    Map<String, HealthCheckResult> runHealthChecks();
+    
+    /**
+     * Get names of all registered health checks
+     */
+    Set<String> getNames();
+}
+
+/**
+ * Interface for individual health check
+ */
+public interface HealthCheck {
+    /**
+     * Perform health check
+     */
+    HealthCheckResult check();
+}
+```
+
+====== Key Data Structures
+
+```java
+/**
+ * Result of a health check
+ */
+public class HealthCheckResult {
+    /**
+     * Status of the health check
+     */
+    private HealthStatus status;
+    
+    /**
+     * Message describing the health check result
+     */
+    private String message;
+    
+    /**
+     * When the check was performed
+     */
+    private Instant timestamp;
+    
+    /**
+     * Additional details about the health check
+     */
+    private Map<String, Object> details;
+}
+
+/**
+ * Health status values
+ */
+public enum HealthStatus {
+    UP,         // Service is healthy
+    DOWN,       // Service is unhealthy
+    WARNING,    // Service is operational but has issues
+    UNKNOWN     // Status could not be determined
+}
+
+/**
+ * Network connection quality levels
+ */
+public enum ConnectionQuality {
+    HIGH_BANDWIDTH,     // Fiber, high-speed broadband
+    MEDIUM_BANDWIDTH,   // Standard broadband, 4G
+    LOW_BANDWIDTH,      // 3G, slow DSL
+    INCONSISTENT,       // Unstable connection with frequent drops
+    OFFLINE             // No connectivity
+}
+
+/**
+ * Monitoring detail levels
+ */
+public enum MonitoringLevel {
+    MINIMAL,    // Only critical metrics, very low overhead
+    BASIC,      // Essential metrics, low overhead
+    STANDARD,   // Normal metrics set, reasonable overhead
+    DETAILED,   // Comprehensive metrics, higher overhead
+    DIAGNOSTIC  // All available metrics, highest overhead
+}
+
+/**
+ * Infrastructure profile for a specific location
+ */
+public interface InfrastructureProfile {
+    /**
+     * Get typical connection quality for this profile
+     */
+    ConnectionQuality getConnectionQuality();
+    
+    /**
+     * Get recommended sampling rate (0.0 - 1.0)
+     */
+    double getRecommendedSamplingRate();
+    
+    /**
+     * Get recommended monitoring level
+     */
+    MonitoringLevel getRecommendedMonitoringLevel();
+    
+    /**
+     * Get metric collection interval in seconds
+     */
+    int getMetricCollectionIntervalSeconds();
+    
+    /**
+     * Whether offline metric storage should be enabled
+     */
+    boolean isOfflineStorageEnabled();
+    
+    /**
+     * Whether detailed tracing should be enabled
+     */
+    boolean isDetailedTracingEnabled();
+    
+    /**
+     * Get bandwidth optimization level (0-10)
+     */
+    int getBandwidthOptimizationLevel();
+}
+```
+
+====== Nepal-Specific Infrastructure Profiles
+
+The Digital Profile system implements performance monitoring profiles optimized for Nepal's varied infrastructure:
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Urban High-Speed Profile" as UrbanHigh {
+  Connection Quality: HIGH_BANDWIDTH
+  Monitoring Level: DETAILED
+  Sampling Rate: 100%
+  Collection Interval: 10 seconds
+  Offline Storage: Disabled
+  Detailed Tracing: Enabled
+  Bandwidth Optimization: Level 0 (None)
+}
+
+note bottom of UrbanHigh
+  Major urban centers with reliable
+  fiber or high-speed connections:
+  Kathmandu (central), Pokhara,
+  Biratnagar, Bharatpur
+end note
+
+RECTANGLE "Urban Standard Profile" as UrbanStd {
+  Connection Quality: MEDIUM_BANDWIDTH
+  Monitoring Level: STANDARD
+  Sampling Rate: 75%
+  Collection Interval: 15 seconds
+  Offline Storage: Minimal
+  Detailed Tracing: Selective
+  Bandwidth Optimization: Level 2
+}
+
+note bottom of UrbanStd
+  District headquarters and
+  urban areas with reliable but
+  moderate speed connections
+end note
+
+RECTANGLE "Semi-Urban Profile" as SemiUrban {
+  Connection Quality: MEDIUM_BANDWIDTH
+  Monitoring Level: BASIC
+  Sampling Rate: 50%
+  Collection Interval: 30 seconds
+  Offline Storage: Moderate
+  Detailed Tracing: Critical only
+  Bandwidth Optimization: Level 4
+}
+
+note bottom of SemiUrban
+  Municipality centers and semi-urban
+  areas with moderate connectivity,
+  typically 3G/4G available
+end note
+
+RECTANGLE "Rural Connected Profile" as Rural {
+  Connection Quality: LOW_BANDWIDTH
+  Monitoring Level: BASIC
+  Sampling Rate: 25%
+  Collection Interval: 60 seconds
+  Offline Storage: Extensive
+  Detailed Tracing: Disabled
+  Bandwidth Optimization: Level 6
+}
+
+note bottom of Rural
+  Rural offices with limited
+  but somewhat reliable connectivity,
+  often 3G or basic broadband
+end note
+
+RECTANGLE "Rural Limited Profile" as RuralLtd {
+  Connection Quality: INCONSISTENT
+  Monitoring Level: MINIMAL
+  Sampling Rate: 10%
+  Collection Interval: 120 seconds
+  Offline Storage: Complete
+  Detailed Tracing: Disabled
+  Bandwidth Optimization: Level 8
+}
+
+note bottom of RuralLtd
+  Remote offices with 2G/EDGE
+  and unreliable connectivity,
+  frequent disruptions
+end note
+
+RECTANGLE "Remote Intermittent Profile" as Remote {
+  Connection Quality: OFFLINE
+  Monitoring Level: MINIMAL
+  Sampling Rate: 5%
+  Collection Interval: 300 seconds
+  Offline Storage: Complete
+  Detailed Tracing: Disabled
+  Bandwidth Optimization: Level 10 (Max)
+}
+
+note bottom of Remote
+  Extremely remote locations with
+  very limited or satellite-only
+  connectivity, often offline
+end note
+@enduml
+----
+
+====== Performance Monitoring Dashboard
+
+A central monitoring dashboard provides insights into system performance across Nepal:
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Nepal Digital Profile - Performance Dashboard" as Dashboard {
+  + System Health Status
+  + Regional Performance Map
+  + Service Response Times
+  + Database Performance
+  + Network Connectivity
+  + Office Activity
+  + Alert Overview
+}
+
+note bottom of Dashboard
+  Dashboard automatically adapts
+  based on the user's role, location,
+  and current interests
+end note
+
+RECTANGLE "System Health" as Health {
+  Status: OPERATIONAL
+  Alerts: 5 Warning, 0 Critical
+  Service Uptime: 99.7%
+  Database: Healthy
+  API Gateway: Healthy
+  Storage: Warning
+  Offline Sync: Healthy
+}
+
+RECTANGLE "Response Time Map" as Map {
+  Kathmandu Region: 125ms
+  Eastern Region: 280ms
+  Central Region: 155ms
+  Western Region: 315ms
+  Far-Western: 580ms
+  Mountain Districts: 720ms+
+}
+
+note bottom of Map
+  Color-coded map shows response times
+  across Nepal's regions, highlighting
+  areas with performance issues
+end note
+
+RECTANGLE "Top Slow Transactions" as SlowTx {
+  1. Land Registration (Dolpa): 4.5s
+  2. Document Upload (Humla): 3.8s
+  3. Citizen Verification (Mugu): 3.2s
+  4. Photo Validation (Bajhang): 2.9s
+  5. Property Search (Jumla): 2.7s
+}
+
+RECTANGLE "Offline Operation Status" as Offline {
+  Pending Sync: 238 operations
+  Oldest Pending: 3 days (Darchula)
+  Sync Success Rate: 94.2%
+  Conflict Rate: 2.8%
+  Data Transfer Efficiency: 68%
+}
+
+note right of Offline
+  Monitoring of offline operations
+  critical during monsoon season
+  when connectivity is impacted
+end note
+@enduml
+----
+
+====== Nepal-Specific Performance Challenges and Solutions
+
+|===
+| Challenge | Solution Implementation
+| Intermittent Connectivity | Adaptive monitoring with offline storage and prioritized metric synchronization
+| Limited Bandwidth | Variable sampling rates based on connection quality with bandwidth optimization
+| Power Outages | Resilient metric storage with automatic recovery and minimal battery consumption
+| Diverse Infrastructure | Region-specific monitoring profiles automatically applied based on office location
+| Remote Office Visibility | Hierarchical metric aggregation for national overview despite connectivity gaps
+| Seasonal Variations | Monitoring schedules that adapt to monsoon season and other predictable disruptions
+| Mobile Performance | Battery and data-aware monitoring for field operations with network-sensitive scheduling
+| Mountains and Terrain | Baseline performance expectations adjusted for geographic challenges
+| Multi-Office Comparisons | Fair performance comparison considering infrastructure differences between regions
+| Low-End Hardware | Resource-aware monitoring that adjusts based on available system resources
+|===
+
+====== Adaptive Thresholds by Region
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Performance Thresholds by Location" as Thresholds {
+  + API Response Time
+  + Database Query Time
+  + Offline Sync Interval
+  + Cache Efficiency
+  + Memory Usage
+}
+
+note bottom of Thresholds
+  The system applies different performance
+  thresholds based on infrastructure reality
+  in different regions of Nepal
+end note
+
+RECTANGLE "Kathmandu Valley" as KTM {
+  API Response: < 200ms
+  Database Query: < 100ms
+  Offline Sync: 30 minutes
+  Cache Hit Rate: > 80%
+  Memory Usage: < 70%
+}
+
+RECTANGLE "Provincial Capitals" as Capitals {
+  API Response: < 500ms
+  Database Query: < 250ms
+  Offline Sync: 1 hour
+  Cache Hit Rate: > 70%
+  Memory Usage: < 75%
+}
+
+RECTANGLE "District Headquarters" as Districts {
+  API Response: < 1000ms
+  Database Query: < 500ms
+  Offline Sync: 2 hours
+  Cache Hit Rate: > 60%
+  Memory Usage: < 80%
+}
+
+RECTANGLE "Rural Municipalities" as Rural {
+  API Response: < 2000ms
+  Database Query: < 1000ms
+  Offline Sync: 6 hours
+  Cache Hit Rate: > 50%
+  Memory Usage: < 85%
+}
+
+RECTANGLE "Remote Mountain Areas" as Remote {
+  API Response: < 5000ms
+  Database Query: < 2500ms
+  Offline Sync: 12 hours
+  Cache Hit Rate: > 40%
+  Memory Usage: < 90%
+}
+
+note bottom of Remote
+  Remote areas focus more on operation
+  completion reliability than speed,
+  with generous thresholds to avoid
+  false alarms
+end note
+@enduml
+----
+
+====== Integrated Monitoring Workflow
+
+A comprehensive monitoring workflow ensures visibility across Nepal's diverse operating environments:
+
+[plantuml]
+----
+@startuml
+start
+
+:Configure regional performance profiles
+based on Nepal's infrastructure map;
+
+:Apply infrastructure-appropriate
+monitoring settings to each office;
+
+:Collect performance metrics with
+variable sampling based on connectivity;
+
+fork
+  :Real-time monitoring
+  for connected offices;
+fork again
+  :Offline storage for
+  intermittently connected offices;
+fork again
+  :Minimal health indicators
+  for remote offices;
+end fork
+
+:Synchronize stored metrics
+when connectivity is available;
+
+:Apply regional thresholds
+for alert evaluation;
+
+if (Performance issue detected?) then (yes)
+  if (Issue in connected office?) then (yes)
+    :Generate immediate alert;
+    :Provide troubleshooting guidance;
+  else (no)
+    :Store alert for sync;
+    :Apply local mitigation if possible;
+  endif
+endif
+
+:Aggregate metrics by region
+and administrative hierarchy;
+
+:Generate performance insights
+with geographic context;
+
+:Update performance dashboards
+with region-aware visualization;
+
+:Distribute daily/weekly reports
+optimized for recipient's bandwidth;
+
+:Analyze trends for regional
+performance improvement;
+
+stop
+@enduml
+----
+
+This comprehensive performance monitoring framework enables the Digital Profile system to operate efficiently across Nepal's challenging and diverse infrastructure landscape, from urban centers with high-speed connectivity to remote mountain villages with intermittent access, while still providing visibility and maintaining essential services.

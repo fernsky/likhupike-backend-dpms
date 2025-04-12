@@ -1,0 +1,307 @@
+===== `AuditInfo`
+Component capturing creation and modification metadata for entities.
+
+[plantuml]
+----
+@startuml
+class AuditInfo {
+  +LocalDateTime createdAt
+  +String createdBy
+  +UUID createdById
+  +String creationSource
+  +LocalDateTime lastModifiedAt
+  +String lastModifiedBy
+  +UUID lastModifiedById
+  +String modificationSource
+  +Integer revisionNumber
+  +String revisionNotes
+  +String ipAddress
+  +String userAgent
+  +Map<String, String> contextInfo
+  +String deviceId
+  +String sessionId
+  +String operatingSystem
+  +String operation
+  +AuditLevel auditLevel
+}
+
+enum AuditLevel {
+  BASIC
+  DETAILED
+  COMPREHENSIVE
+}
+
+AuditInfo -- AuditLevel
+@enduml
+----
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `createdAt`         | When the entity was created
+| `createdBy`         | Username of creator
+| `createdById`       | UUID of creator
+| `creationSource`    | Source system for creation
+| `lastModifiedAt`    | When the entity was last modified
+| `lastModifiedBy`    | Username of last modifier
+| `lastModifiedById`  | UUID of last modifier
+| `modificationSource`| Source system for modification
+| `revisionNumber`    | Incremental revision counter
+| `revisionNotes`     | Notes about the revision
+| `ipAddress`         | IP address of client
+| `userAgent`         | User agent of client
+| `contextInfo`       | Additional contextual information
+| `deviceId`          | Unique device identifier
+| `sessionId`         | User session identifier
+| `operatingSystem`   | Operating system of client
+| `operation`         | Operation performed (CREATE, UPDATE, etc.)
+| `auditLevel`        | Level of audit detail
+|===
+
+====== AuditInfo Interface
+
+```java
+/**
+ * Captures audit information about entity creation and modification
+ */
+public interface AuditInfo {
+    /**
+     * Get entity creation timestamp
+     */
+    LocalDateTime getCreatedAt();
+    
+    /**
+     * Get username of creator
+     */
+    String getCreatedBy();
+    
+    /**
+     * Get UUID of creator
+     */
+    UUID getCreatedById();
+    
+    /**
+     * Get source system for creation
+     */
+    String getCreationSource();
+    
+    /**
+     * Get last modification timestamp
+     */
+    LocalDateTime getLastModifiedAt();
+    
+    /**
+     * Get username of last modifier
+     */
+    String getLastModifiedBy();
+    
+    /**
+     * Get UUID of last modifier
+     */
+    UUID getLastModifiedById();
+    
+    /**
+     * Get source system for modification
+     */
+    String getModificationSource();
+    
+    /**
+     * Get revision number
+     */
+    Integer getRevisionNumber();
+    
+    /**
+     * Get revision notes
+     */
+    String getRevisionNotes();
+    
+    /**
+     * Get client IP address
+     */
+    String getIpAddress();
+    
+    /**
+     * Get client user agent
+     */
+    String getUserAgent();
+    
+    /**
+     * Get contextual information
+     */
+    Map<String, String> getContextInfo();
+    
+    /**
+     * Get device identifier
+     */
+    String getDeviceId();
+    
+    /**
+     * Get session identifier
+     */
+    String getSessionId();
+    
+    /**
+     * Get client operating system
+     */
+    String getOperatingSystem();
+    
+    /**
+     * Get operation performed
+     */
+    String getOperation();
+    
+    /**
+     * Get audit detail level
+     */
+    AuditLevel getAuditLevel();
+    
+    /**
+     * Update modification information
+     */
+    void updateModificationInfo(String username, UUID userId, String source);
+    
+    /**
+     * Increment revision number
+     */
+    void incrementRevision(String notes);
+    
+    /**
+     * Get formatted audit trail summary
+     */
+    String getAuditSummary();
+}
+
+/**
+ * Levels of audit detail
+ */
+public enum AuditLevel {
+    BASIC,
+    DETAILED,
+    COMPREHENSIVE
+}
+```
+
+====== Contextual Use Case for AuditInfo
+
+*Real-World Scenario:* Land Record Modification Audit Trail
+
+[plantuml]
+----
+@startuml
+actor "Land Registry\nOfficer" as Officer
+actor "District Officer\n(Sunita Karki)" as District
+actor "Audit Inspector\n(Naresh Dhakal)" as Auditor
+participant "LandParcel" as Parcel
+participant "AuditInfo" as Audit
+participant "AuditTrailService" as AuditService
+participant "UserSessionService" as Session
+
+Officer -> Session: authenticate()
+activate Session
+Session -> Session: createSession(officerId)
+Officer <-- Session: sessionToken
+deactivate Session
+
+Officer -> Parcel: updateLandOwner(parcelId, newOwnerId)
+activate Parcel
+
+Parcel -> Audit: prepareForModification()
+activate Audit
+Audit -> Session: getCurrentUser()
+activate Session
+Audit <-- Session: {username: "rthapa", userId: "54321"}
+deactivate Session
+Audit -> Session: getSessionMetadata()
+activate Session
+Audit <-- Session: {
+  ipAddress: "192.168.1.25",
+  userAgent: "Mozilla/5.0...",
+  deviceId: "LRO-PC-123",
+  sessionId: "session-98765"
+}
+deactivate Session
+Audit -> Audit: setLastModifiedAt(now())
+Audit -> Audit: setLastModifiedBy("rthapa")
+Audit -> Audit: setLastModifiedById("54321")
+Audit -> Audit: setModificationSource("LandRegistryPortal")
+Audit -> Audit: setIpAddress("192.168.1.25")
+Audit -> Audit: setUserAgent("Mozilla/5.0...")
+Audit -> Audit: setDeviceId("LRO-PC-123")
+Audit -> Audit: setSessionId("session-98765")
+Audit -> Audit: setOperation("UPDATE_OWNER")
+Audit -> Audit: incrementRevision("Owner changed from Prem Bahadur to Ram Kumar")
+Audit -> Audit: setContextInfo({
+  "previousOwnerId": "1234",
+  "newOwnerId": "5678",
+  "transferReason": "SALE",
+  "documentId": "DEED-12345"
+})
+Parcel <-- Audit: auditInfoUpdated
+deactivate Audit
+
+Parcel -> Parcel: performOwnerUpdate(newOwnerId)
+Parcel -> AuditService: logEntityModification(parcel)
+activate AuditService
+AuditService -> AuditService: createAuditEvent(
+  entity: "LandParcel",
+  entityId: parcelId,
+  operation: "UPDATE_OWNER",
+  user: "rthapa",
+  timestamp: now(),
+  details: contextInfo
+)
+Parcel <-- AuditService: auditRecorded
+deactivate AuditService
+
+Officer <-- Parcel: ownershipUpdated
+deactivate Parcel
+
+District -> AuditService: reviewDailyModifications()
+activate AuditService
+AuditService -> AuditService: getModificationsByDateAndOffice(today, "Lalitpur")
+District <-- AuditService: dailyModificationReport
+deactivate AuditService
+
+Auditor -> AuditService: investigateParcelHistory(parcelId)
+activate AuditService
+AuditService -> AuditService: getParcelAuditTrail(parcelId)
+activate AuditService
+AuditService -> Parcel: getAuditInfo()
+activate Parcel
+AuditService <-- Parcel: auditInfo
+deactivate Parcel
+AuditService -> AuditService: getDetailedAuditEvents(parcelId)
+AuditService <-- AuditService: auditTrail
+deactivate AuditService
+
+Auditor <-- AuditService: completeAuditHistory
+deactivate AuditService
+
+Auditor -> AuditService: investigateUserActivity("rthapa")
+activate AuditService
+AuditService -> AuditService: getUserActivityReport("rthapa", dateRange)
+Auditor <-- AuditService: userActivityReport
+deactivate AuditService
+
+Auditor -> AuditService: flagSuspiciousActivity()
+activate AuditService
+AuditService -> AuditService: createAuditFlag(parcelId, "Multiple ownership changes in short period")
+Auditor <-- AuditService: activityFlagged
+deactivate AuditService
+@enduml
+----
+
+*Implementation Details:*
+The AuditInfo component in Nepal's Digital Profile system plays a critical role in maintaining transparency and accountability in government records, particularly for sensitive transactions like land ownership changes where historical corruption and fraud necessitate robust audit trails.
+
+In this scenario, a Land Registry Officer is updating the ownership of a land parcel, transferring it from Prem Bahadur to Ram Kumar. When this update operation begins, the AuditInfo component automatically captures comprehensive metadata about the transaction. This includes standard information like the timestamp and the officer's identity (Rishav Thapa, user ID 54321), but also extends to technical details such as the IP address, device ID, and even the user agent string - elements particularly important in Nepal's context where shared computer systems in government offices are common.
+
+The AuditInfo component increments the revision number and records specific contextual information about the nature of the change, including the IDs of both the previous and new owners, the reason for transfer (sale), and a reference to the supporting document (the sale deed ID). This context is crucial in Nepal's land administration system where various types of transfers (sale, inheritance, donation, government acquisition) must be properly categorized and documented.
+
+The system logs this information both within the entity itself via the embedded AuditInfo component and centrally through the AuditTrailService, ensuring redundant record-keeping as a safeguard against tampering - a design choice reflecting Nepal's efforts to improve governance through technology.
+
+Later, the District Officer Sunita Karki reviews daily modifications as part of regular supervisory duties, accessing a report that summarizes all changes made within her jurisdiction. This supervision layer represents Nepal's administrative hierarchy where district-level officers oversee operations of local land offices.
+
+In a separate process, Audit Inspector Naresh Dhakal from the central government investigates the history of the specific land parcel, retrieving a complete audit trail. He can see who created the record originally, every modification, and the specific context of each change. This level of detail allows him to identify potentially suspicious activities, such as multiple ownership transfers of the same property within a short period - a red flag for potential fraud in Nepal's land markets.
+
+The AuditInfo component is designed to support comprehensive historical accountability while also providing practical operational oversight. It balances immediate transactional needs with long-term governance requirements, reflecting Nepal's ongoing digitalization efforts that aim to reduce corruption through transparent record-keeping.

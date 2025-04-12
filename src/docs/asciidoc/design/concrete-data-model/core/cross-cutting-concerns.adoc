@@ -1,246 +1,51 @@
 ==== Cross-Cutting Concerns
 
-===== `EntityVersion`
-Tracks historical versions of entities for audit and compliance.
+This section describes the cross-cutting concerns that affect multiple domains across the Digital Profile system.
 
-[cols="1,3", options="header"]
-|===
-| Field           | Description
-| `entityId`      | Reference to the entity this version belongs to
-| `entityType`    | Type of entity being versioned
-| `versionNumber` | Sequential version number
-| `createdAt`     | Timestamp when this version was created
-| `createdBy`     | User who created this version
-| `changeType`    | Type of change (CREATE, UPDATE, DELETE, RESTORE)
-| `changeReason`  | Optional reason for the change
-| `serializedData`| JSON or binary serialization of entity state at this version
-| `diff`          | Optional JSON patch showing changes from previous version
-|===
+[plantuml]
+----
+@startuml
+skinparam componentStyle rectangle
 
-===== `EntityAuditEvent`
-Records detailed audit events for entities beyond basic tracking.
+package "Cross-Cutting Concerns" {
+  [Validation] as VAL
+  [Error Handling] as ERR
+  [Auditing] as AUD
+  [Security] as SEC
+  [Pagination] as PAG
+  [Transaction Management] as TXN
+  [Caching] as CAC
+  [Internationalization] as I18N
+  [Performance Monitoring] as PERF
+}
 
-[cols="1,3", options="header"]
-|===
-| Field           | Description
-| `entityId`      | Reference to the entity this audit event relates to
-| `entityType`    | Type of entity being audited
-| `eventType`     | Type of event (VIEW, EXPORT, PRINT, etc.)
-| `timestamp`     | When the event occurred
-| `user`          | User who triggered the event
-| `ipAddress`     | IP address from which the event originated
-| `userAgent`     | Browser/client information
-| `sessionId`     | Session identifier
-| `metadata`      | Additional context-specific metadata about the event
-|===
+cloud "Core Domains" {
+  [Land Domain]
+  [Citizen Domain]
+  [Location Domain]
+  [Document Domain]
+}
 
-===== `AuditableAction`
-Records specific actions performed on entities for comprehensive audit trails.
+VAL --> [Core Domains]
+ERR --> [Core Domains]
+AUD --> [Core Domains]
+SEC --> [Core Domains]
+PAG --> [Core Domains]
+TXN --> [Core Domains]
+CAC --> [Core Domains]
+I18N --> [Core Domains]
+PERF --> [Core Domains]
+@enduml
+----
 
-[cols="1,3", options="header"]
-|===
-| Field           | Description
-| `actionType`    | Type of action performed (CREATE, READ, UPDATE, DELETE, APPROVE, etc.)
-| `entityType`    | Type of entity on which the action was performed
-| `entityId`      | ID of the entity on which the action was performed
-| `performedBy`   | User who performed the action
-| `performedAt`   | Timestamp when the action was performed
-| `ipAddress`     | IP address from which the action was initiated
-| `userAgent`     | User agent information from which the action was initiated
-| `changes`       | JSON representation of changes made (for UPDATE actions)
-| `notes`         | Optional notes providing context about the action
-| `sessionId`     | Session identifier for tracking user journey
-| `transactionId` | Correlation ID for grouping related operations
-| `applicationModule` | Module or component where action originated
-| `success`       | Whether the action completed successfully
-| `duration`      | Time taken to complete the action in milliseconds
-| `riskLevel`     | Assessed risk level of the action (LOW, MEDIUM, HIGH)
-|===
+Cross-cutting concerns represent aspects of the system that affect multiple components across different domains. These concerns are implemented consistently throughout the system to ensure uniformity in behavior, maintainability, and adherence to system-wide requirements.
 
-===== `DomainEvent`
-Base class for domain events in event sourcing.
-
-[cols="1,3", options="header"]
-|===
-| Field               | Description
-| `eventId`           | Unique identifier for the event
-| `entityId`          | ID of the entity this event relates to
-| `entityType`        | Type of entity this event relates to
-| `eventType`         | Type of event (entity-specific)
-| `timestamp`         | When the event occurred
-| `actorId`           | User who triggered the event
-| `sequenceNumber`    | Sequential number for ordering events
-| `payload`           | JSON payload containing event details
-| `metadata`          | Additional contextual metadata
-| `version`           | Schema version of the event
-|===
-
-===== `Tag`
-Represents a categorization tag that can be applied to entities.
-
-[cols="1,3", options="header"]
-|===
-| Field          | Description
-| `name`         | Name of the tag
-| `description`  | Optional description of the tag
-| `category`     | Optional category for grouping related tags
-| `slug`         | URL-friendly version of the tag name
-| `color`        | Optional color code for visual representation
-| `icon`         | Optional icon identifier for visual representation
-| `parentTag`    | Optional reference to parent tag for hierarchical tagging
-| `weight`       | Optional weight for controlling tag importance/ordering
-| `createdBy`    | User who created this tag
-| `isSystemTag`  | Whether this is a system-defined tag (vs. user-defined)
-| `usageCount`   | Number of entities using this tag
-|===
-
-===== `AccessControlEntry`
-Represents a permission assignment for an entity.
-
-[cols="1,3", options="header"]
-|===
-| Field           | Description
-| `entity`        | Entity this ACE applies to
-| `principal`     | User or group this entry applies to
-| `permission`    | Permission being granted
-| `grantedBy`     | User who granted this permission
-| `grantedAt`     | When this permission was granted
-| `expiresAt`     | When this permission expires (if temporary)
-| `conditions`    | Optional conditions for when permission applies
-|===
-
-===== `DataRetentionPolicy`
-Entity for managing data lifecycle according to regulations.
-
-[cols="1,3", options="header"]
-|===
-| Field                     | Description
-| `policyName`              | Name of the retention policy
-| `retentionPeriodDays`     | Number of days to retain data
-| `legalBasis`              | Legal basis for retention period
-| `dataCategories`          | Categories of data this policy applies to
-| `actionAfterRetention`    | Action to take after retention (DELETE, ANONYMIZE, ARCHIVE)
-| `notificationPeriodDays`  | Days before retention action to notify stakeholders
-| `exemptionCriteria`       | Criteria for exempting data from this policy
-| `lastReviewDate`          | When policy was last reviewed
-| `effectiveDate`           | When policy became effective
-| `policyOwner`             | Person/role responsible for this policy
-| `regulatoryReferences`    | References to regulations this policy satisfies
-| `isActive`                | Whether this policy is currently active
-|===
-
-===== `ValidationRule`
-Entity for defining and enforcing validation rules.
-
-[cols="1,3", options="header"]
-|===
-| Field                     | Description
-| `ruleId`                  | Unique identifier for the rule
-| `entityType`              | Type of entity this rule applies to
-| `ruleType`                | Type of rule (FIELD, CROSS_FIELD, ENTITY, RELATIONSHIP)
-| `fieldName`               | Name of field rule applies to (for field rules)
-| `ruleExpression`          | Expression or logic defining the rule
-| `errorMessage`            | User-friendly error message if validation fails
-| `severity`                | Severity of validation failure (ERROR, WARNING, INFO)
-| `enabled`                 | Whether this rule is currently enabled
-| `conditionExpression`     | Optional expression for when rule should be applied
-| `order`                   | Order for evaluating multiple rules
-| `createdBy`               | User who created this rule
-| `createdAt`               | When rule was created
-| `effectiveFrom`           | When rule becomes effective
-| `effectiveTo`             | When rule expires
-|===
-
-===== `BusinessProcessDefinition`
-Entity defining a business process workflow.
-
-[cols="1,3", options="header"]
-|===
-| Field                     | Description
-| `processId`               | Unique identifier for the process
-| `processName`             | Name of the business process
-| `description`             | Description of the process purpose
-| `entityTypes`             | Entity types this process applies to
-| `states`                  | Possible states in this process
-| `transitions`             | Valid transitions between states
-| `conditions`              | Conditions for transitions
-| `roles`                   | Roles involved in this process
-| `permissions`             | Permissions for each role at each state
-| `slas`                    | Service level agreements for states
-| `notifications`           | Notification points in the process
-| `formFields`              | Fields required in each state
-| `version`                 | Process definition version
-| `effectiveFrom`           | When process becomes effective
-| `effectiveTo`             | When process expires
-| `isDefault`               | Whether this is the default process for its entity types
-|===
-
-===== `SecurityContext`
-Entity for tracking security context for operations.
-
-[cols="1,3", options="header"]
-|===
-| Field                     | Description
-| `userId`                  | User performing the operation
-| `roles`                   | Roles the user has
-| `permissions`             | Effective permissions
-| `securityLevel`           | Security clearance level
-| `ipAddress`               | IP address of the request
-| `geoLocation`             | Geographic location
-| `deviceId`                | Device identifier
-| `authnMethod`             | Authentication method used
-| `sessionId`               | Session identifier
-| `impersonating`           | Whether user is impersonating another
-| `impersonatedUserId`      | ID of impersonated user if applicable
-| `scopeRestrictions`       | Any restrictions on scope
-| `expiresAt`               | When this context expires
-| `features`                | Enabled feature flags
-| `riskScore`               | Calculated risk score for this context
-| `tenantId`                | Tenant identifier for multi-tenant systems
-|===
-
-===== `SystemConfiguration`
-Entity for system configuration parameters.
-
-[cols="1,3", options="header"]
-|===
-| Field                     | Description
-| `configKey`               | Configuration key name
-| `configValue`             | Configuration value
-| `description`             | Description of the configuration
-| `category`                | Category this configuration belongs to
-| `dataType`                | Data type (STRING, NUMBER, BOOLEAN, JSON)
-| `validationRule`          | Rule for validating value
-| `defaultValue`            | Default value
-| `isEncrypted`             | Whether value is stored encrypted
-| `lastModifiedBy`          | User who last modified this config
-| `lastModifiedAt`          | When config was last modified
-| `isSystemManaged`         | Whether this is managed by the system
-| `requiresRestart`         | Whether changing requires system restart
-| `environmentOverridable`  | Whether can be overridden by environment
-| `visibleInUI`             | Whether visible in configuration UI
-| `scope`                   | Scope of config (GLOBAL, TENANT, USER)
-|===
-
-===== `DataPrivacyControl`
-Entity for managing privacy controls for data.
-
-[cols="1,3", options="header"]
-|===
-| Field                     | Description
-| `dataCategory`            | Category of data being controlled
-| `sensitivityLevel`        | Sensitivity level of the data
-| `legalBasis`              | Legal basis for processing
-| `purposeOfProcessing`     | Purpose for which data is processed
-| `retentionPeriod`         | How long data is retained
-| `accessControls`          | Who may access this data
-| `sharingRestrictions`     | Restrictions on data sharing
-| `subjectRights`           | Rights data subjects have
-| `consentRequirements`     | Consent requirements for processing
-| `breachImpactLevel`       | Impact level if data is breached
-| `encryptionRequired`      | Whether encryption is required
-| `anonymizationOptions`    | Options for anonymizing data
-| `dataLocality`            | Restrictions on geographic storage
-| `crossBorderTransfer`     | Rules for international transfers
-| `specialCategoryData`     | Whether this is special category data
-|===
+include::cross-cutting-concerns/validation.adoc[leveloffset=+1]
+include::cross-cutting-concerns/error-handling.adoc[leveloffset=+1]
+include::cross-cutting-concerns/auditing.adoc[leveloffset=+1]
+include::cross-cutting-concerns/security.adoc[leveloffset=+1]
+include::cross-cutting-concerns/pagination.adoc[leveloffset=+1]
+include::cross-cutting-concerns/transaction-management.adoc[leveloffset=+1]
+include::cross-cutting-concerns/caching.adoc[leveloffset=+1]
+include::cross-cutting-concerns/internationalization.adoc[leveloffset=+1]
+include::cross-cutting-concerns/performance-monitoring.adoc[leveloffset=+1]

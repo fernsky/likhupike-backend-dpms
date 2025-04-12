@@ -1,0 +1,1393 @@
+===== Error Handling
+
+Error handling is consistently applied throughout the Digital Profile system to provide resilience, meaningful feedback, and appropriate error responses in various scenarios.
+
+====== Error Handling Architecture
+
+[plantuml]
+----
+@startuml
+package "Error Handling Framework" {
+  class GlobalExceptionHandler {
+    +handleDomainException()
+    +handleValidationException()
+    +handleResourceNotFoundException()
+    +handleAuthorizationException()
+    +handleSystemException()
+    +handleUnexpectedException()
+  }
+  
+  class ErrorResponseFactory {
+    +createApiError()
+    +createValidationError()
+    +createAuthorizationError()
+    +createSystemError()
+  }
+  
+  interface ErrorTranslator {
+    +translate(exception: Exception): ErrorDetail
+  }
+  
+  class DomainErrorTranslator
+  class ValidationErrorTranslator
+  class SecurityErrorTranslator
+  class PersistenceErrorTranslator
+  
+  ErrorTranslator <|.. DomainErrorTranslator
+  ErrorTranslator <|.. ValidationErrorTranslator
+  ErrorTranslator <|.. SecurityErrorTranslator
+  ErrorTranslator <|.. PersistenceErrorTranslator
+  
+  GlobalExceptionHandler --> ErrorResponseFactory
+  ErrorResponseFactory --> ErrorTranslator
+}
+
+class ApiError {
+  +status: Int
+  +code: String
+  +message: String
+  +timestamp: LocalDateTime
+  +path: String
+  +details: List<ErrorDetail>
+  +traceId: String
+  +requestId: String
+}
+
+class ErrorDetail {
+  +code: String
+  +message: String
+  +field: String?
+  +rejectedValue: Any?
+  +severity: ErrorSeverity
+  +context: Map<String, Any?>
+}
+
+class UserErrorResponse {
+  +message: String
+  +instructions: String?
+  +fieldErrors: Map<String, String>
+  +retryable: Boolean
+  +referenceNumber: String
+}
+
+class LoggableError {
+  +exception: Exception
+  +sourceClass: String
+  +traceId: String
+  +metadata: Map<String, Any?>
+  +severity: LogLevel
+  +toLogEntry(): String
+}
+
+enum ErrorSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+GlobalExceptionHandler ..> ApiError
+ErrorResponseFactory ..> ErrorDetail
+ApiError *-- ErrorDetail
+ErrorDetail -- ErrorSeverity
+LoggableError -- LogLevel
+ApiError ..> UserErrorResponse : transforms to
+@enduml
+----
+
+====== Exception Hierarchy
+
+[plantuml]
+----
+@startuml
+abstract class DigitalProfileException {
+  +errorCode: String
+  +message: String
+  +severity: ErrorSeverity
+  +cause: Throwable?
+  +metadata: Map<String, Any?>
+}
+
+class DomainException
+class ResourceNotFoundException
+class AuthorizationException
+class ValidationException
+class SystemException
+class NetworkException
+class ConfigurationException
+class IntegrationException
+class ConcurrencyException
+
+DigitalProfileException <|-- DomainException
+DigitalProfileException <|-- ResourceNotFoundException
+DigitalProfileException <|-- AuthorizationException
+DigitalProfileException <|-- ValidationException
+DigitalProfileException <|-- SystemException
+SystemException <|-- NetworkException
+SystemException <|-- ConfigurationException
+SystemException <|-- IntegrationException
+SystemException <|-- ConcurrencyException
+
+class ServiceUnavailableException
+class DataCorruptionException
+class InvalidOperationException
+class BusinessRuleViolationException
+
+NetworkException <|-- ServiceUnavailableException
+SystemException <|-- DataCorruptionException
+DomainException <|-- InvalidOperationException
+DomainException <|-- BusinessRuleViolationException
+@enduml
+----
+
+====== Error Handling Process Flow
+
+[plantuml]
+----
+@startuml
+start
+:Request received;
+:Process request;
+
+if (Exception occurs?) then (yes)
+  :Capture exception;
+  
+  if (Known domain exception?) then (yes)
+    :Map to specific error;
+    :Include domain context;
+    :Set appropriate HTTP status;
+  else (no)
+    if (Validation exception?) then (yes)
+      :Extract field errors;
+      :Generate field-specific messages;
+      :Set 400 Bad Request status;
+    else (no)
+      if (Authentication/Authorization?) then (yes)
+        :Generate security error;
+        :Set 401/403 status;
+        :Audit security violation;
+      else (no)
+        if (Resource not found?) then (yes)
+          :Generate not found error;
+          :Set 404 status;
+        else (no)
+          :Log unexpected error;
+          :Generate generic error;
+          :Set 500 status;
+        endif
+      endif
+    endif
+  endif
+  
+  :Enrich with request context;
+  :Generate trace ID;
+  :Log error details;
+  
+  if (Production environment?) then (yes)
+    :Remove sensitive details;
+    :Generate user-friendly message;
+  else (no)
+    :Include debug information;
+    :Include stack trace;
+  endif
+  
+  :Return error response;
+else (no)
+  :Generate successful response;
+endif
+
+stop
+@enduml
+----
+
+====== Contextual Use Case for Error Handling
+
+*Real-World Scenario:* Land Registration Error Handling in Rural Nepal
+
+[plantuml]
+----
+@startuml
+actor "Land Registration Officer\n(Dilmaya Tamang)" as Officer
+actor "Landowner\n(Rajan Magar)" as Landowner
+participant "LandController" as Controller
+participant "LandService" as Service
+participant "GlobalExceptionHandler" as ExHandler
+participant "ErrorResponseFactory" as ErrorFactory
+participant "MessageSource" as Messages
+participant "ErrorLogger" as Logger
+
+Landowner -> Officer : Submit parcel registration
+Officer -> Controller : registerParcel(registrationForm)
+activate Controller
+
+Controller -> Service : registerParcel(parcelDTO)
+activate Service
+
+alt Database Connection Error
+  Service -> Service : validateParcel(parcelDTO)
+  Service -> Service : saveToDB()
+  Service -> Service : throw NetworkException("Database connection timeout")
+  Controller <-- Service : throw NetworkException
+  deactivate Service
+  
+  Controller -> ExHandler : handleNetworkException(exception)
+  activate ExHandler
+  
+  ExHandler -> ErrorFactory : createSystemError(exception)
+  activate ErrorFactory
+  ErrorFactory -> ErrorFactory : extractErrorCode("ERR_DB_CONN")
+  ErrorFactory -> Messages : getMessage("error.db.connection", locale)
+  activate Messages
+  ErrorFactory <-- Messages : "Database connection unavailable, please retry later"
+  deactivate Messages
+  ExHandler <-- ErrorFactory : apiError
+  deactivate ErrorFactory
+  
+  ExHandler -> Logger : logError(exception, traceId)
+  activate Logger
+  Logger -> Logger : logToFile()
+  Logger -> Logger : sendToMonitoring()
+  ExHandler <-- Logger
+  deactivate Logger
+  
+  Controller <-- ExHandler : errorResponse(503)
+  deactivate ExHandler
+  
+  Officer <-- Controller : "System temporarily unavailable, store form and retry (Error #NET-2023-07-15-1254)"
+  deactivate Controller
+  
+  Officer -> Officer : Store paper form for later processing
+  Officer -> Landowner : Provide receipt with error code
+  
+else Duplicate Parcel Number
+  Service -> Service : validateParcel(parcelDTO)
+  Service -> Service : checkForExistingParcel()
+  Service -> Service : throw DomainException("Duplicate parcel number")
+  Controller <-- Service : throw DomainException
+  deactivate Service
+  
+  Controller -> ExHandler : handleDomainException(exception)
+  activate ExHandler
+  
+  ExHandler -> ErrorFactory : createDomainError(exception)
+  activate ErrorFactory
+  ErrorFactory -> ErrorFactory : extractErrorCode("ERR_PARCEL_DUPLICATE")
+  ErrorFactory -> Messages : getMessage("error.parcel.duplicate", locale)
+  activate Messages
+  ErrorFactory <-- Messages : "Parcel number already exists, please verify the provided information"
+  deactivate Messages
+  ExHandler <-- ErrorFactory : apiError
+  deactivate ErrorFactory
+  
+  ExHandler -> Logger : logError(exception, traceId)
+  activate Logger
+  Logger -> Logger : logToFile()
+  ExHandler <-- Logger
+  deactivate Logger
+  
+  Controller <-- ExHandler : errorResponse(409)
+  deactivate ExHandler
+  
+  Officer <-- Controller : "Parcel number already exists, please verify survey documents"
+  deactivate Controller
+  
+  Officer -> Landowner : Request to verify survey documents
+  
+else Invalid Boundary Data
+  Service -> Service : validateParcel(parcelDTO)
+  Service -> Service : validateBoundary()
+  Service -> Service : throw ValidationException("Invalid boundary data")
+  Controller <-- Service : throw ValidationException
+  deactivate Service
+  
+  Controller -> ExHandler : handleValidationException(exception)
+  activate ExHandler
+  
+  ExHandler -> ErrorFactory : createValidationError(exception)
+  activate ErrorFactory
+  ErrorFactory -> ErrorFactory : extractErrorCode("ERR_BOUNDARY_INVALID")
+  ErrorFactory -> Messages : getMessage("error.boundary.invalid", locale)
+  activate Messages
+  ErrorFactory <-- Messages : "Parcel boundary has errors: self-intersection detected"
+  deactivate Messages
+  ExHandler <-- ErrorFactory : apiError
+  deactivate ErrorFactory
+  
+  ExHandler -> Logger : logError(exception, traceId)
+  activate Logger
+  Logger -> Logger : logToFile()
+  ExHandler <-- Logger
+  deactivate Logger
+  
+  Controller <-- ExHandler : errorResponse(400)
+  deactivate ExHandler
+  
+  Officer <-- Controller : "Boundary data has errors: self-intersection at coordinates 28.394, 84.124"
+  deactivate Controller
+  
+  Officer -> Landowner : Request corrected survey map
+end
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Digital Land Registration System implements a comprehensive error handling framework to address challenges specific to the country's context, such as intermittent connectivity, varying technical literacy levels among users, and the need to maintain data integrity in a system that bridges digital and paper processes.
+
+In the remote Gorkha district office, Land Registration Officer Dilmaya Tamang is processing a land parcel registration submitted by landowner Rajan Magar. The system employs centralized error handling through a GlobalExceptionHandler that intercepts exceptions and transforms them into appropriate responses based on their type and context.
+
+When a database connection timeout occurs (common during power fluctuations in rural offices), the system:
+1. Captures the NetworkException and generates a unique trace ID (NET-2023-07-15-1254)
+2. Creates a system error with code ERR_DB_CONN
+3. Translates the error into both Nepali and English using the MessageSource
+4. Logs comprehensive details including metadata for technical support
+5. Returns a user-friendly response with a 503 Service Unavailable status
+6. Provides Officer Dilmaya with clear instructions to store the paper form and retry later
+
+Because land registration is a critical government function that cannot be interrupted, the error handling ensures that a proper paper trail exists for later digital entry, with the error code linking physical and digital records. The system also triggers an SMS to the IT support team about the connectivity issue.
+
+When a duplicate parcel number is detected (which may indicate a potential fraud attempt or clerical error), the error handler:
+1. Identifies this as a DomainException with code ERR_PARCEL_DUPLICATE
+2. Logs the attempt with details of both the existing and attempted registrations
+3. Returns a 409 Conflict response with specific guidance for resolution
+4. Provides Officer Dilmaya with clear instructions to verify survey documents
+
+For validation errors like an invalid boundary with self-intersection, the error handling:
+1. Captures the ValidationException with code ERR_BOUNDARY_INVALID
+2. Extracts specific coordinates where the error occurs (28.394, 84.124)
+3. Generates a 400 Bad Request response with field-specific error details
+4. Translates the error into non-technical language appropriate for both the officer and landowner
+5. Logs the issue for analytics to improve the digital survey tools
+
+The error handling framework also takes into account the multi-language requirements of Nepal, automatically selecting English or Nepali error messages based on the user's preference. For officers in training, the system can optionally include more detailed guidance in error messages.
+
+This comprehensive approach ensures that errors are handled gracefully, transparent to users, traceable for support, and accommodating of Nepal's unique challenges in digital transformation of land records.
+
+====== Technical Implementation
+
+```kotlin
+@ControllerAdvice
+class GlobalExceptionHandler(
+    private val errorResponseFactory: ErrorResponseFactory,
+    private val messageSource: MessageSource,
+    private val errorLogger: ErrorLogger,
+    private val environment: Environment
+) {
+    
+    @ExceptionHandler(DomainException::class)
+    fun handleDomainException(
+        ex: DomainException,
+        request: HttpServletRequest,
+        locale: Locale
+    ): ResponseEntity<ApiError> {
+        val traceId = generateTraceId()
+        
+        // Log the exception with context
+        errorLogger.logError(
+            exception = ex,
+            traceId = traceId,
+            requestPath = request.requestURI,
+            metadata = ex.metadata
+        )
+        
+        // Create appropriate error response
+        val apiError = errorResponseFactory.createDomainError(
+            exception = ex,
+            locale = locale,
+            path = request.requestURI,
+            traceId = traceId
+        )
+        
+        // Determine HTTP status based on exception type
+        val httpStatus = determineHttpStatus(ex)
+        
+        return ResponseEntity(apiError, httpStatus)
+    }
+    
+    @ExceptionHandler(ValidationException::class)
+    fun handleValidationException(
+        ex: ValidationException,
+        request: HttpServletRequest,
+        locale: Locale
+    ): ResponseEntity<ApiError> {
+        val traceId = generateTraceId()
+        
+        // Log validation errors
+        errorLogger.logValidationError(
+            exception = ex,
+            traceId = traceId,
+            requestPath = request.requestURI
+        )
+        
+        // Create field-specific error responses
+        val apiError = errorResponseFactory.createValidationError(
+            exception = ex,
+            locale = locale,
+            path = request.requestURI,
+            traceId = traceId
+        )
+        
+        return ResponseEntity(apiError, HttpStatus.BAD_REQUEST)
+    }
+    
+    @ExceptionHandler(ResourceNotFoundException::class)
+    fun handleResourceNotFoundException(
+        ex: ResourceNotFoundException,
+        request: HttpServletRequest,
+        locale: Locale
+    ): ResponseEntity<ApiError> {
+        val traceId = generateTraceId()
+        
+        // Log not found error
+        errorLogger.logWarning(
+            exception = ex,
+            traceId = traceId,
+            requestPath = request.requestURI
+        )
+        
+        // Create not found error response
+        val apiError = errorResponseFactory.createResourceNotFoundError(
+            exception = ex,
+            locale = locale,
+            path = request.requestURI,
+            traceId = traceId
+        )
+        
+        return ResponseEntity(apiError, HttpStatus.NOT_FOUND)
+    }
+    
+    @ExceptionHandler(AuthorizationException::class)
+    fun handleAuthorizationException(
+        ex: AuthorizationException,
+        request: HttpServletRequest,
+        locale: Locale
+    ): ResponseEntity<ApiError> {
+        val traceId = generateTraceId()
+        
+        // Log security violation with higher severity
+        errorLogger.logSecurityViolation(
+            exception = ex,
+            traceId = traceId,
+            requestPath = request.requestURI,
+            username = SecurityContextHolder.getContext().authentication?.name,
+            ipAddress = request.remoteAddr
+        )
+        
+        // Create security error response
+        val apiError = errorResponseFactory.createSecurityError(
+            exception = ex,
+            locale = locale,
+            path = request.requestURI,
+            traceId = traceId
+        )
+        
+        val status = if (ex is AuthenticationException) HttpStatus.UNAUTHORIZED else HttpStatus.FORBIDDEN
+        return ResponseEntity(apiError, status)
+    }
+    
+    @ExceptionHandler(NetworkException::class)
+    fun handleNetworkException(
+        ex: NetworkException,
+        request: HttpServletRequest,
+        locale: Locale
+    ): ResponseEntity<ApiError> {
+        val traceId = generateTraceId()
+        
+        // Log network error
+        errorLogger.logError(
+            exception = ex,
+            traceId = traceId,
+            requestPath = request.requestURI,
+            metadata = mapOf(
+                "serviceEndpoint" to ex.metadata["endpoint"].toString(),
+                "attempt" to ex.metadata["attempt"].toString()
+            )
+        )
+        
+        // Send alert to IT support for immediate attention
+        if (ex.severity == ErrorSeverity.CRITICAL) {
+            alertService.sendNetworkAlert(
+                service = ex.metadata["service"].toString(),
+                error = ex.message,
+                traceId = traceId
+            )
+        }
+        
+        // Create system error response with retry information
+        val apiError = errorResponseFactory.createSystemError(
+            exception = ex,
+            locale = locale,
+            path = request.requestURI,
+            traceId = traceId,
+            retryable = ex.isRetryable()
+        )
+        
+        return ResponseEntity(apiError, HttpStatus.SERVICE_UNAVAILABLE)
+    }
+    
+    @ExceptionHandler(Exception::class)
+    fun handleUnexpectedException(
+        ex: Exception,
+        request: HttpServletRequest,
+        locale: Locale
+    ): ResponseEntity<ApiError> {
+        val traceId = generateTraceId()
+        
+        // Log unexpected error with high severity
+        errorLogger.logCritical(
+            exception = ex,
+            traceId = traceId,
+            requestPath = request.requestURI,
+            stackTrace = ex.stackTraceToString()
+        )
+        
+        // Alert system administrators
+        alertService.sendCriticalErrorAlert(
+            error = ex.message ?: "Unknown error",
+            traceId = traceId,
+            endpoint = request.requestURI
+        )
+        
+        // Create generic error response (with or without details based on environment)
+        val includeDetails = environment.activeProfiles.contains("development")
+        val apiError = errorResponseFactory.createUnexpectedError(
+            exception = ex,
+            locale = locale,
+            path = request.requestURI,
+            traceId = traceId,
+            includeDetails = includeDetails
+        )
+        
+        return ResponseEntity(apiError, HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+    
+    private fun generateTraceId(): String {
+        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+        val random = SecureRandom().nextInt(1000).toString().padStart(3, '0')
+        return "$timestamp-$random"
+    }
+    
+    private fun determineHttpStatus(ex: DomainException): HttpStatus {
+        return when (ex) {
+            is BusinessRuleViolationException -> HttpStatus.UNPROCESSABLE_ENTITY
+            is InvalidOperationException -> HttpStatus.BAD_REQUEST
+            is ConcurrencyException -> HttpStatus.CONFLICT
+            else -> HttpStatus.BAD_REQUEST
+        }
+    }
+}
+
+class ErrorResponseFactory(
+    private val messageSource: MessageSource,
+    private val errorTranslatorFactory: ErrorTranslatorFactory
+) {
+    
+    fun createDomainError(
+        exception: DomainException,
+        locale: Locale,
+        path: String,
+        traceId: String
+    ): ApiError {
+        val translator = errorTranslatorFactory.getTranslator(exception)
+        val errorDetail = translator.translate(exception)
+        
+        // Translate error message
+        val localizedMessage = messageSource.getMessage(
+            "error.${exception.errorCode}",
+            exception.messageArgs.toTypedArray(),
+            exception.message,
+            locale
+        )
+        
+        return ApiError(
+            status = determineHttpStatus(exception).value(),
+            code = exception.errorCode,
+            message = localizedMessage,
+            timestamp = LocalDateTime.now(),
+            path = path,
+            details = listOf(errorDetail.copy(message = localizedMessage)),
+            traceId = traceId,
+            requestId = MDC.get("requestId") ?: ""
+        )
+    }
+    
+    fun createValidationError(
+        exception: ValidationException,
+        locale: Locale,
+        path: String,
+        traceId: String
+    ): ApiError {
+        val details = exception.validationErrors.map { error ->
+            // Translate each field error message
+            val localizedMessage = messageSource.getMessage(
+                "validation.${error.code}",
+                error.messageArgs.toTypedArray(),
+                error.message,
+                locale
+            )
+            
+            ErrorDetail(
+                code = error.code,
+                message = localizedMessage,
+                field = error.field,
+                rejectedValue = error.rejectedValue,
+                severity = error.severity,
+                context = error.context
+            )
+        }
+        
+        // Create summary message
+        val summaryMessage = if (details.size == 1) {
+            details.first().message
+        } else {
+            messageSource.getMessage(
+                "validation.multiple.errors",
+                arrayOf(details.size),
+                "${details.size} validation errors occurred",
+                locale
+            )
+        }
+        
+        return ApiError(
+            status = HttpStatus.BAD_REQUEST.value(),
+            code = "VALIDATION_ERROR",
+            message = summaryMessage,
+            timestamp = LocalDateTime.now(),
+            path = path,
+            details = details,
+            traceId = traceId,
+            requestId = MDC.get("requestId") ?: ""
+        )
+    }
+    
+    fun createResourceNotFoundError(
+        exception: ResourceNotFoundException,
+        locale: Locale,
+        path: String,
+        traceId: String
+    ): ApiError {
+        val translator = errorTranslatorFactory.getTranslator(exception)
+        val errorDetail = translator.translate(exception)
+        
+        // Translate error message
+        val localizedMessage = messageSource.getMessage(
+            "error.resource.notfound.${exception.resourceType}",
+            arrayOf(exception.resourceId),
+            exception.message,
+            locale
+        )
+        
+        return ApiError(
+            status = HttpStatus.NOT_FOUND.value(),
+            code = exception.errorCode,
+            message = localizedMessage,
+            timestamp = LocalDateTime.now(),
+            path = path,
+            details = listOf(errorDetail.copy(message = localizedMessage)),
+            traceId = traceId,
+            requestId = MDC.get("requestId") ?: ""
+        )
+    }
+    
+    fun createSystemError(
+        exception: SystemException,
+        locale: Locale,
+        path: String,
+        traceId: String,
+        retryable: Boolean = false
+    ): ApiError {
+        val translator = errorTranslatorFactory.getTranslator(exception)
+        val errorDetail = translator.translate(exception)
+        
+        // Translate error message, potentially adding retry instructions
+        val messageKey = if (retryable) {
+            "error.system.${exception.errorCode}.retryable"
+        } else {
+            "error.system.${exception.errorCode}"
+        }
+        
+        val localizedMessage = messageSource.getMessage(
+            messageKey,
+            exception.messageArgs.toTypedArray(),
+            exception.message,
+            locale
+        )
+        
+        // Always include trace ID in system errors for IT support reference
+        val messageWithTraceId = "$localizedMessage (Error #$traceId)"
+        
+        return ApiError(
+            status = determineSystemHttpStatus(exception).value(),
+            code = exception.errorCode,
+            message = messageWithTraceId,
+            timestamp = LocalDateTime.now(),
+            path = path,
+            details = listOf(errorDetail.copy(message = localizedMessage)),
+            traceId = traceId,
+            requestId = MDC.get("requestId") ?: "",
+            retryable = retryable
+        )
+    }
+    
+    fun createUnexpectedError(
+        exception: Exception,
+        locale: Locale,
+        path: String,
+        traceId: String,
+        includeDetails: Boolean
+    ): ApiError {
+        // For unexpected errors, use a generic message
+        val localizedMessage = messageSource.getMessage(
+            "error.unexpected",
+            arrayOf(traceId),
+            "An unexpected error occurred. Reference: $traceId",
+            locale
+        )
+        
+        val errorDetail = if (includeDetails) {
+            ErrorDetail(
+                code = "UNEXPECTED_ERROR",
+                message = exception.message ?: "Unknown error",
+                severity = ErrorSeverity.CRITICAL,
+                context = mapOf(
+                    "exception" to exception.javaClass.name,
+                    "stackTrace" to exception.stackTraceToString()
+                )
+            )
+        } else {
+            ErrorDetail(
+                code = "UNEXPECTED_ERROR",
+                message = "System error occurred",
+                severity = ErrorSeverity.CRITICAL
+            )
+        }
+        
+        return ApiError(
+            status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            code = "SYSTEM_ERROR",
+            message = localizedMessage,
+            timestamp = LocalDateTime.now(),
+            path = path,
+            details = listOf(errorDetail),
+            traceId = traceId,
+            requestId = MDC.get("requestId") ?: ""
+        )
+    }
+    
+    private fun determineSystemHttpStatus(ex: SystemException): HttpStatus {
+        return when (ex) {
+            is ServiceUnavailableException -> HttpStatus.SERVICE_UNAVAILABLE
+            is ConfigurationException -> HttpStatus.INTERNAL_SERVER_ERROR
+            is DataCorruptionException -> HttpStatus.INTERNAL_SERVER_ERROR
+            is IntegrationException -> HttpStatus.BAD_GATEWAY
+            else -> HttpStatus.INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
+@Service
+class ErrorLogger(
+    private val loggerFactory: LoggerFactory,
+    private val objectMapper: ObjectMapper,
+    private val monitoringService: MonitoringService
+) {
+    private val applicationLogger = loggerFactory.getLogger("application.error")
+    private val securityLogger = loggerFactory.getLogger("security.error")
+    private val integrationLogger = loggerFactory.getLogger("integration.error")
+    
+    fun logError(
+        exception: Exception,
+        traceId: String,
+        requestPath: String,
+        metadata: Map<String, Any?> = emptyMap()
+    ) {
+        val errorLog = LoggableError(
+            exception = exception,
+            sourceClass = exception.stackTrace.firstOrNull()?.className ?: "unknown",
+            traceId = traceId,
+            metadata = metadata + mapOf(
+                "path" to requestPath,
+                "timestamp" to LocalDateTime.now().toString()
+            ),
+            severity = LogLevel.ERROR
+        )
+        
+        applicationLogger.error(errorLog.toLogEntry())
+        
+        // Send to monitoring system for alerts and dashboards
+        monitoringService.trackError(errorLog)
+    }
+    
+    fun logValidationError(
+        exception: ValidationException,
+        traceId: String,
+        requestPath: String
+    ) {
+        val validationDetails = exception.validationErrors.map { error ->
+            mapOf(
+                "field" to error.field,
+                "code" to error.code,
+                "rejectedValue" to error.rejectedValue.toString()
+            )
+        }
+        
+        val errorLog = LoggableError(
+            exception = exception,
+            sourceClass = exception.stackTrace.firstOrNull()?.className ?: "unknown",
+            traceId = traceId,
+            metadata = mapOf(
+                "path" to requestPath,
+                "timestamp" to LocalDateTime.now().toString(),
+                "validationErrors" to validationDetails
+            ),
+            severity = LogLevel.WARN
+        )
+        
+        applicationLogger.warn(errorLog.toLogEntry())
+        
+        // Validation errors are tracked for usability improvements
+        monitoringService.trackValidationError(errorLog)
+    }
+    
+    fun logSecurityViolation(
+        exception: AuthorizationException,
+        traceId: String,
+        requestPath: String,
+        username: String?,
+        ipAddress: String?
+    ) {
+        val errorLog = LoggableError(
+            exception = exception,
+            sourceClass = exception.stackTrace.firstOrNull()?.className ?: "unknown",
+            traceId = traceId,
+            metadata = mapOf(
+                "path" to requestPath,
+                "timestamp" to LocalDateTime.now().toString(),
+                "username" to (username ?: "anonymous"),
+                "ipAddress" to (ipAddress ?: "unknown"),
+                "resourceType" to (exception.metadata["resourceType"] ?: "unknown"),
+                "resourceId" to (exception.metadata["resourceId"] ?: "unknown"),
+                "requiredPermission" to (exception.metadata["requiredPermission"] ?: "unknown")
+            ),
+            severity = LogLevel.ERROR
+        )
+        
+        securityLogger.error(errorLog.toLogEntry())
+        
+        // Security violations trigger immediate security monitoring
+        monitoringService.trackSecurityViolation(errorLog)
+    }
+    
+    fun logCritical(
+        exception: Exception,
+        traceId: String,
+        requestPath: String,
+        stackTrace: String
+    ) {
+        val errorLog = LoggableError(
+            exception = exception,
+            sourceClass = exception.stackTrace.firstOrNull()?.className ?: "unknown",
+            traceId = traceId,
+            metadata = mapOf(
+                "path" to requestPath,
+                "timestamp" to LocalDateTime.now().toString(),
+                "stackTrace" to stackTrace
+            ),
+            severity = LogLevel.FATAL
+        )
+        
+        applicationLogger.error(errorLog.toLogEntry())
+        
+        // Critical errors trigger alerts
+        monitoringService.trackCriticalError(errorLog)
+    }
+    
+    fun logIntegrationError(
+        exception: IntegrationException,
+        traceId: String,
+        endpoint: String,
+        requestData: String?,
+        responseData: String?
+    ) {
+        val errorLog = LoggableError(
+            exception = exception,
+            sourceClass = exception.stackTrace.firstOrNull()?.className ?: "unknown",
+            traceId = traceId,
+            metadata = mapOf(
+                "endpoint" to endpoint,
+                "timestamp" to LocalDateTime.now().toString(),
+                "requestData" to requestData,
+                "responseData" to responseData,
+                "system" to exception.metadata["system"]
+            ),
+            severity = LogLevel.ERROR
+        )
+        
+        integrationLogger.error(errorLog.toLogEntry())
+        
+        // Integration errors affect system connectivity dashboards
+        monitoringService.trackIntegrationError(errorLog)
+    }
+    
+    fun logWarning(
+        exception: Exception,
+        traceId: String,
+        requestPath: String
+    ) {
+        val errorLog = LoggableError(
+            exception = exception,
+            sourceClass = exception.stackTrace.firstOrNull()?.className ?: "unknown",
+            traceId = traceId,
+            metadata = mapOf(
+                "path" to requestPath,
+                "timestamp" to LocalDateTime.now().toString()
+            ),
+            severity = LogLevel.WARN
+        )
+        
+        applicationLogger.warn(errorLog.toLogEntry())
+    }
+}
+
+// Domain Exceptions
+abstract class DigitalProfileException(
+    val errorCode: String,
+    override val message: String,
+    val severity: ErrorSeverity = ErrorSeverity.ERROR,
+    override val cause: Throwable? = null,
+    val metadata: Map<String, Any?> = emptyMap(),
+    val messageArgs: List<Any> = emptyList()
+) : RuntimeException(message, cause)
+
+class DomainException(
+    errorCode: String,
+    message: String,
+    severity: ErrorSeverity = ErrorSeverity.ERROR,
+    cause: Throwable? = null,
+    metadata: Map<String, Any?> = emptyMap(),
+    messageArgs: List<Any> = emptyList()
+) : DigitalProfileException(errorCode, message, severity, cause, metadata, messageArgs)
+
+class ResourceNotFoundException(
+    val resourceType: String,
+    val resourceId: String,
+    errorCode: String = "RESOURCE_NOT_FOUND",
+    message: String = "Resource $resourceType with ID $resourceId not found",
+    metadata: Map<String, Any?> = emptyMap()
+) : DigitalProfileException(
+    errorCode = errorCode,
+    message = message,
+    severity = ErrorSeverity.WARNING,
+    metadata = metadata + mapOf(
+        "resourceType" to resourceType,
+        "resourceId" to resourceId
+    ),
+    messageArgs = listOf(resourceType, resourceId)
+)
+
+class ValidationException(
+    val validationErrors: List<ValidationError>,
+    message: String = "${validationErrors.size} validation errors occurred",
+    metadata: Map<String, Any?> = emptyMap()
+) : DigitalProfileException(
+    errorCode = "VALIDATION_ERROR",
+    message = message,
+    severity = ErrorSeverity.WARNING,
+    metadata = metadata
+)
+
+class AuthorizationException(
+    errorCode: String,
+    message: String,
+    metadata: Map<String, Any?> = emptyMap(),
+    messageArgs: List<Any> = emptyList()
+) : DigitalProfileException(
+    errorCode = errorCode,
+    message = message,
+    severity = ErrorSeverity.ERROR,
+    metadata = metadata,
+    messageArgs = messageArgs
+)
+
+abstract class SystemException(
+    errorCode: String,
+    message: String,
+    severity: ErrorSeverity = ErrorSeverity.ERROR,
+    cause: Throwable? = null,
+    metadata: Map<String, Any?> = emptyMap(),
+    messageArgs: List<Any> = emptyList()
+) : DigitalProfileException(
+    errorCode = errorCode,
+    message = message,
+    severity = severity,
+    cause = cause,
+    metadata = metadata,
+    messageArgs = messageArgs
+) {
+    open fun isRetryable(): Boolean = false
+}
+
+class NetworkException(
+    errorCode: String = "NETWORK_ERROR",
+    message: String,
+    severity: ErrorSeverity = ErrorSeverity.ERROR,
+    cause: Throwable? = null,
+    metadata: Map<String, Any?> = emptyMap(),
+    val retryable: Boolean = true
+) : SystemException(
+    errorCode = errorCode,
+    message = message,
+    severity = severity,
+    cause = cause,
+    metadata = metadata
+) {
+    override fun isRetryable(): Boolean = retryable
+}
+
+class BusinessRuleViolationException(
+    val rule: String,
+    message: String,
+    metadata: Map<String, Any?> = emptyMap()
+) : DomainException(
+    errorCode = "BUSINESS_RULE_VIOLATION",
+    message = message,
+    severity = ErrorSeverity.ERROR,
+    metadata = metadata + mapOf("rule" to rule),
+    messageArgs = listOf(rule)
+)
+
+// Response Models
+data class ApiError(
+    val status: Int,
+    val code: String,
+    val message: String,
+    val timestamp: LocalDateTime,
+    val path: String,
+    val details: List<ErrorDetail>,
+    val traceId: String,
+    val requestId: String,
+    val retryable: Boolean = false
+)
+
+data class ErrorDetail(
+    val code: String,
+    val message: String,
+    val field: String? = null,
+    val rejectedValue: Any? = null,
+    val severity: ErrorSeverity = ErrorSeverity.ERROR,
+    val context: Map<String, Any?> = emptyMap()
+)
+
+data class ValidationError(
+    val field: String?,
+    val code: String,
+    val message: String,
+    val rejectedValue: Any?,
+    val severity: ErrorSeverity = ErrorSeverity.WARNING,
+    val context: Map<String, Any?> = emptyMap(),
+    val messageArgs: List<Any> = emptyList()
+)
+
+data class LoggableError(
+    val exception: Exception,
+    val sourceClass: String,
+    val traceId: String,
+    val metadata: Map<String, Any?>,
+    val severity: LogLevel
+) {
+    fun toLogEntry(): String {
+        val metadataJson = try {
+            objectMapper.writeValueAsString(metadata)
+        } catch (e: Exception) {
+            "{\"error\":\"Failed to serialize metadata\"}"
+        }
+        
+        return "[${severity.name}] [$traceId] [${exception.javaClass.simpleName}] ${exception.message} - $metadataJson"
+    }
+}
+
+enum class ErrorSeverity {
+    INFO,       // Informational only, no action needed
+    WARNING,    // Minor issue, may proceed with caution
+    ERROR,      // Serious issue, operation should not proceed
+    CRITICAL    // System integrity or security issue, immediate attention required
+}
+
+enum class LogLevel {
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    FATAL
+}
+```
+
+====== Multi-language Error Messages for Nepal
+
+The system includes Nepali translations for common errors to ensure accessibility:
+
+*error_ne.properties:*
+```properties
+# System errors
+error.unexpected=प्रणालीमा एक अप्रत्याशित त्रुटि देखा पर्‍यो। सन्दर्भ कोड: {0}
+error.system.ERR_DB_CONN=डाटाबेस कनेक्सन अनुपलब्ध छ, कृपया केहि बेरपछि प्रयास गर्नुहोस्
+error.system.ERR_DB_CONN.retryable=डाटाबेस कनेक्सन अस्थायी रूपमा अनुपलब्ध छ, कृपया केहि बेरपछि प्रयास गर्नुहोस्
+error.system.SERVICE_UNAVAILABLE=यो सेवा हाल अनुपलब्ध छ, कृपया केहि बेरपछि प्रयास गर्नुहोस्
+
+# Domain errors
+error.ERR_PARCEL_DUPLICATE=दिइएको किता नम्बर पहिल्यै मौजुद छ, कृपया प्रदान गरिएको जानकारी जाँच गर्नुहोस्
+error.BUSINESS_RULE_VIOLATION=व्यावसायिक नियम उल्लंघन: {0}
+error.ERR_BOUNDARY_INVALID=भूमिको सिमाना मान्य छैन: स्वयं-प्रतिच्छेदन {0}, {1} मा पत्ता लागेको छ
+
+# Resource errors
+error.resource.notfound.land={0} आईडी भएको जग्गा फेला परेन
+error.resource.notfound.citizen={0} आईडी भएको नागरिक फेला परेन
+error.resource.notfound.document={0} आईडी भएको कागजात फेला परेन
+
+# Validation errors
+validation.multiple.errors={0} मान्यकरण त्रुटिहरू भेटिए
+validation.required=यो क्षेत्र आवश्यक छ
+validation.min.size=यो क्षेत्र कम्तिमा {0} अक्षर हुनुपर्छ
+validation.max.size=यो क्षेत्र बढीमा {0} अक्षर हुनुपर्छ
+validation.pattern=यो क्षेत्र आवश्यक ढाँचासँग मेल खाँदैन
+validation.numeric=यस क्षेत्रमा केवल संख्याहरू हुनुपर्छ
+```
+
+*error_en.properties:*
+```properties
+# System errors
+error.unexpected=An unexpected system error occurred. Reference code: {0}
+error.system.ERR_DB_CONN=Database connection unavailable, please try again later
+error.system.ERR_DB_CONN.retryable=Database connection temporarily unavailable, please try again later
+error.system.SERVICE_UNAVAILABLE=This service is currently unavailable, please try again later
+
+# Domain errors
+error.ERR_PARCEL_DUPLICATE=Parcel number already exists, please verify the provided information
+error.BUSINESS_RULE_VIOLATION=Business rule violation: {0}
+error.ERR_BOUNDARY_INVALID=Parcel boundary is invalid: self-intersection detected at {0}, {1}
+
+# Resource errors
+error.resource.notfound.land=Land parcel with ID {0} not found
+error.resource.notfound.citizen=Citizen with ID {0} not found
+error.resource.notfound.document=Document with ID {0} not found
+
+# Validation errors
+validation.multiple.errors={0} validation errors occurred
+validation.required=This field is required
+validation.min.size=This field must be at least {0} characters
+validation.max.size=This field must be at most {0} characters
+validation.pattern=This field does not match the required pattern
+validation.numeric=This field must contain only numbers
+```
+
+====== Error Handling Configuration
+
+```kotlin
+@Configuration
+class ErrorHandlingConfiguration {
+    
+    @Bean
+    fun errorResponseFactory(
+        messageSource: MessageSource,
+        errorTranslatorFactory: ErrorTranslatorFactory
+    ): ErrorResponseFactory {
+        return ErrorResponseFactory(messageSource, errorTranslatorFactory)
+    }
+    
+    @Bean
+    fun errorTranslatorFactory(): ErrorTranslatorFactory {
+        return ErrorTranslatorFactory()
+    }
+    
+    @Bean
+    fun errorLogger(
+        objectMapper: ObjectMapper,
+        monitoringService: MonitoringService
+    ): ErrorLogger {
+        return ErrorLogger(
+            loggerFactory = LoggerFactory.getLogger("ErrorLogger"),
+            objectMapper = objectMapper,
+            monitoringService = monitoringService
+        )
+    }
+    
+    @Bean
+    fun loggerFactory(): LoggerFactory {
+        return LoggerFactory()
+    }
+    
+    @Bean
+    fun webMvcConfigurer(): WebMvcConfigurer {
+        return object : WebMvcConfigurer {
+            override fun addInterceptors(registry: InterceptorRegistry) {
+                // Add request ID generation interceptor
+                registry.addInterceptor(RequestIdInterceptor())
+            }
+        }
+    }
+}
+
+class RequestIdInterceptor : HandlerInterceptor {
+    override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
+        // Generate and store request ID in MDC for logging
+        val requestId = UUID.randomUUID().toString()
+        MDC.put("requestId", requestId)
+        response.addHeader("X-Request-ID", requestId)
+        return true
+    }
+    
+    override fun afterCompletion(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        handler: Any,
+        ex: Exception?
+    ) {
+        // Clear MDC
+        MDC.remove("requestId")
+    }
+}
+```
+
+====== Fault Resolution Process
+
+The error handling system automatically triggers Nepal-specific resolution workflows:
+
+[plantuml]
+----
+@startuml
+start
+:Error detected;
+
+if (Internet connectivity issue?) then (yes)
+  :Log with localized metadata;
+  :Check local offline mode availability;
+  if (Offline mode available?) then (yes)
+    :Switch to offline mode;
+    :Store transaction for later sync;
+    :Provide offline receipt with trace ID;
+  else (no)
+    :Provide paper form alternative;
+    :Generate manual process reference;
+  endif
+else (no)
+  :Process error normally;
+endif
+
+if (Critical system error?) then (yes)
+  :Escalate to IT support;
+  :Send SMS alert to local support team;
+  :Log with geolocation metadata;
+else (no)
+  :Handle within standard flow;
+endif
+
+if (User-correctable error?) then (yes)
+  :Provide guidance in Nepali and English;
+  :Highlight specific fields needing correction;
+  :Retain user-entered data;
+else (no)
+  :Provide alternative process path;
+endif
+
+:Return appropriate response;
+
+stop
+@enduml
+----
+
+====== Integration with Monitoring Services
+
+The error handling framework provides metrics for system health monitoring:
+
+```kotlin
+@Service
+class MonitoringService(
+    private val meterRegistry: MeterRegistry,
+    private val alertingService: AlertingService
+) {
+    
+    fun trackError(error: LoggableError) {
+        // Increment error counter with tags
+        meterRegistry.counter(
+            "application.errors",
+            Tags.of(
+                Tag.of("error_type", error.exception.javaClass.simpleName),
+                Tag.of("severity", error.severity.name),
+                Tag.of("source_class", error.sourceClass.substringAfterLast('.'))
+            )
+        ).increment()
+        
+        // Track error details for analysis
+        meterRegistry.gauge(
+            "error.details",
+            Tags.of(
+                Tag.of("trace_id", error.traceId),
+                Tag.of("error_code", (error.exception as? DigitalProfileException)?.errorCode ?: "UNKNOWN")
+            ),
+            error,
+            { 1.0 }
+        )
+        
+        // For critical errors, trigger alerts
+        if (error.severity == LogLevel.FATAL || error.severity == LogLevel.ERROR) {
+            alertingService.sendErrorAlert(error)
+        }
+    }
+    
+    // Additional tracking methods...
+}
+```
+
+====== Error Dashboard for Rural Service Centers
+
+The error handling framework provides specialized dashboards for rural Nepal service centers:
+
+[plantuml]
+----
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Error Dashboard for Rukum Service Center" as Dashboard {
+  + Daily Error Summary
+  + Network Status Indicator
+  + Critical Issues
+  + Most Common User Errors
+}
+
+note right of Dashboard::DailyErrorSummary
+  - 12 Validation Errors
+  - 3 Connectivity Issues (2 Resolved)
+  - 0 Critical Errors
+  - 5 Resource Not Found
+end note
+
+note right of Dashboard::NetworkStatusIndicator
+  - Internet: Intermittent (67% uptime)
+  - Last outage: 2 hours ago
+  - Offline mode: Active
+end note
+
+note right of Dashboard::CriticalIssues
+  No active critical issues!
+end note
+
+note right of Dashboard::MostCommonUserErrors
+  1. Missing citizenship number (5)
+  2. Invalid parcel boundary (3)
+  3. Duplicate registration attempts (2) 
+end note
+@enduml
+----
+
+The dashboard provides:
+1. Real-time view of internet connectivity status (crucial in mountainous regions)
+2. Tracking of error patterns to identify user training needs
+3. Alerts for critical issues requiring immediate attention
+4. Information about offline transaction queues to be processed when connectivity returns
