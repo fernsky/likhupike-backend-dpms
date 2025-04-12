@@ -1,0 +1,1289 @@
+==== Demographic Summary
+
+Demographic Summary represents comprehensive demographic statistics for an administrative area, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class SpatialEntity
+interface HistoryViewable
+interface AccessControlled
+interface DataAggregatable
+interface FullTextSearchable
+interface Taggable
+
+' DemographicSummary implementation
+class DemographicSummary {
+  ' From SpatialEntity
+  +Geometry geometry
+  +Point centroid
+  +Double area
+  +Double perimeter
+  +SpatialDataType spatialDataType
+  +Integer spatialAccuracy
+  +SpatialReferenceSystem srs
+  +Set<SpatialRelationship> spatialRelationships
+  
+  ' Administrative context
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  +UUID parentAdminAreaId
+  
+  ' Core demographic data
+  +Integer totalPopulation
+  +Integer populationMale
+  +Integer populationFemale
+  +Integer populationOther
+  +Integer populationAbsenteeTotal
+  +Integer populationMaleAbsentee
+  +Integer populationFemaleAbsentee
+  +Integer populationOtherAbsentee
+  +Double sexRatio
+  +Integer totalHouseholds
+  +Double averageHouseholdSize
+  +Double populationDensity
+  
+  ' Age distribution
+  +Integer population0To14
+  +Integer population15To59
+  +Integer population60AndAbove
+  
+  ' Growth and literacy
+  +Double growthRate
+  +Double literacyRateAbove15
+  +Double literacyRate15To24
+  
+  ' Metadata
+  +String dataSource
+  +Integer dataYear
+  +SummaryStatus status
+  +LocalDate lastUpdated
+  +UUID lastUpdatedBy
+  +String notes
+  +Integer confidenceLevel
+  +UUID currentVersionId
+  +Set<UUID> previousVersionIds
+}
+
+' Supporting classes
+class PopulationStatistics {
+  +UUID id
+  +UUID demographicSummaryId
+  +Integer totalPopulation
+  +Integer populationMale
+  +Integer populationFemale
+  +Integer populationOther
+  +Double sexRatio
+  +Double growthRate
+}
+
+class HouseholdStatistics {
+  +UUID id
+  +UUID demographicSummaryId
+  +Integer totalHouseholds
+  +Double averageHouseholdSize
+  +Integer singlePersonHouseholds
+  +Integer multiGenerationalHouseholds
+  +Map<HouseholdType, Integer> householdsByType
+}
+
+' Enumerations
+enum AdminAreaType {
+  PROVINCE
+  DISTRICT
+  MUNICIPALITY
+  WARD
+  SETTLEMENT
+  VDC
+  CUSTOM_AREA
+}
+
+enum SummaryStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  SUPERSEDED
+  UNDER_REVIEW
+}
+
+' Inheritance relationships
+SpatialEntity <|-- DemographicSummary
+
+' Interface implementation
+DemographicSummary ..|> HistoryViewable
+DemographicSummary ..|> AccessControlled
+DemographicSummary ..|> DataAggregatable
+DemographicSummary ..|> FullTextSearchable
+DemographicSummary ..|> Taggable
+
+' Class relationships
+DemographicSummary "1" o-- "1" PopulationStatistics
+DemographicSummary "1" o-- "1" HouseholdStatistics
+DemographicSummary -- AdminAreaType
+DemographicSummary -- SummaryStatus
+@enduml
+----
+
+===== Demographic Summary Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Data Entry" as Entry
+  state "Data Validation" as Validation
+  state "Issue Resolution" as Issues
+  
+  [*] --> Entry
+  Entry --> Validation : validate
+  Validation --> Entry : validation failed
+  Validation --> Issues : issues detected
+  Issues --> Validation : resolved
+  Validation --> [*] : validation passed
+}
+
+Draft --> UnderReview : submit for review
+UnderReview --> Draft : return for corrections
+UnderReview --> Published : approve
+
+state Published {
+  state "Active" as Active
+  state "Updated" as Updated
+  
+  [*] --> Active
+  Active --> Updated : update data
+  Updated --> [*] : merge updates
+}
+
+Published --> Superseded : newer version published
+Superseded --> Archived : archive old data
+Archived --> [*]
+@enduml
+----
+
+===== Demographic Summary Creation Process
+
+[plantuml]
+----
+@startuml
+|Data Provider|
+start
+:Collect demographic data;
+:Prepare data in standardized format;
+:Submit demographic data;
+
+|System|
+:Validate data structure;
+if (Valid Structure?) then (yes)
+  :Create demographic summary draft;
+else (no)
+  :Return validation errors;
+  |Data Provider|
+  :Correct data structure;
+  note right
+    Return to validation
+  end note
+endif
+
+|Data Officer|
+:Review submitted data;
+:Cross-validate with existing sources;
+if (Data Accurate?) then (yes)
+  :Process data for storage;
+else (no)
+  :Flag data inconsistencies;
+  |Data Provider|
+  :Address inconsistencies;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Calculate derived statistics;
+:Validate statistical consistency;
+if (Consistent?) then (yes)
+  :Prepare for publication;
+else (no)
+  :Generate inconsistency report;
+  |Data Officer|
+  :Resolve statistical inconsistencies;
+  note right
+    Return to calculation
+  end note
+endif
+
+|Approving Authority|
+:Review complete demographic summary;
+if (Approve?) then (yes)
+  :Approve for publication;
+else (no)
+  :Return with comments;
+  |Data Officer|
+  :Address comments;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Publish demographic summary;
+:Generate spatial representations;
+:Index for search;
+:Calculate aggregations;
+:Trigger publication notifications;
+
+|Data Consumer|
+:Access demographic data;
+:Use data for planning and analysis;
+
+stop
+@enduml
+----
+
+===== Demographic Summary Time Series Management
+
+[plantuml]
+----
+@startuml
+|System Manager|
+start
+:Configure time series parameters;
+:Define collection periods;
+
+|Data Provider|
+:Collect time period data;
+:Submit period data;
+
+|System|
+:Store as new time period record;
+:Validate against previous periods;
+if (Anomalies Detected?) then (yes)
+  :Flag anomalies for review;
+  |Data Officer|
+  :Review flagged anomalies;
+  if (Valid Changes?) then (yes)
+    :Document change factors;
+    :Approve anomalies;
+  else (no)
+    :Correct erroneous data;
+  endif
+endif
+
+|System|
+:Calculate period-over-period changes;
+:Update trend analysis;
+:Generate change visualizations;
+
+|Data Officer|
+:Review trend analysis;
+:Add contextual annotations;
+:Publish time series update;
+
+|System|
+:Notify subscribed users;
+:Update dashboards;
+:Archive outdated projections;
+:Generate new projections;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Demographic Summaries are used in the system:
+
+====== Census Data Integration for Municipality Planning
+
+*Scenario:* Integrating new census data for municipal planning in Lalitpur Metropolitan City
+
+[plantuml]
+----
+@startuml
+actor "Central Bureau\nof Statistics" as CBS
+actor "Lalitpur Metropolitan\nPlanning Department" as LMC
+participant "DemographicSummary" as Summary
+participant "DataAggregationService" as Aggregation
+participant "VersionManager" as Versions
+participant "NotificationService" as Notify
+participant "GIS System" as GIS
+
+CBS -> Summary : Submit new census data for Lalitpur
+activate Summary
+Summary -> Summary : Create draft demographic summary
+Summary -> Summary : Set adminAreaType = MUNICIPALITY
+Summary -> Summary : Set adminAreaCode = "LMC"
+Summary -> Summary : Set dataYear = 2021
+Summary -> Summary : Set totalPopulation = 284922
+Summary -> Summary : Set populationMale = 142247
+Summary -> Summary : Set populationFemale = 142675
+Summary -> Summary : Calculate sexRatio = 99.7
+CBS <-- Summary : Draft created
+deactivate Summary
+
+CBS -> Summary : Submit ward-level breakdowns
+activate Summary
+Summary -> Summary : Create child summaries for 29 wards
+Summary -> Summary : Link ward summaries to municipality
+CBS <-- Summary : Ward data linked
+deactivate Summary
+
+LMC -> Summary : Review demographic data
+activate Summary
+Summary -> Summary : Validate population totals
+Summary -> Summary : Cross-check with previous census
+Summary -> Summary : Verify consistency across wards
+LMC <-- Summary : Validation results
+deactivate Summary
+
+LMC -> Summary : Calculate derived metrics
+activate Summary
+Summary -> Summary : Calculate populationDensity = 14,675/km²
+Summary -> Summary : Calculate growthRate = 1.2%
+Summary -> Summary : Calculate averageHouseholdSize = 3.8
+LMC <-- Summary : Metrics calculated
+deactivate Summary
+
+LMC -> Aggregation : Generate age distribution analysis
+activate Aggregation
+Aggregation -> Aggregation : Process age cohort data
+Aggregation -> Aggregation : Calculate dependency ratios
+Aggregation -> Aggregation : Identify demographic trends
+LMC <-- Aggregation : Age distribution analysis
+deactivate Aggregation
+
+LMC -> GIS : Generate population density maps
+activate GIS
+GIS -> GIS : Create choropleth maps
+GIS -> GIS : Identify population hotspots
+GIS -> GIS : Generate ward comparisons
+LMC <-- GIS : Spatial visualizations
+deactivate GIS
+
+LMC -> Versions : Approve and publish demographic data
+activate Versions
+Versions -> Versions : Create new version
+Versions -> Versions : Archive previous version (2011)
+Versions -> Versions : Set currentVersionId = new version
+Versions -> Versions : Set status = PUBLISHED
+LMC <-- Versions : Data published
+deactivate Versions
+
+LMC -> Notify : Announce data availability
+activate Notify
+Notify -> Notify : Notify department heads
+Notify -> Notify : Update municipality website
+Notify -> Notify : Send alert to subscribed users
+LMC <-- Notify : Stakeholders notified
+deactivate Notify
+
+LMC -> Summary : Generate planning insights
+activate Summary
+Summary -> Summary : Compare with national averages
+Summary -> Summary : Identify demographic challenges
+Summary -> Summary : Generate recommendations
+LMC <-- Summary : Planning insights
+deactivate Summary
+@enduml
+----
+
+*Real-World Context:*
+The Central Bureau of Statistics (CBS) conducts the national population census every 10 years in Nepal. After the 2021 census, the CBS provides detailed demographic data for Lalitpur Metropolitan City, one of the major municipalities in Kathmandu Valley. The data shows that Lalitpur has 284,922 residents with a nearly balanced gender distribution (142,247 males and 142,675 females).
+
+The DemographicSummary entity stores this data with detailed geographic attribution, linking it to Lalitpur's specific administrative boundary through the SpatialEntity capabilities. The system automatically calculates derived metrics like the sex ratio (99.7 males per 100 females) and population density (14,675 people per square kilometer), which are significantly higher than the national average of 194 people per square kilometer.
+
+The hierarchical data model allows the system to store demographic details for each of Lalitpur's 29 wards while maintaining aggregation relationships to the parent municipality. The DataAggregatable interface enables automatic roll-ups and drill-downs between these administrative levels, providing both macro and micro views of population distribution.
+
+The Planning Department uses this data to identify critical demographic patterns specific to Lalitpur, such as:
+- The aging population in inner city wards (particularly Wards 16-19) where over 18% of residents are above 60 years
+- High youth concentration in peripheral wards (particularly Wards 25-29)
+- Significant absentee population (workers abroad) affecting household composition in specific neighborhoods
+
+These insights directly inform municipal planning decisions, such as:
+- Allocating budget for elderly care centers in older neighborhoods
+- Planning school expansions in high-growth peripheral areas
+- Developing vocational training programs in wards with high youth unemployment
+
+The system's spatial integration allows the Planning Department to generate thematic maps showing population distribution across the metropolitan area, identifying density hotspots and areas requiring prioritized infrastructure development. The VersionInfo component maintains historical census data, enabling trend analysis comparing the 2021 figures with previous censuses from 2011 and 2001 to identify long-term demographic shifts.
+
+The AccessControlled interface ensures that sensitive demographic data is available only to authorized municipal officials, while aggregated summaries are made available to the public through the municipality's official portal using the SEOAttributes component to optimize discoverability by citizens and researchers.
+
+====== Migration Analysis for Disaster Response Planning
+
+*Scenario:* Analyzing internal migration patterns after a major earthquake for response planning
+
+[plantuml]
+----
+@startuml
+actor "National Disaster\nRisk Reduction Center" as NDRC
+actor "District Disaster\nManagement Committee" as DDMC
+participant "DemographicSummary" as Summary
+participant "AbsenteePopulation" as Absentee
+participant "DemographicChangeAnalysis" as Analysis
+participant "AlertSystem" as Alert
+participant "ResourceAllocationService" as Resources
+
+NDRC -> Summary : Request post-earthquake demographic data
+activate Summary
+Summary -> Summary : Retrieve affected district summaries
+Summary -> Summary : Compare with pre-disaster baseline
+NDRC <-- Summary : Initial population displacement data
+deactivate Summary
+
+NDRC -> Absentee : Analyze displacement patterns
+activate Absentee
+Absentee -> Absentee : Calculate displacement percentages
+Absentee -> Absentee : Identify destination districts
+Absentee -> Absentee : Analyze household fragmentation
+NDRC <-- Absentee : Displacement analysis
+deactivate Absentee
+
+NDRC -> Analysis : Model population movements
+activate Analysis
+Analysis -> Analysis : Create migration network model
+Analysis -> Analysis : Calculate net migration by district
+Analysis -> Analysis : Identify temporary settlement clusters
+Analysis -> Analysis : Predict return timeframes
+NDRC <-- Analysis : Population movement patterns
+deactivate Analysis
+
+NDRC -> DDMC : Share district-specific analysis
+DDMC -> Summary : Examine local demographic changes
+activate Summary
+Summary -> Summary : Compare current vs. baseline
+Summary -> Summary : Identify vulnerable groups
+Summary -> Summary : Calculate resource requirements
+DDMC <-- Summary : District impact assessment
+deactivate Summary
+
+DDMC -> Resources : Calculate relief requirements
+activate Resources
+Resources -> Resources : Calculate food needs (displaced population × 2100 kcal/day)
+Resources -> Resources : Calculate water needs (displaced population × 15 liters/day)
+Resources -> Resources : Calculate shelter needs (displaced households × 3.5 persons)
+Resources -> Resources : Calculate medical needs by demographic group
+DDMC <-- Resources : Resource allocation plan
+deactivate Resources
+
+DDMC -> Alert : Configure early warnings for at-risk areas
+activate Alert
+Alert -> Alert : Set population thresholds for locations
+Alert -> Alert : Configure demographic-specific alerts
+Alert -> Alert : Set up monitoring triggers
+DDMC <-- Alert : Alert system configured
+deactivate Alert
+
+NDRC -> Analysis : Create vulnerability prediction model
+activate Analysis
+Analysis -> Analysis : Correlate demographic factors with vulnerability
+Analysis -> Analysis : Generate vulnerability index by ward
+Analysis -> Analysis : Identify high-priority intervention areas
+NDRC <-- Analysis : Vulnerability predictions
+deactivate Analysis
+
+NDRC -> Summary : Update demographic projections
+activate Summary
+Summary -> Summary : Adjust population projections
+Summary -> Summary : Model recovery scenarios
+Summary -> Summary : Update municipal planning parameters
+NDRC <-- Summary : Updated projections
+deactivate Summary
+@enduml
+----
+
+*Real-World Context:*
+In 2015, Nepal experienced a devastating 7.8 magnitude earthquake that significantly altered population distributions across affected districts. The National Disaster Risk Reduction Center (NDRC) uses the Digital Profile system to analyze these demographic shifts for both immediate response and long-term recovery planning.
+
+The DemographicSummary entity provides a comprehensive view of population changes in the 14 most affected districts, showing substantial population displacement - particularly from mountain districts like Sindhupalchok and Dolakha to the Kathmandu Valley. The system captures these shifts through regular field surveys that update the demographic data in the months following the disaster.
+
+The AbsenteePopulation component tracks displacement patterns, showing that approximately 21% of the population from severely affected areas relocated temporarily or permanently. The data reveals important migration patterns unique to Nepal's context:
+- Urban-to-rural movement (reverse migration) for families with agricultural land in less affected areas
+- Rural-to-urban movement for those seeking medical services and employment
+- Cross-border movement to India, particularly from districts bordering India
+
+The DemographicChangeAnalysis entity applies statistical models to identify factors influencing displacement decisions, such as:
+- Pre-existing family networks in destination areas
+- Access to remittance income from family members working abroad
+- Caste and ethnic group affiliations that influence relocation choices
+- Age distribution, with working-age adults more likely to relocate than elderly residents
+
+District Disaster Management Committees use this analysis to make critical resource allocation decisions. For example, in Gorkha district, the data shows clustering of displaced populations in specific VDCs (Village Development Committees) with greater intact infrastructure, allowing more efficient distribution of relief supplies.
+
+The ResourceAllocationService uses demographic breakdowns to calculate precise needs for different population segments - adjusting food rations based on age distributions (more calories for laborers rebuilding homes), medical supplies based on demographics (pediatric supplies for areas with high child concentrations), and specialized support for areas with high elderly populations.
+
+The system's spatial capabilities integrate population data with geological hazard maps to identify secondary risk areas where displaced populations might face new threats like landslides or floods during the monsoon season. This integration enables proactive evacuation planning rather than reactive response.
+
+For long-term recovery planning, the demographic projections help authorities anticipate:
+- Which areas are likely to see permanent population decline
+- Where to prioritize school rebuilding based on child population recovery patterns
+- How to adjust healthcare facility capacity based on changed population distributions
+- Where housing reconstruction should be prioritized based on return migration patterns
+
+The CustomValidatable interface ensures that field-collected demographic data meets quality standards despite the challenging post-disaster environment, flagging statistically implausible changes for verification and reducing data collection errors.
+
+====== Ethnic and Language Distribution Analysis for Education Policy
+
+*Scenario:* Using demographic data to develop multilingual education policies
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nEducation" as MOE
+actor "Education Policy\nDevelopment Team" as PolicyTeam
+participant "DemographicSummary" as Summary
+participant "CulturalDataRegistry" as Culture
+participant "LanguageDistributionService" as Language
+participant "GeoSpatialAnalytics" as Geo
+participant "PolicySimulator" as Simulator
+
+MOE -> Summary : Request demographic linguistic data
+activate Summary
+Summary -> Summary : Aggregate population by language
+Summary -> Summary : Map district language distributions
+Summary -> Summary : Identify multilingual districts
+MOE <-- Summary : Language distribution data
+deactivate Summary
+
+MOE -> Culture : Analyze ethnolinguistic patterns
+activate Culture
+Culture -> Culture : Map ethnic groups to languages
+Culture -> Culture : Identify primary/secondary languages
+Culture -> Culture : Calculate language vitality indices
+MOE <-- Culture : Ethnolinguistic analysis
+deactivate Culture
+
+MOE -> Language : Generate language heatmaps
+activate Language
+Language -> Language : Create district language profiles
+Language -> Language : Identify linguistic minorities
+Language -> Language : Calculate linguistic density
+MOE <-- Language : Language distribution maps
+deactivate Language
+
+MOE -> PolicyTeam : Develop multilingual education framework
+PolicyTeam -> Summary : Analyze student demographics
+activate Summary
+Summary -> Summary : Extract school-age populations 
+Summary -> Summary : Map language to school districts
+Summary -> Summary : Calculate student language ratios
+PolicyTeam <-- Summary : School language requirements
+deactivate Summary
+
+PolicyTeam -> Geo : Analyze school accessibility
+activate Geo
+Geo -> Geo : Map schools to language communities
+Geo -> Geo : Calculate linguistic isolation indices
+Geo -> Geo : Identify underserved language groups
+PolicyTeam <-- Geo : Access gap analysis
+deactivate Geo
+
+PolicyTeam -> Simulator : Model resource requirements
+activate Simulator
+Simulator -> Simulator : Calculate teacher requirements by language
+Simulator -> Simulator : Estimate textbook needs by language
+Simulator -> Simulator : Project implementation costs
+PolicyTeam <-- Simulator : Resource projections
+deactivate Simulator
+
+PolicyTeam -> MOE : Present policy recommendations
+activate MOE
+MOE -> MOE : Review language coverage strategy
+MOE -> MOE : Determine implementation phases
+MOE -> MOE : Allocate language resources by district
+PolicyTeam <-- MOE : Policy approval
+deactivate MOE
+
+MOE -> Summary : Update education planning parameters
+activate Summary
+Summary -> Summary : Tag districts for implementation
+Summary -> Summary : Set resource allocation priorities
+Summary -> Summary : Define monitoring indicators
+MOE <-- Summary : Planning parameters updated
+deactivate Summary
+@enduml
+----
+
+*Real-World Context:*
+Nepal is one of the world's most linguistically diverse countries, with 123 languages spoken as mother tongues according to the 2011 census. The Ministry of Education uses detailed demographic data to implement the constitutional right to basic education in one's mother tongue, particularly focusing on primary education for linguistic minorities.
+
+The DemographicSummary entity provides district-level and ward-level breakdowns of language distribution across Nepal's complex geographic terrain. This data reveals significant linguistic diversity even within small administrative areas - for instance, in Ilam district alone, there are substantial populations speaking Limbu, Rai, Tamang, and Nepali languages, often with distinct geographic clustering at the ward level.
+
+The system's Taggable interface allows demographic data to be tagged with linguistic and ethnic attributes, enabling detailed analysis of the correlation between language, ethnicity, and education outcomes. This reveals important patterns specific to Nepal:
+- Significant language shift occurring in younger generations
+- Lower educational retention rates in areas where school language doesn't match home language
+- Geographic isolation factors that exacerbate linguistic barriers to education
+
+The Ministry uses this data to develop a phased approach to mother tongue-based multilingual education (MTB-MLE) implementation, prioritizing:
+1. Areas with high linguistic homogeneity within a non-Nepali language
+2. Areas with sufficient population density to make language-specific resources viable
+3. Areas with the largest gaps between home language and educational outcomes
+
+For the Taplejung district, the system identifies a significant Limbu-speaking population (37%) concentrated in specific wards. This demographic information drives resource allocation decisions:
+- Developing Limbu-language educational materials for early grade reading
+- Training and deploying Limbu-speaking teachers to specific schools
+- Implementing dual-language approaches in linguistically mixed schools
+
+The ResourceAllocationService uses demographic projections to calculate precise needs for different implementation phases:
+- Teacher requirements by language (based on student-teacher ratios and language distribution)
+- Textbook and learning material quantities (based on school-age population in each language group)
+- Training capacity needed for teachers in multilingual education techniques
+
+The system's spatial capabilities integrate language data with school locations to identify access gaps based on linguistic factors. This analysis reveals that in some regions, physical access to education is further complicated by linguistic barriers, requiring targeted interventions like:
+- Mobile teaching resources for linguistically isolated communities
+- Boarding facilities for students from linguistic minority areas
+- Digital learning resources in minority languages
+
+The PolicySimulator allows education planners to model different implementation approaches and their impact on educational outcomes, resource requirements, and costs. Using historical data from pilot programs, the system can predict the effect of mother tongue education on enrollment, retention, and achievement metrics for different demographic groups.
+
+The DataAggregatable interface enables analysis at various administrative levels, allowing the Ministry to develop national policies while empowering local governments to implement language-appropriate solutions based on their specific demographic composition.
+
+====== Demographic Trend Analysis for Health Service Planning
+
+*Scenario:* Analyzing demographic trends to plan health service distribution in Province 2
+
+[plantuml]
+----
+@startuml
+actor "Provincial Health\nDirectorate" as PHD
+actor "Health Facility\nManagement Division" as HFMD
+participant "DemographicSummary" as Summary
+participant "AgeDistribution" as Age
+participant "PopulationProjection" as Projection
+participant "HealthResourceCalculator" as Calculator
+participant "ServiceAccessAnalyzer" as Access
+
+PHD -> Summary : Request provincial demographic profile
+activate Summary
+Summary -> Summary : Aggregate district demographics
+Summary -> Summary : Calculate population by municipality
+Summary -> Summary : Generate demographic indicators
+PHD <-- Summary : Province 2 demographic profile
+deactivate Summary
+
+PHD -> Age : Analyze age structure trends
+activate Age
+Age -> Age : Calculate age dependency ratios
+Age -> Age : Identify aging population areas
+Age -> Age : Compare with national patterns
+PHD <-- Age : Age structure analysis
+deactivate Age
+
+PHD -> Projection : Generate 5-year population projections
+activate Projection
+Projection -> Projection : Apply cohort component method
+Projection -> Projection : Incorporate migration patterns
+Projection -> Projection : Calculate birth projections
+Projection -> Projection : Adjust for mortality trends
+PHD <-- Projection : Population projections
+deactivate Projection
+
+PHD -> HFMD : Share demographic insights
+HFMD -> Calculator : Calculate health service requirements
+activate Calculator
+Calculator -> Calculator : Apply service utilization rates by age group
+Calculator -> Calculator : Calculate beds per 1000 population
+Calculator -> Calculator : Determine specialist requirements
+Calculator -> Calculator : Project pharmaceutical needs
+HFMD <-- Calculator : Resource requirements by municipality
+deactivate Calculator
+
+HFMD -> Access : Analyze service coverage gaps
+activate Access
+Access -> Access : Map health facilities to population
+Access -> Access : Calculate travel time coverage
+Access -> Access : Identify underserved populations
+Access -> Access : Project service demand changes
+HFMD <-- Access : Coverage gap analysis
+deactivate Access
+
+HFMD -> Calculator : Prioritize facility investments
+activate Calculator
+Calculator -> Calculator : Rank municipalities by need
+Calculator -> Calculator : Calculate cost-benefit ratios
+Calculator -> Calculator : Generate investment scenarios
+HFMD <-- Calculator : Investment priorities
+deactivate Calculator
+
+PHD -> Summary : Update health planning parameters
+activate Summary
+Summary -> Summary : Tag health service priorities
+Summary -> Summary : Set resource allocation targets
+Summary -> Summary : Define monitoring indicators
+PHD <-- Summary : Planning parameters updated
+deactivate Summary
+
+PHD -> Projection : Validate projections with actual data
+activate Projection
+Projection -> Projection : Compare projections with census
+Projection -> Projection : Calibrate projection models
+Projection -> Projection : Update confidence intervals
+PHD <-- Projection : Validated projections
+deactivate Projection
+@enduml
+----
+
+*Real-World Context:*
+Province 2 (now Madhesh Province) in Nepal's southern Terai region has distinct demographic characteristics that significantly impact health service requirements. The Provincial Health Directorate uses demographic analysis to adapt Nepal's Health Sector Strategy to the province's unique population profile.
+
+The DemographicSummary entity provides integrated population data for the province's 8 districts and 136 municipalities, revealing distinct patterns from Nepal's mountainous regions:
+- Higher population density (approximately 559 people per square kilometer compared to the national average of 180)
+- Higher fertility rates (TFR of 2.7 compared to the national 2.3)
+- Younger age structure with 40% of population under 18 years
+- High seasonal migration patterns across the open border with India
+
+The AgeDistribution component enables detailed analysis of population structure, showing important geographic variations even within the province:
+- Urban centers like Birgunj and Janakpur showing demographic transition with declining birth rates
+- Rural areas maintaining higher fertility and younger population profiles
+- Significant youth bulge in 15-24 age group requiring targeted reproductive health services
+- Emerging aging population in specific municipalities requiring geriatric care planning
+
+The system's DataAggregatable interface enables health planners to analyze service needs at multiple administrative levels - from province-wide planning down to specific health facility catchment areas. This multi-level view is critical in Nepal's federalized governance structure where health service responsibilities are divided between provincial and local governments.
+
+The HealthResourceCalculator applies Nepal-specific service utilization patterns to demographic data to determine:
+- Required primary healthcare centers based on population distribution (1 per 5,000 population in rural areas, 1 per 10,000 in urban areas)
+- Hospital bed requirements by specialty based on age distribution (more pediatric capacity in high-fertility areas)
+- Health workforce needs by category (more maternal health workers in high-fertility areas)
+- Pharmaceutical and medical supply requirements based on population composition
+
+The ServiceAccessAnalyzer integrates demographic data with GIS information to identify service gaps, revealing:
+- Areas where population growth has outpaced health infrastructure
+- Regions where seasonal flooding creates accessibility barriers for up to 4 months annually
+- Communities with linguistic or cultural barriers to healthcare utilization
+- Border areas where significant populations seek healthcare in India due to proximity
+
+For health facility planning, the demographic projections are critical for right-sizing investments:
+- Upgrading the Janakpur Zonal Hospital based on its catchment population's growth trajectory
+- Establishing new primary healthcare centers in rapidly growing municipalities
+- Developing specialized services for the emerging urban middle-aged population
+- Creating mobile health services for remote areas with significant seasonal migration
+
+The system also supports epidemic preparedness planning by identifying:
+- High-density areas vulnerable to communicable disease spread
+- Regions with large elderly populations at higher risk during outbreaks
+- Areas with high population mobility requiring enhanced surveillance
+- Communities with lower vaccination coverage based on demographic and geographic factors
+
+Through the AccessControlled interface, sensitive demographic health data is restricted to authorized health officials while providing aggregated information for public health planning and community engagement.
+
+====== Urban Planning for Rapidly Growing Municipality
+
+*Scenario:* Using demographic data for comprehensive urban planning in Pokhara Metropolitan City
+
+[plantuml]
+----
+@startuml
+actor "Urban Planning\nDepartment" as UPD
+actor "Infrastructure\nDevelopment Division" as IDD
+participant "DemographicSummary" as Summary
+participant "HouseholdStatistics" as Households
+participant "DemographicProjection" as Projection
+participant "UrbanGrowthAnalyzer" as Growth
+participant "InfrastructureCalculator" as Infrastructure
+
+UPD -> Summary : Request metropolitan demographic profile
+activate Summary
+Summary -> Summary : Aggregate ward demographics
+Summary -> Summary : Identify population growth hotspots
+Summary -> Summary : Calculate urbanization indicators
+UPD <-- Summary : Pokhara demographic profile
+deactivate Summary
+
+UPD -> Households : Analyze household composition
+activate Households
+Households -> Households : Calculate household formation rates
+Households -> Households : Identify housing typology needs
+Households -> Households : Map household income distribution
+UPD <-- Households : Household analysis
+deactivate Households
+
+UPD -> Projection : Generate 10-year growth projections
+activate Projection
+Projection -> Projection : Apply cohort component models
+Projection -> Projection : Incorporate migration patterns
+Projection -> Projection : Model tourism impact on demographics
+Projection -> Projection : Project housing demand by ward
+UPD <-- Projection : Growth projections
+deactivate Projection
+
+UPD -> Growth : Analyze settlement patterns
+activate Growth
+Growth -> Growth : Map population density gradients
+Growth -> Growth : Identify urban expansion vectors
+Growth -> Growth : Model land use conversion patterns
+Growth -> Growth : Calculate density optimization scenarios
+UPD <-- Growth : Settlement pattern analysis
+deactivate Growth
+
+UPD -> IDD : Share growth projections
+IDD -> Infrastructure : Calculate infrastructure requirements
+activate Infrastructure
+Infrastructure -> Infrastructure : Project water demand (150L/person/day)
+Infrastructure -> Infrastructure : Calculate road capacity needs
+Infrastructure -> Infrastructure : Determine electricity demand
+Infrastructure -> Infrastructure : Model waste management needs
+IDD <-- Infrastructure : Infrastructure requirements
+deactivate Infrastructure
+
+IDD -> Infrastructure : Prioritize infrastructure investments
+activate Infrastructure
+Infrastructure -> Infrastructure : Rank wards by infrastructure gaps
+Infrastructure -> Infrastructure : Calculate cost-benefit ratios
+Infrastructure -> Infrastructure : Generate investment scenarios
+IDD <-- Infrastructure : Investment priorities
+deactivate Infrastructure
+
+UPD -> Summary : Update urban planning parameters
+activate Summary
+Summary -> Summary : Tag development priority zones
+Summary -> Summary : Set zoning parameters
+Summary -> Summary : Define urban growth boundaries
+UPD <-- Summary : Planning parameters updated
+deactivate Summary
+
+UPD -> Projection : Validate projections against actual growth
+activate Projection
+Projection -> Projection : Compare projections with recent data
+Projection -> Projection : Calibrate growth models
+Projection -> Projection : Update confidence intervals
+UPD <-- Projection : Validated projections
+deactivate Projection
+@enduml
+----
+
+*Real-World Context:*
+Pokhara Metropolitan City, a major tourist destination and second-largest city in Nepal, is experiencing rapid growth that requires data-driven urban planning. The Urban Planning Department uses detailed demographic analysis to guide the city's 20-year master plan development.
+
+The DemographicSummary entity provides integrated population data for the metropolitan city's 33 wards, revealing distinctive growth patterns:
+- Rapid population growth (3.8% annually compared to the national average of 1.35%)
+- Significant in-migration from surrounding rural areas
+- Tourist population fluctuations affecting service demands
+- Demographic variation between core urban areas and newly incorporated rural wards
+
+The HouseholdStatistics component enables detailed analysis of housing needs, revealing:
+- Declining household size in central wards (3.5 persons per household compared to 4.2 in peripheral areas)
+- Increasing demand for apartment-style housing in core areas
+- Informal settlements developing in specific geographic zones
+- Mixed-use housing demand in tourist-oriented neighborhoods
+
+The system's SpatialEntity capabilities integrate demographic data with topographic constraints unique to Pokhara:
+- Lake Phewa shoreline development considerations
+- Steep terrain in eastern wards limiting expansion
+- Flood-prone areas in southern sectors
+- Airport noise impact zones affecting residential development potential
+
+The UrbanGrowthAnalyzer applies Nepal-specific urban development patterns to demographic data to project:
+- Urban expansion vectors based on transportation corridors
+- Density optimization opportunities in underdeveloped central areas
+- Areas requiring growth boundaries to protect agricultural land
+- Neighborhoods requiring density restrictions due to geological hazards
+
+The InfrastructureCalculator translates demographic projections into specific requirements:
+- Water supply needs based on population projections and Nepal's standard of 150 liters per person per day in urban areas
+- School capacity requirements based on projected school-age populations
+- Healthcare facility needs based on age composition and accessibility standards
+- Public space requirements based on density projections (Nepal's standard of 3 square meters of open space per urban resident)
+
+For transportation planning, demographic analysis reveals:
+- Commuting pattern changes as the city expands
+- Public transportation corridors needed to connect population centers
+- Pedestrian infrastructure priorities based on population density
+- Traffic management needs in tourist-heavy zones with seasonal population fluctuations
+
+The system also supports resilience planning by identifying:
+- Areas with vulnerable populations requiring special disaster response planning
+- Critical infrastructure needs for rapidly growing neighborhoods
+- Water resource management requirements based on population growth
+- Healthcare access gaps during tourist high seasons
+
+The DataAggregatable interface allows planners to analyze infrastructure needs at multiple scales, from metropolitan-wide systems to neighborhood-level facilities, ensuring integrated planning across Pokhara's diverse urban landscape.
+
+====== Social Security and Pension Planning
+
+*Scenario:* Using demographic data for social security planning for aging populations
+
+[plantuml]
+----
+@startuml
+actor "Social Security\nFund" as SSF
+actor "Pension\nAdministration" as Pension
+participant "DemographicSummary" as Summary
+participant "AgeDistribution" as Age
+participant "AbsenteePopulation" as Absentee
+participant "DemographicProjection" as Projection
+participant "BenefitCalculator" as Calculator
+
+SSF -> Summary : Request national demographic profile
+activate Summary
+Summary -> Summary : Aggregate province demographics
+Summary -> Summary : Calculate elderly population by district
+Summary -> Summary : Generate demographic indicators
+SSF <-- Summary : National demographic profile
+deactivate Summary
+
+SSF -> Age : Analyze aging trends
+activate Age
+Age -> Age : Calculate old-age dependency ratios
+Age -> Age : Identify accelerated aging areas
+Age -> Age : Model life expectancy patterns
+SSF <-- Age : Aging population analysis
+deactivate Age
+
+SSF -> Absentee : Analyze labor migration impact
+activate Absentee
+Absentee -> Absentee : Calculate workforce abroad
+Absentee -> Absentee : Project remittance patterns
+Absentee -> Absentee : Analyze retirement return migration
+SSF <-- Absentee : Labor migration analysis
+deactivate Absentee
+
+SSF -> Projection : Generate 30-year elderly projections
+activate Projection
+Projection -> Projection : Apply cohort survival models
+Projection -> Projection : Model retirement migration
+Projection -> Projection : Project life expectancy changes
+Projection -> Projection : Calculate dependency ratio trends
+SSF <-- Projection : Elderly population projections
+deactivate Projection
+
+SSF -> Pension : Share demographic insights
+Pension -> Calculator : Calculate pension funding requirements
+activate Calculator
+Calculator -> Calculator : Project beneficiary numbers
+Calculator -> Calculator : Calculate dependency-adjusted contributions
+Calculator -> Calculator : Model cost escalation factors
+Calculator -> Calculator : Calculate sustainability threshold
+Pension <-- Calculator : Pension funding requirements
+deactivate Calculator
+
+Pension -> Calculator : Model benefit scenarios
+activate Calculator
+Calculator -> Calculator : Calculate coverage expansion costs
+Calculator -> Calculator : Model benefit level adjustments
+Calculator -> Calculator : Project administrative requirements
+Pension <-- Calculator : Benefit scenario models
+deactivate Calculator
+
+SSF -> Summary : Update social security parameters
+activate Summary
+Summary -> Summary : Tag priority expansion districts
+Summary -> Summary : Set contribution adjustment factors
+Summary -> Summary : Define monitoring indicators
+SSF <-- Summary : Planning parameters updated
+deactivate Summary
+
+SSF -> Projection : Validate projections with actual data
+activate Projection
+Projection -> Projection : Compare projections with census
+Projection -> Projection : Calibrate demographic models
+Projection -> Projection : Update confidence intervals
+SSF <-- Projection : Validated projections
+deactivate Projection
+@enduml
+----
+
+*Real-World Context:*
+Nepal is experiencing demographic transition with a rapidly aging population in certain regions, creating challenges for its developing social security system. The Social Security Fund uses demographic analysis to plan for Nepal's contributory social security program, which was established in 2018.
+
+The DemographicSummary entity provides integrated population data across Nepal's provinces, revealing important aging patterns:
+- Rapid aging in western hill districts with high outmigration of working-age population
+- Provincial variations in elderly population (ranging from 4% to 12% across provinces)
+- Rural areas aging faster than urban areas due to youth migration
+- Gender imbalance in elderly population with more elderly females than males due to life expectancy differences
+
+The AgeDistribution component enables detailed analysis of population structure changes:
+- Increasing old-age dependency ratios (particularly in Provinces 5 and 6)
+- Declining support ratio (working-age adults per elderly person)
+- Life expectancy differentials between urban (71 years) and rural (67 years) populations
+- Emerging elderly-only households in migrant-sending districts
+
+The AbsenteePopulation component provides critical insights into Nepal's unique labor migration patterns:
+- Approximately 3.5 million working-age Nepalis abroad (mostly in Gulf countries and Malaysia)
+- Significant portion of workforce outside formal economy and social security coverage
+- Returning retirees from foreign employment creating localized aging increases
+- Remittance-dependent households with different economic security profiles
+
+The BenefitCalculator applies Nepal-specific parameters to demographic data to determine:
+- Required contribution rates to maintain system sustainability given dependency ratios
+- Benefit levels that can be sustainably provided under different demographic scenarios
+- Administrative capacity needs for expanding coverage to informal sector workers
+- Special provisions needed for areas with accelerated aging
+
+For pension planning, demographic projections reveal critical policy considerations:
+- Unsustainability of current parameters given rapid aging in certain regions
+- Need for regionally adjusted contribution systems
+- Potential coverage gaps in female elderly population due to lower formal sector participation
+- Required subsidy levels for rural populations with limited contribution capacity
+
+The system also supports policy planning through scenario modeling:
+- Impact of extending retirement age on system sustainability
+- Effects of expanding coverage to informal sector workers
+- Costs of providing minimum pension guarantees
+- Administrative requirements for decentralized service delivery
+
+The WebhookTriggerable interface allows automatic notifications to economic planning agencies when demographic projections change significantly, ensuring coordinated policy responses across government agencies dealing with Nepal's aging challenges.
+
+===== DataAggregatable Implementation
+
+The DemographicSummary entity implements the DataAggregatable interface to support hierarchical data aggregation:
+
+[plantuml]
+----
+@startuml
+participant "PlanningService" as Service
+participant "DemographicSummary\nimplements DataAggregatable" as Summary
+participant "Repository" as Repo
+participant "AggregationEngine" as Engine
+participant "DataValidator" as Validator
+
+Service -> Summary : getAggregatedData(provinceId, "DISTRICT")
+activate Summary
+
+Summary -> Summary : validateAggregationRequest(provinceId, "DISTRICT")
+activate Summary
+Summary -> Summary : checkPermissions()
+Summary -> Summary : validateHierarchy()
+Summary <-- Summary : requestValid
+deactivate Summary
+
+Summary -> Repo : findChildSummaries(provinceId, "DISTRICT")
+activate Repo
+Summary <-- Repo : districtSummaries
+deactivate Repo
+
+Summary -> Engine : aggregatePopulationData(districtSummaries)
+activate Engine
+Engine -> Engine : sumPopulations()
+Engine -> Engine : calculateWeightedAverages()
+Engine -> Engine : deriveRatios()
+Summary <-- Engine : aggregatedPopulationData
+deactivate Engine
+
+Summary -> Engine : aggregateHouseholdData(districtSummaries)
+activate Engine
+Engine -> Engine : sumHouseholds()
+Engine -> Engine : calculateAverages()
+Summary <-- Engine : aggregatedHouseholdData
+deactivate Engine
+
+Summary -> Validator : validateAggregate(aggregatedData, provinceId)
+activate Validator
+Validator -> Validator : checkTotals()
+Validator -> Validator : validateConsistency()
+Validator -> Validator : flagAnomalies()
+Summary <-- Validator : validationResults
+deactivate Validator
+
+Summary -> Summary : applyValidationAdjustments(validationResults)
+Summary -> Summary : buildAggregateResponse()
+
+Service <-- Summary : aggregatedDemographicData
+deactivate Summary
+
+Service -> Summary : drillDown(provinceId, "DISTRICT", districtId)
+activate Summary
+Summary -> Repo : findChildSummaries(districtId, "MUNICIPALITY")
+activate Repo
+Summary <-- Repo : municipalitySummaries
+deactivate Repo
+Summary -> Engine : aggregateDemographicData(municipalitySummaries)
+activate Engine
+Summary <-- Engine : aggregatedData
+deactivate Engine
+Service <-- Summary : districtDetailWithMunicipalities
+deactivate Summary
+@enduml
+----
+
+===== FullTextSearchable Implementation
+
+The DemographicSummary entity implements the FullTextSearchable interface for advanced search capabilities:
+
+[plantuml]
+----
+@startuml
+participant "SearchService" as Search
+participant "DemographicSummary\nimplements FullTextSearchable" as Summary
+participant "SearchRepository" as Repo
+participant "SearchIndexer" as Indexer
+participant "AdminAreaService" as AdminService
+
+Search -> Summary : indexForSearch()
+activate Summary
+
+Summary -> Summary : getSearchableContent()
+activate Summary
+Summary -> AdminService : getAdminAreaName(adminAreaId)
+activate AdminService
+Summary <-- AdminService : areaName
+deactivate AdminService
+Summary -> Summary : buildSearchableMap()
+Summary <-- Summary : searchContent = {
+  "adminAreaName": "Lalitpur Metropolitan City",
+  "adminAreaType": "MUNICIPALITY",
+  "adminAreaCode": "LMC",
+  "dataYear": "2021",
+  "totalPopulation": "284922",
+  "populationDensity": "14675",
+  "averageHouseholdSize": "3.8"
+}
+deactivate Summary
+
+Summary -> Summary : getSearchKeywords()
+activate Summary
+Summary <-- Summary : keywords = [
+  "Lalitpur",
+  "Metropolitan",
+  "Municipality",
+  "Census",
+  "2021",
+  "demographics"
+]
+deactivate Summary
+
+Summary -> Indexer : updateSearchIndex(entityId, searchContent, keywords)
+activate Indexer
+Summary <-- Indexer : indexUpdateConfirmation
+deactivate Indexer
+
+Search <-- Summary : indexingComplete
+deactivate Summary
+
+Search -> Summary : getSearchBoostFactors()
+activate Summary
+Search <-- Summary : {
+  "adminAreaName": 5.0,
+  "adminAreaCode": 3.0,
+  "dataYear": 2.0,
+  "totalPopulation": 1.0
+}
+deactivate Summary
+
+Search -> Repo : search("Lalitpur population 2021")
+activate Repo
+Repo -> Repo : executeFullTextSearch()
+Repo -> Repo : applyBoostFactors()
+Repo -> Repo : sortByRelevance()
+Search <-- Repo : searchResults
+deactivate Repo
+@enduml
+----
+
+===== AccessControlled Implementation
+
+The DemographicSummary entity implements the AccessControlled interface to manage permissions:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "DemographicSummary\nimplements AccessControlled" as Summary
+participant "AccessControlRepository" as ACRepo
+participant "UserRepository" as Users
+participant "AdminAreaRepository" as Areas
+
+Security -> Summary : hasPermission(user, Permission.VIEW)
+activate Summary
+
+Summary -> Summary : getAccessControlList()
+activate Summary
+Summary -> ACRepo : findByEntityTypeAndEntityId("DemographicSummary", id)
+activate ACRepo
+Summary <-- ACRepo : accessControlEntries
+deactivate ACRepo
+Summary <-- Summary : entries
+deactivate Summary
+
+alt Direct permission exists
+  Summary -> Summary : checkDirectPermission(user, entries, Permission.VIEW)
+  Summary -> Summary : return true/false based on direct permission
+else Check administrative permissions
+  Summary -> Summary : getAdminAreaId()
+  Summary -> Users : getUserAdminAreas(userId)
+  activate Users
+  Summary <-- Users : userAdminAreas
+  deactivate Users
+  
+  Summary -> Areas : hasJurisdiction(userAdminAreas, adminAreaId)
+  activate Areas
+  Summary <-- Areas : hasJurisdiction
+  deactivate Areas
+  
+  alt User has jurisdiction
+    Summary -> Summary : return true (jurisdictional VIEW permission)
+  else User has no jurisdiction
+    Summary -> Summary : return false (no VIEW permission)
+  end
+end
+
+Security <-- Summary : permissionResult
+deactivate Summary
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+The DemographicSummary entity implements the HistoryViewable interface to track changes:
+
+[plantuml]
+----
+@startuml
+participant "DemographicAnalysisUI" as UI
+participant "DemographicHistory" as History
+participant "DemographicSummary\nimplements HistoryViewable" as Summary
+participant "VersionRepository" as Versions
+participant "ChangeRepository" as Changes
+
+UI -> History : getDemographicHistory(summaryId)
+activate History
+
+History -> Summary : getChangeHistory()
+activate Summary
+Summary -> Changes : findByEntityTypeAndEntityId("DemographicSummary", id)
+activate Changes
+Summary <-- Changes : changeRecords
+deactivate Changes
+History <-- Summary : changeHistory
+deactivate Summary
+
+History -> Summary : getHistorySnapshot(timestamp)
+activate Summary
+Summary -> Versions : findByEntityTypeAndEntityIdAndTimestamp("DemographicSummary", id, timestamp)
+activate Versions
+Summary <-- Versions : versionData
+deactivate Versions
+History <-- Summary : snapshotAtPointInTime
+deactivate Summary
+
+UI <- History : demographicHistoryData
+deactivate History
+
+UI -> History : compareDemographicVersions(summaryId, 2011, 2021)
+activate History
+
+History -> Summary : getHistorySnapshot(2011)
+activate Summary
+History <-- Summary : snapshot2011
+deactivate Summary
+
+History -> Summary : getHistorySnapshot(2021)
+activate Summary
+History <-- Summary : snapshot2021
+deactivate Summary
+
+History -> History : compareDemographicData(snapshot2011, snapshot2021)
+History -> History : calculateGrowthRates()
+History -> History : identifySignificantChanges()
+
+UI <-- History : decennialComparisonResults
+deactivate History
+@enduml
+----
