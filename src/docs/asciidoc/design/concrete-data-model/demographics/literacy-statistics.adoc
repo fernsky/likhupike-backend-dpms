@@ -1,0 +1,41 @@
+==== Literacy Statistics
+
+Literacy Statistics represents demographic data about literacy rates and educational attainment for administrative areas, extending core domain models while providing specialized functionality for literacy-based demographic analysis.
+
+===== Core Model Integration
+
+include::literacy-statistics/core-model-integration.adoc[leveloffset=+1]
+
+===== Literacy Data Collection Process
+
+include::literacy-statistics/data-collection-process.adoc[leveloffset=+1]
+
+===== Literacy-Based Analysis
+
+include::literacy-statistics/literacy-based-analysis.adoc[leveloffset=+1]
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Literacy Statistics are used in the system:
+
+include::literacy-statistics/education-planning.adoc[leveloffset=+1]
+
+include::literacy-statistics/workforce-development.adoc[leveloffset=+1]
+
+include::literacy-statistics/digital-inclusion.adoc[leveloffset=+1]
+
+include::literacy-statistics/multilingual-education.adoc[leveloffset=+1]
+
+include::literacy-statistics/adult-literacy-programs.adoc[leveloffset=+1]
+
+===== Capability Implementations
+
+include::literacy-statistics/data-aggregatable-implementation.adoc[leveloffset=+1]
+
+include::literacy-statistics/visualization-capabilities.adoc[leveloffset=+1]
+
+===== Additional Technical Details
+
+include::literacy-statistics/data-model.adoc[leveloffset=+1]
+
+include::literacy-statistics/events.adoc[leveloffset=+1]

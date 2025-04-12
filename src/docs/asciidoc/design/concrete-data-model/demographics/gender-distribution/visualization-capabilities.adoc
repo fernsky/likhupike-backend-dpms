@@ -1,0 +1,381 @@
+===== Visualization Capabilities
+
+The GenderDistribution entity provides specialized visualization capabilities that transform gender demographic data into accessible visual insights to support planning and policy development.
+
+[plantuml]
+----
+@startuml
+participant "DemographicDashboard" as Dashboard
+participant "GenderDistribution" as Gender
+participant "VisualizationEngine" as VisEngine
+participant "ChartConfigService" as Config
+participant "DataTransformer" as Transformer
+participant "RenderingService" as Renderer
+participant "ExportService" as Export
+
+Dashboard -> Gender: requestVisualization(visualType, parameters)
+activate Gender
+
+Gender -> Gender: prepareVisualizationData()
+activate Gender
+Gender -> Gender: validateData()
+Gender -> Gender: applyFilters()
+Gender -> Gender: extractGenderData()
+Gender <-- Gender: preparedData
+deactivate Gender
+
+Gender -> Config: getVisualizationConfiguration(visualType)
+activate Config
+Config -> Config: loadDefaultSettings()
+Config -> Config: applyUserPreferences()
+Config -> Config: resolveLocalizations()
+Gender <-- Config: visualizationConfig
+deactivate Config
+
+Gender -> Transformer: transformForVisualization(preparedData, visualType)
+activate Transformer
+Transformer -> Transformer: structureDataSeries()
+Transformer -> Transformer: calculateDerivedValues()
+Transformer -> Transformer: prepareLabels()
+Transformer -> Transformer: formatNumbers()
+Gender <-- Transformer: transformedData
+deactivate Transformer
+
+Gender -> VisEngine: generateVisualization(transformedData, visualizationConfig)
+activate VisEngine
+
+alt visualType == GENDER_RATIO_MAP
+  VisEngine -> Renderer: createThematicMap()
+  activate Renderer
+  Renderer -> Renderer: setupMapCanvas()
+  Renderer -> Renderer: applyColorScale()
+  Renderer -> Renderer: renderAdminAreas()
+  Renderer -> Renderer: addLegend()
+  VisEngine <-- Renderer: thematicMapVisualization
+  deactivate Renderer
+else visualType == GENDER_RATIO_CHART
+  VisEngine -> Renderer: createBarChart()
+  activate Renderer
+  Renderer -> Renderer: setupChartLayout()
+  Renderer -> Renderer: renderGenderRatioBars()
+  Renderer -> Renderer: addReferenceLines()
+  Renderer -> Renderer: addLabels()
+  VisEngine <-- Renderer: barChartVisualization
+  deactivate Renderer
+else visualType == GENDER_TREND
+  VisEngine -> Renderer: createLineChart()
+  activate Renderer
+  Renderer -> Renderer: setupTrendLayout()
+  Renderer -> Renderer: renderTrendLines()
+  Renderer -> Renderer: addTimelineEvents()
+  Renderer -> Renderer: configureInteractions()
+  VisEngine <-- Renderer: trendVisualization
+  deactivate Renderer
+else visualType == GENDER_PYRAMID
+  VisEngine -> Renderer: createPopulationPyramid()
+  activate Renderer
+  Renderer -> Renderer: setupPyramidLayout()
+  Renderer -> Renderer: renderAgeGenderBars()
+  Renderer -> Renderer: addThirdGenderOverlay()
+  Renderer -> Renderer: addMetadataAnnotations()
+  VisEngine <-- Renderer: pyramidVisualization
+  deactivate Renderer
+end
+
+Gender <-- VisEngine: visualization
+deactivate VisEngine
+
+Dashboard <-- Gender: visualizationResponse
+deactivate Gender
+
+Dashboard -> Gender: exportVisualization(visualizationId, format)
+activate Gender
+Gender -> VisEngine: retrieveVisualization(visualizationId)
+activate VisEngine
+Gender <-- VisEngine: visualization
+deactivate VisEngine
+
+Gender -> Export: formatForExport(visualization, format)
+activate Export
+Export -> Export: prepareHighResVersion()
+Export -> Export: addMetadata()
+Export -> Export: packageWithDataTable()
+Gender <-- Export: exportedPackage
+deactivate Export
+
+Dashboard <-- Gender: exportedVisualization
+deactivate Gender
+@enduml
+----
+
+The GenderDistribution entity transforms complex gender demographic data into accessible visualizations tailored to Nepal's context and planning needs.
+
+===== Core Visualization Types
+
+*Gender Ratio Map*
+
+The thematic map visualization displays sex ratio (males per 100 females) across administrative areas, making geographic patterns immediately visible.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/map.puml
+
+<sprite:map> **Gender Ratio by Province**
+
+|= Province |= Ratio |= Category |= Color |
+| Koshi | 89.5 | FEMALE_DOMINATED | <back:LightPink>    </back>|
+| Madhesh | 100.2 | BALANCED | <back:LightGreen>   </back>|
+| Bagmati | 95.6 | SLIGHTLY_FEMALE_DOMINATED | <back:LightCoral>    </back>|
+| Gandaki | 86.3 | FEMALE_DOMINATED | <back:LightPink> </back>|
+| Lumbini | 88.4 | FEMALE_DOMINATED | <back:LightPink>      </back>|
+| Karnali | 95.8 | SLIGHTLY_FEMALE_DOMINATED | <back:LightCoral>    </back>|
+| Sudurpashchim | 91.2 | FEMALE_DOMINATED | <back:LightPink>    </back>|
+
+Legend: Number of males per 100 females
+@enduml
+----
+
+Key features of gender ratio maps include:
+
+1. **Customizable Classification**: Users can apply different classification schemes (natural breaks, quantiles, equal intervals) to highlight different patterns in the data.
+
+2. **Multi-Category Visualization**: Can display gender balance categories (MALE_DOMINATED, BALANCED, FEMALE_DOMINATED, etc.) rather than raw ratios for clearer interpretation.
+
+3. **Administrative Level Control**: Supports visualization at any administrative level with drill-down capabilities from national to ward level.
+
+4. **Migration Pattern Overlay**: Option to overlay migration vectors to visualize the relationship between gender imbalances and migration patterns.
+
+5. **Time Animation**: Ability to animate maps across multiple years to show changes in gender patterns over time.
+
+*Gender Ratio Chart*
+
+This visualization compares gender ratios across administrative areas or time periods in a bar or column format.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Sex Ratio in Top 5 Male-Deficit Districts**
+
+|= District |= Sex Ratio |
+| Sindhupalchowk | 79.7 |
+| Dolakha | 82.1 |
+| Ramechhap | 83.5 |
+| Khotang | 84.2 |
+| Nuwakot | 85.6 |
+
+Reference Line: Balanced Ratio (100)
+@enduml
+----
+
+Key features of gender ratio charts include:
+
+1. **Reference Lines**: Inclusion of reference lines for balanced ratio (100) or national average for context.
+
+2. **Comparative Visualization**: Ability to group administrative areas by characteristics (urban/rural, ecological zone, development region) for meaningful comparisons.
+
+3. **Multiple Ranking Views**: Options to rank areas by male deficit, female deficit, third gender representation, or change over time.
+
+4. **Deviation Highlighting**: Color coding to emphasize areas with significant deviations from the balanced ratio or national average.
+
+5. **Correlation Display**: Option to display associated factors (migration rate, economic indicators) alongside gender ratio for correlation analysis.
+
+*Gender Trend Visualization*
+
+This visualization shows how gender distributions change over time, essential for understanding demographic transitions.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Sex Ratio Trend: Gorkha District 2001-2021**
+
+scale max 1000
+concise "Sex Ratio" as Ratio
+
+@2001
+Ratio is 900
+
+@2011
+Ratio is 800
+
+@2021
+Ratio is 850
+
+@enduml
+----
+
+Key features of gender trend visualization include:
+
+1. **Event Annotation**: Important events affecting gender distribution (e.g., major migration policy changes, 2015 earthquake) can be marked on the timeline.
+
+2. **Multi-Series Comparison**: Display of multiple administrative areas in the same trend chart for comparison of trajectories.
+
+3. **Forecasting Extension**: Trend lines can include projections with confidence intervals based on historical patterns.
+
+4. **Trend Detection**: Automatic highlighting of significant trend changes or reversal points.
+
+5. **Seasonality Adjustment**: Option to view seasonally-adjusted trends to account for Nepal's seasonal migration patterns.
+
+*Age-Gender Pyramid*
+
+This visualization combines age and gender data to show the complete demographic structure of a population.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Population Pyramid with Third Gender - Kathmandu 2021**
+
+|= Age Group |= Males |= |= Females |= Third Gender |
+| 80+        | <:▋     | | ▎:>     | + |
+| 70-79      | <:▊     | | ▍:>     | + |
+| 60-69      | <:█     | | ▋:>     | ++ |
+| 50-59      | <:█▏    | | ▌:>     | ++ |
+| 40-49      | <:█▍    | | █:>     | +++ |
+| 30-39      | <:█▌    | | █▏:>    | ++++ |
+| 20-29      | <:█▊    | | █▍:>    | +++++ |
+| 10-19      | <:██    | | █▋:>    | ++ |
+| 0-9        | <:██▍   | | ██:>    | + |
+
+Males: 1.03M          Females: 1.07M          Third Gender: 1,834
+@enduml
+----
+
+Key features of age-gender pyramids include:
+
+1. **Third Gender Representation**: Nepal officially recognizes third gender, and the visualization includes this category, typically as a supplementary overlay.
+
+2. **Comparative Overlays**: Ability to overlay multiple pyramids (e.g., 2011 vs. 2021 census, urban vs. rural) to highlight structural differences.
+
+3. **Migration Impact Visualization**: Option to highlight "missing" cohorts that indicate outmigration, particularly working-age males in Nepal's context.
+
+4. **Cultural Annotation**: Ability to annotate culturally significant age bands (marriage age, retirement age) for social context.
+
+5. **Life Stage Highlighting**: Highlighting of key demographic groups like reproductive-age women or school-age children for specific planning purposes.
+
+===== Advanced Visualization Features
+
+*Third Gender-Specific Visualizations*
+
+Specialized visualizations for third gender demographics, reflecting Nepal's progressive legal recognition:
+
+1. **Geographic Distribution**: Maps showing third gender population density across administrative areas
+
+2. **Reporting Trend**: Line charts showing changes in reported third gender population over time (particularly important as social acceptance and willingness to self-identify evolves)
+
+3. **Urban Concentration**: Comparative visualizations of urban vs. rural third gender demographics
+
+4. **Age Structure**: Age distribution charts for third gender population
+
+*Migration Impact Analysis*
+
+Visualizations specialized for Nepal's high migration context:
+
+1. **Male Deficit Maps**: Highlighting areas with significant male deficits due to labor migration
+
+2. **Household Headship Changes**: Visualizing increases in female-headed households correlated with male outmigration
+
+3. **Temporal Migration Patterns**: Visualization of how gender ratios fluctuate seasonally with migration cycles
+
+4. **Migration Corridor Analysis**: Visualization of how gender imbalances relate to specific migration destinations (Gulf countries, Malaysia, India)
+
+*Gender Equity Visualization*
+
+Visualizations focusing on gender equity dimensions:
+
+1. **Gender Gap Index Maps**: Composite indicators of gender equity across multiple dimensions
+
+2. **Service Access Disparity**: Visualization of gender disparities in access to services such as education, healthcare, and financial services
+
+3. **Gender Budget Allocation**: Visualizations of gender-responsive budget allocations across administrative units
+
+4. **Gender-Based Violence Correlation**: Optional overlays showing relationships between demographic patterns and gender-based violence statistics
+
+*Comparative Gender Analysis*
+
+Specialized visualizations for comparing gender structures:
+
+1. **Urban-Rural Comparison**: Side-by-side visualizations comparing urban and rural gender patterns
+
+2. **Caste/Ethnicity Breakdown**: Comparative gender structures across Nepal's diverse ethnic and caste groups
+
+3. **Economic Stratification**: Gender patterns by wealth quintile or education level
+
+4. **International Comparison**: Benchmarking Nepal's gender demographics against regional neighbors or development peers
+
+===== Implementation Details
+
+*Dynamic Data Transformation*
+
+The visualization system dynamically transforms gender data to match visualization requirements:
+
+1. **Category Generation**: Automatic categorization of continuous gender ratio data into meaningful categories (e.g., "highly female-dominated" for areas with sex ratios below 80)
+
+2. **User-Configurable Thresholds**: Adjustable thresholds for categorical classifications
+
+3. **Statistical Transformation**: Calculation of derived statistics like percent change, standard deviation from mean, etc.
+
+4. **Temporal Alignment**: Adjustment for different data collection timeframes to enable valid comparisons
+
+*Culturally Appropriate Visualization*
+
+Visualizations are customized for Nepal's cultural context:
+
+1. **Dual Script Support**: All visualizations include both Nepali and English labels
+
+2. **Nepali Calendar Integration**: Support for Bikram Sambat dates alongside Gregorian calendar
+
+3. **Culturally Appropriate Color Schemes**: Use of culturally neutral color schemes that avoid problematic color associations
+
+4. **Local Administrative Names**: Use of official Nepali terminology for administrative divisions
+
+*Accessibility Features*
+
+Visualizations implement accessibility best practices:
+
+1. **Color Blindness Safe**: All color schemes tested for color vision deficiencies
+
+2. **Screen Reader Support**: Text equivalents for all visual elements
+
+3. **Data Table Alternatives**: All visual data available in accessible tabular format
+
+4. **Mobile Optimization**: Responsive design for Nepal's predominantly mobile-first internet users
+
+*Export and Sharing Options*
+
+Visualizations support multiple export formats:
+
+1. **High-Resolution Images**: PNG and SVG formats for reports and publications
+
+2. **Interactive HTML**: Self-contained interactive versions for digital sharing
+
+3. **Data Export**: Underlying data in CSV, Excel, and JSON formats
+
+4. **Report Integration**: Direct integration with report generation systems
+
+5. **Social Media Formats**: Export optimized for WhatsApp and Facebook sharing, the dominant platforms in Nepal
+
+*Edge Cases and Special Considerations*
+
+The visualization system handles several edge cases specific to Nepal's context:
+
+1. **Small Population Areas**: Statistical smoothing for wards with very small populations to avoid extreme values
+
+2. **Zero Third Gender Areas**: Appropriate representation for areas with zero or unreported third gender population
+
+3. **Missing Data Handling**: Clear visualization of areas with incomplete data
+
+4. **Extreme Migration Areas**: Special handling for districts with extremely skewed gender ratios (some districts have fewer than 80 males per 100 females)
+
+5. **Administrative Changes**: Consistent visualization across Nepal's changing administrative boundaries, particularly important given the 2017 federal restructuring
+
+These visualization capabilities transform complex gender demographic data into accessible insights that support evidence-based planning and policy development. The visualizations are designed to bridge technical demographic analysis and practical decision-making, making gender demographic patterns accessible to policymakers, planners, and citizens across Nepal's diverse contexts.

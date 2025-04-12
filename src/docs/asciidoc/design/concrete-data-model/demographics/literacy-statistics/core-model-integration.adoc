@@ -1,0 +1,293 @@
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface FullTextSearchable
+interface CustomValidatable
+
+' LiteracyStatistics implementation
+class LiteracyStatistics {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +String adminAreaName
+  +AdminAreaLevel adminAreaLevel
+  
+  ' Time context
+  +Integer year
+  +String periodType
+  +LocalDate referenceDate
+  +Boolean isCensusData
+  +String censusReference
+  +Boolean isProjected
+  +String projectionMethod
+  
+  ' Overall literacy rates
+  +Double overallLiteracyRate
+  +Double maleLiteracyRate
+  +Double femaleLiteracyRate
+  +Double urbanLiteracyRate
+  +Double ruralLiteracyRate
+  +Double literacyGenderParity
+  +Double literacyUrbanRuralParity
+  
+  ' Population counts
+  +Integer totalPopulationOverFive
+  +Integer literateTotalCount
+  +Integer illiterateTotalCount
+  +Integer malePopulationOverFive
+  +Integer literatedMaleCount
+  +Integer illiterateMaleCount
+  +Integer femalePopulationOverFive
+  +Integer literatedFemaleCount
+  +Integer illiterateFemaleCount
+  
+  ' Age-specific literacy
+  +Map<AgeGroup, LiteracyByAge> literacyByAge
+  +Double youthLiteracyRate
+  +Double adultLiteracyRate
+  +Double elderlyLiteracyRate
+  
+  ' Educational attainment
+  +Map<EducationLevel, LiteracyByEducation> educationalAttainment
+  +Double primaryCompletionRate
+  +Double secondaryCompletionRate
+  +Double tertiaryEnrollmentRate
+  +Double averageYearsOfSchooling
+  
+  ' Specialized metrics
+  +Map<Language, Double> literacyByLanguage
+  +Double digitalLiteracyRate
+  +Double financialLiteracyRate
+  +Double functionalLiteracyRate
+  +String dominantLanguageGroup
+  +String dominantScriptSystem
+  
+  ' Data quality
+  +ConfidenceLevel confidenceLevel
+  +String dataSource
+  +String methodologyDescription
+  +Double marginOfError
+  +String notes
+  
+  ' Previous reference
+  +UUID previousStatisticsId
+  +Double changeLiteracyRate
+  +Double changeLiteracyGenderParity
+  +Double changeEducationalAttainment
+  
+  ' External references
+  +UUID sourceDatasetId
+  +UUID educationDepartmentReferenceId
+}
+
+' Supporting Classes
+class LiteracyByAge {
+  +UUID id
+  +AgeGroup ageGroup
+  +Integer populationCount
+  +Integer literateCount
+  +Integer illiterateCount
+  +Double literacyRate
+  +Double maleLiteracyRate
+  +Double femaleLiteracyRate
+  +Double genderParity
+  +Boolean isEstimated
+  +ConfidenceLevel confidenceLevel
+}
+
+class LiteracyByEducation {
+  +UUID id
+  +EducationLevel level
+  +Integer populationCount
+  +Double percentOfPopulation
+  +Double malePercentage
+  +Double femalePercentage
+  +Double genderParity
+  +Double urbanPercentage
+  +Double ruralPercentage
+  +Boolean isEstimated
+  +ConfidenceLevel confidenceLevel
+}
+
+class LiteracyTrendAnalysis {
+  +UUID id
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startYear
+  +Integer endYear
+  +List<Integer> years
+  +List<Double> overallRates
+  +List<Double> maleRates
+  +List<Double> femaleRates
+  +List<Double> genderParityIndices
+  +Double averageAnnualChange
+  +TrendDirection trend
+  +Double projectedFutureRate
+  +Integer projectionYear
+  +String analysisNotes
+  +LocalDateTime analyzedAt
+}
+
+class LiteracyDisparityIndicator {
+  +UUID id
+  +UUID literacyStatisticsId
+  +DisparityType disparityType
+  +Double disparitySeverity
+  +String possibleCauses
+  +String implicationsDescription
+  +String recommendedInterventions
+  +LocalDateTime detectedAt
+  +Boolean isVerified
+  +UUID verifiedBy
+  +String verificationNotes
+}
+
+' Enumerations
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AgeGroup {
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum EducationLevel {
+  NO_FORMAL_EDUCATION
+  BASIC_LITERACY
+  PRIMARY_PARTIAL
+  PRIMARY_COMPLETE
+  LOWER_SECONDARY
+  SECONDARY
+  HIGHER_SECONDARY
+  BACHELOR
+  MASTER
+  DOCTORAL
+  TECHNICAL_VOCATIONAL
+}
+
+enum Language {
+  NEPALI
+  MAITHILI
+  BHOJPURI
+  THARU
+  TAMANG
+  NEWAR
+  BAJJIKA
+  MAGAR
+  DOTELI
+  URDU
+  AWADHI
+  LIMBU
+  GURUNG
+  RAI
+  BAITADELI
+  ENGLISH
+  OTHER
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  ACCELERATING
+  DECELERATING
+}
+
+enum DisparityType {
+  GENDER
+  URBAN_RURAL
+  ETHNIC
+  LINGUISTIC
+  AGE_GROUP
+  ECONOMIC
+  GEOGRAPHIC
+  DISABILITY
+}
+
+' Inheritance relationships
+BaseEntity <|-- LiteracyStatistics
+BaseEntity <|-- LiteracyByAge
+BaseEntity <|-- LiteracyByEducation
+BaseEntity <|-- LiteracyTrendAnalysis
+BaseEntity <|-- LiteracyDisparityIndicator
+
+' Interface implementation
+LiteracyStatistics ..|> DataAggregatable
+LiteracyStatistics ..|> HistoryViewable
+LiteracyStatistics ..|> ExternalSystemSyncable
+LiteracyStatistics ..|> FullTextSearchable
+LiteracyStatistics ..|> CustomValidatable
+
+' Class relationships
+LiteracyStatistics "1" o-- "many" LiteracyByAge
+LiteracyStatistics "1" o-- "many" LiteracyByEducation
+LiteracyStatistics "1" o-- "many" LiteracyDisparityIndicator
+LiteracyStatistics -- ConfidenceLevel
+LiteracyStatistics -- AdminAreaLevel
+LiteracyByAge -- AgeGroup
+LiteracyByAge -- ConfidenceLevel
+LiteracyByEducation -- EducationLevel
+LiteracyByEducation -- ConfidenceLevel
+LiteracyTrendAnalysis -- TrendDirection
+LiteracyTrendAnalysis -- AdminAreaLevel
+LiteracyDisparityIndicator -- DisparityType
+@enduml
+----
+
+The LiteracyStatistics entity extends the BaseEntity core model and implements several capability interfaces to provide comprehensive literacy and educational attainment analysis. This integration enables sophisticated literacy data management while maintaining consistency with the core domain model architecture.
+
+The entity is designed to work with census data, educational surveys, and demographic estimates, capturing literacy rates and educational attainment across administrative boundaries. It maintains connections to the administrative hierarchy (ward, municipality, district, province, country) for contextual analysis.
+
+As a DataAggregatable entity, LiteracyStatistics supports hierarchical roll-ups from smaller to larger administrative units, allowing literacy analysis at any level of Nepal's administrative structure. The HistoryViewable interface enables tracking of literacy rate changes over time, essential for analyzing trends in educational development.
+
+The entity captures not just raw literacy counts but also derived metrics such as gender parity indices, urban-rural disparities, and age-specific literacy rates. These metrics provide valuable insights into educational inequalities and their potential socioeconomic implications.
+
+A distinctive feature of the LiteracyStatistics entity is its explicit inclusion of multilingual literacy data. Nepal's linguistic diversity includes over 120 languages, with Nepali as the official language. The entity captures literacy rates across major language groups, acknowledging that in Nepal's context, literacy often depends on the language of assessment.
+
+The model handles both current data and historical information with clear reference to previous statistics, enabling trend analysis. It also supports literacy analysis across different dimensions including age groups, educational attainment levels, geographic locations (urban/rural), and languages, providing a multifaceted view of literacy demographics.
+
+For quality management, the entity includes explicit confidence level indicators, methodology descriptions, and margin of error calculations. This transparency about data reliability is particularly important for literacy statistics where data collection challenges can affect accuracy, especially in remote areas or among marginalized populations.
+
+Finally, the model includes specialized components for analyzing literacy-related phenomena like disparity indicators and trend analysis, supporting deeper investigation of literacy patterns and their causes. This comprehensive approach ensures the entity can support a wide range of literacy-focused demographic analyses required for evidence-based planning in education, workforce development, and social inclusion programs.

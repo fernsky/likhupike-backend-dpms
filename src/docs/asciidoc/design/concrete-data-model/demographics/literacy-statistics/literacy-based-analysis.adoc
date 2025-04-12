@@ -1,0 +1,310 @@
+[plantuml]
+----
+@startuml
+participant "EducationAnalyst" as Analyst
+participant "LiteracyStatistics" as LiteracyStats
+participant "LiteracyAnalysisEngine" as AnalysisEngine
+participant "DisparityAnalysisService" as Disparity
+participant "VisualizationService" as Viz
+participant "AnomalyDetectionService" as Anomaly
+
+Analyst -> LiteracyStats: requestLiteracyAnalysis(areaId, year)
+activate LiteracyStats
+
+LiteracyStats -> LiteracyStats: retrieveLiteracyData()
+LiteracyStats -> AnalysisEngine: analyzeLiteracyPatterns(literacyData)
+activate AnalysisEngine
+
+AnalysisEngine -> AnalysisEngine: calculateOverallLiteracyRate()
+AnalysisEngine -> AnalysisEngine: analyzeLiteracyByGender()
+AnalysisEngine -> AnalysisEngine: analyzeLiteracyByAge()
+AnalysisEngine -> AnalysisEngine: assessEducationalAttainment()
+AnalysisEngine -> AnalysisEngine: calculateLiteracyGaps()
+AnalysisEngine -> AnalysisEngine: analyzeLiteracyTrends()
+AnalysisEngine -> AnalysisEngine: calculateCompletionRates()
+AnalysisEngine -> AnalysisEngine: assessMultilingualLiteracy()
+
+LiteracyStats <-- AnalysisEngine: literacyAnalysisResults
+deactivate AnalysisEngine
+
+LiteracyStats -> Disparity: identifyDisparities(literacyData)
+activate Disparity
+
+Disparity -> Disparity: calculateGenderDisparities()
+Disparity -> Disparity: assessGeographicDisparities()
+Disparity -> Disparity: analyzeAgeDisparities()
+Disparity -> Disparity: identifyEthnicDisparities()
+Disparity -> Disparity: assessLanguageDisparities()
+Disparity -> Disparity: calculateDisparityIndices()
+
+LiteracyStats <-- Disparity: disparityAnalysis
+deactivate Disparity
+
+LiteracyStats -> Anomaly: detectLiteracyAnomalies(literacyData)
+activate Anomaly
+
+Anomaly -> Anomaly: checkForDataCollectionBiases()
+Anomaly -> Anomaly: identifyUnexpectedPatterns()
+Anomaly -> Anomaly: detectStatisticalOutliers()
+Anomaly -> Anomaly: assessHistoricalConsistency()
+Anomaly -> Anomaly: evaluateRegionalComparability()
+
+LiteracyStats <-- Anomaly: anomalyReport
+deactivate Anomaly
+
+LiteracyStats -> LiteracyStats: compileAnalysisInsights()
+activate LiteracyStats
+LiteracyStats -> LiteracyStats: summarizeLiteracyPatterns()
+LiteracyStats -> LiteracyStats: identifyPolicyImplications()
+LiteracyStats -> LiteracyStats: generateRecommendations()
+deactivate LiteracyStats
+
+LiteracyStats -> Viz: renderLiteracyVisualizations(literacyData)
+activate Viz
+
+Viz -> Viz: createLiteracyMap()
+Viz -> Viz: generateDisparityCharts()
+Viz -> Viz: produceAgeLiteracyBarGraph()
+Viz -> Viz: createGenderComparisonChart()
+Viz -> Viz: renderEducationalAttainmentPyramid()
+
+LiteracyStats <-- Viz: visualizationPackage
+deactivate Viz
+
+Analyst <-- LiteracyStats: completeLiteracyAnalysis
+deactivate LiteracyStats
+
+Analyst -> LiteracyStats: compareLiteracyDistributions(areaId, yearRange)
+activate LiteracyStats
+
+LiteracyStats -> LiteracyStats: retrieveTimeSeriesData(areaId, yearRange)
+LiteracyStats -> AnalysisEngine: analyzeTemporialTrends(timeSeriesData)
+activate AnalysisEngine
+
+AnalysisEngine -> AnalysisEngine: calculateYearOverYearChanges()
+AnalysisEngine -> AnalysisEngine: identifyTrendPatterns()
+AnalysisEngine -> AnalysisEngine: detectTrendReversals()
+AnalysisEngine -> AnalysisEngine: projectFutureLiteracyRates()
+AnalysisEngine -> AnalysisEngine: assessLongTermImplications()
+
+LiteracyStats <-- AnalysisEngine: temporalAnalysisResults
+deactivate AnalysisEngine
+
+LiteracyStats -> Viz: renderTrendVisualizations(temporalAnalysisResults)
+activate Viz
+
+Viz -> Viz: createTimeSeriesChart()
+Viz -> Viz: generateCohortProgressionGraph()
+Viz -> Viz: produceDisparityTrendChart()
+Viz -> Viz: renderProjectionVisualization()
+
+LiteracyStats <-- Viz: trendsVisualizationPackage
+deactivate Viz
+
+Analyst <-- LiteracyStats: literacyTemporalAnalysis
+deactivate LiteracyStats
+@enduml
+----
+
+The LiteracyStatistics entity provides sophisticated analytical capabilities specifically designed for Nepal's unique literacy demographic context. Literacy analysis is a crucial aspect of demographic research, particularly in Nepal where significant disparities exist across different regions, social groups, and age cohorts.
+
+===== Overall Literacy Analysis
+
+The system analyzes literacy rates with multiple dimensions:
+
+1. **Basic Literacy Calculation**
+   * Standard literacy rate (percentage of population age 5+ who can read and write)
+   * Age-specific literacy rates to identify life-cycle patterns
+   * Gender-specific literacy rates to identify gender gaps
+   * Geographic patterns (urban vs. rural)
+
+2. **Literacy Rate Categorization**
+   * VERY_HIGH (>90%)
+   * HIGH (75-90%)
+   * MEDIUM (60-75%)
+   * LOW (45-60%)
+   * VERY_LOW (<45%)
+
+3. **Literacy Gap Analysis**
+   * Gender literacy gap (difference between male and female rates)
+   * Urban-rural literacy gap
+   * Age cohort literacy gaps
+   * Ethnic/caste literacy disparities
+
+===== Educational Attainment Analysis
+
+The system examines detailed educational attainment:
+
+1. **Completion Rate Analysis**
+   * Primary education completion rates
+   * Secondary education completion rates
+   * Higher education attainment rates
+   * Vocational training participation
+
+2. **Educational Progression**
+   * School enrollment-to-completion ratios
+   * Grade progression rates
+   * Educational attainment by age cohort
+   * Years of schooling distribution
+
+3. **Gender Parity in Education**
+   * Gender parity index for different education levels
+   * Female participation in higher education
+   * Gender-specific dropout patterns
+   * Subject/field gender distribution
+
+===== Age-Specific Literacy Analysis
+
+The system examines literacy patterns across age groups:
+
+1. **Youth Literacy (15-24)**
+   * Current education system effectiveness indicator
+   * School-to-work transition literacy needs
+   * Digital literacy among youth
+   * Multilingual literacy in younger generations
+
+2. **Adult Literacy (25-64)**
+   * Workforce literacy assessment
+   * Parent literacy for educational support
+   * Functional literacy for economic participation
+   * Adult education program targeting
+
+3. **Elderly Literacy (65+)**
+   * Historical education access indicator
+   * Social inclusion implications
+   * Health information access capability
+   * Intergenerational literacy support needs
+
+===== Multilingual Literacy Assessment
+
+Nepal's linguistic diversity requires specialized analysis:
+
+1. **Language-Specific Literacy**
+   * Literacy in official language (Nepali)
+   * Literacy in mother tongue
+   * Multilingual literacy capabilities
+   * Script-based literacy assessment
+
+2. **Linguistic Inclusion Patterns**
+   * Access to education in mother tongue
+   * Transition to Nepali-medium instruction
+   * English language literacy as economic asset
+   * Indigenous language preservation metrics
+
+3. **Linguistic Barriers Analysis**
+   * Identification of language barriers to literacy
+   * Assessment of multilingual education effectiveness
+   * Documentation of script-based literacy challenges
+   * Linguistic isolation impact on literacy
+
+===== Disparity Detection and Analysis
+
+The system identifies and classifies different types of literacy disparities:
+
+1. **Disparity Types**
+   * GENDER: Disparities between males and females
+   * URBAN_RURAL: Disparities between urban and rural areas
+   * ETHNIC: Disparities across ethnic groups and castes
+   * LINGUISTIC: Disparities based on linguistic background
+   * AGE_GROUP: Disparities across generations
+   * ECONOMIC: Disparities correlated with economic status
+   * GEOGRAPHIC: Disparities between regions (mountains, hills, terai)
+   * DISABILITY: Literacy disparities affecting persons with disabilities
+
+2. **Severity Assessment**
+   * Quantification of disparity magnitude
+   * Historical trend (improving/worsening)
+   * Comparative analysis with national/regional norms
+   * Intersectional disparity amplification effects
+
+3. **Cause Analysis**
+   * Multiple-factor evaluation of causal factors
+   * Differentiation between access and quality causes
+   * Cultural, economic, and geographical determinants
+   * Policy intervention points identification
+
+===== Functional Literacy Analysis
+
+Beyond basic literacy, the system assesses functional literacy capabilities:
+
+1. **Digital Literacy Assessment**
+   * Basic computer/smartphone usage skills
+   * Internet information search abilities
+   * Digital service access capabilities
+   * Online safety awareness
+
+2. **Financial Literacy Evaluation**
+   * Basic numeracy skills
+   * Budget management capabilities
+   * Banking service utilization ability
+   * Financial decision-making capacity
+
+3. **Health Literacy Analysis**
+   * Ability to understand health information
+   * Medication instruction comprehension
+   * Preventive health knowledge
+   * Healthcare access capabilities
+
+===== Nepal-Specific Features
+
+The literacy analysis includes features specific to Nepal's educational and social context:
+
+1. **Ecological Zone Analysis**
+   * Differential literacy patterns across Mountain, Hill, and Terai regions
+   * Altitude-correlated educational access
+   * Resource distribution impacts on literacy
+   * Geographic isolation effects
+
+2. **Caste/Ethnicity Correlation**
+   * Analysis of literacy patterns across Nepal's diverse ethnic groups
+   * Identification of historically disadvantaged groups
+   * Affirmative action program effectiveness
+   * Intersectional analysis of gender and ethnicity
+
+3. **Migration Impact Analysis**
+   * Remittance effects on educational investment
+   * Brain drain patterns
+   * Returnee migrant literacy benefits
+   * Left-behind family educational impacts
+
+4. **Non-Formal Education Assessment**
+   * Impact of adult literacy campaigns
+   * Effectiveness of alternative education programs
+   * Traditional knowledge systems integration
+   * Vocational vs. academic education patterns
+
+===== Literacy-Specific Indicators
+
+The analysis calculates specialized literacy demographic indicators:
+
+1. **Educational Efficiency Metrics**
+   * Years-to-literacy ratio
+   * Educational investment per literacy percentage point
+   * Teacher-to-literacy effectiveness ratio
+   * Program retention to literacy correlation
+
+2. **Literacy Vulnerability Index**
+   * Combined measure of factors threatening literacy progress
+   * Early warning system for literacy regression
+   * Identification of at-risk populations
+   * Emergency response targeting tool
+
+3. **Literacy Sustainability Assessment**
+   * Intergenerational literacy transfer patterns
+   * Community literacy support infrastructure
+   * Literacy utilization in daily life
+   * Long-term literacy maintenance factors
+
+===== Edge Cases and Special Considerations
+
+1. **Migrant Worker Literacy**: For communities with high labor migration, literacy statistics can be distorted as more educated members may be absent during census enumeration. The system employs special adjustments to account for the "brain drain" effect in literacy calculations.
+
+2. **Multilingual Assessment Complexity**: In linguistically diverse areas, a person may be literate in one language but not the national language. The system can record literacy in multiple languages and provides both language-specific and overall literacy metrics.
+
+3. **Monastic Education**: In certain communities, particularly Tibetan Buddhist areas, traditional monastic education may not align with conventional literacy definitions despite providing sophisticated learning. The system accommodates these alternative education pathways in literacy assessment.
+
+4. **Script Diversity**: Nepal uses multiple script systems, with Devanagari being the most common for Nepali language. The system can distinguish between literacy in different scripts, acknowledging that script familiarity affects functional literacy.
+
+5. **Seasonal Assessment Variation**: When literacy assessments occur during seasonal migration periods, results may be skewed. The system flags literacy data collected during high migration seasons for special interpretation.
+
+By providing these specialized literacy analysis capabilities, the LiteracyStatistics entity transforms raw literacy data into actionable demographic insights for education policy, workforce development, and social inclusion programs across Nepal's diverse contexts.

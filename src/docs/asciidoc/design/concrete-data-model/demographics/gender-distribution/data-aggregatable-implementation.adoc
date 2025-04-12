@@ -1,0 +1,222 @@
+===== DataAggregatable Implementation
+
+The GenderDistribution entity implements the DataAggregatable interface to enable aggregation of gender data across different administrative levels and time periods.
+
+[plantuml]
+----
+@startuml
+participant "DemographicService" as Service
+participant "GenderDistribution\nimplements DataAggregatable" as Gender
+participant "AggregationEngine" as Engine
+participant "ValidationService" as Validation
+participant "AdminHierarchyService" as Hierarchy
+
+Service -> Gender: aggregateData(genderDistributions, targetLevel)
+activate Gender
+
+Gender -> Hierarchy: verifyAdminHierarchy(sourceIds, targetId)
+activate Hierarchy
+Gender <-- Hierarchy: hierarchyVerified
+deactivate Hierarchy
+
+Gender -> Gender: validateForAggregation(genderDistributions)
+activate Gender
+Gender -> Gender: checkAdminLevelConsistency()
+Gender -> Gender: checkTimeConsistency()
+Gender -> Gender: checkMethodologicalConsistency()
+Gender <-- Gender: aggregatableDistributions
+deactivate Gender
+
+Gender -> Engine: aggregateGenderDistributions(aggregatableDistributions)
+activate Engine
+Engine -> Engine: sumTotalPopulation()
+Engine -> Engine: sumMalePopulation()
+Engine -> Engine: sumFemalePopulation()
+Engine -> Engine: sumThirdGenderPopulation()
+Engine -> Engine: calculateGenderRatios()
+Engine -> Engine: calculateConfidenceMetrics()
+Engine -> Engine: propagateMetadata()
+Gender <-- Engine: aggregatedDistribution
+deactivate Engine
+
+Gender -> Validation: validateAggregation(aggregatedDistribution)
+activate Validation
+Validation -> Validation: checkTotalConsistency()
+Validation -> Validation: verifyGenderRatios()
+Validation -> Validation: validateGenderProportions()
+Gender <-- Validation: validationResult
+deactivate Validation
+
+Gender -> Gender: finalizeAggregation(aggregatedDistribution)
+activate Gender
+Gender -> Gender: setAdminAreaLevel(targetLevel)
+Gender -> Gender: setAdminAreaId(targetId)
+Gender -> Gender: assignConfidenceLevel()
+Gender -> Gender: recordSourceDistributions()
+Gender <-- Gender: finalAggregatedDistribution
+deactivate Gender
+
+Service <-- Gender: aggregatedDistribution
+deactivate Gender
+
+Service -> Gender: aggregateTimePeriod(distributionId, startYear, endYear, method)
+activate Gender
+
+Gender -> Gender: getDistributionsForPeriod(distributionId, startYear, endYear)
+activate Gender
+Gender <-- Gender: periodDistributions
+deactivate Gender
+
+Gender -> Gender: validateTimeSeriesDistributions(periodDistributions)
+activate Gender
+Gender -> Gender: checkTemporalContinuity()
+Gender -> Gender: identifyMethodologicalBreaks()
+Gender <-- Gender: validatedDistributions
+deactivate Gender
+
+Gender -> Engine: aggregateTimeSeries(validatedDistributions, method)
+activate Engine
+alt method == AVERAGE
+  Engine -> Engine: calculateAverageGenderDistribution()
+else method == TREND
+  Engine -> Engine: calculateGenderTrendDistribution()
+else method == ENDPOINT_COMPARISON
+  Engine -> Engine: calculateComparisonDistribution()
+else method == CUSTOM
+  Engine -> Engine: applyCustomAggregation()
+end
+Gender <-- Engine: timeAggregatedResult
+deactivate Engine
+
+Gender -> Gender: finalizeTimeAggregation(timeAggregatedResult)
+activate Gender
+Gender -> Gender: setTimeAggregationMetadata()
+Gender -> Gender: setSynthesizedYear()
+Gender -> Gender: recordTimeRangeDetails()
+Gender <-- Gender: finalizedTimeAggregation
+deactivate Gender
+
+Service <-- Gender: timeAggregatedDistribution
+deactivate Gender
+@enduml
+----
+
+The GenderDistribution entity's implementation of DataAggregatable provides powerful aggregation capabilities to support gender-specific demographic analysis across Nepal's administrative hierarchy and over time periods.
+
+===== Spatial Aggregation Implementation
+
+Spatial aggregation enables the combination of gender data from lower administrative levels to create aggregated distributions for higher administrative units, supporting Nepal's multi-tiered administrative structure.
+
+*Administrative Hierarchy Validation*
+
+Before performing spatial aggregation, the system validates that the specified source distributions form a complete set for the target administrative unit:
+
+1. **Completeness Check**: Ensures all constituent units of the target administrative area are represented in the source data
+2. **Boundary Validation**: Confirms administrative boundaries have not changed between data collection periods
+3. **Hierarchical Consistency**: Validates that all source data belongs to the same administrative level
+
+This validation is particularly important in Nepal's context where the 2017 federal restructuring created new administrative boundaries, and ensuring data aggregation respects these boundaries is critical for accurate analysis.
+
+*Gender-Specific Aggregation Methodology*
+
+The aggregation process applies specialized methods for gender data:
+
+1. **Population Counts**: Direct summation of male, female, and third gender population counts
+
+2. **Gender Ratio Calculation**: Recalculation of sex ratio based on the aggregated gender counts rather than averaging the ratios of constituent units
+
+3. **Third Gender Data Handling**: Special handling for third gender data, which often has smaller counts and requires statistical smoothing when aggregating
+
+4. **Data Quality Weighting**: For survey-based data, weighting is applied based on sample size and confidence intervals
+
+*Confidence Level Propagation*
+
+The system propagates confidence information during aggregation:
+
+1. **Lowest Common Confidence**: The aggregated distribution typically receives the lowest confidence level of any constituent distribution
+
+2. **Sample Size Adjustment**: For survey-based data, confidence levels may be elevated when combining sufficient sample sizes
+
+3. **Methodological Discrepancy Penalty**: Confidence is reduced when combining data collected through different methodologies
+
+4. **Missing Data Impact**: Partial data coverage results in confidence level reduction
+
+*Special Considerations for Nepal*
+
+Several specialized aggregation features address Nepal's unique context:
+
+1. **Male Migration Adjustment**: In districts with high male outmigration, the system can apply migration-adjusted aggregation that accounts for temporarily absent populations when requested
+
+2. **Caste/Ethnicity Correlation**: Optional parallel aggregation of gender data by major ethnic/caste groups to preserve important social dimensions
+
+3. **Urban-Rural Distinction**: Ability to maintain urban-rural distinctions during upward aggregation to preserve important demographic differences
+
+4. **Post-Disaster Displacement**: Special aggregation modes for post-disaster periods that can account for population displacement
+
+===== Temporal Aggregation Implementation
+
+Temporal aggregation enables analysis of gender distribution trends over time and supports various time-based analysis methods.
+
+*Time Period Selection*
+
+The system supports flexible time period selection for aggregation:
+
+1. **Census Periods**: Aggregation between official census periods (2001, 2011, 2021)
+2. **Custom Ranges**: User-defined time periods for specific analysis needs
+3. **Plan-Aligned Periods**: Time frames aligned with Five-Year Development Plan periods
+4. **Pre/Post Event Analysis**: Periods defined relative to significant events (e.g., pre/post federal restructuring)
+
+*Data Continuity Validation*
+
+Before temporal aggregation, the system validates time series consistency:
+
+1. **Coverage Check**: Ensures consistent administrative coverage across time periods
+2. **Methodological Breaks**: Identifies and flags changes in data collection methodology
+3. **Classification Changes**: Adjusts for changes in gender classification (particularly relevant for third gender recognition, which was formally introduced in the 2011 census)
+
+*Multiple Temporal Aggregation Methods*
+
+The system supports different approaches to temporal aggregation:
+
+1. **Averaging**: Calculating mean values across the time period, useful for smoothing short-term fluctuations
+
+2. **Trend Analysis**: Computing trend lines to characterize gender proportion changes:
+   - Sex ratio trends
+   - Third gender reporting trends
+   - Gender balance category shifts
+
+3. **Endpoint Comparison**: Analyzing net change between the start and end of a period:
+   - Net change in gender counts and ratios
+   - Proportional changes in gender distribution
+   - Categorical shifts in gender balance
+
+4. **Custom Methods**: Specialized aggregation for specific needs:
+   - Weighted temporal averages giving preference to more recent data
+   - Bayesian methods for small area statistics
+   - Gap-filling for incomplete time series
+
+*Gender-Specific Time Series Considerations*
+
+Several temporal factors specific to gender data in Nepal are addressed:
+
+1. **Third Gender Reporting Evolution**: Special handling for the evolving nature of third gender data collection, which has changed significantly over census periods
+
+2. **Migration Effect Isolation**: Techniques to separate gender distribution changes due to migration from those caused by other demographic factors
+
+3. **Data Collection Timing Effects**: Adjustment for seasonal male migration that can affect gender distributions depending on when data was collected
+
+4. **Incremental Census Roll-Out**: Methods to account for the phased collection of Nepal's census data, which can span several months with different regions enumerated at different times
+
+*Implementation Considerations*
+
+Several optimizations support efficient temporal aggregation:
+
+1. **Caching Strategy**: Common temporal aggregations are cached to improve performance
+
+2. **Computational Efficiency**: Algorithms optimized for sparse time series data, common in Nepal's data environment
+
+3. **Quality Flagging**: Clear identification of periods with lower data quality
+
+4. **Metadata Preservation**: Detailed tracking of which methodologies were used in different time periods
+
+This DataAggregatable implementation enables sophisticated analysis of gender demographic patterns across both administrative hierarchies and time periods, accounting for Nepal's complex administrative history and diverse data collection methodologies.

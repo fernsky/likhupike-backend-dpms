@@ -1,0 +1,191 @@
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Design literacy assessment methodology;
+:Develop literacy survey instruments;
+:Train enumerators on literacy assessment;
+
+|Field Data Collection|
+:Conduct household surveys;
+:Administer literacy tests;
+:Collect educational attainment data;
+:Document multilingual literacy;
+note right
+  Nepal-specific challenges:
+  - Multilingual assessment needed
+  - Remote area access limitations
+  - Cultural factors affecting self-reporting
+  - Varying literacy definitions by context
+end note
+
+|Education Department|
+:Compile school enrollment records;
+:Gather school completion data;
+:Document non-formal education programs;
+:Provide teacher-student ratios;
+note right
+  School data challenges:
+  - Incomplete record-keeping in remote schools
+  - School dropout tracking gaps
+  - Informal education documentation
+  - Migration effects on enrollment
+end note
+
+|Data Processing Team|
+:Clean raw literacy data;
+:Resolve inconsistencies;
+:Apply literacy measurement standards;
+:Calculate initial literacy rates;
+note right
+  Processing considerations:
+  - Reconciling self-reported vs. tested literacy
+  - Standardizing across languages
+  - Age-appropriate literacy definitions
+  - Functional vs. basic literacy distinction
+end note
+
+|System|
+:Import validated literacy data;
+:Calculate literacy rates by administrative area;
+:Compute gender and geographic disparities;
+:Flag areas with significant literacy gaps;
+
+|Statistical Team|
+:Analyze literacy patterns;
+:Compare with historical literacy trends;
+:Assess migration impacts on literacy rates;
+:Validate against international benchmarks;
+:Document data limitations;
+
+|Quality Assurance|
+:Perform data verification;
+:Conduct post-enumeration literacy sample;
+:Calculate confidence levels;
+:Identify undercounting risks;
+:Finalize literacy dataset;
+
+|Literacy Analysis Specialist|
+:Review literacy anomalies;
+:Assess education policy implications;
+:Analyze spatial patterns of literacy;
+:Document interpretation guidelines;
+:Generate education recommendations;
+
+|Data Users|
+:Access literacy distribution data;
+:View literacy rate visualizations;
+:Extract literacy statistics for planning;
+:Correlate with other demographic indicators;
+:Develop targeted education interventions;
+
+stop
+@enduml
+----
+
+The LiteracyStatistics entity implements a comprehensive data collection and processing workflow designed to address Nepal's unique context and challenges in literacy data collection.
+
+===== Census and Survey Integration
+
+The primary authoritative source for literacy distribution data is Nepal's national population census conducted by the Central Bureau of Statistics (CBS) approximately every 10 years. When official census data becomes available, it is integrated as the foundation for literacy analysis with `isCensusData=true`.
+
+Nepal faces unique challenges in literacy data collection:
+
+1. **Multilingual Literacy Assessment**: Nepal's linguistic diversity requires literacy assessment in multiple languages, as a person might be literate in one language but not in others. The system accommodates multiple literacy definitions based on language proficiency.
+
+2. **Self-Reported vs. Tested Literacy**: Census data typically relies on self-reported literacy, which can overestimate actual literacy. The system records the methodology used and can adjust confidence levels accordingly when literacy has been directly tested rather than self-reported.
+
+3. **Functional Literacy vs. Basic Literacy**: The system distinguishes between basic literacy (ability to read and write simple sentences) and functional literacy (ability to use literacy skills in daily life and work contexts), capturing both metrics when available.
+
+4. **Educational Attainment Verification**: Data collection includes verification against school records where possible, especially for recent graduates, to validate educational attainment claims.
+
+The system applies specific methodologies to address these challenges:
+
+- Language-specific literacy assessment protocols
+- Combination of self-reporting and sample testing
+- Standardized tests for functional literacy assessment
+- Integration of school enrollment and completion records
+- Special consideration for non-formal education programs
+
+===== Intercensal Estimation Process
+
+Between census years, the system employs several techniques to update literacy statistics:
+
+1. **School Completion Method**: Updates literacy estimates based on school enrollment and completion rates, particularly for youth populations
+
+2. **Survey Integration**: Incorporates literacy data from periodic surveys like the Nepal Living Standards Survey (NLSS) or the Nepal Demographic Health Survey (NDHS)
+
+3. **Administrative Data**: Integrates literacy data from administrative sources such as voter registration (which often includes literacy status) and adult literacy program participation
+
+4. **Cohort Projection**: Projects literacy rates by age cohort, accounting for education system improvements over time
+
+Each estimation method explicitly documents literacy-specific assumptions and limitations in the data through the `methodologyDescription` field.
+
+===== Literacy Data Quality Management
+
+Each LiteracyStatistics record includes explicit quality indicators:
+
+1. **Confidence Level**: Rated from HIGH (census data with literacy testing) to VERY_LOW (rough projections based on limited data)
+
+2. **Data Source**: Specifies the origin of the literacy data, including whether it was directly tested or self-reported
+
+3. **Methodology Description**: Documents literacy assessment methods, especially important when multiple languages are involved
+
+4. **Margin of Error**: Quantifies the statistical uncertainty for literacy rates, particularly important for small administrative areas
+
+These quality indicators ensure users can appropriately interpret literacy data, particularly for planning education programs. The system also performs automated checks for implausible literacy patterns or suspicious trends that might indicate data quality issues.
+
+===== Multilingual Literacy Management
+
+Nepal's linguistic diversity requires specialized data handling:
+
+1. **Language-Specific Assessment**: Records indicate which languages were used for literacy assessment
+
+2. **Script-Based Literacy**: Captures literacy in different script systems (Devanagari, Latin, etc.) where relevant
+
+3. **Dominant Language Documentation**: Identifies the dominant language for literacy in each administrative area
+
+4. **Mother Tongue vs. Official Language**: Distinguishes between literacy in mother tongue and literacy in Nepal's official language (Nepali)
+
+===== Nepal-Specific Literacy Context
+
+The data collection and processing workflow acknowledges several factors specific to Nepal's literacy context:
+
+1. **Regional Variation**: Literacy rates vary significantly by ecological zone, with higher rates in urban centers and the Kathmandu Valley compared to remote mountain and hill regions
+
+2. **Caste/Ethnicity Correlation**: Literacy patterns often correlate with specific ethnic communities, requiring culturally informed interpretation
+
+3. **Gender Disparities**: Persistent gender gaps in literacy rates, particularly in certain communities and older age groups, require specific focus during data collection and analysis
+
+4. **Migration Effects**: Labor migration (particularly male outmigration) can affect measured literacy rates in source communities
+
+5. **Monastic Education**: Some communities, particularly in mountain regions, have traditional education systems like monastic education that require special consideration in literacy assessment
+
+By incorporating these contextual factors, the LiteracyStatistics entity provides not just raw literacy counts, but contextually interpreted information for education planning and policy development.
+
+===== Field Collection Methodologies
+
+The system supports documentation of specific field methodologies used for literacy data collection:
+
+1. **Assessment Type**: Records whether literacy was self-reported, directly tested, or derived from educational attainment records
+
+2. **Test Instrument**: Documents which literacy assessment instrument was used (important for comparability)
+
+3. **Language of Assessment**: Captures which language(s) were used to assess literacy
+
+4. **Education Verification**: Records whether educational attainment was verified against institutional records
+
+These methodology details help contextualize literacy data and understand potential collection biases.
+
+===== Administrative Boundary Change Handling
+
+When administrative boundaries change, as occurred extensively following Nepal's 2017 federal restructuring, historical literacy data must be reconciled with new boundaries. The system provides:
+
+1. **Historical Recalculation**: Literacy statistics recalculated to match current administrative boundaries
+
+2. **Confidence Adjustment**: Appropriate confidence level downgrades for boundary-adjusted historical literacy data
+
+3. **Transition Documentation**: Clear documentation of methodology used for literacy data transitions across boundary changes
+
+This ensures time-series literacy analysis remains valid despite administrative restructuring.

@@ -1,0 +1,695 @@
+===== Domain Events
+
+The GenderDistribution entity publishes and consumes domain events to facilitate integration with other system components and maintain data consistency across the demographic domain.
+
+[plantuml]
+----
+@startuml
+class GenderDistributionCreatedEvent {
+  +UUID genderDistributionId
+  +UUID adminAreaId
+  +String adminAreaLevel
+  +Integer year
+  +Integer totalPopulation
+  +Integer malePopulation
+  +Integer femalePopulation
+  +Integer thirdGenderPopulation
+  +Boolean isCensusData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderDistributionUpdatedEvent {
+  +UUID genderDistributionId
+  +UUID adminAreaId
+  +Integer year
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderDistributionImportedEvent {
+  +UUID genderDistributionId
+  +UUID adminAreaId
+  +String importSource
+  +String importFormat
+  +Integer recordCount
+  +Boolean hadErrors
+  +String errorSummary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderDistributionQualityCheckedEvent {
+  +UUID genderDistributionId
+  +UUID adminAreaId
+  +List<QualityCheckResult> checkResults
+  +Boolean passedAllChecks
+  +String suggestedActions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderImbalanceDetectedEvent {
+  +UUID genderDistributionId
+  +UUID adminAreaId
+  +ImbalanceType imbalanceType
+  +Double imbalanceSeverity
+  +String possibleCauses
+  +Map<String, Object> imbalanceDetails
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderMigrationImpactAssessedEvent {
+  +UUID genderDistributionId
+  +UUID adminAreaId
+  +Double netMaleMigrationRate
+  +Double netFemaleMigrationRate
+  +MigrationImpactLevel impactLevel
+  +String primaryDestinations
+  +Map<String, Object> assessmentDetails
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderDistributionProjectedEvent {
+  +UUID sourceDistributionId
+  +UUID projectedDistributionId
+  +UUID adminAreaId
+  +Integer targetYear
+  +ProjectionMethod method
+  +String methodologyDescription
+  +Double confidenceLevel
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderDistributionAggregatedEvent {
+  +UUID resultDistributionId
+  +List<UUID> sourceDistributionIds
+  +UUID targetAdminAreaId
+  +AdminAreaLevel resultLevel
+  +Integer year
+  +AggregationMethod method
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderDistributionComparedEvent {
+  +UUID baseDistributionId
+  +UUID comparisonDistributionId
+  +String comparisonType
+  +Map<String, Object> keyDifferences
+  +String analysisNotes
+  +Map<String, Double> changeMagnitudes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderTrendAnalyzedEvent {
+  +UUID trendAnalysisId
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startYear
+  +Integer endYear
+  +TrendDirection sexRatioTrend
+  +Double averageAnnualChange
+  +Double projectedFutureSexRatio
+  +Integer projectionYear
+  +String analysisNotes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ThirdGenderDataAnalyzedEvent {
+  +UUID genderDistributionId
+  +UUID adminAreaId
+  +Integer thirdGenderPopulation
+  +Double thirdGenderPercentage
+  +Map<AgeGroup, Integer> thirdGenderByAge
+  +Double changeFromPrevious
+  +Map<String, Object> analysisResults
+  +String reportingQualityAssessment
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum ImbalanceType {
+  AGE_SPECIFIC
+  BIRTH_SEX_RATIO
+  MIGRATION_INDUCED
+  MORTALITY_DIFFERENTIAL
+  EDUCATIONAL_DISPARITY
+  OCCUPATIONAL_SEGREGATION
+}
+
+enum ProjectionMethod {
+  COMPONENT_METHOD
+  RATIO_METHOD
+  COHORT_COMPONENT
+  EXPONENTIAL_GROWTH
+  POLYNOMIAL_REGRESSION
+  LINEAR_INTERPOLATION
+  CUSTOM_MODEL
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AgeGroup {
+  UNDER_5
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum AggregationMethod {
+  SUM
+  WEIGHTED_AVERAGE
+  PROPORTIONAL
+  CUSTOM
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  REVERSING
+}
+
+enum MigrationImpactLevel {
+  NEGLIGIBLE
+  LOW
+  MODERATE
+  HIGH
+  SEVERE
+}
+
+class QualityCheckResult {
+  +String checkType
+  +Boolean passed
+  +Double score
+  +String description
+  +String recommendation
+}
+
+abstract class DomainEvent
+DomainEvent <|-- GenderDistributionCreatedEvent
+DomainEvent <|-- GenderDistributionUpdatedEvent
+DomainEvent <|-- GenderDistributionImportedEvent
+DomainEvent <|-- GenderDistributionQualityCheckedEvent
+DomainEvent <|-- GenderImbalanceDetectedEvent
+DomainEvent <|-- GenderMigrationImpactAssessedEvent
+DomainEvent <|-- GenderDistributionProjectedEvent
+DomainEvent <|-- GenderDistributionAggregatedEvent
+DomainEvent <|-- GenderDistributionComparedEvent
+DomainEvent <|-- GenderTrendAnalyzedEvent
+DomainEvent <|-- ThirdGenderDataAnalyzedEvent
+
+GenderImbalanceDetectedEvent -- ImbalanceType
+GenderMigrationImpactAssessedEvent -- MigrationImpactLevel
+GenderDistributionProjectedEvent -- ProjectionMethod
+GenderDistributionAggregatedEvent -- AdminAreaLevel
+GenderDistributionAggregatedEvent -- AggregationMethod
+GenderDistributionQualityCheckedEvent *-- "many" QualityCheckResult
+GenderTrendAnalyzedEvent -- TrendDirection
+GenderTrendAnalyzedEvent -- AdminAreaLevel
+ThirdGenderDataAnalyzedEvent -- AgeGroup
+@enduml
+----
+
+==== Core Domain Events
+
+===== GenderDistributionCreatedEvent
+
+Triggered when a new gender distribution dataset is created for an administrative area.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| genderDistributionId | Unique identifier of the newly created gender distribution
+| adminAreaId | Administrative area this distribution belongs to
+| adminAreaLevel | Level of the administrative area (WARD, MUNICIPALITY, etc.)
+| year | Year of the gender distribution data
+| totalPopulation | Total population recorded
+| malePopulation | Male population count
+| femalePopulation | Female population count
+| thirdGenderPopulation | Third gender population count
+| isCensusData | Whether this is official census data
+| timestamp | When the event occurred
+| actorId | User or system that created the distribution
+|===
+
+*Business Impact:* This event initiates various secondary processes including data quality checks, gender imbalance detection, and migration impact assessment. In Nepal's context, new gender distribution data is particularly significant for gender-responsive planning and budgeting, which is mandated by the constitution.
+
+===== GenderDistributionUpdatedEvent
+
+Triggered when changes are made to existing gender distribution data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| genderDistributionId | Identifier of the updated distribution
+| adminAreaId | Administrative area identifier
+| year | Year of the distribution data
+| changedFields | Map of fields that were changed with their old and new values
+| updateType | Type of update (CORRECTION, REVISION, ENHANCEMENT)
+| isRevision | Whether this is an official revision
+| updateReason | Reason for the update
+| timestamp | When the event occurred
+| actorId | User who made the update
+|===
+
+*Business Impact:* This event may trigger recalculation of gender-based indicators, re-aggregation of higher-level administrative areas, and notifications to stakeholders about changed data. For Nepal, the ability to track changes is especially important for maintaining transparency in gender-specific data, which can be politically sensitive.
+
+===== GenderDistributionImportedEvent
+
+Triggered when gender distribution data is imported from an external source.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| genderDistributionId | Identifier of the imported distribution
+| adminAreaId | Administrative area identifier
+| importSource | Source of the imported data (CBS, UN Women, etc.)
+| importFormat | Format of the imported data (CSV, Excel, etc.)
+| recordCount | Number of records imported
+| hadErrors | Whether there were errors during import
+| errorSummary | Summary of any errors encountered
+| timestamp | When the import occurred
+| actorId | User who performed the import
+|===
+
+*Business Impact:* Data import is a common operation in Nepal's decentralized statistical system, where gender data may originate from multiple sources including the Central Bureau of Statistics, ministry field offices, and international organizations like UN Women or UNFPA. This event initiates data validation processes and ensures proper attribution of data sources.
+
+==== Specialized Domain Events
+
+===== GenderDistributionQualityCheckedEvent
+
+Triggered when quality checks are performed on gender distribution data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| genderDistributionId | Identifier of the checked distribution
+| adminAreaId | Administrative area identifier
+| checkResults | Results of individual quality checks
+| passedAllChecks | Whether all checks were passed
+| suggestedActions | Suggested actions for failed checks
+| timestamp | When checks were performed
+| actorId | User or system that performed the checks
+|===
+
+*Business Impact:* Data quality is a significant concern in Nepal's gender demographic data, particularly regarding third gender reporting and gender attribution in proxy-reported households. This event allows systems to flag potentially problematic data patterns and suggest corrective measures.
+
+===== GenderImbalanceDetectedEvent
+
+Triggered when a significant gender imbalance is detected in a distribution.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| genderDistributionId | Identifier of the distribution with imbalance
+| adminAreaId | Administrative area identifier
+| imbalanceType | Type of gender imbalance detected
+| imbalanceSeverity | Quantified severity of the imbalance
+| possibleCauses | Potential causes of the imbalance
+| imbalanceDetails | Detailed information about the imbalance
+| timestamp | When the imbalance was detected
+| actorId | User or system that detected the imbalance
+|===
+
+*Business Impact:* Gender imbalances in Nepal are often indicators of important social phenomena like labor migration, educational disparities, or cultural factors. This event can trigger notifications to relevant ministries when significant imbalances are detected, prompting investigation or targeted interventions.
+
+===== GenderMigrationImpactAssessedEvent
+
+Triggered when migration impacts on gender distribution are assessed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| genderDistributionId | Identifier of the assessed distribution
+| adminAreaId | Administrative area identifier
+| netMaleMigrationRate | Net migration rate for males
+| netFemaleMigrationRate | Net migration rate for females
+| impactLevel | Level of migration impact
+| primaryDestinations | Main migration destinations
+| assessmentDetails | Detailed assessment information
+| timestamp | When the assessment was performed
+| actorId | User or system that performed the assessment
+|===
+
+*Business Impact:* Nepal experiences significant gender-specific migration patterns, particularly male outmigration for foreign employment, which creates distinctive demographic signatures. This event allows planning departments to be notified of migration-induced gender imbalances that may require specific social services or economic interventions.
+
+===== GenderDistributionProjectedEvent
+
+Triggered when a new gender distribution projection is created for a future year.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| sourceDistributionId | Identifier of the source distribution
+| projectedDistributionId | Identifier of the created projection
+| adminAreaId | Administrative area identifier
+| targetYear | Year being projected
+| method | Projection method used
+| methodologyDescription | Description of methodology
+| confidenceLevel | Confidence level of the projection
+| timestamp | When the projection was created
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Projections are essential for Nepal's planning processes, particularly for gender-responsive service planning with long implementation timeframes. This event allows planning departments to be notified of new gender projections relevant to their sector and geography.
+
+===== GenderDistributionAggregatedEvent
+
+Triggered when ward-level gender data is aggregated to higher administrative levels.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| resultDistributionId | Identifier of the aggregated distribution
+| sourceDistributionIds | Identifiers of source distributions
+| targetAdminAreaId | Identifier of the target administrative area
+| resultLevel | Administrative level of the result
+| year | Year of the aggregated data
+| method | Method used for aggregation
+| timestamp | When the aggregation occurred
+| actorId | User or system that performed the aggregation
+|===
+
+*Business Impact:* Aggregation events are vital in Nepal's federal structure where gender-responsive planning happens at multiple administrative levels. Provincial and federal ministries rely on these aggregations for policy development, particularly for allocating gender-targeted resources.
+
+===== GenderDistributionComparedEvent
+
+Triggered when two gender distributions are formally compared.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| baseDistributionId | Identifier of the base distribution
+| comparisonDistributionId | Identifier of the comparison distribution
+| comparisonType | Type of comparison (TIME, GEOGRAPHY, SCENARIO)
+| keyDifferences | Map of key differences identified
+| analysisNotes | Notes from the comparison analysis
+| changeMagnitudes | Magnitudes of changes in key metrics
+| timestamp | When the comparison was performed
+| actorId | User who performed the comparison
+|===
+
+*Business Impact:* Comparative analysis is essential for understanding gender demographic transitions in Nepal's diverse regions, particularly contrasting urban and rural gender patterns or before/after impacts of significant events like the 2015 earthquake or policy interventions aimed at gender equality.
+
+===== GenderTrendAnalyzedEvent
+
+Triggered when gender trend analysis is completed over a time period.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| trendAnalysisId | Identifier of the trend analysis
+| adminAreaId | Administrative area identifier
+| adminAreaLevel | Level of the administrative area
+| startYear | First year in the analysis period
+| endYear | Last year in the analysis period
+| sexRatioTrend | Direction of change in sex ratio
+| averageAnnualChange | Average yearly change in sex ratio
+| projectedFutureSexRatio | Projected future sex ratio
+| projectionYear | Year for which projection is made
+| analysisNotes | Notes from the analysis
+| timestamp | When the analysis was performed
+| actorId | User who performed the analysis
+|===
+
+*Business Impact:* Trend analysis helps identify long-term gender demographic patterns that may require policy interventions. In Nepal, this has been particularly valuable for understanding changing gender dynamics as the country undergoes demographic transition and increasing urbanization.
+
+===== ThirdGenderDataAnalyzedEvent
+
+Triggered when third gender data is specifically analyzed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| genderDistributionId | Identifier of the analyzed distribution
+| adminAreaId | Administrative area identifier
+| thirdGenderPopulation | Count of third gender population
+| thirdGenderPercentage | Percentage of third gender population
+| thirdGenderByAge | Distribution of third gender population by age group
+| changeFromPrevious | Change from previous time period
+| analysisResults | Detailed analysis results
+| reportingQualityAssessment | Assessment of reporting quality
+| timestamp | When the analysis was performed
+| actorId | User who performed the analysis
+|===
+
+*Business Impact:* Nepal was one of the first countries in the world to legally recognize a third gender category. This specialized event supports Nepal's progressive stance on gender identity by enabling detailed analysis of third gender demographic patterns, which can inform inclusive policy development and service provision.
+
+==== Event Handling Architecture
+
+[plantuml]
+----
+@startuml
+participant "DemographicService" as Service
+participant "GenderDistribution" as Entity
+participant "EventPublisher" as Publisher
+participant "QualityCheckService" as Quality
+participant "ImbalanceDetectionService" as Imbalance
+participant "MigrationAnalysisService" as Migration
+participant "NotificationService" as Notify
+participant "IndexingService" as Index
+participant "AuditService" as Audit
+
+Service -> Entity: createGenderDistribution(adminAreaId, year, data)
+activate Entity
+
+Entity -> Entity: constructDistribution()
+Entity -> Entity: calculateGenderMetrics()
+Entity -> Publisher: publishEvent(GenderDistributionCreatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Quality: scheduleQualityChecks(distributionId)
+activate Quality
+Quality -> Quality: performDataChecks()
+Quality -> Quality: validateGenderConsistency()
+Quality -> Quality: checkAgeGenderRelationships()
+Quality -> Publisher: publishEvent(GenderDistributionQualityCheckedEvent)
+Publisher <-- Quality: checksScheduled
+deactivate Quality
+
+Publisher -> Imbalance: detectImbalances(distributionId)
+activate Imbalance
+Imbalance -> Imbalance: analyzeSexRatio()
+Imbalance -> Imbalance: checkForAnomalies()
+Imbalance -> Imbalance: assessEducationalGenderGap()
+Imbalance -> Publisher: publishEvent(GenderImbalanceDetectedEvent)
+Publisher <-- Imbalance: imbalanceDetectionTriggered
+deactivate Imbalance
+
+Publisher -> Migration: analyzeMigrationImpact(distributionId)
+activate Migration
+Migration -> Migration: calculateGenderMigrationGap()
+Migration -> Migration: estimateMigrationVolume()
+Migration -> Migration: assessGenderSpecificPatterns()
+Migration -> Publisher: publishEvent(GenderMigrationImpactAssessedEvent)
+Publisher <-- Migration: migrationAnalysisTriggered
+deactivate Migration
+
+Publisher -> Index: updateSearchIndex(distributionId)
+activate Index
+Index -> Index: extractSearchableFields()
+Index -> Index: buildIndexEntries()
+Publisher <-- Index: indexUpdated
+deactivate Index
+
+Publisher -> Notify: sendAnalystNotification(distributionId)
+activate Notify
+Notify -> Notify: identifyInterestedStakeholders()
+Notify -> Notify: prepareNotificationContent()
+Notify -> Notify: dispatchNotifications()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Entity <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Entity: distributionCreated
+deactivate Entity
+
+Service -> Entity: updateGenderDistribution(distributionId, updatedData)
+activate Entity
+Entity -> Entity: validateUpdates()
+Entity -> Entity: applyChanges()
+Entity -> Entity: recalculateGenderMetrics()
+Entity -> Publisher: publishEvent(GenderDistributionUpdatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Imbalance: reassessImbalances(distributionId)
+activate Imbalance
+Imbalance -> Imbalance: reevaluateCurrentImbalances()
+Publisher <-- Imbalance: reassessmentTriggered
+deactivate Imbalance
+
+alt Significant Gender Data Change
+  Publisher -> Migration: reassessMigrationImpact(distributionId)
+  activate Migration
+  Publisher <-- Migration: reassessmentTriggered
+  deactivate Migration
+end
+
+Publisher -> Index: updateSearchIndex(distributionId)
+activate Index
+Publisher <-- Index: indexUpdated
+deactivate Index
+
+Publisher -> Notify: sendUpdateNotification(distributionId, changedFields)
+activate Notify
+Notify -> Notify: identifyImpactedStakeholders()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Entity <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Entity: distributionUpdated
+deactivate Entity
+@enduml
+----
+
+The diagram above illustrates how events flow through the system when gender distribution data is created or updated. The process demonstrates several key patterns:
+
+1. **Event-Driven Data Quality Assurance**: Data quality checks are triggered automatically after creation events, ensuring all gender data is validated for consistency and plausibility.
+
+2. **Automatic Analysis Workflows**: The creation of a gender distribution automatically triggers specialized analysis processes including imbalance detection and migration impact assessment.
+
+3. **Stakeholder Notification**: Relevant stakeholders are notified of gender data changes that affect their domains, ensuring that gender-responsive planning is based on the latest information.
+
+4. **Audit Trail**: All events are recorded for audit purposes, maintaining transparency and traceability in gender data management.
+
+5. **Search Indexing**: New and updated gender data is automatically indexed for search capabilities, enabling efficient discovery of gender patterns.
+
+==== Event Application Use Cases
+
+===== Gender-Based Migration Analysis in Rural Communities
+
+When gender distribution data is updated for a rural municipality, the system needs to identify potential migration impacts:
+
+1. The `GenderDistributionCreatedEvent` triggers an automatic migration impact analysis.
+2. The MigrationAnalysisService detects a highly skewed sex ratio (75 males per 100 females) in working-age cohorts.
+3. The `GenderMigrationImpactAssessedEvent` is published with impactLevel = HIGH.
+4. This notifies the Local Development Office about potential social impacts of high male outmigration.
+5. The system recommends interventions for female-headed households, using gender demographic data to estimate their prevalence.
+
+This process ensures local governments can respond appropriately to gendered migration patterns, particularly in Nepal's hill and mountain districts where male outmigration has transformed community structures and created new social support needs.
+
+===== Third Gender Inclusion Planning
+
+When analyzing demographic data for urban areas:
+
+1. A `GenderDistributionCreatedEvent` includes third gender population data for a municipality.
+2. The system automatically triggers specialized third gender data analysis.
+3. The `ThirdGenderDataAnalyzedEvent` identifies concentrations in specific wards.
+4. This information supports targeted service planning for the third gender community.
+5. Stakeholders in social inclusion programs are automatically notified about the demographic pattern.
+
+This process supports Nepal's legal recognition of third gender by providing evidence-based data for inclusive service planning, aligning with Nepal's constitutional guarantees of equal rights regardless of gender identity.
+
+===== Gender Demographic Impact of Development Projects
+
+When analyzing the impacts of a major development project:
+
+1. The `GenderDistributionComparedEvent` compares pre-project and current gender distributions.
+2. The event captures key differences in gender balance, identifying a sudden increase in male population due to project workers.
+3. This triggers notifications to local services about potential impacts on community gender dynamics.
+4. The comparative data informs adjustments to social services to accommodate the temporary demographic shift.
+
+This process helps manage demographic transition impacts from development activities, a common issue in Nepal where large infrastructure projects can temporarily transform local gender balances.
+
+===== Gender-Responsive Budget Planning
+
+When provincial officials are planning resource allocation:
+
+1. The `GenderDistributionAggregatedEvent` provides province-level gender data aggregated from constituent municipalities.
+2. Gender analysis services use this data to identify districts with high gender disparities in education.
+3. The budgeting system receives notifications about priority areas for gender-responsive interventions.
+4. Resources are allocated proportionally to address identified gender gaps.
+
+This process supports Nepal's constitutionally-mandated gender-responsive budgeting, ensuring resource allocation is informed by accurate gender demographic data that highlights areas of greatest need.
+
+==== Nepal-Specific Event Considerations
+
+1. **Administrative Restructuring**: Events include mechanisms to handle Nepal's administrative boundary changes, particularly important since the 2017 federal restructuring that significantly altered the administrative geography.
+
+2. **Seasonal Migration Patterns**: Events related to migration impact assessment are designed to differentiate between permanent demographic changes and Nepal's significant seasonal migration patterns.
+
+3. **Census Cycle Alignment**: Events are designed to handle the transition between Nepal's 10-year census cycles, with different validation approaches for census years versus intercensal estimates.
+
+4. **Third Gender Reporting Evolution**: Special handling for third gender data acknowledges the evolving nature of third gender reporting and recognition in Nepal, which has progressed significantly since initial recognition in 2007.
+
+5. **Disaster Impact Analysis**: Special events track gender demographic shifts following disasters, essential in Nepal's context where earthquakes, floods, and landslides can cause significant population displacements that often have gender-specific patterns.
+
+These Nepal-specific considerations ensure that the event architecture addresses the country's unique gender demographic context and administrative requirements, providing a foundation for evidence-based gender-responsive planning across all levels of governance.
+
+===== Gender Event Integration with Other Domains
+
+The gender distribution events integrate with multiple other domains to provide comprehensive gender analysis:
+
+1. **Health Domain Integration**: Gender demographic events trigger notifications to health planning systems about changes in female reproductive-age populations that affect maternal health service requirements.
+
+2. **Education Domain Integration**: Gender distribution data flows to education planning systems to support gender-equitable education resource allocation and identify areas with gender gaps in educational access.
+
+3. **Economic Domain Integration**: Gender distributions by occupation and education level provide critical inputs to economic planning, particularly for employment programs targeting gender-specific economic challenges.
+
+4. **Social Protection Domain Integration**: Gender demographic patterns, especially female-headed households in high male outmigration areas, inform social protection interventions and support program design.
+
+5. **Infrastructure Domain Integration**: Gender distribution data influences infrastructure planning to ensure gender-responsive design, such as safe transportation options in areas with high female mobility needs.
+
+This cross-domain integration ensures that gender demographic insights inform planning across sectors, supporting Nepal's whole-of-government approach to gender equality as mandated by the constitution and national gender policies.
+
+===== Privacy and Sensitivity Considerations
+
+Gender demographic events implement several safeguards for sensitive data:
+
+1. **Third Gender Data Protection**: Specialized anonymization protocols for third gender data in areas with small populations to prevent potential identification.
+
+2. **Gender-Based Violence Correlation Protection**: Controls on event data that could link gender demographics to gender-based violence statistics to prevent misuse of sensitive information.
+
+3. **Role-Based Access**: Different event subscriptions based on user roles to ensure sensitive gender analysis is only available to authorized stakeholders.
+
+4. **Geographic Restriction**: Event access limited by administrative jurisdiction, ensuring local gender data is only accessible to relevant authorities.
+
+5. **Audit Logging**: Comprehensive logs of all gender data event access to maintain accountability.
+
+These measures ensure compliance with Nepal's privacy regulations while enabling appropriate data sharing for planning purposes, balancing transparency with protection of sensitive demographic information.

@@ -1,0 +1,802 @@
+===== Data Model
+
+The GenderDistribution entity implements a comprehensive data model for tracking population by gender across administrative areas.
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface FullTextSearchable
+interface CustomValidatable
+
+' Main class
+class GenderDistribution {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +String adminAreaName
+  +AdminAreaLevel adminAreaLevel
+  
+  ' Time context
+  +Integer year
+  +String periodType
+  +LocalDate referenceDate
+  +Boolean isCensusData
+  +String censusReference
+  +Boolean isProjected
+  +String projectionMethod
+  
+  ' Population counts by gender
+  +Integer totalPopulation
+  +Integer malePopulation
+  +Integer femalePopulation
+  +Integer thirdGenderPopulation
+  +Integer undisclosedGenderPopulation
+  
+  ' Gender ratios and metrics
+  +Double sexRatio
+  +Double genderParity
+  +Double thirdGenderPercentage
+  +GenderBalance genderBalanceCategory
+  
+  ' Age-related gender metrics
+  +Map<AgeGroup, GenderDistributionByAge> genderByAge
+  +Double femaleFertilityAgePercentage
+  +Double femaleElderlyPercentage
+  +Double maleWorkingAgePercentage
+  
+  ' Socioeconomic indicators
+  +Map<EducationLevel, GenderDistribution> genderByEducation
+  +Map<OccupationType, GenderDistribution> genderByOccupation
+  +Map<MaritalStatus, GenderDistribution> genderByMaritalStatus
+  
+  ' Data quality
+  +ConfidenceLevel confidenceLevel
+  +String dataSource
+  +String methodologyDescription
+  +Double marginOfError
+  +String notes
+  
+  ' Previous reference
+  +UUID previousDistributionId
+  +Integer changeMalePopulation
+  +Integer changeFemalePopulation
+  +Integer changeThirdGenderPopulation
+  +Double changeSexRatio
+  
+  ' External references
+  +UUID sourceDatasetId
+  +UUID populationStatisticsId
+  
+  ' Methods
+  +Map<Gender, Double> calculateGenderPercentages()
+  +Double calculateGenderGap()
+  +Map<AgeGroup, Double> calculateGenderRatioByAge()
+  +GenderBalance determineGenderBalance()
+  +Boolean isHighMigrationPattern()
+  +Map<Gender, Integer> getPopulationByGender()
+  +List<UUID> getRelatedAdminAreas(RelationshipType type)
+  +GenderDistribution projectForward(Integer years, ProjectionMethod method)
+  +Boolean validateGenderDistribution()
+  +GenderDistribution calculateDifference(GenderDistribution other)
+  +Map<String, Object> generateVisualizationData(VisualizationType type)
+}
+
+' Supporting Classes
+class GenderDistributionByAge {
+  +UUID id
+  +AgeGroup ageGroup
+  +Integer maleCount
+  +Integer femaleCount
+  +Integer thirdGenderCount
+  +Double sexRatio
+  +Double feminityRatio
+  +Double masculinityRatio
+  +Boolean isEstimated
+  +ConfidenceLevel confidenceLevel
+  +String estimationMethod
+}
+
+class GenderTrendAnalysis {
+  +UUID id
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startYear
+  +Integer endYear
+  +List<Integer> years
+  +List<Double> sexRatios
+  +List<Double> genderParityIndices
+  +List<Double> thirdGenderPercentages
+  +Double averageAnnualChange
+  +TrendDirection sexRatioTrend
+  +Double projectedFutureSexRatio
+  +Integer projectionYear
+  +String analysisNotes
+  +LocalDateTime analyzedAt
+}
+
+class GenderImbalanceIndicator {
+  +UUID id
+  +UUID genderDistributionId
+  +ImbalanceType imbalanceType
+  +Double imbalanceSeverity
+  +String possibleCauses
+  +String implicationsDescription
+  +LocalDateTime detectedAt
+  +Boolean isVerified
+  +UUID verifiedBy
+  +String verificationNotes
+}
+
+class GenderMigrationImpact {
+  +UUID id
+  +UUID genderDistributionId
+  +Double netMaleMigrationRate
+  +Double netFemaleMigrationRate
+  +Double netThirdGenderMigrationRate
+  +Integer estimatedMaleMigrants
+  +Integer estimatedFemaleMigrants
+  +Integer estimatedThirdGenderMigrants
+  +MigrationImpactLevel impactLevel
+  +String primaryDestinations
+  +String migrationNotes
+  +UUID migrationDataSourceId
+}
+
+' Enumerations
+enum Gender {
+  MALE
+  FEMALE
+  THIRD_GENDER
+  UNDISCLOSED
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AgeGroup {
+  UNDER_5
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  REVERSING
+}
+
+enum GenderBalance {
+  BALANCED
+  MALE_DOMINATED
+  HIGHLY_MALE_DOMINATED
+  FEMALE_DOMINATED
+  HIGHLY_FEMALE_DOMINATED
+}
+
+enum ImbalanceType {
+  AGE_SPECIFIC
+  BIRTH_SEX_RATIO
+  MIGRATION_INDUCED
+  MORTALITY_DIFFERENTIAL
+  EDUCATIONAL_DISPARITY
+  OCCUPATIONAL_SEGREGATION
+}
+
+enum MigrationImpactLevel {
+  NEGLIGIBLE
+  LOW
+  MODERATE
+  HIGH
+  SEVERE
+}
+
+enum EducationLevel {
+  NO_FORMAL_EDUCATION
+  PRIMARY
+  LOWER_SECONDARY
+  SECONDARY
+  HIGHER_SECONDARY
+  BACHELOR
+  MASTER_OR_ABOVE
+  TECHNICAL_VOCATIONAL
+}
+
+enum OccupationType {
+  AGRICULTURE
+  MANUFACTURING
+  SERVICES
+  GOVERNMENT
+  PRIVATE_SECTOR
+  UNEMPLOYED
+  STUDENT
+  RETIRED
+}
+
+enum MaritalStatus {
+  NEVER_MARRIED
+  MARRIED
+  WIDOWED
+  DIVORCED
+  SEPARATED
+  INFORMAL_UNION
+}
+
+enum ProjectionMethod {
+  COMPONENT_METHOD
+  RATIO_METHOD
+  COHORT_COMPONENT
+  EXPONENTIAL_GROWTH
+  POLYNOMIAL_REGRESSION
+  LINEAR_INTERPOLATION
+  CUSTOM_MODEL
+}
+
+enum VisualizationType {
+  GENDER_BALANCE_MAP
+  GENDER_PROPORTION_CHART
+  GENDER_TREND_LINE
+  AGE_GENDER_PYRAMID
+  THIRD_GENDER_DISTRIBUTION
+  COMPARATIVE_VIEW
+}
+
+enum RelationshipType {
+  ADJACENT
+  CONTAINING
+  CONTAINED_WITHIN
+  MIGRATION_CONNECTED
+  DEMOGRAPHICALLY_SIMILAR
+}
+
+' Inheritance relationships
+BaseEntity <|-- GenderDistribution
+BaseEntity <|-- GenderDistributionByAge
+BaseEntity <|-- GenderTrendAnalysis
+BaseEntity <|-- GenderImbalanceIndicator
+BaseEntity <|-- GenderMigrationImpact
+
+' Interface implementation
+GenderDistribution ..|> DataAggregatable
+GenderDistribution ..|> HistoryViewable
+GenderDistribution ..|> ExternalSystemSyncable
+GenderDistribution ..|> FullTextSearchable
+GenderDistribution ..|> CustomValidatable
+
+' Class relationships
+GenderDistribution "1" o-- "many" GenderDistributionByAge
+GenderDistribution "1" o-- "many" GenderImbalanceIndicator
+GenderDistribution "1" o-- "0..1" GenderMigrationImpact
+GenderDistribution -- GenderBalance
+GenderDistribution -- ConfidenceLevel
+GenderDistribution -- AdminAreaLevel
+GenderDistributionByAge -- AgeGroup
+GenderDistributionByAge -- ConfidenceLevel
+GenderTrendAnalysis -- TrendDirection
+GenderTrendAnalysis -- AdminAreaLevel
+GenderImbalanceIndicator -- ImbalanceType
+GenderMigrationImpact -- MigrationImpactLevel
+@enduml
+----
+
+The data model captures the multifaceted nature of gender distribution analysis, with special attention to Nepal's unique demographic context and challenges around gender data collection.
+
+==== Core Entity: GenderDistribution
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the gender distribution
+| demographicSummaryId | UUID | Reference to the demographic summary this distribution belongs to
+| adminAreaId | UUID | Reference to the administrative area
+| adminAreaCode | String | Code for the administrative area
+| adminAreaName | String | Name of the administrative area
+| adminAreaLevel | AdminAreaLevel | Level in the administrative hierarchy
+| year | Integer | Year of the gender distribution data
+| periodType | String | Type of time period (CENSUS, ESTIMATE, PROJECTION)
+| referenceDate | LocalDate | Specific reference date for the data
+| isCensusData | Boolean | Whether this is official census data
+| censusReference | String | Reference to specific census
+| isProjected | Boolean | Whether this is projected rather than measured data
+| projectionMethod | String | Method used for projection if projected
+| totalPopulation | Integer | Total population count
+| malePopulation | Integer | Count of male population
+| femalePopulation | Integer | Count of female population
+| thirdGenderPopulation | Integer | Count of third gender population
+| undisclosedGenderPopulation | Integer | Count of population with undisclosed gender
+| sexRatio | Double | Number of males per 100 females
+| genderParity | Double | Measure of gender balance (1.0 = equal)
+| thirdGenderPercentage | Double | Percentage of third gender population
+| genderBalanceCategory | GenderBalance | Classification of gender balance
+| genderByAge | Map | Gender distribution broken down by age group
+| femaleFertilityAgePercentage | Double | Percentage of females in reproductive age (15-49)
+| femaleElderlyPercentage | Double | Percentage of elderly population who are female
+| maleWorkingAgePercentage | Double | Percentage of working-age population who are male
+| genderByEducation | Map | Gender distribution broken down by education level
+| genderByOccupation | Map | Gender distribution broken down by occupation type
+| genderByMaritalStatus | Map | Gender distribution broken down by marital status
+| confidenceLevel | ConfidenceLevel | Confidence level of the data
+| dataSource | String | Source of the data
+| methodologyDescription | String | Description of methodology used
+| marginOfError | Double | Statistical margin of error
+| notes | String | Additional notes about the data
+| previousDistributionId | UUID | Reference to previous time point
+| changeMalePopulation | Integer | Change in male population from previous
+| changeFemalePopulation | Integer | Change in female population from previous
+| changeThirdGenderPopulation | Integer | Change in third gender population from previous
+| changeSexRatio | Double | Change in sex ratio from previous
+| sourceDatasetId | UUID | Reference to source dataset
+| populationStatisticsId | UUID | Reference to related population statistics
+|===
+
+==== Supporting Entity: GenderDistributionByAge
+
+Breaks down gender distribution by age groups.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| ageGroup | AgeGroup | Age group category
+| maleCount | Integer | Number of males in this age group
+| femaleCount | Integer | Number of females in this age group
+| thirdGenderCount | Integer | Number of third gender individuals in this age group
+| sexRatio | Double | Number of males per 100 females in this age group
+| feminityRatio | Double | Number of females per 100 persons in this age group
+| masculinityRatio | Double | Number of males per 100 persons in this age group
+| isEstimated | Boolean | Whether the data is estimated or directly measured
+| confidenceLevel | ConfidenceLevel | Confidence level of the data
+| estimationMethod | String | Method used for estimation if estimated
+|===
+
+==== Supporting Entity: GenderTrendAnalysis
+
+Analyzes trends in gender distribution over time.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| adminAreaId | UUID | Reference to the administrative area
+| adminAreaLevel | AdminAreaLevel | Level in the administrative hierarchy
+| startYear | Integer | First year in the analysis period
+| endYear | Integer | Last year in the analysis period
+| years | List<Integer> | List of years included in the analysis
+| sexRatios | List<Double> | Sex ratio values for each year
+| genderParityIndices | List<Double> | Gender parity indices for each year
+| thirdGenderPercentages | List<Double> | Third gender percentages for each year
+| averageAnnualChange | Double | Average yearly change in sex ratio
+| sexRatioTrend | TrendDirection | Direction of change in sex ratio
+| projectedFutureSexRatio | Double | Projected future sex ratio
+| projectionYear | Integer | Year for which projection is made
+| analysisNotes | String | Notes from the analysis
+| analyzedAt | LocalDateTime | When the analysis was performed
+|===
+
+==== Supporting Entity: GenderImbalanceIndicator
+
+Identifies and characterizes gender imbalances.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| genderDistributionId | UUID | Reference to the gender distribution
+| imbalanceType | ImbalanceType | Type of gender imbalance
+| imbalanceSeverity | Double | Severity score of the imbalance
+| possibleCauses | String | Potential causes of the imbalance
+| implicationsDescription | String | Description of implications
+| detectedAt | LocalDateTime | When the imbalance was detected
+| isVerified | Boolean | Whether the imbalance has been verified
+| verifiedBy | UUID | Who verified the imbalance
+| verificationNotes | String | Notes from verification
+|===
+
+==== Supporting Entity: GenderMigrationImpact
+
+Analyzes migration impacts on gender distribution.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| genderDistributionId | UUID | Reference to the gender distribution
+| netMaleMigrationRate | Double | Net migration rate for males
+| netFemaleMigrationRate | Double | Net migration rate for females
+| netThirdGenderMigrationRate | Double | Net migration rate for third gender individuals
+| estimatedMaleMigrants | Integer | Estimated number of male migrants
+| estimatedFemaleMigrants | Integer | Estimated number of female migrants
+| estimatedThirdGenderMigrants | Integer | Estimated number of third gender migrants
+| impactLevel | MigrationImpactLevel | Level of migration impact
+| primaryDestinations | String | Main migration destinations
+| migrationNotes | String | Notes about migration patterns
+| migrationDataSourceId | UUID | Reference to migration data source
+|===
+
+==== Enumerations
+
+===== Gender
+Standard gender classifications.
+
+* `MALE`: Male gender
+* `FEMALE`: Female gender
+* `THIRD_GENDER`: Third gender (recognized in Nepal since 2007)
+* `UNDISCLOSED`: Gender not disclosed
+
+===== AdminAreaLevel
+Administrative area levels in Nepal.
+
+* `WARD`: Ward level
+* `MUNICIPALITY`: Municipality level
+* `DISTRICT`: District level
+* `PROVINCE`: Province level
+* `COUNTRY`: National level
+
+===== AgeGroup
+Standard age group classifications.
+
+* `UNDER_5`: Ages 0-4
+* `AGE_5_9`: Ages 5-9
+* ... [Other age groups]
+* `AGE_85_PLUS`: Ages 85 and above
+
+===== ConfidenceLevel
+Indicates the level of confidence in the data.
+
+* `HIGH`: High confidence (typically census data)
+* `MEDIUM`: Medium confidence
+* `LOW`: Low confidence
+* `VERY_LOW`: Very low confidence
+* `UNKNOWN`: Confidence level cannot be determined
+
+===== TrendDirection
+Direction of change in time-series data.
+
+* `INCREASING`: Values are consistently increasing
+* `DECREASING`: Values are consistently decreasing
+* `STABLE`: Values remain relatively stable
+* `FLUCTUATING`: Values change without clear direction
+* `REVERSING`: Direction of change has reversed
+
+===== GenderBalance
+Classifications of gender balance.
+
+* `BALANCED`: Sex ratio between 95-105
+* `MALE_DOMINATED`: Sex ratio between 105-120
+* `HIGHLY_MALE_DOMINATED`: Sex ratio above 120
+* `FEMALE_DOMINATED`: Sex ratio between 80-95
+* `HIGHLY_FEMALE_DOMINATED`: Sex ratio below 80
+
+===== ImbalanceType
+Types of gender imbalances.
+
+* `AGE_SPECIFIC`: Imbalance in specific age cohorts
+* `BIRTH_SEX_RATIO`: Imbalance in birth ratios
+* `MIGRATION_INDUCED`: Imbalance due to migration
+* `MORTALITY_DIFFERENTIAL`: Imbalance due to mortality differences
+* `EDUCATIONAL_DISPARITY`: Imbalance in educational attainment
+* `OCCUPATIONAL_SEGREGATION`: Imbalance in occupational distribution
+
+===== MigrationImpactLevel
+Levels of migration impact on gender distribution.
+
+* `NEGLIGIBLE`: Minimal impact
+* `LOW`: Low impact
+* `MODERATE`: Moderate impact
+* `HIGH`: High impact
+* `SEVERE`: Severe impact
+
+===== EducationLevel
+Educational attainment levels.
+
+* `NO_FORMAL_EDUCATION`: No formal education
+* `PRIMARY`: Primary education
+* `LOWER_SECONDARY`: Lower secondary education
+* ... [Other levels]
+* `TECHNICAL_VOCATIONAL`: Technical or vocational education
+
+===== OccupationType
+Types of occupations.
+
+* `AGRICULTURE`: Agricultural occupations
+* `MANUFACTURING`: Manufacturing occupations
+* ... [Other types]
+* `RETIRED`: Retired individuals
+
+===== MaritalStatus
+Marital status categories.
+
+* `NEVER_MARRIED`: Never married
+* `MARRIED`: Currently married
+* ... [Other statuses]
+* `INFORMAL_UNION`: In informal union
+
+===== ProjectionMethod
+Methods for projecting gender distributions.
+
+* `COMPONENT_METHOD`: Component method for projection
+* `RATIO_METHOD`: Ratio method for projection
+* ... [Other methods]
+* `CUSTOM_MODEL`: Custom projection model
+
+===== VisualizationType
+Types of gender data visualizations.
+
+* `GENDER_BALANCE_MAP`: Map showing gender balance
+* `GENDER_PROPORTION_CHART`: Chart of gender proportions
+* ... [Other types]
+* `COMPARATIVE_VIEW`: Comparative visualization
+
+===== RelationshipType
+Types of relationships between administrative areas.
+
+* `ADJACENT`: Areas share a border
+* `CONTAINING`: Area contains another area
+* ... [Other types]
+* `DEMOGRAPHICALLY_SIMILAR`: Areas with similar demographics
+
+==== Database Schema Implementation
+
+The GenderDistribution entity and its related entities are mapped to the following database schema:
+
+```sql
+-- Main gender distribution table
+CREATE TABLE gender_distribution (
+  id UUID PRIMARY KEY,
+  demographic_summary_id UUID NOT NULL REFERENCES demographic_summary(id),
+  
+  -- Administrative context
+  admin_area_id UUID NOT NULL REFERENCES administrative_area(id),
+  admin_area_code VARCHAR(50) NOT NULL,
+  admin_area_name VARCHAR(100) NOT NULL,
+  admin_area_level VARCHAR(20) NOT NULL,
+  
+  -- Time context
+  year INT NOT NULL,
+  period_type VARCHAR(20),
+  reference_date DATE,
+  is_census_data BOOLEAN DEFAULT FALSE,
+  census_reference VARCHAR(50),
+  is_projected BOOLEAN DEFAULT FALSE,
+  projection_method VARCHAR(50),
+  
+  -- Population counts by gender
+  total_population INT NOT NULL,
+  male_population INT NOT NULL,
+  female_population INT NOT NULL,
+  third_gender_population INT DEFAULT 0,
+  undisclosed_gender_population INT DEFAULT 0,
+  
+  -- Gender ratios and metrics
+  sex_ratio NUMERIC(7,2),
+  gender_parity NUMERIC(5,3),
+  third_gender_percentage NUMERIC(5,3),
+  gender_balance_category VARCHAR(30),
+  
+  -- Key age-related metrics
+  female_fertility_age_percentage NUMERIC(5,2),
+  female_elderly_percentage NUMERIC(5,2),
+  male_working_age_percentage NUMERIC(5,2),
+  
+  -- Data quality
+  confidence_level VARCHAR(20) NOT NULL,
+  data_source VARCHAR(100),
+  methodology_description TEXT,
+  margin_of_error NUMERIC(5,2),
+  notes TEXT,
+  
+  -- Previous reference
+  previous_distribution_id UUID REFERENCES gender_distribution(id),
+  change_male_population INT,
+  change_female_population INT,
+  change_third_gender_population INT,
+  change_sex_ratio NUMERIC(5,2),
+  
+  -- External references
+  source_dataset_id UUID,
+  population_statistics_id UUID,
+  
+  -- Audit fields
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  
+  -- Constraints
+  CONSTRAINT uk_admin_area_year UNIQUE (admin_area_id, year)
+);
+
+-- Gender distribution by age group
+CREATE TABLE gender_distribution_by_age (
+  id UUID PRIMARY KEY,
+  gender_distribution_id UUID NOT NULL REFERENCES gender_distribution(id),
+  age_group VARCHAR(20) NOT NULL,
+  male_count INT NOT NULL,
+  female_count INT NOT NULL,
+  third_gender_count INT DEFAULT 0,
+  sex_ratio NUMERIC(7,2),
+  feminity_ratio NUMERIC(6,2),
+  masculinity_ratio NUMERIC(6,2),
+  is_estimated BOOLEAN DEFAULT FALSE,
+  confidence_level VARCHAR(20),
+  estimation_method VARCHAR(100),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  
+  CONSTRAINT uk_gender_dist_age_group UNIQUE (gender_distribution_id, age_group)
+);
+
+-- Gender by education level
+CREATE TABLE gender_by_education (
+  gender_distribution_id UUID NOT NULL REFERENCES gender_distribution(id),
+  education_level VARCHAR(30) NOT NULL,
+  male_count INT NOT NULL,
+  female_count INT NOT NULL,
+  third_gender_count INT DEFAULT 0,
+  total_count INT NOT NULL,
+  sex_ratio NUMERIC(7,2),
+  is_estimated BOOLEAN DEFAULT FALSE,
+  notes TEXT,
+  PRIMARY KEY (gender_distribution_id, education_level)
+);
+
+-- Gender by occupation type
+CREATE TABLE gender_by_occupation (
+  gender_distribution_id UUID NOT NULL REFERENCES gender_distribution(id),
+  occupation_type VARCHAR(30) NOT NULL,
+  male_count INT NOT NULL,
+  female_count INT NOT NULL,
+  third_gender_count INT DEFAULT 0,
+  total_count INT NOT NULL,
+  sex_ratio NUMERIC(7,2),
+  is_estimated BOOLEAN DEFAULT FALSE,
+  notes TEXT,
+  PRIMARY KEY (gender_distribution_id, occupation_type)
+);
+
+-- Gender by marital status
+CREATE TABLE gender_by_marital_status (
+  gender_distribution_id UUID NOT NULL REFERENCES gender_distribution(id),
+  marital_status VARCHAR(30) NOT NULL,
+  male_count INT NOT NULL,
+  female_count INT NOT NULL,
+  third_gender_count INT DEFAULT 0,
+  total_count INT NOT NULL,
+  sex_ratio NUMERIC(7,2),
+  is_estimated BOOLEAN DEFAULT FALSE,
+  notes TEXT,
+  PRIMARY KEY (gender_distribution_id, marital_status)
+);
+
+-- Gender trend analysis
+CREATE TABLE gender_trend_analysis (
+  id UUID PRIMARY KEY,
+  admin_area_id UUID NOT NULL REFERENCES administrative_area(id),
+  admin_area_level VARCHAR(20) NOT NULL,
+  start_year INT NOT NULL,
+  end_year INT NOT NULL,
+  years JSON NOT NULL, -- Array of years
+  sex_ratios JSON NOT NULL, -- Array of sex ratios
+  gender_parity_indices JSON, -- Array of gender parity indices
+  third_gender_percentages JSON, -- Array of third gender percentages
+  average_annual_change NUMERIC(5,2),
+  sex_ratio_trend VARCHAR(20),
+  projected_future_sex_ratio NUMERIC(7,2),
+  projection_year INT,
+  analysis_notes TEXT,
+  analyzed_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  
+  CONSTRAINT uk_gender_trend_area_period UNIQUE (admin_area_id, start_year, end_year)
+);
+
+-- Gender imbalance indicators
+CREATE TABLE gender_imbalance_indicator (
+  id UUID PRIMARY KEY,
+  gender_distribution_id UUID NOT NULL REFERENCES gender_distribution(id),
+  imbalance_type VARCHAR(30) NOT NULL,
+  imbalance_severity NUMERIC(5,2) NOT NULL,
+  possible_causes TEXT,
+  implications_description TEXT,
+  detected_at TIMESTAMP NOT NULL,
+  is_verified BOOLEAN DEFAULT FALSE,
+  verified_by UUID,
+  verification_notes TEXT,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL
+);
+
+-- Gender migration impact
+CREATE TABLE gender_migration_impact (
+  id UUID PRIMARY KEY,
+  gender_distribution_id UUID NOT NULL REFERENCES gender_distribution(id),
+  net_male_migration_rate NUMERIC(6,2),
+  net_female_migration_rate NUMERIC(6,2),
+  net_third_gender_migration_rate NUMERIC(6,2),
+  estimated_male_migrants INT,
+  estimated_female_migrants INT,
+  estimated_third_gender_migrants INT,
+  impact_level VARCHAR(20),
+  primary_destinations TEXT,
+  migration_notes TEXT,
+  migration_data_source_id UUID,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  
+  CONSTRAINT uk_gender_migration_distribution UNIQUE (gender_distribution_id)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_gender_dist_admin_area ON gender_distribution(admin_area_id);
+CREATE INDEX idx_gender_dist_admin_level ON gender_distribution(admin_area_level);
+CREATE INDEX idx_gender_dist_year ON gender_distribution(year);
+CREATE INDEX idx_gender_dist_census ON gender_distribution(is_census_data);
+CREATE INDEX idx_gender_dist_confidence ON gender_distribution(confidence_level);
+CREATE INDEX idx_gender_dist_previous ON gender_distribution(previous_distribution_id);
+CREATE INDEX idx_gender_dist_by_age ON gender_distribution_by_age(gender_distribution_id);
+CREATE INDEX idx_gender_imbalance ON gender_imbalance_indicator(gender_distribution_id);
+CREATE INDEX idx_gender_trend_area ON gender_trend_analysis(admin_area_id);
+```
+
+This database schema efficiently organizes the complex data required for gender distribution analysis while maintaining the relationships between entities. The use of proper foreign keys ensures referential integrity, while multiple indexes support the performance requirements of demographic queries across administrative levels and time periods.
+
+===== Nepal-Specific Implementation Details
+
+Several aspects of the schema are specifically designed for Nepal's demographic context:
+
+1. **Third Gender Recognition**: The schema includes dedicated fields for third gender population, reflecting Nepal's official recognition of third gender identity since 2007, one of the earliest countries to do so.
+
+2. **Administrative Structure**: The admin_area_level field accommodates Nepal's federal structure with its multiple administrative tiers (ward, municipality, district, province, country).
+
+3. **Migration Impact Analysis**: The GenderMigrationImpact entity is designed to analyze Nepal's high labor outmigration patterns, particularly male outmigration which creates distinctive gender imbalances in source communities.
+
+4. **Dual-Calendar Support**: The reference_date field can store dates in both Gregorian and Bikram Sambat calendars, supporting Nepal's official use of the BS calendar.
+
+5. **Ethnic Analysis Capability**: The database supports integration with Nepal's ethnic demographic data, allowing gender analysis to be broken down by ethnic communities where culturally appropriate.
+
+6. **Historical Tracking**: The change tracking fields are designed to handle Nepal's administrative restructuring events, including the major 2017 federal restructuring that redefined administrative boundaries.
+
+These Nepal-specific features ensure the data model can accurately represent and analyze the country's unique gender demographic context and challenges.
