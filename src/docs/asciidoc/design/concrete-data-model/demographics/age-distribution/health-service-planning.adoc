@@ -1,0 +1,168 @@
+===== Health Service Planning Based on Age Structure
+
+*Scenario:* Using age distribution data to plan health services and infrastructure
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nHealth" as MoH
+actor "Health Planner" as Planner
+participant "AgeDistribution" as AgeDistr
+participant "HealthNeeds\nAssessment" as Needs
+participant "DiseasePattern\nAnalysis" as Disease
+participant "HealthFacility\nMapping" as Facility
+participant "ResourceAllocation\nEngine" as Resource
+
+MoH -> Planner: Develop health service plan
+Planner -> AgeDistr: retrieveAgeStructure(provinceId, currentYear)
+activate AgeDistr
+AgeDistr -> AgeDistr: extractAgeSpecificProfiles()
+AgeDistr -> AgeDistr: calculateVulnerableGroups()
+AgeDistr -> AgeDistr: mapAgeDistributionByLocality()
+AgeDistr -> AgeDistr: assessGenderDistribution()
+Planner <-- AgeDistr: detailedAgeStructure
+deactivate AgeDistr
+
+Planner -> Needs: calculateAgeSpecificNeeds()
+activate Needs
+Needs -> Needs: quantifyMaternalChildHealthNeeds()
+Needs -> Needs: assessAdolescentHealthRequirements()
+Needs -> Needs: calculateAdultHealthServices()
+Needs -> Needs: estimateGeriatricCareNeeds()
+Needs -> Needs: projectSpecialtyRequirements()
+Planner <-- Needs: ageBasedHealthNeeds
+deactivate Needs
+
+Planner -> Disease: analyzeEpidemiologicalProfile()
+activate Disease
+Disease -> Disease: mapAgeSpecificDiseasePatterns()
+Disease -> Disease: calculateDiseasePrevalence()
+Disease -> Disease: assessPreventionPriorities()
+Disease -> Disease: projectDiseaseTransitions()
+Disease -> Disease: analyzeComorbidityPatterns()
+Planner <-- Disease: epidemiologicalAnalysis
+deactivate Disease
+
+Planner -> AgeDistr: projectDemographicChanges(10)
+activate AgeDistr
+AgeDistr -> AgeDistr: forecastAgeStructureShifts()
+AgeDistr -> AgeDistr: modelAgingTrends()
+AgeDistr -> AgeDistr: projectChildrenUnderFive()
+AgeDistr -> AgeDistr: estimateReproductiveAgeCohorts()
+AgeDistr -> AgeDistr: predictElderlyPopulationGrowth()
+Planner <-- AgeDistr: demographicProjections
+deactivate AgeDistr
+
+Planner -> Needs: forecastFutureServiceNeeds()
+activate Needs
+Needs -> Needs: projectServiceVolumeChanges()
+Needs -> Needs: modelServiceTypeShifts()
+Needs -> Needs: calculateFacilityRequirements()
+Needs -> Needs: estimateHumanResourceNeeds()
+Planner <-- Needs: futureServiceRequirements
+deactivate Needs
+
+Planner -> Facility: assessCurrentCapacity()
+activate Facility
+Facility -> Facility: mapExistingHealthFacilities()
+Facility -> Facility: evaluateServiceCapacity()
+Facility -> Facility: analyzeGeographicCoverage()
+Facility -> Facility: assessSpecialtyAvailability()
+Facility -> Facility: calculateAccessibilityMetrics()
+Planner <-- Facility: healthSystemCapacity
+deactivate Facility
+
+Planner -> Resource: calculateResourceGaps()
+activate Resource
+Resource -> Resource: identifyServiceGaps()
+Resource -> Resource: quantifyFacilityNeeds()
+Resource -> Resource: calculateStaffingRequirements()
+Resource -> Resource: estimateEquipmentNeeds()
+Resource -> Resource: prepareBudgetProjections()
+Planner <-- Resource: resourceGapAnalysis
+deactivate Resource
+
+Planner -> Resource: prioritizeInterventions()
+activate Resource
+Resource -> Resource: rankByHealthImpact()
+Resource -> Resource: evaluateCostEffectiveness()
+Resource -> Resource: assessEquityImplications()
+Resource -> Resource: considerImplementationFeasibility()
+Planner <-- Resource: prioritizedInterventions
+deactivate Resource
+
+Planner -> MoH: submitHealthServicesPlan()
+@enduml
+----
+
+*Real-World Context:*
+Nepal's health system faces complex challenges in delivering services across diverse geographical terrain to a population undergoing significant demographic and epidemiological transitions. The Ministry of Health and Population must optimize limited resources to address changing health needs while improving equity in health outcomes. The AgeDistribution entity provides essential data for understanding how population age structure affects health service requirements across different regions.
+
+The analysis begins with detailed extraction of age profiles for health planning, focusing on key health-related age groups:
+- Under 5 (early childhood health needs)
+- 5-9 (school health programs)
+- 10-19 (adolescent health)
+- 15-49 females (reproductive health)
+- 20-59 (adult health)
+- 60+ (geriatric care)
+
+The AgeDistribution entity's regional disaggregation reveals significant geographic variations that affect health planning:
+- Urban areas showing growing adolescent and youth populations, with emerging lifestyle disease concerns
+- Some Terai districts with high under-5 populations requiring stronger maternal-child health services
+- Hill districts with depleted young adult populations but rapidly growing elderly proportions
+- Remote mountain districts with sparse populations requiring unique service delivery models
+
+The HealthNeedsAssessment service uses age distribution data to estimate service requirements for each population segment. In Nepal's context, this includes:
+- Basic Health Service Package requirements as mandated under the National Health Insurance Program
+- Reproductive health services capacity, particularly important given Nepal's focus on reducing maternal mortality
+- Pediatric care requirements, calibrated to Nepal's reduced but still substantial child health burden
+- Geriatric care needs, which are rapidly growing as Nepal's life expectancy increases
+- Mental health service requirements, which vary significantly by age group
+
+The DiseasePatternAnalysis service maps age-specific epidemiological profiles, revealing Nepal's "dual burden of disease":
+- Persistent communicable diseases affecting younger populations (diarrheal diseases, respiratory infections)
+- Growing non-communicable disease burden in older cohorts (cardiovascular disease, diabetes, COPD)
+- Emerging adolescent health issues in urban areas
+- Nutrition-related health issues across different age groups
+
+The AgeDistribution's projection capabilities model how these patterns will evolve over the next decade, revealing several critical trends for health planning:
+- Declining under-5 population (projected 15% reduction), reducing pressure on pediatric services
+- Expanding elderly population (projected 40% growth), requiring significant expansion of geriatric care
+- Rapid growth in the 40-60 age band when chronic disease management becomes essential
+- Geographic shifts as working-age populations concentrate in urban areas, leaving rural areas with aging demographics
+
+These projections inform facility and workforce planning. For example, in Bagmati Province, the analysis shows:
+- Need to repurpose some maternal-child health facilities for elderly care in rural districts
+- Requirements for additional adolescent health services in the Kathmandu Valley
+- Need for increased chronic disease management capacity across all districts
+- Specialized geriatric care facilities needed in district headquarters
+
+The HealthFacilityMapping service overlays existing health infrastructure against these demographic projections, revealing mismatches that must be addressed:
+- Urban areas with insufficient health facilities for growing populations
+- Rural areas with health posts designed for younger populations that now need geriatric care capacity
+- Areas with significant gaps in specialty services for growing age cohorts
+- Geographic accessibility challenges for elderly populations in rural areas
+
+The ResourceGapAnalysis service identifies specific investment priorities based on age-structure changes:
+- Health worker training needs (e.g., additional geriatric care training for rural health workers)
+- Infrastructure modifications needed to serve changing demographic profiles
+- Medical equipment requirements for age-specific services
+- Budget implications of demographic transitions
+
+The system also supports equity analysis by identifying regions where demographic changes disproportionately affect marginalized communities, enabling better targeting of health resources to underserved populations.
+
+===== Special Considerations for Nepal's Health Context
+
+Several factors unique to Nepal's health system are incorporated into the analysis:
+
+1. **Geographic Accessibility Challenges**: In mountain districts, elderly patients often face extreme difficulty accessing services, requiring specialized service delivery approaches like outreach clinics calibrated to the elderly population size in each ward.
+
+2. **Federalization Impact**: Under Nepal's federal structure, health service planning is primarily a provincial responsibility, and the age distribution analysis operates across all administrative levels to support this decentralized planning.
+
+3. **Workforce Migration Effects**: Many young Nepali health workers emigrate for overseas jobs, creating health workforce shortages that must be analyzed in relation to changing service demands from the aging population.
+
+4. **Traditional Medicine Integration**: In many rural areas, especially among elderly populations, traditional medicine remains important, and the planning system incorporates traditional healthcare utilization patterns by age group.
+
+5. **Post-Disaster Health Needs**: Following the 2015 earthquake, many districts have specific age-related vulnerabilities including elderly populations with increased disability and psychological trauma, which the system factors into health service planning.
+
+This comprehensive demographic analysis allows Nepal's health system to anticipate future needs and strategically allocate limited resources across both geography and demographic segments. By understanding the changing age structure of each locality, health planners can systematically improve service distribution, facility planning, workforce development, and budget allocation to meet the evolving health needs of Nepal's population.

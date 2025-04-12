@@ -1,0 +1,243 @@
+===== DataAggregatable Implementation
+
+The AgeDistribution entity implements the DataAggregatable interface to enable aggregation of age distribution data across administrative hierarchies and time periods.
+
+[plantuml]
+----
+@startuml
+participant "DemographicService" as Service
+participant "AgeDistribution\nimplements DataAggregatable" as AgeDistr
+participant "AggregationEngine" as Engine
+participant "ValidationService" as Validation
+participant "AdminHierarchyService" as Hierarchy
+
+Service -> AgeDistr: aggregateData(ageDistributions, targetLevel)
+activate AgeDistr
+
+AgeDistr -> Hierarchy: verifyAdminHierarchy(sourceIds, targetId)
+activate Hierarchy
+AgeDistr <-- Hierarchy: hierarchyVerified
+deactivate Hierarchy
+
+AgeDistr -> AgeDistr: validateForAggregation(ageDistributions)
+activate AgeDistr
+AgeDistr -> AgeDistr: checkAdminLevelConsistency()
+AgeDistr -> AgeDistr: checkTimeConsistency()
+AgeDistr -> AgeDistr: checkMethodologicalConsistency()
+AgeDistr <-- AgeDistr: aggregatableDistributions
+deactivate AgeDistr
+
+AgeDistr -> Engine: aggregateAgeDistributions(aggregatableDistributions)
+activate Engine
+Engine -> Engine: sumTotalPopulation()
+Engine -> Engine: sumPopulationByAgeGroup()
+Engine -> Engine: sumGenderPopulationByAgeGroup()
+Engine -> Engine: calculateProportionalMetrics()
+Engine -> Engine: calculateWeightedIndices()
+Engine -> Engine: propagateMetadata()
+AgeDistr <-- Engine: aggregatedDistribution
+deactivate Engine
+
+AgeDistr -> Validation: validateAggregation(aggregatedDistribution)
+activate Validation
+Validation -> Validation: checkTotalConsistency()
+Validation -> Validation: verifyAgeGroupBalance()
+Validation -> Validation: validateDemographicRatios()
+AgeDistr <-- Validation: validationResult
+deactivate Validation
+
+AgeDistr -> AgeDistr: finalizeAggregation(aggregatedDistribution)
+activate AgeDistr
+AgeDistr -> AgeDistr: setAdminAreaLevel(targetLevel)
+AgeDistr -> AgeDistr: setAdminAreaId(targetId)
+AgeDistr -> AgeDistr: assignConfidenceLevel()
+AgeDistr -> AgeDistr: recordSourceDistributions()
+AgeDistr <-- AgeDistr: finalAggregatedDistribution
+deactivate AgeDistr
+
+Service <-- AgeDistr: aggregatedDistribution
+deactivate AgeDistr
+
+Service -> AgeDistr: aggregateTimePeriod(distributionId, startYear, endYear, method)
+activate AgeDistr
+
+AgeDistr -> AgeDistr: getDistributionsForPeriod(distributionId, startYear, endYear)
+activate AgeDistr
+AgeDistr <-- AgeDistr: periodDistributions
+deactivate AgeDistr
+
+AgeDistr -> AgeDistr: validateTimeSeriesDistributions(periodDistributions)
+activate AgeDistr
+AgeDistr -> AgeDistr: checkTemporalContinuity()
+AgeDistr -> AgeDistr: identifyMethodologicalBreaks()
+AgeDistr <-- AgeDistr: validatedDistributions
+deactivate AgeDistr
+
+AgeDistr -> Engine: aggregateTimeSeries(validatedDistributions, method)
+activate Engine
+alt method == AVERAGE
+  Engine -> Engine: calculateAverageDistribution()
+else method == TREND
+  Engine -> Engine: calculateTrendDistribution()
+else method == ENDPOINT_COMPARISON
+  Engine -> Engine: calculateComparisonDistribution()
+else method == CUSTOM
+  Engine -> Engine: applyCustomAggregation()
+end
+AgeDistr <-- Engine: timeAggregatedResult
+deactivate Engine
+
+AgeDistr -> AgeDistr: finalizeTimeAggregation(timeAggregatedResult)
+activate AgeDistr
+AgeDistr -> AgeDistr: setTimeAggregationMetadata()
+AgeDistr -> AgeDistr: setSynthesizedYear()
+AgeDistr -> AgeDistr: recordTimeRangeDetails()
+AgeDistr <-- AgeDistr: finalizedTimeAggregation
+deactivate AgeDistr
+
+Service <-- AgeDistr: timeAggregatedDistribution
+deactivate AgeDistr
+@enduml
+----
+
+The AgeDistribution entity implements DataAggregatable to support two critical aggregation capabilities:
+
+1. **Spatial Aggregation**: Combining ward-level age distributions to create aggregated distributions for higher administrative levels (municipality, district, province, country)
+2. **Temporal Aggregation**: Synthesizing multiple time points to generate trend data, averages, or comparison analyses over time
+
+===== Spatial Aggregation Implementation
+
+The spatial aggregation capability supports Nepal's multi-level administrative structure, allowing demographic analysis at any administrative level by aggregating data from lower levels.
+
+*Administrative Hierarchy Validation*
+
+Before aggregation begins, the system validates that the specified source distributions form a complete set for the target administrative unit. This is particularly important in Nepal's context because:
+
+- The 2017 administrative restructuring created complex relationships between old and new administrative units
+- Some wards may have missing data or different data collection periods
+- Administrative boundaries occasionally change, requiring validation that the data represents consistent geographic areas
+
+*Age Group Aggregation Methodology*
+
+When aggregating age distributions across administrative areas, several methodological considerations are addressed:
+
+1. **Direct Count Aggregation**: For complete census-based data, age groups are directly summed across the source administrative units.
+
+2. **Sample-Based Aggregation**: For survey-based data, the system applies appropriate statistical methods including:
+   - Weighting based on sampling methodology
+   - Confidence interval calculations for aggregated estimates
+   - Adjustment for different sampling rates across areas
+
+3. **Heterogeneous Data Sources**: When aggregating distributions from different data sources (e.g., some census-based, some survey-based), the system:
+   - Prioritizes more reliable data sources
+   - Applies appropriate weighting based on data quality
+   - Clearly indicates the mixed methodology in metadata
+
+*Weighted Demographic Indices*
+
+While raw population counts are simply summed, demographic indices require more sophisticated aggregation:
+
+1. **Median Age**: Calculated from the aggregated age distribution rather than averaging median ages
+2. **Dependency Ratios**: Recalculated from the summed population in relevant age groups
+3. **Age-Gender Ratios**: Derived from the summed gender-specific age distributions
+
+*Confidence Level Propagation*
+
+The system propagates confidence information during aggregation, accounting for:
+
+1. **Varying Data Quality**: Different administrative areas may have different data quality
+2. **Temporal Distance**: Data further from collection point has lower confidence
+3. **Mixed Methodologies**: Combination of census and estimated data affects confidence
+4. **Completeness**: Missing areas or age groups reduce confidence
+
+The aggregated distribution receives a confidence level representing the lowest common denominator of source distributions, ensuring users understand potential limitations in the aggregated data.
+
+*Edge Cases and Special Considerations*
+
+Several edge cases are handled to ensure accurate aggregation:
+
+1. **Zero Population Areas**: Some administrative areas may be uninhabited (especially in national park or high mountain regions) and are properly handled in aggregations.
+
+2. **Single Age Source Breakdown**: When more detailed age breakdowns exist for some areas but not others, the system aggregates to the lowest common denominator while preserving the more detailed data for those specific areas.
+
+3. **Disputed Areas**: Administrative areas with boundary disputes are flagged, and age distributions from these areas include appropriate caveats.
+
+4. **Special Populations**: Areas with unusual population characteristics (military bases, university campuses, industrial zones) are noted in metadata as they may skew age distributions.
+
+===== Temporal Aggregation Implementation
+
+The temporal aggregation capability enables analysis of age distribution trends over time, supporting both short-term comparisons and long-term demographic trend analysis.
+
+*Time Period Selection*
+
+The system supports flexible time period selection for aggregation:
+
+1. **Standard Intervals**: Census periods (typically 10 years), 5-year planning periods, or annual data
+2. **Custom Ranges**: User-defined time periods for specific analysis needs
+3. **Pre/Post Event Analysis**: Periods defined relative to significant events (e.g., pre/post 2015 earthquake)
+
+*Data Continuity Validation*
+
+Before temporal aggregation, the system validates data continuity to ensure meaningful aggregation:
+
+1. **Coverage Check**: Ensures consistent administrative coverage across time periods
+2. **Methodological Breaks**: Identifies and adjusts for changes in data collection methodology
+3. **Boundary Changes**: Flags and adjusts for administrative boundary changes between periods
+4. **Missing Periods**: Determines whether gaps in time series data affect aggregation validity
+
+*Multiple Temporal Aggregation Methods*
+
+The system supports different temporal aggregation approaches:
+
+1. **Averaging**: Calculating mean values across the time period, useful for smoothing short-term fluctuations
+
+2. **Trend Analysis**: Computing trend lines (linear, exponential, logarithmic) to characterize change over time:
+   - Age-specific growth rates
+   - Cohort progression patterns
+   - Dependency ratio trends
+
+3. **Endpoint Comparison**: Analyzing net change between the start and end of a period:
+   - Total change (absolute numbers)
+   - Percentage change
+   - Structural change (shift in proportions)
+
+4. **Custom Methods**: Specialized aggregation for specific analysis needs:
+   - Weighted temporal averages
+   - Bayesian projections
+   - Statistical mixture models
+
+*Time-Series Visualization*
+
+Temporal aggregations are designed to support rich visualization options:
+
+1. **Animation-Ready Data**: Time series outputs structured for animated visualizations
+2. **Comparable Time Points**: Consistent age bands across time for valid comparisons
+3. **Uncertainty Bands**: Confidence intervals that reflect increasing uncertainty in older data
+
+*Special Considerations for Nepal's Context*
+
+Temporal aggregation addresses several factors specific to Nepal's demographic context:
+
+1. **Intercensal Estimation**: Between census years (2001, 2011, 2021), providing consistent estimation methods
+
+2. **Civil Conflict Period**: Special handling for the 1996-2006 period when data collection was disrupted in many areas
+
+3. **Post-Earthquake Displacement**: Adjustments for the 2015 earthquake's effect on population distribution
+
+4. **Migration Effects**: Correction for Nepal's high rural-urban and international migration rates that affect age structures over time
+
+5. **Changing Administrative Units**: Reconciliation of data across Nepal's 2017 transition from 75 districts to 77 districts and from VDCs to rural municipalities
+
+*Implementation Considerations*
+
+The DataAggregatable implementation includes several optimizations for Nepal's data environment:
+
+1. **Caching Strategy**: Commonly requested aggregations (district and province levels) are cached
+
+2. **Computational Efficiency**: Optimized algorithms for large-scale aggregations across Nepal's 6,743 wards
+
+3. **Data Quality Flagging**: Clear indication of lower-quality input data that affects aggregation results
+
+4. **Hybrid Data Integration**: Methods to combine census, survey, and administrative data in coherent aggregations
+
+This implementation enables demographic analysis at any administrative level and across flexible time periods, accounting for Nepal's complex administrative history and diverse data quality across regions.

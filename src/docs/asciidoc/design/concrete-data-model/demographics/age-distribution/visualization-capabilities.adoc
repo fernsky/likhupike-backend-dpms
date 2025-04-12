@@ -1,0 +1,409 @@
+===== Visualization Capabilities
+
+The AgeDistribution entity provides specialized visualization capabilities to transform complex demographic data into accessible visual insights that support planning and decision-making.
+
+[plantuml]
+----
+@startuml
+participant "DemographicDashboard" as Dashboard
+participant "AgeDistribution" as AgeDistr
+participant "VisualizationEngine" as VisEngine
+participant "ChartConfigService" as Config
+participant "DataTransformer" as Transformer
+participant "RenderingService" as Renderer
+participant "ExportService" as Export
+
+Dashboard -> AgeDistr: requestVisualization(visualType, parameters)
+activate AgeDistr
+
+AgeDistr -> AgeDistr: prepareVisualizationData()
+activate AgeDistr
+AgeDistr -> AgeDistr: validateData()
+AgeDistr -> AgeDistr: applyFilters()
+AgeDistr -> AgeDistr: groupAgeData()
+AgeDistr <-- AgeDistr: preparedData
+deactivate AgeDistr
+
+AgeDistr -> Config: getVisualizationConfiguration(visualType)
+activate Config
+Config -> Config: loadDefaultSettings()
+Config -> Config: applyUserPreferences()
+Config -> Config: resolveLocalizations()
+AgeDistr <-- Config: visualizationConfig
+deactivate Config
+
+AgeDistr -> Transformer: transformForVisualization(preparedData, visualType)
+activate Transformer
+Transformer -> Transformer: structureDataSeries()
+Transformer -> Transformer: calculateDerivedValues()
+Transformer -> Transformer: prepareLabels()
+Transformer -> Transformer: formatNumbers()
+AgeDistr <-- Transformer: transformedData
+deactivate Transformer
+
+AgeDistr -> VisEngine: generateVisualization(transformedData, visualizationConfig)
+activate VisEngine
+
+alt visualType == POPULATION_PYRAMID
+  VisEngine -> Renderer: createPopulationPyramid()
+  activate Renderer
+  Renderer -> Renderer: setupPyramidLayout()
+  Renderer -> Renderer: renderHorizontalBars()
+  Renderer -> Renderer: addAgeLabels()
+  Renderer -> Renderer: addGenderLegend()
+  Renderer -> Renderer: addAnnotations()
+  VisEngine <-- Renderer: pyramidVisualization
+  deactivate Renderer
+else visualType == AGE_TREND
+  VisEngine -> Renderer: createAgeGroupTrend()
+  activate Renderer
+  Renderer -> Renderer: setupTrendLayout()
+  Renderer -> Renderer: renderTimeSeriesLines()
+  Renderer -> Renderer: addConfidenceIntervals()
+  Renderer -> Renderer: addTimelineEvents()
+  VisEngine <-- Renderer: trendVisualization
+  deactivate Renderer
+else visualType == COMPARATIVE_PYRAMID
+  VisEngine -> Renderer: createComparativePyramids()
+  activate Renderer
+  Renderer -> Renderer: setupMultiPyramidLayout()
+  Renderer -> Renderer: renderOverlayedPyramids()
+  Renderer -> Renderer: addComparisonLegend()
+  Renderer -> Renderer: highlightDifferences()
+  VisEngine <-- Renderer: comparativeVisualization
+  deactivate Renderer
+else visualType == AGE_DISTRIBUTION_MAP
+  VisEngine -> Renderer: createThematicMap()
+  activate Renderer
+  Renderer -> Renderer: setupMapCanvas()
+  Renderer -> Renderer: applyColorScale()
+  Renderer -> Renderer: renderAgeSpecificLayers()
+  Renderer -> Renderer: addNavigationControls()
+  VisEngine <-- Renderer: thematicMapVisualization
+  deactivate Renderer
+end
+
+AgeDistr <-- VisEngine: visualization
+deactivate VisEngine
+
+Dashboard <-- AgeDistr: visualizationResponse
+deactivate AgeDistr
+
+Dashboard -> AgeDistr: exportVisualization(visualizationId, format)
+activate AgeDistr
+AgeDistr -> VisEngine: retrieveVisualization(visualizationId)
+activate VisEngine
+AgeDistr <-- VisEngine: visualization
+deactivate VisEngine
+
+AgeDistr -> Export: formatForExport(visualization, format)
+activate Export
+Export -> Export: prepareHighResVersion()
+Export -> Export: addMetadata()
+Export -> Export: packageWithDataTable()
+AgeDistr <-- Export: exportedPackage
+deactivate Export
+
+Dashboard <-- AgeDistr: exportedVisualization
+deactivate AgeDistr
+@enduml
+----
+
+The AgeDistribution entity's visualization capabilities transform complex age distribution data into accessible, interactive visualizations tailored to Nepal's demographic context and planning needs.
+
+===== Core Visualization Types
+
+*Population Pyramid*
+
+The population pyramid (age-sex pyramid) is the foundation of age distribution visualization, showing population by age group and gender.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Nepal Population Pyramid 2021**
+
+|= Age Group |= Males |= |= Females |
+| 80+        | <:▋     | | ▎:>     |
+| 75-79      | <:▊     | | ▍:>     |
+| 70-74      | <:▊     | | ▍:>     |
+| 65-69      | <:█     | | ▋:>     |
+| 60-64      | <:█     | | ▌:>     |
+| 55-59      | <:█▏    | | ▌:>     |
+| 50-54      | <:█▍    | | █:>     |
+| 45-49      | <:█▌    | | █▏:>    |
+| 40-44      | <:█▊    | | █▍:>    |
+| 35-39      | <:██    | | █▋:>    |
+| 30-34      | <:██▍   | | ██:>    |
+| 25-29      | <:██▋   | | ██▎:>   |
+| 20-24      | <:███   | | ██▋:>   |
+| 15-19      | <:███▎  | | ███:>   |
+| 10-14      | <:███▌  | | ███▏:>  |
+| 5-9        | <:███▊  | | ███▍:>  |
+| 0-4        | <:███▊  | | ███▌:>  |
+
+Males: 14.13 million          Females: 14.88 million
+Median Age: 24.6 years
+@enduml
+----
+
+Key features of the population pyramid include:
+
+1. **Multi-Gender Representation**: While traditional pyramids show male and female, the system also accommodates third gender representation where data is available, reflecting Nepal's legal recognition of third gender identity.
+
+2. **Cultural Configuration**: Age bands can be configured to align with Nepal's cultural life-stage divisions (e.g., school-age children, marriage-age, elderly) rather than just standard 5-year cohorts.
+
+3. **Comparative Overlays**: Multiple pyramids can be overlaid (e.g., urban vs. rural, 2011 vs. 2021 census) with transparency effects to highlight structural differences.
+
+4. **Migration Signature Highlighting**: Given Nepal's high migration rates, the system can highlight "missing" cohorts that indicate outmigration, particularly working-age males.
+
+5. **Annotation Support**: Key demographic events (civil conflict, 2015 earthquake, COVID-19 pandemic) can be annotated on the pyramid to explain unusual patterns.
+
+*Age Group Trend Analysis*
+
+This visualization shows how specific age groups change over time, essential for longitudinal analysis.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Age Group Trends: Kathmandu District 2001-2021**
+
+scale max 1000
+concise "Children (0-14)" as Children
+concise "Working Age (15-64)" as Working
+concise "Elderly (65+)" as Elderly
+
+@2001
+Children is 325
+Working is 550
+Elderly is 125
+
+@2011
+Children is 290
+Working is 620
+Elderly is 145
+
+@2021
+Children is 255
+Working is 655
+Elderly is 170
+
+@enduml
+----
+
+Key features of age trend visualization include:
+
+1. **Flexible Age Grouping**: Users can select standard groupings (children, working-age, elderly) or define custom age bands for specific analysis needs.
+
+2. **Multi-Region Comparison**: Multiple administrative areas can be plotted together to compare trajectories (e.g., different districts aging at different rates).
+
+3. **Event Markers**: Significant events affecting demographics (e.g., disasters, policy changes) can be marked on the timeline.
+
+4. **Projection Extension**: Trend lines can include projections with confidence intervals, based on historical patterns and demographic models.
+
+5. **Ratio Visualization**: Beyond absolute numbers, derived metrics like dependency ratio trends can be visualized over time.
+
+*Demographic Index Maps*
+
+Thematic maps visualize age-related indices across geographic areas, revealing spatial patterns.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/map.puml
+
+<sprite:map> **Child Dependency Ratio by Province**
+
+|= Province |= Ratio |= Color |
+| Koshi | 64.2 | <back:LightBlue>    </back>|
+| Madhesh | 73.8 | <back:DeepSkyBlue>   </back>|
+| Bagmati | 52.6 | <back:LightCyan>    </back>|
+| Gandaki | 58.4 | <back:PaleTurquoise> </back>|
+| Lumbini | 68.9 | <back:SkyBlue>      </back>|
+| Karnali | 82.5 | <back:DodgerBlue>    </back>|
+| Sudurpashchim | 78.3 | <back:RoyalBlue>    </back>|
+
+Legend: Number of children (0-14) per 100 working-age adults (15-64)
+@enduml
+----
+
+Key features of demographic maps include:
+
+1. **Multi-Level Geography**: Maps can display data at any administrative level (ward, municipality, district, province) with drill-down capability.
+
+2. **Diverse Demographic Indices**: Various indices can be mapped:
+   - Median age
+   - Youth dependency ratio
+   - Elderly dependency ratio
+   - Aging index
+   - Sex ratio by age group
+
+3. **Time Animation**: Maps can be animated to show change over time, revealing how demographic patterns shift geographically.
+
+4. **Multi-Layer Analysis**: Geographic features (elevation, roads, services) can be overlaid with demographic data to analyze relationships.
+
+5. **Outlier Highlighting**: Statistical outliers are automatically highlighted, drawing attention to unusual demographic patterns that may require further investigation.
+
+*Cohort Flow Visualization*
+
+This specialized visualization tracks how specific birth cohorts move through the age structure over time.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Birth Cohort Flow: 1990-1994 Birth Cohort**
+
+scale max 1000
+concise "Cohort Size" as Size
+
+@1991 "Age 0-4"
+Size is 850
+
+@2001 "Age 10-14"
+Size is 835
+
+@2011 "Age 20-24"
+Size is 720
+
+@2021 "Age 30-34"
+Size is 650
+
+@enduml
+----
+
+Key features of cohort flow visualization include:
+
+1. **Cohort Tracking**: Following the same birth cohort through multiple time points to visualize how cohort size changes.
+
+2. **Decline Decomposition**: Analysis of whether cohort changes are due to mortality, migration, or data issues.
+
+3. **Gender Differentiation**: Tracking male and female cohorts separately to identify gender-specific patterns, especially important in Nepal where male outmigration is significant.
+
+4. **Multiple Cohort Comparison**: Comparing different birth cohorts to identify how demographic experience differs by generation.
+
+5. **Life Stage Highlighting**: Marking important life stages (school entry, working age entry, retirement) for cohorts to link with policy planning.
+
+===== Advanced Visualization Features
+
+*Comparative Demographic Analysis*
+
+This visualization compares age structures across different factors:
+
+1. **Urban-Rural Comparison**: Side-by-side pyramids showing the different age structures of urban and rural populations.
+
+2. **Ethnic/Caste Comparison**: Comparing age structures across Nepal's diverse ethnic and caste groups, revealing different demographic patterns.
+
+3. **Socioeconomic Stratification**: Age structures by wealth quintile or education level, showing how demographics vary with socioeconomic status.
+
+4. **Before-After Analysis**: Comparing age structures before and after significant events (disasters, development projects, policy changes).
+
+*Demographic Dividend Analysis*
+
+Specialized visualization focusing on Nepal's demographic dividend opportunity:
+
+1. **Support Ratio Visualization**: Showing the ratio of working-age to dependent populations over time.
+
+2. **Window of Opportunity**: Highlighting the period when the demographic dividend is expected to be strongest.
+
+3. **Regional Variation**: Mapping how the demographic dividend varies across Nepal's regions, with some already past peak while others are still approaching it.
+
+4. **Policy Scenario Modeling**: Visualizing how different policy interventions might affect the realization of the demographic dividend.
+
+*Educational Transition Visualization*
+
+Given education planning importance, specialized visualization for educational cohorts:
+
+1. **School-Age Cohort Tracking**: Visualizing the size of school-age cohorts over time.
+
+2. **Enrollment Projection**: Combining age data with enrollment rates to project future student numbers.
+
+3. **Educational Transition Mapping**: Visualizing how age cohorts move through educational levels.
+
+4. **Geographic Enrollment Pressure**: Mapping where student population growth or decline creates pressure points in the education system.
+
+===== Implementation Details
+
+*Dynamic Data Transformation*
+
+The visualization system dynamically transforms AgeDistribution data to match the needs of different visualization types:
+
+1. **Standard Age Regrouping**: Automatically regrouping detailed age data into standard visualization categories.
+
+2. **Normalization Options**: Providing absolute counts, percentages, or normalized values based on visualization needs.
+
+3. **Statistical Transformation**: Calculating derived statistics like growth rates, indices, or proportions as needed.
+
+4. **Temporal Alignment**: Adjusting for different data collection timeframes to enable valid comparisons.
+
+*Culturally Appropriate Visualization*
+
+Visualizations are customized for Nepal's cultural context:
+
+1. **Dual Script Support**: All visualizations include both Nepali and English labels, supporting Nepal's bilingual official documentation.
+
+2. **Nepali Calendar Integration**: Support for Bikram Sambat dating alongside Gregorian calendar.
+
+3. **Cultural Color Schemes**: Culturally appropriate color selections avoiding potentially problematic color associations.
+
+4. **Local Administrative Names**: Using official Nepali terminology for administrative divisions.
+
+*Accessibility Features*
+
+Visualizations implement accessibility best practices:
+
+1. **Color Blindness Safe**: All color schemes are tested for color vision deficiencies.
+
+2. **Screen Reader Support**: Text equivalents and ARIA attributes for all visual elements.
+
+3. **Data Table Alternatives**: All visual data available in accessible tabular format.
+
+4. **Keyboard Navigation**: Complete functionality without requiring mouse interaction.
+
+*Export and Sharing Options*
+
+Visualizations support multiple export formats:
+
+1. **High-Resolution Images**: PNG and SVG formats for reports and publications.
+
+2. **Interactive HTML**: Self-contained interactive versions for digital sharing.
+
+3. **Data Export**: Underlying data in CSV, Excel, and JSON formats.
+
+4. **Report Integration**: Direct integration with report generation systems.
+
+5. **API Access**: Programmatic access for integration with other systems.
+
+*Mobile Optimization*
+
+Given Nepal's high mobile penetration, visualizations are optimized for mobile access:
+
+1. **Responsive Design**: Adapting to different screen sizes while maintaining readability.
+
+2. **Touch Interaction**: Optimized controls for touch interfaces rather than mouse.
+
+3. **Data Loading Efficiency**: Progressive loading for low-bandwidth environments common in rural Nepal.
+
+4. **Offline Capability**: Key visualizations can be cached for offline reference in areas with limited connectivity.
+
+*Edge Cases and Performance Considerations*
+
+Several edge cases are handled to ensure visualization robustness:
+
+1. **Missing Data Handling**: Appropriate visualization of incomplete time series or missing age bands.
+
+2. **Small Population Areas**: Special handling for administrative areas with very small populations to avoid misleading visualizations.
+
+3. **Statistical Outliers**: Automated detection and appropriate visualization of unusual demographic patterns.
+
+4. **Large Dataset Performance**: Optimization techniques for visualizing complete national datasets with thousands of administrative areas.
+
+Through these visualization capabilities, the AgeDistribution entity transforms complex demographic data into accessible insights that support evidence-based planning across Nepal's diverse contexts. The visualizations bridge the gap between technical demographic analysis and practical decision-making, making population age structure data meaningful to policymakers, planners, and citizens.
