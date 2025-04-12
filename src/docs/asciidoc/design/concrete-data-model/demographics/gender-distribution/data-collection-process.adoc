@@ -1,0 +1,173 @@
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Plan gender data collection strategy;
+:Design gender-inclusive questionnaire;
+:Train field enumerators on gender sensitivity;
+
+|Field Data Collection|
+:Conduct house-to-house enumeration;
+:Record gender information of household members;
+:Accommodate third gender declaration;
+:Document gender data collection challenges;
+note right
+  Nepal-specific challenges:
+  - Cultural sensitivity around gender discussions
+  - Gender-based migration patterns
+  - Remote area access limitations
+  - Varied understanding of third gender concept
+end note
+
+|Data Processing Team|
+:Clean raw gender data;
+:Resolve missing gender information;
+:Apply gender-specific imputation methods;
+:Calculate preliminary gender ratios;
+note right
+  Gender data quality assessment:
+  - Check for illogical gender ratios
+  - Detect outliers in third gender reporting
+  - Compare with expected demographic patterns
+end note
+
+|System|
+:Import validated gender data;
+:Calculate gender counts by administrative area;
+:Compute sex ratios and gender metrics;
+:Flag areas with significant gender imbalance;
+
+|Statistical Team|
+:Analyze gender distribution patterns;
+:Compare with historical gender trends;
+:Assess migration impacts on gender distribution;
+:Validate gender data against other sources;
+:Document gender data limitations;
+
+|Quality Assurance|
+:Perform gender data verification;
+:Conduct post-enumeration gender survey;
+:Calculate gender reporting confidence levels;
+:Identify gender-based undercounting risks;
+:Finalize gender distribution dataset;
+
+|Gender Analysis Specialist|
+:Review gender distribution anomalies;
+:Assess societal implications of gender ratios;
+:Analyze spatial patterns of gender imbalance;
+:Document gender data interpretation guidelines;
+:Generate gender-specific recommendations;
+
+|Data Users|
+:Access gender distribution data;
+:View gender ratio visualizations;
+:Extract gender statistics for planning;
+:Correlate with other demographic indicators;
+:Incorporate into gender-responsive policies;
+
+stop
+@enduml
+----
+
+The GenderDistribution entity implements a comprehensive data collection and processing workflow designed to address Nepal's unique context and challenges in gender data collection.
+
+===== Census Data Integration
+
+The primary authoritative source for gender distribution data is Nepal's national population census conducted by the Central Bureau of Statistics (CBS) approximately every 10 years (most recently in 2011 and 2021). When official census data becomes available, it is integrated as the foundation for gender distribution analysis with `isCensusData=true`.
+
+Nepal faces unique challenges in gender data collection:
+
+1. **Third Gender Recognition**: Nepal was one of the first countries to officially recognize a third gender category in its 2011 census. The data collection process must sensitively capture this information while respecting privacy concerns.
+
+2. **Gender-Specific Migration**: Nepal experiences high male outmigration for foreign employment, creating significant gender imbalances in many communities. This must be carefully documented and differentiated from other causes of gender ratio variations.
+
+3. **Cultural Sensitivity**: In some communities, traditional practices may influence how gender information is reported. Field enumerators are specially trained to navigate these cultural sensitivities.
+
+4. **Remote Area Gender Data**: Gender data collection in remote mountain areas often faces additional challenges, including accessing female respondents in households where cultural norms may limit interactions with outside enumerators.
+
+The system applies specific methodologies to address these challenges:
+
+- Gender-sensitive enumeration protocols
+- Female enumerators for interviewing women in traditional communities
+- Specialized training on third gender enumeration 
+- Post-enumeration gender verification surveys
+
+===== Intercensal Estimation Process
+
+Between census years, the system employs several techniques to update gender distributions:
+
+1. **Component Method**: Applies gender-specific birth rates, death rates, and migration data to update population by gender
+
+2. **Survey Integration**: Incorporates gender data from periodic surveys like the Nepal Demographic Health Survey, which provides updated gender statistics for reproductive-age populations
+
+3. **Administrative Data**: Integrates gender data from administrative sources such as vital registration systems, voter lists, and school enrollment records
+
+4. **Gender-Specific Migration Adjustment**: Applies specialized adjustments based on labor migration statistics from the Department of Foreign Employment
+
+Each estimation method explicitly documents gender-specific assumptions and limitations in the data through the `methodologyDescription` field.
+
+===== Gender Data Quality Management
+
+Each GenderDistribution record includes explicit quality indicators:
+
+1. **Confidence Level**: Rated from HIGH (census data) to VERY_LOW (rough projections)
+2. **Data Source**: Specifies the origin of the gender data
+3. **Methodology Description**: Documents gender-specific collection and estimation methods
+4. **Margin of Error**: Quantifies the statistical uncertainty for gender counts
+
+These quality indicators ensure users can appropriately interpret gender data, particularly for planning gender-responsive programs. The system also performs automated checks for implausible gender ratios or suspicious patterns that might indicate data quality issues.
+
+===== Third Gender Data Management
+
+Nepal's recognition of third gender identity requires specialized data handling:
+
+1. **Privacy Protections**: Small counts of third gender individuals at ward level may be aggregated to municipality level to prevent potential identification
+
+2. **Imputations**: Missing third gender data may be imputed based on urban/rural patterns and regional factors
+
+3. **Confidence Indicators**: Third gender counts include specific confidence indicators due to evolving enumeration methodologies
+
+4. **Documentation**: The system documents limitations in third gender data collection to ensure appropriate interpretation
+
+===== Nepal-Specific Gender Data Context
+
+The data collection and processing workflow acknowledges several factors specific to Nepal's gender demographics context:
+
+1. **Regional Variation**: Gender ratios vary significantly by ecological zone, with more balanced ratios in hill regions compared to some Terai districts
+
+2. **Caste/Ethnicity Correlation**: Gender patterns often correlate with specific ethnic communities, requiring culturally informed interpretation
+
+3. **Seasonal Migration Effects**: Some communities experience seasonal male migration that can affect gender counts depending on when data is collected
+
+4. **Post-Disaster Disruption**: Major events like the 2015 earthquake temporarily altered gender distributions in affected areas through displacement
+
+5. **Urban-Rural Differences**: Urban areas often show different gender patterns due to female migration for education and employment
+
+By incorporating these contextual factors, the GenderDistribution entity provides not just raw gender counts, but contextually interpreted information for gender-responsive planning and policy development.
+
+===== Field Collection Methodologies
+
+The system supports documentation of specific field methodologies used for gender data collection:
+
+1. **Gender of Enumerator**: Records whether same-gender enumerators were used, which can affect response quality in traditional communities
+
+2. **Proxy Reporting**: Tracks whether gender information was reported by the individual or by another household member
+
+3. **Self-Identification Protocol**: Documents whether gender was self-identified or assigned based on observation
+
+4. **Third Gender Enumeration Approach**: Records the specific protocol used for third gender enumeration, which has evolved over different census periods
+
+These methodology details help contextualize gender data and understand potential collection biases.
+
+===== Administrative Boundary Change Handling
+
+When administrative boundaries change, as occurred extensively following Nepal's 2017 federal restructuring, historical gender data must be reconciled with new boundaries. The system provides:
+
+1. **Historical Recalculation**: Gender distributions recalculated to match current administrative boundaries
+
+2. **Confidence Adjustment**: Appropriate confidence level downgrades for boundary-adjusted historical gender data
+
+3. **Transition Documentation**: Clear documentation of methodology used for gender data transitions across boundary changes
+
+This ensures time-series gender analysis remains valid despite administrative restructuring.
