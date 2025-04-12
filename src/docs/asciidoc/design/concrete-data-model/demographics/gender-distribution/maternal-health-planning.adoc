@@ -1,0 +1,128 @@
+===== Maternal Health Service Planning
+
+*Scenario:* Using female population distribution data to plan maternal health services
+
+[plantuml]
+----
+@startuml
+actor "District Health\nOffice" as DHO
+actor "Maternal Health\nCoordinator" as MHC
+participant "GenderDistribution" as Gender
+participant "MaternalHealthNeeds\nAssessment" as Needs
+participant "HealthFacility\nMapping" as Facility
+participant "AccessAnalysis\nService" as Access
+participant "ResourceAllocation\nEngine" as Resource
+
+DHO -> MHC: Plan maternal health services
+MHC -> Gender: retrieveGenderDistribution(districtId, currentYear)
+activate Gender
+Gender -> Gender: extractReproductiveAgeFemales()
+Gender -> Gender: calculatePregnancyEstimates()
+Gender -> Gender: mapWardLevelDistribution()
+MHC <-- Gender: reproductiveAgeFemaleData
+deactivate Gender
+
+MHC -> Needs: assessMaternalHealthNeeds(districtId)
+activate Needs
+Needs -> Needs: calculateANCCaseload()
+Needs -> Needs: estimateDeliveries()
+Needs -> Needs: projectedComplicationsRate()
+Needs -> Needs: calculatePostnatalCare()
+Needs -> Needs: assessHighRiskCategories()
+MHC <-- Needs: maternalHealthNeeds
+deactivate Needs
+
+MHC -> Facility: mapExistingMaternalServices()
+activate Facility
+Facility -> Facility: identificyBirthingCenters()
+Facility -> Facility: assessBEmONCFacilities()
+Facility -> Facility: mapCEmONCAvailability()
+Facility -> Facility: evaluateReferralSystem()
+Facility -> Facility: assessHumanResourceGaps()
+MHC <-- Facility: facilityAssessment
+deactivate Facility
+
+MHC -> Access: analyzeServiceAccessibility()
+activate Access
+Access -> Access: calculateTravelTimeIsochrones()
+Access -> Access: identifyGeographicBarriers()
+Access -> Access: mapSeasonalAccessibility()
+Access -> Access: assessTransportOptions()
+Access -> Access: identifyUnderservedPopulations()
+MHC <-- Access: accessibilityAnalysis
+deactivate Access
+
+MHC -> Gender: analyzeSpecialPopulations()
+activate Gender
+Gender -> Gender: identifyRemoteSettlements()
+Gender -> Gender: mapDisadvantagedGroups()
+Gender -> Gender: assessAdolescentMotherRisk()
+Gender -> Gender: identifyMigrantWomenNeeds()
+MHC <-- Gender: specialPopulationAnalysis
+deactivate Gender
+
+MHC -> Resource: allocateResources()
+activate Resource
+Resource -> Resource: calculateStaffingNeeds()
+Resource -> Resource: determineCommodityRequirements()
+Resource -> Resource: prioritizeFacilityUpgrades()
+Resource -> Resource: allocateTransportBudget()
+Resource -> Resource: planOutreachServices()
+MHC <-- Resource: resourceAllocationPlan
+deactivate Resource
+
+MHC -> DHO: presentMaternalHealthPlan()
+DHO -> Resource: approveResourceAllocation()
+activate Resource
+Resource -> Resource: finalizeBudget()
+Resource -> Resource: setImplementationTimeline()
+Resource -> Resource: establishMonitoringPlan()
+DHO <-- Resource: finalizedPlan
+deactivate Resource
+@enduml
+----
+
+*Real-World Context:*
+The District Health Office (DHO) in Jumla, one of Nepal's remote mountain districts, is planning maternal health services for the upcoming fiscal year. Jumla faces significant challenges in maternal health service delivery due to its difficult terrain, dispersed settlements, and limited infrastructure. The Maternal Health Coordinator uses gender distribution data to develop an evidence-based maternal health service plan.
+
+The planning process begins with retrieving detailed gender distribution data for the district. Jumla has approximately 14,200 women of reproductive age (15-49 years), representing 23% of the total population. The data reveals significant variation across wards - some remote northern wards have lower proportions of reproductive-age women due to outmigration, while more accessible southern wards show higher concentrations. Applying fertility rates to this population, the system calculates an expected 2,840 pregnancies annually, with monthly variations based on seasonal patterns.
+
+The Maternal Health Needs Assessment service translates these demographic figures into specific service needs: approximately 11,360 antenatal care visits (assuming 4 visits per pregnancy), 2,840 deliveries, and 2,840 postnatal care visits. Based on district epidemiological patterns, the system projects that about 15% (426) of these pregnancies will be high-risk cases requiring specialized care, and approximately 5% (142) will require emergency obstetric interventions.
+
+The Health Facility Mapping service assesses existing maternal health infrastructure against these projected needs. Jumla has one district hospital with Comprehensive Emergency Obstetric and Newborn Care (CEmONC) capabilities, three Primary Health Centers with Basic Emergency Obstetric and Newborn Care (BEmONC) services, and 12 Health Posts with basic delivery facilities. The assessment identifies critical gaps: two health posts lack functional birthing centers, the district hospital has only one obstetrician for the entire district, and emergency blood transfusion services are limited.
+
+The Access Analysis service overlays the female population distribution with geographic accessibility data. This reveals that approximately 35% of reproductive-age women live beyond a two-hour travel time to any birthing center, and 60% are more than two hours from emergency obstetric care. During the monsoon season (June-September), accessibility worsens significantly when roads become impassable, isolating several northern wards completely.
+
+The Gender Distribution service identifies special population needs: approximately 420 pregnant women will be from Dalit communities (historically disadvantaged groups), 380 will be adolescent pregnancies (higher risk), and about 250 will be from migrant households with husbands working abroad, lacking traditional family support systems.
+
+Based on this comprehensive analysis, the Resource Allocation Engine develops a targeted maternal health plan:
+
+1. **Facility Upgrades**: Establish two new birthing centers in northern wards to reduce travel time for isolated communities; upgrade the Primary Health Center in Tila to provide BEmONC services.
+
+2. **Human Resources**: Recruit an additional obstetrician for the district hospital; train 8 additional skilled birth attendants for remote health posts; establish a rotating midwife program for monsoon-isolated areas.
+
+3. **Outreach Services**: Implement monthly satellite antenatal clinics in 14 remote settlements; establish a helicopter emergency evacuation fund for complicated cases during monsoon isolation.
+
+4. **Community-Based Interventions**: Train female community health volunteers in each ward on danger sign identification; establish maternity waiting homes near the district hospital for women from remote areas.
+
+5. **Target Programs**: Develop specialized support for adolescent mothers; create a birth preparedness program for women in migrant households.
+
+The plan includes a detailed budget allocation totaling NPR 24.6 million, with implementation timelines aligned to seasonal access patterns (accelerating construction during the dry season) and a monitoring framework with ward-level maternal health indicators.
+
+By utilizing detailed gender distribution data, the plan ensures maternal health resources are allocated efficiently to address the specific geographic and demographic challenges of Jumla district, with the goal of reducing maternal mortality and improving birth outcomes despite the challenging context.
+
+===== Special Considerations for Nepal's Maternal Health Context
+
+The maternal health planning process incorporates several considerations specific to Nepal's context:
+
+1. **Geographic Accessibility Challenges**: Nepal's mountainous terrain creates extreme service delivery challenges, requiring specialized approaches like helicopter evacuations for emergencies and maternity waiting homes.
+
+2. **Seasonal Variations**: Monsoon season significantly affects service accessibility in many districts, requiring season-specific planning and resource allocation.
+
+3. **Socio-Cultural Factors**: Traditional practices around childbirth vary across Nepal's diverse ethnic communities, requiring culturally-sensitive approaches tailored to local contexts.
+
+4. **Federalism Implementation**: Under Nepal's federal structure, local governments now have primary responsibility for basic health services, while provincial governments manage district hospitals, creating a complex governance environment for maternal health.
+
+5. **Male Migration Impact**: The high rate of male labor migration means many pregnant women lack traditional family support, requiring additional psychosocial services and support mechanisms.
+
+By incorporating these contextual factors, gender distribution data becomes a powerful tool for evidence-based, locally-relevant maternal health planning within Nepal's unique geographic and social landscape.

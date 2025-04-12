@@ -1,0 +1,137 @@
+===== Gender Equity Planning in Local Governance
+
+*Scenario:* Using gender distribution data to develop gender-responsive local development plans
+
+[plantuml]
+----
+@startuml
+actor "Local Government\nPlanning Unit" as Planner
+actor "Gender Focal Person" as GFP
+participant "GenderDistribution" as Gender
+participant "GenderEquityService" as Equity
+participant "LocalResourceAllocation" as Resource
+participant "SectoralAnalysis" as Sectoral
+participant "ProjectDatabase" as Projects
+
+Planner -> Gender: retrieveGenderDistribution(municipalityId, currentYear)
+activate Gender
+Gender -> Gender: fetchGenderData()
+Planner <-- Gender: genderDistributionData
+deactivate Gender
+
+Planner -> GFP: analyze gender implications
+GFP -> Equity: assessGenderEquity(municipalityId)
+activate Equity
+Equity -> Equity: calculateGenderEquityIndices()
+Equity -> Equity: identifyGenderGaps()
+Equity -> Equity: assessGenderBudgetAllocation()
+Equity -> Equity: evaluateInstitutionalCapacity()
+GFP <-- Equity: equityAssessmentReport
+deactivate Equity
+
+GFP -> Sectoral: analyzeGenderDimensions()
+activate Sectoral
+Sectoral -> Sectoral: assessEducationGenderGap()
+Sectoral -> Sectoral: evaluateHealthAccessByGender()
+Sectoral -> Sectoral: analyzeEconomicParticipation()
+Sectoral -> Sectoral: assessGenderBasedViolenceData()
+Sectoral -> Sectoral: evaluateWaterAccessByGender()
+GFP <-- Sectoral: sectoralGenderAnalysis
+deactivate Sectoral
+
+GFP -> Projects: reviewExistingProjects(municipalityId)
+activate Projects
+Projects -> Projects: categorizeByGenderResponsiveness()
+Projects -> Projects: assessGenderOutcomes()
+Projects -> Projects: identifyGenderBlindSpots()
+GFP <-- Projects: projectGenderAnalysis
+deactivate Projects
+
+GFP -> Resource: analyzeResourceAllocation()
+activate Resource
+Resource -> Resource: calculateGenderResponsiveBudget()
+Resource -> Resource: assessDirectGenderBenefits()
+Resource -> Resource: evaluateIndirectGenderBenefits()
+Resource -> Resource: identifyGenderBudgetGaps()
+GFP <-- Resource: genderBudgetAnalysis
+deactivate Resource
+
+GFP -> Equity: generateGenderActionPlan()
+activate Equity
+Equity -> Equity: prioritizeGenderInterventions()
+Equity -> Equity: calculateResourceRequirements()
+Equity -> Equity: developMonitoringFramework()
+Equity -> Equity: defineGenderTargets()
+GFP <-- Equity: genderActionPlan
+deactivate Equity
+
+Planner <- GFP: submit gender action recommendations
+
+Planner -> Planner: integrateIntoLocalDevelopmentPlan()
+Planner -> Resource: allocateGenderResponsiveResources()
+activate Resource
+Resource -> Resource: setMandatoryGenderAllocation()
+Resource -> Resource: tagGenderTransformativeProjects()
+Resource -> Resource: establishGenderMonitoringMetrics()
+Planner <-- Resource: resourceAllocationConfirmed
+deactivate Resource
+
+Planner -> Projects: planNewGenderResponsiveProjects()
+activate Projects
+Projects -> Projects: designWomenFocusedInitiatives()
+Projects -> Projects: incorporateGenderInInfrastructure()
+Projects -> Projects: planForEconomicEmpowerment()
+Projects -> Projects: designGBVPrevention()
+Planner <-- Projects: genderProjectPortfolio
+deactivate Projects
+@enduml
+----
+
+*Real-World Context:*
+Dhankuta Municipality in Province 1 is preparing its annual development plan and budget, which by law must include gender-responsive elements as mandated by Nepal's Local Government Operation Act 2017. The Local Government Planning Unit works with the designated Gender Focal Person to use gender demographic data to develop gender-responsive plans and budgets.
+
+The planning process begins with retrieving the latest gender distribution data for the municipality. Dhankuta shows a sex ratio of 91 males per 100 females, significantly below the national average, indicating high male outmigration. The data reveals that 28% of households are female-headed, and there is a growing elderly female population (9.3% of total population). The municipality also has a small but visible third gender population (0.3%).
+
+The Gender Equity Service analyzes these demographic patterns to identify specific gender inequities. For instance, despite the female-majority population, women's representation in local decision-making positions is only 18% (beyond the mandatory 33% in elected positions). While women-headed households are numerous, they control only 12% of productive agricultural land.
+
+The Sectoral Analysis examines gender dimensions across key service areas:
+- Education data shows 86% girls' enrollment in secondary schools vs. 92% for boys
+- Women's access to skilled birth attendance is limited at 68%
+- Only 24% of formal businesses are owned by women
+- Gender-based violence reports have increased 30% in the last year
+- Women spend an average of 2.3 hours daily collecting water in certain wards
+
+The Project Database review reveals that only 17% of previous year's projects were explicitly gender-focused, while 45% were "gender-blind" with no consideration of differential gender impacts. Most gender-focused projects were small in scale and limited to traditional women's sectors like handicrafts.
+
+The Resource Allocation analysis shows that in the previous fiscal year, only 14% of the municipal budget was allocated to directly gender-responsive activities, despite Nepal's constitutional mandate requiring gender-responsive budgeting at all government levels.
+
+Based on this comprehensive analysis, the Gender Focal Person develops a Gender Action Plan with specific recommendations:
+1. Allocate at least 25% of municipal budget to gender-responsive programs
+2. Launch economic empowerment programs targeting female-headed households
+3. Develop eldercare services focused on the growing elderly female population
+4. Create specialized vocational training for women in non-traditional sectors
+5. Improve water supply infrastructure in wards with high water collection burden
+6. Strengthen GBV response mechanisms and preventive programs
+7. Ensure women's meaningful participation in user committees beyond token presence
+
+The Local Government Planning Unit integrates these recommendations into the municipal development plan, allocating specific budget lines for gender-responsive activities and establishing gender-specific targets and monitoring mechanisms.
+
+For infrastructure projects, gender considerations are now mandatory in design specifications, such as including women's safety features in public spaces, ensuring water points are accessible to female users, and integrating childcare facilities in market development projects.
+
+This gender-responsive planning approach ensures that Dhankuta Municipality's development activities address the specific needs of its female-majority population while working toward greater gender equity in resource allocation and development outcomes. The continuous use of updated gender distribution data allows the municipality to track progress and adjust interventions based on changing gender demographics over time.
+
+===== Special Considerations for Nepal's Context
+
+The gender equity planning process incorporates several considerations specific to Nepal's governance context:
+
+1. **Federalism Implementation**: The planning process operates within Nepal's relatively new federal structure, where municipalities have significant autonomy in local development planning but must align with provincial and federal gender policies.
+
+2. **Mandatory Participation Requirements**: Nepal's legislation requires 40% women's participation in planning processes, which must be documented and verified in the plans.
+
+3. **Intersectionality**: Gender analysis must consider Nepal's complex social structure, including caste, ethnicity, and geographical remoteness that create multiple layers of disadvantage for certain women.
+
+4. **Migration Context**: The high male outmigration in many municipalities creates unique planning challenges, requiring programs specifically designed for remittance-dependent female-headed households.
+
+5. **Post-Disaster Needs**: In earthquake-affected areas, gender planning must accommodate the specific vulnerabilities women faced during reconstruction.
+
+By incorporating these contextual factors, the gender distribution data becomes a powerful tool for evidence-based, locally-relevant gender equity planning within Nepal's governance framework.

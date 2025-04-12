@@ -1,0 +1,131 @@
+===== Migration Pattern Analysis Based on Gender Distribution
+
+*Scenario:* Using gender distribution anomalies to analyze migration patterns and impacts
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nLabour" as Ministry
+actor "Migration\nResearcher" as Researcher
+participant "GenderDistribution" as Gender
+participant "MigrationAnalysis\nService" as Migration
+participant "SpatialAnalysis\nService" as Spatial
+participant "RemittanceImpact\nService" as Remittance
+participant "HouseholdStructure\nService" as Household
+
+Ministry -> Researcher: Analyze migration patterns from gender data
+Researcher -> Gender: retrieveGenderDistribution(districtId, year)
+activate Gender
+Gender -> Gender: fetchGenderDataByAgeGroup()
+Researcher <-- Gender: genderDistributionData
+deactivate Gender
+
+Researcher -> Migration: detectMigrationPatterns(genderData)
+activate Migration
+Migration -> Migration: calculateGenderRatioAnomalies()
+Migration -> Migration: identifyWorkingeAgeDeficits()
+Migration -> Migration: compareWithBaseline()
+Migration -> Migration: estimateMigrationVolume()
+Researcher <-- Migration: migrationEstimates
+deactivate Migration
+
+Researcher -> Spatial: mapMigrationPatterns(districtId)
+activate Spatial
+Spatial -> Spatial: generateDestinationHeatmap()
+Spatial -> Spatial: mapOriginHotspots()
+Spatial -> Spatial: visualizeMigrationCorridors()
+Spatial -> Spatial: analyzeGeographicFactors()
+Researcher <-- Spatial: spatialAnalysis
+deactivate Spatial
+
+Researcher -> Remittance: analyzeRemittanceEffects(districtId)
+activate Remittance
+Remittance -> Remittance: correlateGenderGapsWithRemittances()
+Remittance -> Remittance: estimateRemittanceVolume()
+Remittance -> Remittance: assessEconomicDependency()
+Remittance -> Remittance: modelSustainabilityRisks()
+Researcher <-- Remittance: remittanceAnalysis
+deactivate Remittance
+
+Researcher -> Household: assessHouseholdImpacts(districtId)
+activate Household
+Household -> Household: calculateFemaleHeadedHouseholdRate()
+Household -> Household: analyzeChildrenInMigrantHouseholds()
+Household -> Household: assessElderlySupport()
+Household -> Household: evaluateDecisionMakingPatterns()
+Researcher <-- Household: householdImpactAnalysis
+deactivate Household
+
+Researcher -> Gender: generateTimeSeriesAnalysis(districtId, timeRange)
+activate Gender
+Gender -> Gender: fetchHistoricalGenderData()
+Gender -> Gender: calculateTrendLines()
+Gender -> Gender: identifyTrendShifts()
+Gender -> Gender: correlateWithPolicyChanges()
+Researcher <-- Gender: temporalAnalysis
+deactivate Gender
+
+Researcher -> Migration: projectFutureTrends(districtId)
+activate Migration
+Migration -> Migration: modelReturnMigration()
+Migration -> Migration: forecastGenderDistribution()
+Migration -> Migration: assessLaborMarketImplications()
+Migration -> Migration: projectSocialImpacts()
+Researcher <-- Migration: futureTrendProjections
+deactivate Migration
+
+Researcher -> Migration: generatePolicyRecommendations()
+activate Migration
+Migration -> Migration: identifyInterventionPoints()
+Migration -> Migration: assessEconomicDiversification()
+Migration -> Migration: recommendSkillingPrograms()
+Migration -> Migration: suggestReintegrationPolicies()
+Researcher <-- Migration: policyOptions
+deactivate Migration
+
+Ministry <-- Researcher: comprehensiveMigrationAnalysis
+@enduml
+----
+
+*Real-World Context:*
+Nepal's Department of Foreign Employment and Ministry of Labour are analyzing the demographic impacts of international labor migration, which has become a defining feature of Nepal's economy with over 3 million Nepalis working abroad. Instead of relying solely on migration registration data, which often misses unofficial migration, they use gender distribution anomalies to understand migration patterns, particularly in districts with high outmigration rates.
+
+The analysis begins with retrieving gender distribution data for Dailekh district in Karnali Province, which shows a highly skewed sex ratio of 76 males per 100 females overall, but with extreme imbalances in specific age cohorts: the 20-34 age group shows only 52 males per 100 females, while birth cohorts and elderly populations maintain normal ratios. This pattern is a classic signature of male labor migration.
+
+The MigrationAnalysis service processes this gender distribution data to detect migration patterns. By comparing actual gender ratios with expected baseline ratios for each age cohort, the system estimates that approximately 18,000 working-age males are "missing" from Dailekh district due to migration. Age-specific analysis reveals the migration is heavily concentrated in the 20-34 age range, with moderate impacts in the 35-44 range, matching known patterns of labor migration.
+
+The SpatialAnalysis service maps these patterns across geographic space, revealing that male deficits are most severe in the district's northern VDCs (Village Development Committees), correlating with areas of lower agricultural productivity and limited alternative livelihoods. Migration corridors are identified, showing the primary destinations are Gulf countries (Qatar, UAE, Saudi Arabia) and Malaysia, with secondary migration to India.
+
+The RemittanceImpact service correlates the gender gaps with remittance flows, estimating that remittances constitute approximately 38% of the district's economy. Areas with the highest gender imbalances show higher remittance dependency, sometimes exceeding 60% of household income. The analysis reveals concerning economic vulnerability in these communities if remittance flows were disrupted.
+
+The HouseholdStructure service examines the social implications of this gender-selective migration. With 41% of households now functionally female-headed (though men may legally remain household heads), traditional family structures have been significantly altered. The analysis shows that children in migrant households have increased educational enrollment (due to remittance funding) but face emotional and developmental challenges due to father absence. Elderly care responsibilities have shifted predominantly to women, creating additional burdens on those left behind.
+
+A time-series analysis of gender distribution over 20 years reveals the migration trend accelerated sharply after 2008, coinciding with expanded labor agreements with Malaysia and Gulf states, and intensified further after the 2015 earthquake as households sought alternative income sources during reconstruction. The data also reveals a slight moderation in gender imbalances since 2018, possibly indicating early signs of return migration.
+
+Future trend projections raise concerns about demographic sustainability. If current patterns continue, the working-age male population in the district could decline by another 15% over the next decade, threatening agricultural productivity and overall economic viability beyond remittances. The system models potential return migration scenarios, showing that even moderate return rates could significantly rebalance the population over a 5-year period.
+
+Based on this comprehensive analysis, policy recommendations are generated:
+1. Target economic diversification programs specifically in high-migration northern VDCs
+2. Develop vocational training programs for women in migrant households to create local income alternatives
+3. Establish support services for elderly in areas with severe male demographic deficits
+4. Create reintegration programs for returning migrants, focusing on entrepreneurship
+5. Develop community-based childcare to support female-headed households
+6. Establish psychosocial support programs for families experiencing prolonged separation
+
+This evidence-based approach allows policymakers to respond to the complex reality of migration rather than relying on incomplete administrative data alone. The gender distribution patterns provide a more accurate and nuanced picture of migration's demographic impacts, enabling targeted interventions in the communities most affected by gender-selective outmigration.
+
+===== Special Considerations for Nepal's Migration Context
+
+Several unique aspects of Nepal's migration patterns require specialized analysis:
+
+1. **India-Nepal Open Border**: Nepali citizens can freely work in India without registration, making this migration difficult to track through official statistics. Gender distribution analysis helps quantify this otherwise invisible migration flow.
+
+2. **Informal Migration**: Many migrants, especially women, leave through informal channels not captured in official records. Gender distribution analysis can reveal these hidden migration streams.
+
+3. **Seasonal Migration**: Some migration is seasonal, particularly to India, causing fluctuating gender ratios depending on the time of year data is collected. The system tags seasonal variation patterns to avoid misinterpretation.
+
+4. **Post-Disaster Migration Surges**: Natural disasters like the 2015 earthquake triggered migration spikes that appear as sudden shifts in gender distribution. The system correlates these shifts with disaster timelines.
+
+5. **Caste/Ethnicity Patterns**: Migration propensity varies significantly by ethnic community, creating localized gender imbalances in specific ethnic settlements. The analysis incorporates ethnic composition data for nuanced interpretation.
+
+These contextual factors are essential for correctly interpreting gender distribution anomalies in the Nepali migration context, ensuring that the detected patterns accurately reflect the complex reality of population mobility in Nepal.

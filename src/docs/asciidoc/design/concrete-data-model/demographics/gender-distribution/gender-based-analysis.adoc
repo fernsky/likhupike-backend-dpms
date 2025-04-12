@@ -1,0 +1,261 @@
+[plantuml]
+----
+@startuml
+participant "DemographicAnalyst" as Analyst
+participant "GenderDistribution" as GenderDistrib
+participant "GenderAnalysisEngine" as AnalysisEngine
+participant "MigrationImpactService" as Migration
+participant "VisualizationService" as Viz
+participant "AnomalyDetectionService" as Anomaly
+
+Analyst -> GenderDistrib: requestGenderAnalysis(areaId, year)
+activate GenderDistrib
+
+GenderDistrib -> GenderDistrib: retrieveGenderData()
+GenderDistrib -> AnalysisEngine: analyzeGenderPatterns(genderData)
+activate AnalysisEngine
+
+AnalysisEngine -> AnalysisEngine: calculateSexRatio()
+AnalysisEngine -> AnalysisEngine: determineSexRatioCategory()
+AnalysisEngine -> AnalysisEngine: assessGenderParity()
+AnalysisEngine -> AnalysisEngine: analyzeAgeSpecificGenderPatterns()
+AnalysisEngine -> AnalysisEngine: detectLifeCycleGenderImbalances()
+AnalysisEngine -> AnalysisEngine: evaluateThirdGenderDistribution()
+AnalysisEngine -> AnalysisEngine: calculateGenderIndicators()
+
+GenderDistrib <-- AnalysisEngine: genderAnalysisResults
+deactivate AnalysisEngine
+
+GenderDistrib -> Migration: assessMigrationImpact(genderData)
+activate Migration
+
+Migration -> Migration: calculateGenderMigrationDifferential()
+Migration -> Migration: estimateMissingMalePopulation()
+Migration -> Migration: identifyHighMigrationAreas()
+Migration -> Migration: assessRemittanceEffects()
+Migration -> Migration: evaluateHouseholdStructureChanges()
+
+GenderDistrib <-- Migration: migrationImpactAnalysis
+deactivate Migration
+
+GenderDistrib -> Anomaly: detectGenderDistributionAnomalies(genderData)
+activate Anomaly
+
+Anomaly -> Anomaly: checkForDataCollectionBiases()
+Anomaly -> Anomaly: identifyUnexpectedGenderRatios()
+Anomaly -> Anomaly: detectStatisticalOutliers()
+Anomaly -> Anomaly: assessHistoricalConsistency()
+Anomaly -> Anomaly: evaluateRegionalComparability()
+
+GenderDistrib <-- Anomaly: anomalyReport
+deactivate Anomaly
+
+GenderDistrib -> GenderDistrib: compileAnalysisInsights()
+activate GenderDistrib
+GenderDistrib -> GenderDistrib: summarizeGenderDynamics()
+GenderDistrib -> GenderDistrib: identifyPolicyImplications()
+GenderDistrib -> GenderDistrib: generateRecommendations()
+deactivate GenderDistrib
+
+GenderDistrib -> Viz: renderGenderVisualizations(genderData)
+activate Viz
+
+Viz -> Viz: createSexRatioPyramid()
+Viz -> Viz: generateGenderTrendGraph()
+Viz -> Viz: produceGeospatialGenderMap()
+Viz -> Viz: createGenderParityIndicators()
+Viz -> Viz: renderThirdGenderDistribution()
+
+GenderDistrib <-- Viz: visualizationPackage
+deactivate Viz
+
+Analyst <-- GenderDistrib: completeGenderAnalysis
+deactivate GenderDistrib
+
+Analyst -> GenderDistrib: compareGenderDistributions(areaId, yearRange)
+activate GenderDistrib
+
+GenderDistrib -> GenderDistrib: retrieveTimeSeriesData(areaId, yearRange)
+GenderDistrib -> AnalysisEngine: analyzeTemporialTrends(timeSeriesData)
+activate AnalysisEngine
+
+AnalysisEngine -> AnalysisEngine: calculateYearOverYearChanges()
+AnalysisEngine -> AnalysisEngine: identifyTrendPatterns()
+AnalysisEngine -> AnalysisEngine: detectTrendReversals()
+AnalysisEngine -> AnalysisEngine: projectFutureGenderDistribution()
+AnalysisEngine -> AnalysisEngine: assessLongTermImplications()
+
+GenderDistrib <-- AnalysisEngine: temporalAnalysisResults
+deactivate AnalysisEngine
+
+GenderDistrib -> Viz: renderTrendVisualizations(temporalAnalysisResults)
+activate Viz
+
+Viz -> Viz: createTimeSeriesAnimation()
+Viz -> Viz: generateGenderFlowDiagram()
+Viz -> Viz: produceComparativeHeatmap()
+Viz -> Viz: renderForecastProjections()
+
+GenderDistrib <-- Viz: trendsVisualizationPackage
+deactivate Viz
+
+Analyst <-- GenderDistrib: genderTemporalAnalysis
+deactivate GenderDistrib
+@enduml
+----
+
+The GenderDistribution entity provides sophisticated analytical capabilities specifically designed for Nepal's unique gender demographic context. Gender analysis is a crucial aspect of demographic research, particularly in Nepal where significant gender disparities exist across different regions and social groups.
+
+===== Sex Ratio Analysis
+
+The system analyzes sex ratio (number of males per 100 females) as a fundamental indicator of gender distribution:
+
+1. **Sex Ratio Calculation**
+   * Standard ratio calculation for overall population
+   * Age-specific sex ratios to identify life-cycle patterns
+   * Area-specific ratios to identify geographic patterns
+   * Trend analysis of changing ratios over time
+
+2. **Sex Ratio Categorization**
+   * BALANCED (95-105 males per 100 females)
+   * MALE_DOMINATED (105-120 males per 100 females)
+   * HIGHLY_MALE_DOMINATED (>120 males per 100 females)
+   * FEMALE_DOMINATED (80-95 males per 100 females)
+   * HIGHLY_FEMALE_DOMINATED (<80 males per 100 females)
+
+3. **Biological vs. Social Sex Ratio**
+   * Birth sex ratio analysis (typically 103-107 males per 100 females)
+   * Adult sex ratio affected by migration and mortality differences
+   * Elderly sex ratio reflecting gender-differential longevity
+
+===== Migration Impact Analysis
+
+Nepal experiences significant gender-selective migration that dramatically affects gender distribution:
+
+1. **Missing Male Assessment**
+   * Estimation of "missing males" due to foreign labor migration
+   * Age-specific male deficits in high-migration districts
+   * Temporal correlation with migration policy changes
+   * Estimation of return migration effects
+
+2. **Female Migration Patterns**
+   * Assessment of emerging female migration trends
+   * Domestic vs. international female migration
+   * Education-driven female mobility patterns
+   * Urban concentration of female migrants
+
+3. **Household Structure Impact**
+   * Identification of female-headed household patterns
+   * Analysis of "left-behind" household compositions
+   * Socioeconomic implications of gender-selective absence
+   * Remittance effects on gender dynamics
+
+===== Third Gender Analysis
+
+Nepal's official recognition of third gender requires specialized analysis capabilities:
+
+1. **Distribution Patterns**
+   * Geographic distribution of third gender population
+   * Urban-rural differences in third gender reporting
+   * Correlation with social acceptance indicators
+   * Temporal trends in third gender identification
+
+2. **Inclusion Assessment**
+   * Analysis of third gender representation in various sectors
+   * Identification of inclusion barriers
+   * Service access patterns for third gender individuals
+   * Policy recommendations for greater inclusion
+
+3. **Data Quality Evaluation**
+   * Assessment of third gender data reliability
+   * Identification of underreporting patterns
+   * Comparative analysis with alternative data sources
+   * Methodology improvements for future data collection
+
+===== Gender Imbalance Detection
+
+The system identifies and classifies different types of gender imbalances:
+
+1. **Imbalance Types**
+   * AGE_SPECIFIC: Imbalances in specific age cohorts
+   * BIRTH_SEX_RATIO: Abnormal sex ratios at birth
+   * MIGRATION_INDUCED: Imbalances due to gender-selective migration
+   * MORTALITY_DIFFERENTIAL: Imbalances from gender-specific mortality
+   * EDUCATIONAL_DISPARITY: Education-related gender imbalances
+   * OCCUPATIONAL_SEGREGATION: Work-related gender disparities
+
+2. **Severity Assessment**
+   * Quantification of imbalance magnitude
+   * Comparative analysis with national/regional norms
+   * Trend assessment (improving/worsening)
+   * Projected future impact based on current patterns
+
+3. **Cause Analysis**
+   * Multiple-factor evaluation of causal factors
+   * Differentiation between temporary and structural causes
+   * Cultural, economic, and social determinants
+   * Policy intervention points identification
+
+===== Nepal-Specific Features
+
+The gender analysis includes features specific to Nepal's demographic and social context:
+
+1. **Ecological Zone Analysis**
+   * Differential gender patterns across Mountain, Hill, and Terai regions
+   * Altitude-correlated gender distribution variations
+   * Resource access impacts on gender distribution
+   * Climate vulnerability and gender patterns
+
+2. **Caste/Ethnicity Correlation**
+   * Analysis of gender patterns across Nepal's diverse ethnic groups
+   * Identification of culturally-specific gender norms and impacts
+   * Intersectional analysis of gender and ethnicity
+   * Targeted recommendations for specific communities
+
+3. **Urban Transformation Analysis**
+   * Gender dimensions of rapid urbanization
+   * Changing gender norms in urban contexts
+   * Urban employment and gender shifts
+   * Infrastructure implications of urban gender patterns
+
+4. **Post-Disaster Gender Impacts**
+   * Analysis of gender distribution changes after the 2015 earthquake
+   * Post-disaster migration effects on gender balance
+   * Reconstruction priorities based on gender patterns
+   * Vulnerability reduction strategies by gender
+
+===== Gender-Specific Indicators
+
+The analysis calculates specialized gender demographic indicators:
+
+1. **Gender Parity Index**
+   * Ratio of females to males in key demographic segments
+   * Education-specific gender parity metrics
+   * Economic participation gender parity
+   * Political representation parity measures
+
+2. **Female Demographic Indices**
+   * Reproductive-age female percentage (15-49 years)
+   * Female elderly dependency measurements
+   * Female-headed household prevalence
+   * Female workforce participation indicators
+
+3. **Gender Empowerment Metrics**
+   * Educational attainment by gender
+   * Income distribution by gender
+   * Asset ownership patterns by gender
+   * Decision-making power distribution
+
+===== Edge Cases and Special Considerations
+
+1. **Small Population Areas**: For wards with very small populations, gender ratio calculations require statistical smoothing to prevent extreme values. The system employs Bayesian statistical methods to adjust for small numbers while preserving overall patterns.
+
+2. **Highly Migratory Populations**: In districts with extreme male outmigration (sometimes exceeding 50% of working-age males), standard gender metrics may become misleading. The system provides specialized "migration-adjusted" indicators that account for temporarily absent populations.
+
+3. **Post-Conflict Areas**: Districts heavily affected by Nepal's civil conflict (1996-2006) may show lingering demographic irregularities. The system flags conflict-affected areas for special interpretation.
+
+4. **Border Communities**: Areas near the Indian border often experience high population mobility that can affect gender counts. The system includes border-region analysis tools to interpret these patterns.
+
+5. **Cultural Reporting Biases**: In some traditional communities, gender reporting may be influenced by cultural factors. The system flags areas with potential reporting biases based on comparative analysis.
+
+By providing these specialized gender analysis capabilities, the GenderDistribution entity transforms raw gender data into actionable demographic insights for gender-responsive policy, planning, and service delivery across Nepal's diverse contexts.
