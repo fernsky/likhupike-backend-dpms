@@ -1,0 +1,246 @@
+===== DataAggregatable Implementation
+
+The LiteracyStatistics entity implements the DataAggregatable interface to enable aggregation of literacy data across different administrative levels and time periods.
+
+[plantuml]
+----
+@startuml
+participant "EducationDepartment" as Service
+participant "LiteracyStatistics\nimplements DataAggregatable" as Literacy
+participant "AggregationEngine" as Engine
+participant "ValidationService" as Validation
+participant "AdminHierarchyService" as Hierarchy
+
+Service -> Literacy: aggregateData(literacyStats, targetLevel)
+activate Literacy
+
+Literacy -> Hierarchy: verifyAdminHierarchy(sourceIds, targetId)
+activate Hierarchy
+Literacy <-- Hierarchy: hierarchyVerified
+deactivate Hierarchy
+
+Literacy -> Literacy: validateForAggregation(literacyStats)
+activate Literacy
+Literacy -> Literacy: checkAdminLevelConsistency()
+Literacy -> Literacy: checkTimeConsistency()
+Literacy -> Literacy: checkMethodologicalConsistency()
+Literacy <-- Literacy: aggregatableStats
+deactivate Literacy
+
+Literacy -> Engine: aggregateLiteracyStatistics(aggregatableStats)
+activate Engine
+Engine -> Engine: calculateTotalPopulation()
+Engine -> Engine: aggregateLiteratePopulation()
+Engine -> Engine: aggregateByEducationLevel()
+Engine -> Engine: aggregateByAgeGroup()
+Engine -> Engine: aggregateByLanguage()
+Engine -> Engine: aggregateGenderDistribution()
+Engine -> Engine: calculateWeightedRates()
+Literacy <-- Engine: aggregatedStatistics
+deactivate Engine
+
+Literacy -> Validation: validateAggregation(aggregatedStatistics)
+activate Validation
+Validation -> Validation: checkTotalConsistency()
+Validation -> Validation: verifyRateCalculations()
+Validation -> Validation: validateDemographicProportions()
+Literacy <-- Validation: validationResult
+deactivate Validation
+
+Literacy -> Literacy: finalizeAggregation(aggregatedStatistics)
+activate Literacy
+Literacy -> Literacy: setAdminAreaLevel(targetLevel)
+Literacy -> Literacy: setAdminAreaId(targetId)
+Literacy -> Literacy: assignConfidenceLevel()
+Literacy -> Literacy: recordSourceStatistics()
+Literacy <-- Literacy: finalAggregatedStatistics
+deactivate Literacy
+
+Service <-- Literacy: aggregatedLiteracyStatistics
+deactivate Literacy
+
+Service -> Literacy: aggregateTimePeriod(statisticsId, startYear, endYear, method)
+activate Literacy
+
+Literacy -> Literacy: getStatisticsForPeriod(statisticsId, startYear, endYear)
+activate Literacy
+Literacy <-- Literacy: periodStatistics
+deactivate Literacy
+
+Literacy -> Literacy: validateTimeSeriesStatistics(periodStatistics)
+activate Literacy
+Literacy -> Literacy: checkTemporalContinuity()
+Literacy -> Literacy: identifyMethodologicalBreaks()
+Literacy <-- Literacy: validatedStatistics
+deactivate Literacy
+
+Literacy -> Engine: aggregateTimeSeries(validatedStatistics, method)
+activate Engine
+alt method == AVERAGE
+  Engine -> Engine: calculateAverageLiteracyRate()
+else method == TREND
+  Engine -> Engine: calculateLiteracyTrend()
+else method == ENDPOINT_COMPARISON
+  Engine -> Engine: calculateComparisonStatistics()
+else method == COHORT_TRACKING
+  Engine -> Engine: trackAgeCohortsOverTime()
+end
+Literacy <-- Engine: timeAggregatedResult
+deactivate Engine
+
+Literacy -> Literacy: finalizeTimeAggregation(timeAggregatedResult)
+activate Literacy
+Literacy -> Literacy: setTimeAggregationMetadata()
+Literacy -> Literacy: setSynthesizedYear()
+Literacy -> Literacy: recordTimeRangeDetails()
+Literacy <-- Literacy: finalizedTimeAggregation
+deactivate Literacy
+
+Service <-- Literacy: timeAggregatedStatistics
+deactivate Literacy
+@enduml
+----
+
+The LiteracyStatistics entity's implementation of DataAggregatable provides powerful aggregation capabilities to support literacy-specific demographic analysis across Nepal's administrative hierarchy and over time periods.
+
+===== Spatial Aggregation Implementation
+
+Spatial aggregation enables the combination of literacy data from lower administrative levels to create aggregated statistics for higher administrative units, supporting Nepal's multi-tiered administrative structure.
+
+*Administrative Hierarchy Validation*
+
+Before performing spatial aggregation, the system validates that the specified source statistics form a complete set for the target administrative unit:
+
+1. **Completeness Check**: Ensures all constituent units of the target administrative area are represented in the source data
+2. **Boundary Validation**: Confirms administrative boundaries have not changed between data collection periods
+3. **Hierarchical Consistency**: Validates that all source data belongs to the same administrative level
+
+This validation is particularly important in Nepal's context where the 2017 federal restructuring created new administrative boundaries, and ensuring data aggregation respects these boundaries is critical for accurate analysis.
+
+*Literacy-Specific Aggregation Methodology*
+
+The aggregation process applies specialized methods for literacy data:
+
+1. **Population Weighted Averaging**: Literacy rates are calculated as weighted averages based on population size, rather than simple averages of constituent unit rates
+
+2. **Educational Attainment Distribution**: Educational attainment metrics are aggregated with appropriate handling of overlapping categories
+
+3. **Multilingual Literacy Aggregation**: Special handling for linguistic dimension of literacy, maintaining distinction between literacy in different languages
+
+4. **Age-Cohort Preservation**: Maintains age-specific literacy information during aggregation to prevent loss of demographic detail
+
+*Confidence Level Propagation*
+
+The system propagates confidence information during aggregation:
+
+1. **Lowest Common Confidence**: The aggregated statistics typically receive the lowest confidence level of any constituent statistics
+
+2. **Sample Size Adjustment**: For survey-based data, confidence levels may be elevated when combining sufficient sample sizes
+
+3. **Methodological Discrepancy Penalty**: Confidence is reduced when combining data collected through different methodologies
+
+4. **Missing Data Impact**: Partial data coverage results in confidence level reduction
+
+*Special Considerations for Nepal*
+
+Several specialized aggregation features address Nepal's unique context:
+
+1. **Ethnic Concentration Preservation**: In areas where specific ethnic groups are geographically concentrated, the system can maintain disaggregated literacy rates by ethnicity even in upward aggregation
+
+2. **Multilingual Pattern Preservation**: Aggregation maintains data on multilingual literacy patterns (e.g., literacy in mother tongue vs. official language)
+
+3. **Urban-Rural Distinction**: Ability to maintain urban-rural distinctions during upward aggregation to preserve important demographic differences
+
+4. **Caste/Ethnicity Correlation**: Optional parallel aggregation of literacy data by major ethnic/caste groups to preserve important social dimensions
+
+===== Temporal Aggregation Implementation
+
+Temporal aggregation enables analysis of literacy trends over time and supports various time-based analysis methods.
+
+*Time Period Selection*
+
+The system supports flexible time period selection for aggregation:
+
+1. **Census Periods**: Aggregation between official census periods (2001, 2011, 2021)
+2. **Plan-Aligned Periods**: Time frames aligned with Five-Year Development Plan periods
+3. **Custom Ranges**: User-defined time periods for specific analysis needs
+4. **Educational Cycle-Based**: Periods aligned with educational system cycles
+
+*Data Continuity Validation*
+
+Before temporal aggregation, the system validates time series consistency:
+
+1. **Coverage Check**: Ensures consistent administrative coverage across time periods
+2. **Methodological Breaks**: Identifies and flags changes in data collection methodology
+3. **Definition Changes**: Adjusts for changes in literacy definition over time
+
+*Multiple Temporal Aggregation Methods*
+
+The system supports different approaches to temporal aggregation:
+
+1. **Averaging**: Calculating mean values across the time period, useful for smoothing short-term fluctuations
+
+2. **Trend Analysis**: Computing trend lines to characterize literacy changes:
+   - Linear trend analysis
+   - Polynomial regression for non-linear patterns
+   - Seasonally adjusted trend for areas with seasonal migration effects
+
+3. **Endpoint Comparison**: Analyzing net change between the start and end of a period:
+   - Net change in literacy rates
+   - Proportional changes
+   - Demographic shifts in literacy patterns
+
+4. **Cohort Tracking**: Following specific age cohorts over time:
+   - Youth-to-adult literacy progression
+   - Educational attainment advancement
+   - Generational literacy gap analysis
+
+*Literacy-Specific Time Series Considerations*
+
+Several temporal factors specific to literacy data are addressed:
+
+1. **Educational System Changes**: Adjustments for major educational policy reforms that affect literacy metrics
+
+2. **Post-Conflict Impact**: Specialized analysis for the effect of Nepal's civil conflict (1996-2006) on educational continuity
+
+3. **Historical Benchmark Creation**: Methods to establish comparable historical benchmarks despite changing literacy definitions
+
+4. **Migration Effect Isolation**: Techniques to separate literacy changes due to migration from those caused by educational interventions
+
+*Smoothing and Projection Techniques*
+
+For incomplete time series data, common in Nepal's education statistics environment, the system provides:
+
+1. **Gap Filling**: Statistical methods to estimate missing years in incomplete time series
+2. **Trend Projection**: Forward projection of literacy trends based on historical patterns
+3. **Cohort-Component Method**: Age-specific projection accounting for demographic transitions
+4. **Scenario Modeling**: "What-if" analysis for different educational intervention scenarios
+
+*Implementation Considerations*
+
+Several optimizations support efficient temporal aggregation:
+
+1. **Caching Strategy**: Common temporal aggregations are cached to improve performance
+2. **Computational Efficiency**: Algorithms optimized for sparse time series data
+3. **Quality Flagging**: Clear identification of periods with lower data quality
+4. **Metadata Preservation**: Detailed tracking of which methodologies were used in different time periods
+
+===== Aggregation Edge Cases
+
+The implementation handles several important edge cases in literacy data aggregation:
+
+1. **Zero Population Handling**: Some administrative divisions may have extremely small or zero population in certain demographic segments (e.g., no elderly females with higher education in a small ward). The system properly handles these edge cases without mathematical errors.
+
+2. **Administrative Boundary Changes**: When boundaries change, historical data must be reaggregated to match current boundaries. The system uses spatial allocation methods to apportion historical literacy data to new boundaries based on population distribution.
+
+3. **Non-Comparable Methodologies**: When methodologies differ significantly (e.g., census vs. small sample survey), the system may decline to aggregate and instead present data side-by-side with appropriate warnings.
+
+4. **Literacy Definition Evolution**: Nepal's definition of literacy has evolved over decades. The system maintains translation mappings between different literacy standards to enable meaningful time-series aggregation.
+
+5. **Conflicting Data Sources**: When multiple data sources exist for the same area and time period (e.g., both a national survey and local government data), the system implements a priority algorithm that selects the most reliable source based on methodology and sample size.
+
+6. **Data Sparsity Handling**: In cases of sparse data (common in remote areas), the system can apply statistical techniques like nearest-neighbor imputation or regional averaging to create usable aggregates while clearly indicating derived nature.
+
+7. **Census Timing Differences**: Nepal's census enumeration occurs over months, with different regions enumerated at different times. The system applies temporal normalization when aggregating across areas with significantly different enumeration dates.
+
+This comprehensive DataAggregatable implementation enables sophisticated analysis of literacy patterns across both administrative hierarchies and time periods, accounting for Nepal's complex administrative history and diverse data collection methodologies.

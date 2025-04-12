@@ -1,0 +1,276 @@
+===== WebhookTriggerable Implementation
+
+The DemographicChangeAnalysis entity implements the WebhookTriggerable interface to enable real-time notification of demographic changes to external systems and stakeholders.
+
+[plantuml]
+----
+@startuml
+participant "DemographicAnalysisService" as Service
+participant "DemographicChangeAnalysis\nimplements WebhookTriggerable" as Demo
+participant "WebhookManager" as Manager
+participant "PayloadGenerator" as Payload
+participant "WebhookRegistry" as Registry
+participant "ExternalSystem" as External
+participant "NotificationService" as Notification
+
+Service -> Demo: saveSignificantChange(demographicChange)
+activate Demo
+Demo -> Demo: persistChanges()
+activate Demo
+Demo <-- Demo: changesSaved
+deactivate Demo
+
+Demo -> Demo: triggerWebhook("SIGNIFICANT_DEMOGRAPHIC_CHANGE", changeData)
+activate Demo
+
+Demo -> Registry: getRegisteredWebhooks(eventType, adminAreaId)
+activate Registry
+Registry -> Registry: filterByEventType()
+Registry -> Registry: filterByAdminArea()
+Registry -> Registry: filterByDemographicMeasure()
+Registry -> Registry: applySubscriptionRules()
+Demo <-- Registry: relevantWebhooks
+deactivate Registry
+
+Demo -> Payload: generateWebhookPayload(changeData, webhookConfig)
+activate Payload
+Payload -> Payload: assembleBasicPayload()
+Payload -> Payload: addContextualMetadata()
+Payload -> Payload: formatForRecipient()
+Payload -> Payload: applyDataPrivacyRules()
+Demo <-- Payload: formattedPayload
+deactivate Payload
+
+Demo -> Manager: dispatchWebhooks(relevantWebhooks, payload)
+activate Manager
+
+Manager -> External: HTTP POST /planning-api/demographic-changes
+activate External
+Manager <-- External: 200 OK
+deactivate External
+
+Manager -> External: HTTP POST /sdg-monitoring/demographic-indicators
+activate External
+Manager <-- External: 202 Accepted
+deactivate External
+
+Manager -> Notification: sendEmailNotifications(emailSubscribers, summary)
+activate Notification
+Manager <-- Notification: emailsQueued
+deactivate Notification
+
+Demo <-- Manager: dispatchResults
+deactivate Manager
+
+Service <-- Demo: processingComplete
+deactivate Demo
+
+Service -> Demo: registerWebhook(newWebhook)
+activate Demo
+Demo -> Registry: addWebhook(webhook)
+activate Registry
+Registry -> Registry: validateWebhookConfig()
+Registry -> Registry: storeWebhookRegistration()
+Demo <-- Registry: webhookRegistered
+deactivate Registry
+Service <-- Demo: registrationConfirmed
+deactivate Demo
+
+Service -> Demo: getRegisteredWebhooks()
+activate Demo
+Demo -> Registry: retrieveWebhooks(criteriaFilters)
+activate Registry
+Demo <-- Registry: webhookList
+deactivate Registry
+Service <-- Demo: webhooks
+deactivate Demo
+@enduml
+----
+
+The DemographicChangeAnalysis entity leverages the WebhookTriggerable interface to establish a real-time notification system that alerts relevant stakeholders and systems when significant demographic changes are detected. This capability is critical for ensuring that demographic insights are promptly incorporated into planning processes and decision-making.
+
+===== Webhook Event Types
+
+The implementation defines several specialized demographic webhook event types:
+
+1. **SIGNIFICANT_DEMOGRAPHIC_CHANGE**: Triggered when a demographic measure changes by more than a configurable threshold
+   - Example: Working-age population declining more than 5% in a 3-year period
+
+2. **DEMOGRAPHIC_TREND_SHIFT**: Fired when a previously established trend changes direction
+   - Example: Urbanization rate accelerating after a period of steady growth
+
+3. **DEMOGRAPHIC_ANOMALY_DETECTED**: Triggered when unusual patterns are identified
+   - Example: Unexpected age-specific mortality increases in specific areas
+
+4. **DEMOGRAPHIC_PROJECTION_UPDATED**: Fired when demographic projections are updated
+   - Example: Population projection for 2030 revised based on new census data
+
+5. **DEMOGRAPHIC_GOAL_STATUS_CHANGE**: Triggered when progress toward demographic goals changes status
+   - Example: Moving from "On Track" to "At Risk" for SDG demographic targets
+
+Each event type has specific payload structures optimized for the nature of the demographic information being conveyed.
+
+===== Geographic Targeting System
+
+A sophisticated geographic targeting system ensures webhooks are triggered only for relevant administrative areas:
+
+1. **Hierarchical Subscription**: Subscribers can register for all changes within a province, district, or municipality
+   - Example: Provincial Planning Commission receiving notifications for all municipalities within the province
+
+2. **Cross-Border Notification**: Special handling for demographic changes that affect multiple administrative units
+   - Example: Migration corridors between source and destination municipalities
+
+3. **Comparative Threshold**: Triggering based on deviation from regional or national patterns
+   - Example: Notification when a district's demographic trend diverges significantly from the provincial average
+
+4. **Special Area Designation**: Enhanced monitoring for priority areas
+   - Example: More sensitive triggers for earthquake-affected districts or climate-vulnerable regions
+
+This geographic targeting system ensures notifications are relevant to stakeholders' jurisdictions and responsibilities.
+
+===== Integration with Nepal's Planning Ecosystem
+
+The webhook implementation is specifically designed to integrate with Nepal's multi-level planning structure:
+
+1. **Federal Planning Commission Integration**: Webhooks formatted for the National Planning Commission's systems
+   - Provides demographic inputs for periodic plans and national strategies
+
+2. **Provincial Dashboard Updates**: Real-time updates to provincial planning dashboards
+   - Supports evidence-based resource allocation decisions
+
+3. **SDG Monitoring System**: Specialized webhooks for Nepal's Sustainable Development Goal monitoring platform
+   - Maps demographic changes to relevant SDG indicators
+
+4. **Sector Ministry Notifications**: Targeted notifications to relevant ministries
+   - Education ministry notifications for school-age population changes
+   - Health ministry alerts for aging population trends
+   - Labor ministry updates on working-age population shifts
+
+5. **Development Partner Integration**: Configurable webhooks for international development partners
+   - World Bank, ADB, UN agencies, and bilateral donors supporting Nepal's development
+
+This ecosystem integration ensures demographic insights flow directly to decision-makers at all levels of Nepal's federal structure.
+
+===== Customizable Payload Formatting
+
+The implementation provides extensive customization of webhook payloads:
+
+1. **Format Adaptation**: Payload formatting according to recipient system requirements
+   - JSON, XML, CSV, or custom formats
+   - Support for Nepal's government data exchange standards
+
+2. **Language Options**: Multilingual payload support
+   - Primary support for English and Nepali
+   - Optional transliteration for linguistic accessibility
+
+3. **Detail Levels**: Tiered detail options from summary to comprehensive
+   - Summary: High-level demographic changes with key figures
+   - Standard: Detailed demographic measures with contextual information
+   - Comprehensive: Complete demographic analysis with methodological details
+
+4. **Visualization Embedding**: Inclusion of visualization elements for dashboard integration
+   - Chart definition objects
+   - GeoJSON for spatial representation
+   - Time-series data for trend visualization
+
+This customization ensures that webhook notifications are immediately usable by recipient systems without additional processing.
+
+===== Security and Compliance Features
+
+The webhook implementation includes robust security and compliance features:
+
+1. **Authentication Options**: Multiple authentication mechanisms
+   - API key authentication
+   - JWT token support
+   - OAuth 2.0 integration
+   - IP whitelisting
+
+2. **Data Privacy Controls**: Configurable data sensitivity handling
+   - Aggregation thresholds to prevent individual identification
+   - Exclusion of sensitive demographic dimensions
+   - Compliance with Nepal's data protection regulations
+
+3. **Delivery Verification**: Confirmation of webhook delivery
+   - Retry logic for failed deliveries
+   - Delivery receipt logging
+   - Escalation for persistent failures
+
+4. **Audit Trail**: Comprehensive tracking of all webhook activities
+   - Webhook triggering events
+   - Delivery attempts and responses
+   - Configuration changes
+
+These security features ensure that demographic data is shared responsibly and in compliance with applicable regulations.
+
+===== Webhook Registration and Management
+
+The system provides sophisticated capabilities for managing webhook subscriptions:
+
+1. **Self-Service Registration**: API for external systems to register webhook endpoints
+   - Administrative approval workflow
+   - Capability-based permission system
+
+2. **Filtering Rules**: Complex rule definition for webhook triggering
+   - Demographic measure selection
+   - Threshold configuration
+   - Administrative area specification
+   - Temporal parameters
+
+3. **Testing Tools**: Capabilities to validate webhook configuration
+   - Test payload generation
+   - Delivery simulation
+   - Response validation
+
+4. **Usage Analytics**: Monitoring of webhook usage patterns
+   - Delivery success rates
+   - System response times
+   - Integration activity levels
+
+These management capabilities ensure that the webhook system can adapt to evolving integration needs and maintain reliable operation.
+
+===== Real-World Example: Urban Planning Integration
+
+In a real-world implementation for Bharatpur Metropolitan City:
+
+1. The city's planning department registers webhooks for:
+   - Significant changes in ward-level population growth rates
+   - Shifts in household size and composition
+   - Changes in age distribution affecting service demands
+
+2. When demographic analysis detects accelerating population growth in eastern wards:
+   - A webhook is triggered to the Urban Infrastructure Division
+   - The payload includes growth rates, demographic composition, and spatial distribution
+   - The city's infrastructure planning dashboard updates automatically
+
+3. The system also notifies:
+   - Education department about projected school-age population changes
+   - Water supply authority about increased service demand
+   - Transportation department about changing mobility patterns
+
+4. Each notification includes:
+   - Raw demographic change data
+   - Analysis of service implications
+   - Geospatial representation for planning overlays
+
+This integration ensures urban planning decisions are made with immediate awareness of demographic shifts, rather than relying on outdated periodic reports.
+
+===== Integration with Predictive Systems
+
+The webhook system extends beyond notification to enable predictive analytics:
+
+1. **Machine Learning Model Updates**: Demographic changes automatically update predictive models
+   - Population projection models
+   - Service demand forecasting
+   - Infrastructure capacity planning
+
+2. **Scenario Triggers**: Major demographic shifts initiate new scenario modeling
+   - "What-if" analysis for policy responses
+   - Resource allocation optimization
+   - Service adaptation planning
+
+3. **Early Warning Integration**: Connection to early demographic warning systems
+   - School capacity constraints
+   - Healthcare system pressure points
+   - Employment-population mismatches
+
+This predictive integration transforms demographic data from retrospective reporting to forward-looking planning tools, significantly enhancing the value of demographic change analysis in Nepal's development planning.

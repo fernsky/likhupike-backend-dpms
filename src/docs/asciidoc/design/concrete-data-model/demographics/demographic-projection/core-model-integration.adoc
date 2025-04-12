@@ -1,0 +1,283 @@
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+package "Core Domain Models" {
+  abstract class ApprovableEntity {
+    +isApproved: Boolean
+    +approvedBy: UUID
+    +approvedAt: Instant
+    +approvalNotes: String
+    +approve(approverId: UUID, notes: String): void
+  }
+  
+  interface CustomValidatable {
+    +validate(): ValidationResult
+    +getValidationRules(): List<ValidationRule>
+    +registerValidator(validator: Validator): void
+  }
+  
+  interface WebhookTriggerable {
+    +triggerWebhook(eventType: String, payload: Map): void
+    +getRegisteredWebhooks(): List<Webhook>
+    +registerWebhook(webhook: Webhook): void
+  }
+}
+
+package "Demographics Domain" {
+  class DemographicProjection {
+    +id: UUID
+    +adminAreaId: UUID
+    +adminAreaLevel: AdminAreaLevel
+    +baselineYear: Integer
+    +projectionHorizon: Integer
+    +projectionTitle: String
+    +description: String
+    +methodologyDescription: String
+    +scenarioType: ScenarioType
+    +assumptions: Map<String, Object>
+    +confidenceLevel: ConfidenceLevel
+    +uncertaintyRange: Double
+    +createdBy: UUID
+    +createdAt: Instant
+    +updatedAt: Instant
+    +status: ProjectionStatus
+    +isOfficial: Boolean
+    +projectPopulation(): ProjectionResult
+    +compareWithScenarios(): ScenarioComparison
+    +extractTimeSeries(): List<TimeSeriesPoint>
+    +calculateDemographicIndicators(): Map<String, Object>
+  }
+  
+  class ProjectionScenario {
+    +id: UUID
+    +projectionId: UUID
+    +scenarioName: String
+    +scenarioDescription: String
+    +assumptions: Map<String, Object>
+    +parameters: Map<String, Double>
+    +probabilityWeight: Double
+    +isPrimaryScenario: Boolean
+    +compareWithBaseline(): ScenarioDeviation
+    +calculateScenarioImpact(): ImpactAssessment
+  }
+  
+  class ProjectionPoint {
+    +id: UUID
+    +projectionId: UUID
+    +scenarioId: UUID
+    +year: Integer
+    +totalPopulation: Long
+    +malePopulation: Long
+    +femalePopulation: Long
+    +ageDistribution: Map<AgeGroup, Long>
+    +householdCount: Long
+    +averageHouseholdSize: Double
+    +dependencyRatio: Double
+    +populationDensity: Double
+  }
+  
+  class ProjectedDemographicIndicator {
+    +id: UUID
+    +projectionId: UUID
+    +scenarioId: UUID
+    +year: Integer
+    +indicatorType: IndicatorType
+    +value: Double
+    +confidenceMin: Double
+    +confidenceMax: Double
+    +comparisonToBaseline: Double
+    +trendDirection: TrendDirection
+  }
+  
+  class ProjectionImpactAssessment {
+    +id: UUID
+    +projectionId: UUID
+    +scenarioId: UUID
+    +sectorType: SectorType
+    +impactDescription: String
+    +quantitativeImpact: Double
+    +qualitativeAssessment: String
+    +recommendedActions: String
+    +timeframe: ImpactTimeframe
+  }
+  
+  enum AdminAreaLevel {
+    WARD
+    MUNICIPALITY
+    DISTRICT
+    PROVINCE
+    COUNTRY
+  }
+  
+  enum ScenarioType {
+    BASELINE
+    HIGH_GROWTH
+    LOW_GROWTH
+    HIGH_FERTILITY
+    LOW_FERTILITY
+    HIGH_MIGRATION
+    LOW_MIGRATION
+    HIGH_LIFE_EXPECTANCY
+    LOW_LIFE_EXPECTANCY
+    POLICY_INTERVENTION
+    DISASTER_IMPACT
+    CUSTOM
+  }
+  
+  enum ConfidenceLevel {
+    VERY_HIGH
+    HIGH
+    MODERATE
+    LOW
+    VERY_LOW
+    EXPERIMENTAL
+  }
+  
+  enum ProjectionStatus {
+    DRAFT
+    UNDER_REVIEW
+    APPROVED
+    PUBLISHED
+    DEPRECATED
+    ARCHIVED
+  }
+  
+  enum IndicatorType {
+    TOTAL_POPULATION
+    POPULATION_GROWTH_RATE
+    FERTILITY_RATE
+    MORTALITY_RATE
+    MIGRATION_RATE
+    LIFE_EXPECTANCY
+    MEDIAN_AGE
+    DEPENDENCY_RATIO
+    WORKING_AGE_RATIO
+    URBANIZATION_RATE
+    POPULATION_DENSITY
+  }
+  
+  enum TrendDirection {
+    INCREASING
+    DECREASING
+    STABLE
+    FLUCTUATING
+    ACCELERATING
+    DECELERATING
+  }
+  
+  enum SectorType {
+    EDUCATION
+    HEALTHCARE
+    HOUSING
+    EMPLOYMENT
+    TRANSPORTATION
+    UTILITIES
+    SOCIAL_SERVICES
+    ECONOMY
+    ENVIRONMENT
+  }
+  
+  enum ImpactTimeframe {
+    SHORT_TERM
+    MEDIUM_TERM
+    LONG_TERM
+    INTERGENERATIONAL
+  }
+  
+  ApprovableEntity <|-- DemographicProjection
+  DemographicProjection ..|> CustomValidatable
+  DemographicProjection ..|> WebhookTriggerable
+  
+  DemographicProjection "1" *-- "many" ProjectionScenario
+  DemographicProjection "1" *-- "many" ProjectionPoint
+  ProjectionScenario "1" *-- "many" ProjectionPoint
+  DemographicProjection "1" *-- "many" ProjectedDemographicIndicator
+  ProjectionScenario "1" *-- "many" ProjectedDemographicIndicator
+  DemographicProjection "1" *-- "many" ProjectionImpactAssessment
+  ProjectionScenario "1" *-- "many" ProjectionImpactAssessment
+  
+  DemographicProjection -- AdminAreaLevel
+  DemographicProjection -- ScenarioType
+  DemographicProjection -- ConfidenceLevel
+  DemographicProjection -- ProjectionStatus
+  ProjectedDemographicIndicator -- IndicatorType
+  ProjectedDemographicIndicator -- TrendDirection
+  ProjectionImpactAssessment -- SectorType
+  ProjectionImpactAssessment -- ImpactTimeframe
+}
+@enduml
+----
+
+The DemographicProjection entity extends ApprovableEntity from the core domain and implements two key capability interfaces: CustomValidatable and WebhookTriggerable. This integration provides the entity with sophisticated approval workflows, complex validation capabilities, and the ability to trigger notifications to external systems when demographic projections are updated.
+
+===== Inheritance from ApprovableEntity
+
+By extending ApprovableEntity, DemographicProjection inherits several key attributes and behaviors:
+
+1. **Approval Workflow**: Demographic projections go through a formal approval process before they can be used for official planning purposes. This is critical for ensuring the quality and reliability of projections that may influence significant resource allocation decisions.
+
+2. **Approval Metadata**: The entity tracks who approved the projection, when it was approved, and any notes or conditions attached to the approval.
+
+3. **Approval Status Management**: The entity can transition through different approval states, allowing projections to be reviewed and validated before being finalized.
+
+This inheritance is particularly important in Nepal's context, where demographic projections often inform government planning and resource allocation decisions. The approval mechanism ensures proper oversight of potentially impactful projections.
+
+===== CustomValidatable Implementation
+
+DemographicProjection implements the CustomValidatable interface to enable:
+
+1. **Methodological Validation**: Ensuring that the projection follows sound demographic and statistical methodologies.
+
+2. **Assumption Consistency Checks**: Validating that projection assumptions are internally consistent and plausible.
+
+3. **Historical Consistency**: Checking that projections align sensibly with historical demographic trends.
+
+4. **Cross-Variable Consistency**: Ensuring related demographic variables (fertility, mortality, migration) produce coherent outcomes.
+
+This implementation allows the system to enforce custom validation rules specific to demographic projections, such as requiring that age-specific fertility rates sum to the total fertility rate or that mortality assumptions follow established patterns.
+
+===== WebhookTriggerable Implementation
+
+The WebhookTriggerable interface enables DemographicProjection to:
+
+1. **Notify Planning Systems**: Automatically alert planning departments when new demographic projections are approved.
+
+2. **Update Dashboards**: Trigger updates to government dashboards and reporting systems when projections change.
+
+3. **Inform Stakeholders**: Notify relevant ministries and agencies about demographic projections relevant to their areas of responsibility.
+
+4. **Integration with Planning Workflows**: Connect with planning workflow systems to initiate or update planning processes based on new projections.
+
+This capability is essential in Nepal's planning ecosystem, where demographic projections need to be communicated to multiple stakeholders across different levels of government.
+
+===== Composition Relationships
+
+DemographicProjection has several main composition relationships:
+
+1. **ProjectionScenario**: Represents different scenarios (high growth, low growth, policy intervention, etc.) within a projection. These scenarios allow for examining multiple possible demographic futures.
+
+2. **ProjectionPoint**: Contains the detailed demographic data for a specific year within a projection, including population by age, gender, and other characteristics.
+
+3. **ProjectedDemographicIndicator**: Represents derived indicators such as dependency ratios, growth rates, and other demographic metrics for each year in the projection.
+
+4. **ProjectionImpactAssessment**: Assesses the implications of projected demographic changes on different sectors such as education, healthcare, and infrastructure.
+
+These relationships enable the detailed documentation of both the demographic projections themselves and their potential implications for planning and policy.
+
+===== Nepal-Specific Implementation Considerations
+
+The implementation of DemographicProjection in Nepal's context includes several specialized adaptations:
+
+1. **Natural Disaster Scenario Capability**: Enhanced support for modeling the demographic impacts of earthquakes, floods, and landslides, which are significant risks in Nepal.
+
+2. **Migration Modeling Focus**: Sophisticated capabilities for modeling international labor migration, which heavily impacts Nepal's demographic structure.
+
+3. **Federalism Transition**: Support for projecting population redistribution due to Nepal's transition to a federal system, which is creating new administrative centers.
+
+4. **Ecological Zone Considerations**: Differentiated projection methodologies for mountain, hill, and terai (plains) regions, which have distinct demographic patterns.
+
+5. **Remittance Economy Factors**: Incorporation of remittance-influenced demographic behaviors, including delayed marriage, reduced fertility, and changed consumption patterns.
+
+These Nepal-specific adaptations ensure that the DemographicProjection entity supports the country's unique demographic context and planning needs, while maintaining alignment with international demographic projection standards.

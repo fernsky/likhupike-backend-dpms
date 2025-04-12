@@ -1,0 +1,195 @@
+[plantuml]
+----
+@startuml
+|Demographic Analysis Team|
+start
+:Select administrative area for analysis;
+:Define analysis time period;
+:Configure change detection parameters;
+
+|System|
+:Retrieve baseline demographic data;
+:Retrieve current demographic data;
+
+|Analysis Engine|
+:Calculate absolute changes;
+:Calculate percentage changes;
+:Generate change velocity metrics;
+:Perform statistical significance tests;
+note right
+  - T-test for continuous measures
+  - Chi-square for categorical measures
+  - Mann-Kendall for trend detection
+  - Confidence interval analysis
+end note
+
+:Apply change detection rules;
+:Identify significant demographic shifts;
+note right
+  Key detection rules:
+  - Changes exceeding thresholds
+  - Accelerating/decelerating trends
+  - Pattern breaks and reversals
+  - Outlier detection
+end note
+
+:Categorize changes by type and significance;
+:Analyze spatial patterns of change;
+
+|Demographic Analysis Team|
+:Review detected changes;
+:Provide contextual interpretation;
+:Assess policy implications;
+
+|System|
+:Generate visualization of changes;
+:Calculate comparative metrics;
+note right
+  Comparative benchmarks:
+  - Local vs. provincial changes
+  - Provincial vs. national changes
+  - Comparison with demographic models
+  - Comparison with similar areas
+end note
+
+:Prepare analysis documentation;
+
+|Planning Department|
+:Review and validate analysis;
+:Assess planning implications;
+:Approve final analysis;
+
+|System|
+:Publish analysis to stakeholders;
+:Trigger notifications based on change types;
+:Update demographic dashboards;
+:Archive analysis in demographic knowledge base;
+
+stop
+@enduml
+----
+
+The Demographic Change Analysis entity implements a comprehensive, statistically rigorous process for detecting and analyzing demographic shifts over time. This process combines automated data analysis with expert interpretation to identify meaningful demographic changes that can inform policy and planning decisions.
+
+===== Data Collection and Preparation Phase
+
+The process begins with careful preparation to ensure accurate change detection:
+
+1. **Administrative Area Selection**: The analysis team selects the target administrative area (which may be a ward, municipality, district, province, or the entire country).
+
+2. **Time Period Definition**: A relevant time period is defined, typically comparing two census periods or using intercensal estimates for shorter intervals.
+
+3. **Baseline Data Retrieval**: Historical demographic data is retrieved from the system's demographic repository, including population statistics, household data, age-gender distributions, and other key demographic indicators.
+
+4. **Current Data Assembly**: The most recent demographic data is assembled from the system's database, potentially combining census data with survey estimates and administrative records.
+
+5. **Data Standardization**: Both baseline and current data are standardized to ensure comparability, including adjustments for administrative boundary changes over time.
+
+In Nepal's context, this preparation phase often requires careful handling of data from different census periods (2001, 2011, 2021) and considering disruptions like the 2015 earthquake that affected population distributions.
+
+===== Change Calculation and Significance Testing
+
+Once data is prepared, the system performs robust statistical analysis:
+
+1. **Absolute Change Calculation**: Raw numerical changes are calculated for all demographic measures (population, household count, age groups, etc.).
+
+2. **Percentage Change Calculation**: Proportional changes are calculated to enable comparison across areas of different sizes.
+
+3. **Change Velocity Determination**: The rate of change per year is calculated to standardize changes across different time periods.
+
+4. **Statistical Testing**: Appropriate statistical tests are applied:
+   - T-tests for continuous variables to determine if changes are statistically significant
+   - Chi-square tests for categorical variables to assess distribution changes
+   - Mann-Kendall tests for detecting consistent trends over time
+   - Confidence interval analysis to account for data uncertainty
+
+5. **Local Context Calibration**: Change significance thresholds are adjusted based on local patterns and variation, recognizing that what constitutes a "significant" change may differ between a rapidly growing urban area and a stable rural community.
+
+This rigorous statistical approach ensures that identified changes represent genuine demographic shifts rather than data artifacts or random fluctuations.
+
+===== Pattern Recognition and Classification
+
+The system employs sophisticated pattern recognition to classify demographic changes:
+
+1. **Change Type Identification**: Changes are classified into types such as:
+   - Growth (accelerating, steady, decelerating)
+   - Decline (accelerating, steady, decelerating)
+   - Redistribution (spatial shift without overall change)
+   - Composition shift (change in demographic structure)
+   - Reversal (change in trend direction)
+   - Stabilization (reduction in change velocity)
+
+2. **Significance Categorization**: Changes are categorized by significance level from "very high" to "statistically insignificant" based on both statistical tests and demographic importance.
+
+3. **Pattern Relationship Analysis**: Related patterns are linked to identify complex demographic transitions such as:
+   - Urbanization (rural decline coupled with urban growth)
+   - Aging (declining youth ratio coupled with increasing elderly ratio)
+   - Migration impact (working-age population decline coupled with remittance increase)
+   - Demographic dividend phase (increasing working-age ratio coupled with declining dependency ratio)
+
+4. **Outlier Detection**: Unusual changes that deviate from typical demographic transitions are flagged for special attention and verification.
+
+This pattern recognition goes beyond simple statistical detection to identify meaningful demographic narratives that can inform policy development.
+
+===== Contextual Interpretation and Policy Linkage
+
+The system supports human expertise in interpreting detected changes:
+
+1. **Contextual Factors Documentation**: Analysts can document relevant contextual factors that help explain detected changes, such as:
+   - Infrastructure developments
+   - Economic opportunities
+   - Educational investments
+   - Natural disasters or conflicts
+   - Policy interventions
+
+2. **Policy Implication Assessment**: For each significant change, potential policy implications are assessed across sectors:
+   - Education (school capacity needs, teacher allocation)
+   - Health (service provision adjustments, facility planning)
+   - Transportation (infrastructure sizing, public transit needs)
+   - Housing (demand projections, affordability considerations)
+   - Employment (workforce development, job creation targets)
+
+3. **Comparative Benchmarking**: Changes are compared to relevant benchmarks:
+   - Similar administrative areas
+   - Provincial and national averages
+   - International comparison areas
+   - Expected demographic transition patterns
+
+4. **Uncertainty Acknowledgment**: Confidence levels are assigned to both the changes themselves and their interpretations, recognizing that demographic analysis involves inherent uncertainty.
+
+This human-in-the-loop approach ensures that demographic changes are interpreted within their proper context, leading to more informed policy responses.
+
+===== Nepal-Specific Process Adaptations
+
+The change detection process includes several adaptations for Nepal's unique context:
+
+1. **Ecological Zone Differentiation**: Change thresholds and patterns are calibrated differently for Nepal's three ecological zones (mountains, hills, and terai/plains), which have historically experienced different demographic trajectories.
+
+2. **Migration Effect Isolation**: Special analytical techniques are employed to distinguish between changes due to natural population dynamics (births/deaths) and those due to migration, particularly important in Nepal's high-migration districts.
+
+3. **Disaster Impact Analysis**: Enhanced capabilities for isolating demographic changes caused by natural disasters such as earthquakes and floods, which have significant impacts on Nepal's population distribution.
+
+4. **Federalization Adjustment**: Specialized processing to account for Nepal's 2017 administrative restructuring, which created new provinces, districts, and municipalities with boundaries that don't align with previous census periods.
+
+5. **Caste/Ethnicity Dimension**: Capability to analyze demographic changes by Nepal's diverse caste and ethnic groups, supporting the country's inclusion policies and efforts to address historical disparities.
+
+These adaptations ensure that the change detection process produces meaningful results in Nepal's diverse and dynamic demographic context.
+
+===== Visualization and Dissemination
+
+The final phase focuses on communicating detected changes effectively:
+
+1. **Tiered Reporting**: Different report formats are generated for different audiences:
+   - Technical demographic analysis for specialists
+   - Policy briefings for decision-makers
+   - Public information summaries for general consumption
+
+2. **Spatial Visualization**: Changes are mapped using GIS to reveal spatial patterns and concentrations.
+
+3. **Temporal Visualization**: Time-series visualizations show change trajectories and acceleration/deceleration patterns.
+
+4. **Scenario Projection**: Detected trends can be projected forward under different scenarios to inform long-term planning.
+
+5. **Notification Routing**: Automated notifications about significant changes are routed to relevant government departments based on the type and location of the change.
+
+This comprehensive communication approach ensures that demographic insights reach the right stakeholders in formats that facilitate understanding and action.

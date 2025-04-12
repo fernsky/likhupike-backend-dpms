@@ -1,0 +1,781 @@
+===== Domain Events
+
+The Demographic Change Analysis entity publishes and consumes domain events to facilitate integration with other system components and support event-driven workflows that respond to demographic transitions.
+
+[plantuml]
+----
+@startuml
+class DemographicAnalysisCreatedEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startPeriod
+  +Integer endPeriod
+  +AnalysisStatus status
+  +ConfidenceLevel confidenceLevel
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicAnalysisUpdatedEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SignificantDemographicChangeDetectedEvent {
+  +UUID analysisId
+  +UUID changeId
+  +UUID adminAreaId
+  +DemographicMeasure measure
+  +Double percentageChange
+  +ChangeType changeType
+  +ChangeSignificance significance
+  +String impactSummary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicPatternIdentifiedEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +PatternType patternType
+  +String patternName
+  +Double confidenceScore
+  +Map<String, Object> evidencePoints
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicAnalysisApprovedEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +UUID approvedBy
+  +ConfidenceLevel assignedConfidence
+  +String approvalNotes
+  +List<String> validationChecksPerformed
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicProjectionCreatedEvent {
+  +UUID projectionId
+  +UUID analysisId
+  +UUID adminAreaId
+  +ProjectionMethod method
+  +Integer baselineYear
+  +Integer targetYear
+  +String scenarioName
+  +ConfidenceLevel confidence
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicTrendAlertEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +DemographicMeasure measure
+  +TrendDirection direction
+  +ChangeSignificance significance
+  +String alertMessage
+  +List<String> recommendedActions
+  +AlertPriority priority
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicComparisonCompletedEvent {
+  +UUID analysisId
+  +UUID comparisonId
+  +UUID sourceAdminAreaId
+  +UUID targetAdminAreaId
+  +ComparisonType comparisonType
+  +Map<String, Object> keyDifferences
+  +Double divergenceIndex
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicReportGeneratedEvent {
+  +UUID reportId
+  +UUID analysisId
+  +UUID adminAreaId
+  +ReportFormat format
+  +String title
+  +String language
+  +List<String> includedSections
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicAnalysisPublishedEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +PublicationChannel channel
+  +String accessUrl
+  +List<String> targetAudiences
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PolicyRecommendationGeneratedEvent {
+  +UUID recommendationId
+  +UUID analysisId
+  +UUID adminAreaId
+  +PolicySector sector
+  +String recommendationSummary
+  +RecommendationPriority priority
+  +TimeHorizon implementationHorizon
+  +ResourceIntensity resourceRequirement
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicDataInconsistencyDetectedEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +InconsistencyType inconsistencyType
+  +String description
+  +SeverityLevel severity
+  +Map<String, Object> inconsistentValues
+  +String suggestedResolution
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class HistoricalPatternCorrelationEvent {
+  +UUID analysisId
+  +UUID adminAreaId
+  +UUID correlationId
+  +PatternType patternType
+  +Double correlationScore
+  +String historicalPeriod
+  +String correlationInsight
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum AlertPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFORMATIONAL
+}
+
+enum ComparisonType {
+  GEOGRAPHIC
+  TEMPORAL
+  SCENARIO
+  BENCHMARK
+  THRESHOLD
+}
+
+enum PublicationChannel {
+  SYSTEM_DASHBOARD
+  PUBLIC_PORTAL
+  ADMINISTRATIVE_API
+  DATA_EXPORT
+  EMAIL_DISTRIBUTION
+  INTEGRATED_PLANNING_SYSTEM
+}
+
+enum PolicySector {
+  EDUCATION
+  HEALTHCARE
+  HOUSING
+  EMPLOYMENT
+  INFRASTRUCTURE
+  SOCIAL_SERVICES
+  ENVIRONMENT
+  ECONOMIC_DEVELOPMENT
+  DISASTER_MANAGEMENT
+}
+
+enum RecommendationPriority {
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+  LONG_TERM
+}
+
+enum TimeHorizon {
+  IMMEDIATE
+  SHORT_TERM
+  MEDIUM_TERM
+  LONG_TERM
+  STRATEGIC
+}
+
+enum ResourceIntensity {
+  MINIMAL
+  MODERATE
+  SUBSTANTIAL
+  EXTENSIVE
+  TRANSFORMATIVE
+}
+
+enum InconsistencyType {
+  LOGICAL_CONTRADICTION
+  STATISTICAL_OUTLIER
+  TEMPORAL_DISCONTINUITY
+  SPATIAL_INCONSISTENCY
+  METHODOLOGY_MISMATCH
+  DATA_INCOMPLETENESS
+}
+
+enum SeverityLevel {
+  CRITICAL
+  MAJOR
+  MODERATE
+  MINOR
+  INFORMATIONAL
+}
+
+abstract class DomainEvent
+DomainEvent <|-- DemographicAnalysisCreatedEvent
+DomainEvent <|-- DemographicAnalysisUpdatedEvent
+DomainEvent <|-- SignificantDemographicChangeDetectedEvent
+DomainEvent <|-- DemographicPatternIdentifiedEvent
+DomainEvent <|-- DemographicAnalysisApprovedEvent
+DomainEvent <|-- DemographicProjectionCreatedEvent
+DomainEvent <|-- DemographicTrendAlertEvent
+DomainEvent <|-- DemographicComparisonCompletedEvent
+DomainEvent <|-- DemographicReportGeneratedEvent
+DomainEvent <|-- DemographicAnalysisPublishedEvent
+DomainEvent <|-- PolicyRecommendationGeneratedEvent
+DomainEvent <|-- DemographicDataInconsistencyDetectedEvent
+DomainEvent <|-- HistoricalPatternCorrelationEvent
+
+DemographicTrendAlertEvent -- AlertPriority
+DemographicComparisonCompletedEvent -- ComparisonType
+DemographicAnalysisPublishedEvent -- PublicationChannel
+PolicyRecommendationGeneratedEvent -- PolicySector
+PolicyRecommendationGeneratedEvent -- RecommendationPriority
+PolicyRecommendationGeneratedEvent -- TimeHorizon
+PolicyRecommendationGeneratedEvent -- ResourceIntensity
+DemographicDataInconsistencyDetectedEvent -- InconsistencyType
+DemographicDataInconsistencyDetectedEvent -- SeverityLevel
+@enduml
+----
+
+==== Core Domain Events
+
+===== DemographicAnalysisCreatedEvent
+
+Triggered when a new demographic change analysis is created.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Unique identifier of the newly created analysis
+| adminAreaId | Administrative area this analysis covers
+| adminAreaLevel | Level of the administrative area (WARD, MUNICIPALITY, etc.)
+| startPeriod | Starting year of the analysis period
+| endPeriod | Ending year of the analysis period
+| status | Initial status of the analysis (typically DRAFT)
+| confidenceLevel | Initial confidence level assigned to the analysis
+| timestamp | When the event occurred
+| actorId | User or system that created the analysis
+|===
+
+*Business Impact:* This event initiates the demographic analysis workflow, potentially triggering data validation processes and notifying relevant planning departments that a new analysis has been initiated for their geographic area of interest.
+
+===== DemographicAnalysisUpdatedEvent
+
+Triggered when significant changes are made to an existing demographic analysis.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the updated analysis
+| adminAreaId | Administrative area identifier
+| changedFields | Map of fields that were changed with their old and new values
+| updateType | Type of update (METHODOLOGY_CHANGE, DATA_CORRECTION, ANALYSIS_EXTENSION)
+| isRevision | Whether this is an official revision
+| updateReason | Reason for the update
+| timestamp | When the event occurred
+| actorId | User who made the update
+|===
+
+*Business Impact:* Updates to demographic analyses may necessitate reconsideration of planning assumptions or policy decisions. This event ensures that systems and stakeholders relying on demographic analysis are notified when significant changes occur.
+
+===== SignificantDemographicChangeDetectedEvent
+
+Triggered when the system identifies a demographically significant change that may require policy attention.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the analysis detecting the change
+| changeId | Identifier of the specific demographic change
+| adminAreaId | Administrative area experiencing the change
+| measure | Demographic measure showing significant change
+| percentageChange | Percentage change detected
+| changeType | Type of demographic change
+| significance | Assessed significance of the change
+| impactSummary | Brief description of potential impacts
+| timestamp | When the change was detected
+| actorId | User or system that detected the change
+|===
+
+*Business Impact:* This high-value event alerts planning departments to meaningful demographic shifts that may require responsive action. For example, detecting a rapid increase in elderly population would trigger notifications to health and social service departments to prepare for changing service needs.
+
+==== Specialized Domain Events
+
+===== DemographicPatternIdentifiedEvent
+
+Triggered when a recognizable demographic pattern is identified in the data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the analysis
+| adminAreaId | Administrative area identifier
+| patternType | Type of pattern identified (e.g., URBANIZATION, AGING)
+| patternName | Descriptive name of the pattern
+| confidenceScore | Confidence in the pattern match
+| evidencePoints | Key data points supporting the pattern identification
+| timestamp | When the pattern was identified
+| actorId | User or system that identified the pattern
+|===
+
+*Business Impact:* Pattern identification adds interpretive value to raw demographic data. This event allows planning systems to respond to recognized demographic phenomena with established policy approaches. For example, detecting an urbanization pattern might trigger urban infrastructure planning workflows.
+
+===== DemographicAnalysisApprovedEvent
+
+Triggered when a demographic analysis receives formal approval for use in planning.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the approved analysis
+| adminAreaId | Administrative area identifier
+| approvedBy | Identifier of the approving authority
+| assignedConfidence | Confidence level assigned during approval
+| approvalNotes | Notes provided during approval
+| validationChecksPerformed | List of validation checks conducted
+| timestamp | When the approval occurred
+| actorId | User who approved the analysis
+|===
+
+*Business Impact:* Approval events signal that demographic analyses have been vetted and are suitable for official planning purposes. This triggers wider availability of the analysis and may initiate dependent planning processes that were awaiting validated demographic insights.
+
+===== DemographicProjectionCreatedEvent
+
+Triggered when a new demographic projection is created based on analysis.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| projectionId | Identifier of the new projection
+| analysisId | Identifier of the underlying analysis
+| adminAreaId | Administrative area identifier
+| method | Projection method used
+| baselineYear | Starting year for the projection
+| targetYear | End year for the projection
+| scenarioName | Name of the projection scenario
+| confidence | Confidence level of the projection
+| timestamp | When the projection was created
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Projections are essential inputs for long-term planning. This event notifies planning systems that new future-oriented demographic data is available, potentially triggering updates to long-range infrastructure plans, educational facility projections, or healthcare capacity assessments.
+
+===== DemographicTrendAlertEvent
+
+Triggered when a demographic trend requiring immediate attention is detected.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the analysis
+| adminAreaId | Administrative area experiencing the trend
+| measure | Demographic measure showing the trend
+| direction | Direction of the trend
+| significance | Significance of the trend
+| alertMessage | Clear description of the alert
+| recommendedActions | Suggested responses to the trend
+| priority | Alert priority level
+| timestamp | When the alert was generated
+| actorId | User or system that generated the alert
+|===
+
+*Business Impact:* Unlike regular change detection, trend alerts highlight phenomena requiring prompt action. In Nepal's context, this might include rapid outmigration from a district, sudden population influx to urban areas, or accelerating aging in certain communities.
+
+===== DemographicComparisonCompletedEvent
+
+Triggered when a formal comparison between regions or time periods is completed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the primary analysis
+| comparisonId | Identifier of the comparison
+| sourceAdminAreaId | First administrative area in comparison
+| targetAdminAreaId | Second administrative area in comparison
+| comparisonType | Type of comparison performed
+| keyDifferences | Major differences identified
+| divergenceIndex | Quantified measure of demographic divergence
+| timestamp | When the comparison was completed
+| actorId | User who performed the comparison
+|===
+
+*Business Impact:* Comparative analysis helps contextualize demographic changes by showing how one area compares to others. This event enables planning systems to identify areas deviating significantly from regional trends, which may require special interventions.
+
+===== DemographicReportGeneratedEvent
+
+Triggered when a formal report document is generated from demographic analysis.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| reportId | Identifier of the generated report
+| analysisId | Identifier of the underlying analysis
+| adminAreaId | Administrative area covered
+| format | Format of the generated report
+| title | Report title
+| language | Language of the report
+| includedSections | Major sections included
+| timestamp | When the report was generated
+| actorId | User who generated the report
+|===
+
+*Business Impact:* Report generation events facilitate knowledge distribution by alerting stakeholders that formally documented demographic insights are available. This is particularly important in Nepal's context where not all stakeholders have direct access to the analytical system.
+
+===== DemographicAnalysisPublishedEvent
+
+Triggered when demographic analysis is officially published for wider consumption.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the published analysis
+| adminAreaId | Administrative area covered
+| adminAreaLevel | Level of the administrative area
+| channel | Publication channel used
+| accessUrl | URL where the publication can be accessed
+| targetAudiences | Intended audiences for the publication
+| timestamp | When the publication occurred
+| actorId | User who published the analysis
+|===
+
+*Business Impact:* Publication events mark the transition of demographic analyses from internal planning tools to official information available to broader audiences including other government agencies, development partners, and potentially the public.
+
+===== PolicyRecommendationGeneratedEvent
+
+Triggered when the system generates policy recommendations based on demographic analysis.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| recommendationId | Identifier of the recommendation
+| analysisId | Identifier of the underlying analysis
+| adminAreaId | Administrative area the recommendation applies to
+| sector | Policy sector for the recommendation
+| recommendationSummary | Brief description of the recommendation
+| priority | Priority level for implementation
+| implementationHorizon | Timeframe for implementation
+| resourceRequirement | Level of resources required
+| timestamp | When the recommendation was generated
+| actorId | User or system that generated the recommendation
+|===
+
+*Business Impact:* This event connects demographic insights directly to policy action by notifying relevant departments of specific recommendations derived from demographic changes. For example, a recommendation for expanded elderly care facilities based on aging population trends would be routed to health and social welfare departments.
+
+===== DemographicDataInconsistencyDetectedEvent
+
+Triggered when potentially problematic inconsistencies are found in demographic data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the analysis
+| adminAreaId | Administrative area with inconsistent data
+| inconsistencyType | Type of inconsistency detected
+| description | Detailed description of the issue
+| severity | Severity level of the inconsistency
+| inconsistentValues | The specific inconsistent data values
+| suggestedResolution | Suggested approach to resolve the issue
+| timestamp | When the inconsistency was detected
+| actorId | User or system that detected the inconsistency
+|===
+
+*Business Impact:* Data quality is a significant concern in demographic analysis. This event alerts data managers to potential issues requiring investigation or correction, preventing flawed demographic data from informing policy decisions.
+
+===== HistoricalPatternCorrelationEvent
+
+Triggered when current demographic patterns show significant correlation with historical patterns.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| analysisId | Identifier of the current analysis
+| adminAreaId | Administrative area showing the pattern
+| correlationId | Identifier of the correlation record
+| patternType | Type of demographic pattern
+| correlationScore | Strength of the historical correlation
+| historicalPeriod | Past period showing similar patterns
+| correlationInsight | Interpretation of the correlation's significance
+| timestamp | When the correlation was identified
+| actorId | User or system that identified the correlation
+|===
+
+*Business Impact:* Historical correlation provides valuable context for interpreting current demographic changes. This event enables planning systems to identify recurring patterns and potentially apply lessons from historical responses to similar demographic shifts.
+
+==== Event Handling Architecture
+
+[plantuml]
+----
+@startuml
+participant "DemographicAnalysisService" as Service
+participant "DemographicChangeAnalysis" as Analysis
+participant "EventPublisher" as Publisher
+participant "NotificationService" as Notify
+participant "PlanningIntegrationService" as Planning
+participant "PredictiveModelingService" as Predictive
+participant "DataQualityService" as Quality
+participant "ReportingService" as Reporting
+
+Service -> Analysis: performAnalysis(adminAreaId, timePeriod)
+activate Analysis
+
+Analysis -> Analysis: detectSignificantChanges()
+activate Analysis
+Analysis -> Publisher: publishEvent(SignificantDemographicChangeDetectedEvent)
+deactivate Analysis
+
+activate Publisher
+Publisher -> Planning: notifyPlanningSystems(event)
+activate Planning
+Planning -> Planning: updatePlanningDashboards()
+Planning -> Planning: triggerImpactAssessments()
+Publisher <-- Planning: notificationConfirmed
+deactivate Planning
+
+Publisher -> Notify: alertStakeholders(event)
+activate Notify
+Notify -> Notify: identifyRelevantStakeholders()
+Notify -> Notify: prepareNotifications()
+Notify -> Notify: dispatchAlerts()
+Publisher <-- Notify: alertsSent
+deactivate Notify
+
+Analysis <-- Publisher: eventPublished
+deactivate Publisher
+
+Analysis -> Analysis: identifyDemographicPatterns()
+activate Analysis
+Analysis -> Publisher: publishEvent(DemographicPatternIdentifiedEvent)
+deactivate Analysis
+
+activate Publisher
+Publisher -> Predictive: updatePredictiveModels(event)
+activate Predictive
+Predictive -> Predictive: incorporatePatternData()
+Predictive -> Predictive: refineProjectionModels()
+Publisher <-- Predictive: modelsUpdated
+deactivate Predictive
+
+Analysis <-- Publisher: eventPublished
+deactivate Publisher
+
+Analysis -> Analysis: generateProjections()
+activate Analysis
+Analysis -> Publisher: publishEvent(DemographicProjectionCreatedEvent)
+deactivate Analysis
+
+activate Publisher
+Publisher -> Planning: integrateLongTermPlanning(event)
+activate Planning
+Planning -> Planning: updateInfrastructurePlans()
+Planning -> Planning: reassessResourceAllocations()
+Publisher <-- Planning: planningUpdated
+deactivate Planning
+
+Analysis <-- Publisher: eventPublished
+deactivate Publisher
+
+Analysis -> Analysis: generatePolicyRecommendations()
+activate Analysis
+Analysis -> Publisher: publishEvent(PolicyRecommendationGeneratedEvent)
+deactivate Analysis
+
+activate Publisher
+Publisher -> Notify: notifyPolicyStakeholders(event)
+activate Notify
+Notify -> Notify: routeToRelevantDepartments()
+Notify -> Notify: prioritizeByUrgency()
+Publisher <-- Notify: policyNotificationsSent
+deactivate Notify
+
+Analysis <-- Publisher: eventPublished
+deactivate Publisher
+
+Analysis -> Analysis: prepareAnalysisForPublication()
+activate Analysis
+Analysis -> Quality: performQualityChecks()
+activate Quality
+Quality -> Quality: validateDataConsistency()
+Quality -> Quality: verifyMethodologicalSoundness()
+Quality -> Quality: checkStatisticalSignificance()
+Analysis <-- Quality: qualityAssessmentCompleted
+deactivate Quality
+
+Analysis -> Publisher: publishEvent(DemographicAnalysisApprovedEvent)
+deactivate Analysis
+
+activate Publisher
+Publisher -> Reporting: generateFormalReports(event)
+activate Reporting
+Reporting -> Reporting: compileAnalysisResults()
+Reporting -> Reporting: formatForTargetAudiences()
+Reporting -> Reporting: prepareVisualizationPackage()
+Publisher <-- Reporting: reportsGenerated
+deactivate Reporting
+
+Analysis <-- Publisher: eventPublished
+deactivate Publisher
+
+Service <-- Analysis: analysisCompleted
+deactivate Analysis
+@enduml
+----
+
+The diagram above illustrates how events flow through the system when demographic change analysis is performed. The process demonstrates several key patterns:
+
+1. **Event-Driven Integration**: Domain events serve as the primary integration mechanism between the demographic analysis system and dependent planning systems.
+
+2. **Stakeholder Notification**: Events trigger appropriate notifications to relevant stakeholders based on the nature and significance of demographic findings.
+
+3. **Predictive Model Updates**: Significant demographic events trigger updates to predictive models, ensuring that future projections incorporate the latest observed patterns.
+
+4. **Policy Action Linkage**: Events create direct connections between demographic insights and policy responses, ensuring that demographic intelligence informs action.
+
+5. **Quality Control Workflow**: Events support a quality control workflow that ensures analytical rigor before demographic insights influence planning decisions.
+
+==== Event Application Use Cases
+
+===== Infrastructure Planning Based on Urbanization Trends
+
+When demographic analysis detects urbanization patterns:
+
+1. The `DemographicPatternIdentifiedEvent` is published with patternType = URBANIZATION.
+2. Urban Planning systems consume this event to update population projections.
+3. Infrastructure Planning systems use these updated projections to recalculate service demands.
+4. The `PolicyRecommendationGeneratedEvent` suggests specific infrastructure investments needed.
+5. Capital investment planning systems incorporate these recommendations into budget planning.
+
+This process ensures that infrastructure development anticipates demographic shifts rather than merely reacting to them—particularly important in Nepal's rapidly urbanizing areas like Pokhara and Bharatpur where infrastructure development struggles to keep pace with population growth.
+
+===== Aging Population Health Service Planning
+
+When analysis reveals an accelerating aging trend:
+
+1. The `SignificantDemographicChangeDetectedEvent` identifies increasing elderly population.
+2. The Health Services Planning system receives this event and updates healthcare demand models.
+3. The `DemographicProjectionCreatedEvent` provides long-term elderly population projections.
+4. Health facility planning uses these projections to identify areas needing expanded geriatric services.
+5. Health workforce planning systems adjust training requirements for elderly care specialists.
+
+This event-driven process helps Nepal's health system prepare for the demographic aging that is beginning to emerge as life expectancy increases and fertility declines, particularly in hill districts with high youth outmigration.
+
+===== Education Resource Planning for Youth Population Changes
+
+When analysis shows shifts in school-age population:
+
+1. The `DemographicTrendAlertEvent` signals significant changes in youth population distribution.
+2. The Education Department planning system receives this alert and updates student projections.
+3. Teacher allocation systems adjust staffing projections based on changing student population.
+4. School infrastructure planning identifies areas needing expanded or consolidated facilities.
+5. Education budget planning adjusts resource allocations based on demographic shifts.
+
+This event chain helps Nepal's education system adapt to rapidly changing youth demographics driven by internal migration, urbanization, and shifting fertility patterns, ensuring educational resources align with population needs.
+
+===== Post-Disaster Demographic Response Planning
+
+Following natural disasters like earthquakes that cause population displacement:
+
+1. The `DemographicDataInconsistencyDetectedEvent` flags unusual population patterns in affected areas.
+2. Emergency response systems receive real-time alerts about population displacement.
+3. The `DemographicPatternIdentifiedEvent` with patternType = POST_DISASTER identifies returnee patterns.
+4. Reconstruction planning uses these patterns to prioritize housing and infrastructure rebuilding.
+5. The `PolicyRecommendationGeneratedEvent` suggests special measures for affected communities.
+
+This application is particularly relevant in Nepal's disaster-prone context, where the 2015 earthquake caused significant population displacement and subsequent demographic reorganization.
+
+===== Labor Migration Impact Assessment
+
+When analyzing impacts of Nepal's high international labor migration:
+
+1. The `SignificantDemographicChangeDetectedEvent` identifies critical working-age population gaps.
+2. Labor market information systems update workforce availability projections.
+3. The `PolicyRecommendationGeneratedEvent` suggests approaches to address skills shortages.
+4. Social service planning adjusts to support families with absent working-age members.
+5. The `DemographicProjectionCreatedEvent` models scenarios for different return migration patterns.
+
+This event-driven process helps government systems respond to Nepal's exceptionally high labor outmigration, which has transformed household composition and labor markets in many districts.
+
+==== Integration with External Systems
+
+===== National Planning Commission Integration
+
+Demographic change events integrate with Nepal's National Planning Commission systems through:
+
+1. Standardized event formats aligned with National Planning Commission data protocols.
+2. Secure event delivery to the Integrated Planning Information System (IPIS).
+3. Two-way integration where NPC planning decisions can trigger demographic analysis.
+4. Priority flagging for events relevant to current five-year planning cycle priorities.
+
+This integration ensures demographic insights directly inform national development planning and resource allocation.
+
+===== Provincial Planning Integration
+
+Nepal's federal structure requires provincial-level planning integration:
+
+1. Province-specific event subscriptions ensure relevant demographic insights reach provincial planning bodies.
+2. Province-level planning actions can be triggered by demographic events specific to their jurisdiction.
+3. Cross-provincial demographic patterns trigger coordinated planning responses across administrative boundaries.
+4. Provincial development priorities influence which demographic events receive heightened attention.
+
+This provincial integration supports Nepal's devolved planning structure while maintaining national demographic standards.
+
+===== Local Government Planning Systems
+
+At the municipal level, demographic events support local planning:
+
+1. Spatial filtering ensures municipalities receive only demographic events relevant to their areas.
+2. Simplified event payloads accommodate the varying technical capacities of local governments.
+3. Event translation supports Nepal's diverse local languages in administrative systems.
+4. Context-rich events provide clear planning implications for local decision-makers.
+
+This local integration helps municipalities make evidence-based planning decisions despite varying capacity levels.
+
+===== Development Partner Systems
+
+International development organizations supporting Nepal's development receive:
+
+1. Selected demographic events relevant to their programming areas.
+2. Standardized event formats compatible with international development indicator systems.
+3. Specifically formatted events for SDG monitoring and reporting.
+4. Development coordination events when demographic changes suggest programming adjustments.
+
+This integration supports coordinated development responses to demographic challenges across government and international partners.
+
+==== Security and Compliance Considerations
+
+All demographic change events are subject to:
+
+1. **Classification Levels**: Events are classified according to sensitivity, with distribution restricted appropriately.
+2. **Aggregation Controls**: Events containing demographic data maintain minimum population thresholds to prevent individual identification.
+3. **Audit Trails**: Complete event histories are maintained for all demographic change events.
+4. **Access Control**: Event consumption is restricted based on administrative level and user role.
+
+These controls ensure that demographic insights are shared securely while allowing appropriate information flow for planning purposes.

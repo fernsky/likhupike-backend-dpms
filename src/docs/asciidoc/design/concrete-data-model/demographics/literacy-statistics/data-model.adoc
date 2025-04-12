@@ -1,0 +1,995 @@
+===== Data Model
+
+The LiteracyStatistics entity implements a comprehensive data model for tracking literacy and educational attainment across administrative areas.
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface FullTextSearchable
+interface CustomValidatable
+
+' Main class
+class LiteracyStatistics {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +String adminAreaName
+  +AdminAreaLevel adminAreaLevel
+  
+  ' Time context
+  +Integer year
+  +String periodType
+  +LocalDate referenceDate
+  +Boolean isCensusData
+  +String censusReference
+  +Boolean isProjected
+  +String projectionMethod
+  
+  ' Overall literacy rates
+  +Double overallLiteracyRate
+  +Double maleLiteracyRate
+  +Double femaleLiteracyRate
+  +Double urbanLiteracyRate
+  +Double ruralLiteracyRate
+  +Double literacyGenderParity
+  +Double literacyUrbanRuralParity
+  
+  ' Population counts
+  +Integer totalPopulationOverFive
+  +Integer literateTotalCount
+  +Integer illiterateTotalCount
+  +Integer malePopulationOverFive
+  +Integer literatedMaleCount
+  +Integer illiterateMaleCount
+  +Integer femalePopulationOverFive
+  +Integer literatedFemaleCount
+  +Integer illiterateFemaleCount
+  
+  ' Age-specific literacy
+  +Map<AgeGroup, LiteracyByAge> literacyByAge
+  +Double youthLiteracyRate
+  +Double adultLiteracyRate
+  +Double elderlyLiteracyRate
+  
+  ' Educational attainment
+  +Map<EducationLevel, LiteracyByEducation> educationalAttainment
+  +Double primaryCompletionRate
+  +Double secondaryCompletionRate
+  +Double tertiaryEnrollmentRate
+  +Double averageYearsOfSchooling
+  
+  ' Specialized metrics
+  +Map<Language, Double> literacyByLanguage
+  +Double digitalLiteracyRate
+  +Double financialLiteracyRate
+  +Double functionalLiteracyRate
+  +String dominantLanguageGroup
+  +String dominantScriptSystem
+  
+  ' Data quality
+  +ConfidenceLevel confidenceLevel
+  +String dataSource
+  +String methodologyDescription
+  +Double marginOfError
+  +String notes
+  
+  ' Previous reference
+  +UUID previousStatisticsId
+  +Double changeLiteracyRate
+  +Double changeLiteracyGenderParity
+  +Double changeEducationalAttainment
+  
+  ' External references
+  +UUID sourceDatasetId
+  +UUID educationDepartmentReferenceId
+  
+  ' Methods
+  +Double calculateLiteracyGenderGap()
+  +Double calculateYouthAdultGap()
+  +Map<AgeGroup, Double> getLiteracyRatesByAge()
+  +Map<Gender, Double> getLiteracyRatesByGender()
+  +Map<EducationLevel, Integer> getPopulationByEducation()
+  +LiteracyTrend calculateLiteracyTrend(int periodYears)
+  +LiteracyStatistics projectFuture(int targetYear, String method)
+  +Map<String, Object> generateVisualizationData(String visualType)
+  +List<DisparityIndex> calculateDisparityIndices()
+  +Integer getOutOfSchoolPopulation(AgeGroup ageGroup)
+  +Double getLiteracyRateInLanguage(Language language)
+  +UUID getRelatedAdminAreaStatistics(RelationshipType type)
+}
+
+' Supporting Classes
+class LiteracyByAge {
+  +UUID id
+  +AgeGroup ageGroup
+  +Integer populationCount
+  +Integer literateCount
+  +Integer illiterateCount
+  +Double literacyRate
+  +Double maleLiteracyRate
+  +Double femaleLiteracyRate
+  +Double genderParity
+  +Boolean isEstimated
+  +ConfidenceLevel confidenceLevel
+}
+
+class LiteracyByEducation {
+  +UUID id
+  +EducationLevel level
+  +Integer populationCount
+  +Double percentOfPopulation
+  +Double malePercentage
+  +Double femalePercentage
+  +Double genderParity
+  +Double urbanPercentage
+  +Double ruralPercentage
+  +Boolean isEstimated
+  +ConfidenceLevel confidenceLevel
+}
+
+class LiteracyTrendAnalysis {
+  +UUID id
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startYear
+  +Integer endYear
+  +List<Integer> years
+  +List<Double> overallRates
+  +List<Double> maleRates
+  +List<Double> femaleRates
+  +List<Double> genderParityIndices
+  +Double averageAnnualChange
+  +TrendDirection trend
+  +Double projectedFutureRate
+  +Integer projectionYear
+  +String analysisNotes
+  +LocalDateTime analyzedAt
+}
+
+class LiteracyDisparityIndicator {
+  +UUID id
+  +UUID literacyStatisticsId
+  +DisparityType disparityType
+  +Double disparitySeverity
+  +String possibleCauses
+  +String implicationsDescription
+  +String recommendedInterventions
+  +LocalDateTime detectedAt
+  +Boolean isVerified
+  +UUID verifiedBy
+  +String verificationNotes
+}
+
+class EducationalAttainmentDistribution {
+  +UUID id
+  +UUID literacyStatisticsId
+  +Integer noFormalEducationCount
+  +Integer primaryPartialCount
+  +Integer primaryCompleteCount
+  +Integer lowerSecondaryCount
+  +Integer secondaryCount
+  +Integer higherSecondaryCount
+  +Integer bachelorCount
+  +Integer masterCount
+  +Integer doctoralCount
+  +Integer technicalVocationalCount
+  +Double averageYearsOfSchooling
+  +Double maleAverageYears
+  +Double femaleAverageYears
+  +Double completionRateChangeRatio
+  +Boolean isEstimated
+  +ConfidenceLevel confidenceLevel
+}
+
+class LiteracyProgramImpact {
+  +UUID id
+  +UUID literacyStatisticsId
+  +String programName
+  +LocalDate startDate
+  +LocalDate endDate
+  +Integer participantCount
+  +Double preInterventionRate
+  +Double postInterventionRate
+  +Double impactScore
+  +ProgramType programType
+  +Integer completersCount
+  +Double completionRate
+  +Double costPerParticipant
+  +Double returnToEducationRate
+  +String evaluationMethod
+  +UUID implementingAgencyId
+}
+
+class LiteracyGoalsProgress {
+  +UUID id
+  +UUID literacyStatisticsId
+  +String goalName
+  +Double targetValue
+  +Double currentValue
+  +Double percentTowardsGoal
+  +Integer targetYear
+  +List<String> interventions
+  +Boolean onTrack
+  +String challengesFaced
+  +LocalDate lastAssessedAt
+  +UUID assessedBy
+}
+
+' Enumerations
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AgeGroup {
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum EducationLevel {
+  NO_FORMAL_EDUCATION
+  BASIC_LITERACY
+  PRIMARY_PARTIAL
+  PRIMARY_COMPLETE
+  LOWER_SECONDARY
+  SECONDARY
+  HIGHER_SECONDARY
+  BACHELOR
+  MASTER
+  DOCTORAL
+  TECHNICAL_VOCATIONAL
+}
+
+enum Language {
+  NEPALI
+  MAITHILI
+  BHOJPURI
+  THARU
+  TAMANG
+  NEWAR
+  BAJJIKA
+  MAGAR
+  DOTELI
+  URDU
+  AWADHI
+  LIMBU
+  GURUNG
+  RAI
+  BAITADELI
+  ENGLISH
+  OTHER
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  ACCELERATING
+  DECELERATING
+}
+
+enum DisparityType {
+  GENDER
+  URBAN_RURAL
+  ETHNIC
+  LINGUISTIC
+  AGE_GROUP
+  ECONOMIC
+  GEOGRAPHIC
+  DISABILITY
+}
+
+enum ProgramType {
+  FORMAL_SCHOOL
+  NON_FORMAL_EDUCATION
+  ADULT_LITERACY
+  DIGITAL_LITERACY
+  FINANCIAL_LITERACY
+  MOTHER_TONGUE_BASED
+  VOCATIONAL_LITERACY
+  EARLY_CHILDHOOD
+  REMEDIAL
+  MIXED_APPROACH
+}
+
+enum RelationshipType {
+  ADJACENT
+  CONTAINING
+  CONTAINED_WITHIN
+  MIGRATIONALLY_CONNECTED
+  CULTURALLY_SIMILAR
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+' Inheritance relationships
+BaseEntity <|-- LiteracyStatistics
+BaseEntity <|-- LiteracyByAge
+BaseEntity <|-- LiteracyByEducation
+BaseEntity <|-- LiteracyTrendAnalysis
+BaseEntity <|-- LiteracyDisparityIndicator
+BaseEntity <|-- EducationalAttainmentDistribution
+BaseEntity <|-- LiteracyProgramImpact
+BaseEntity <|-- LiteracyGoalsProgress
+
+' Interface implementation
+LiteracyStatistics ..|> DataAggregatable
+LiteracyStatistics ..|> HistoryViewable
+LiteracyStatistics ..|> ExternalSystemSyncable
+LiteracyStatistics ..|> FullTextSearchable
+LiteracyStatistics ..|> CustomValidatable
+
+' Class relationships
+LiteracyStatistics "1" o-- "many" LiteracyByAge
+LiteracyStatistics "1" o-- "many" LiteracyByEducation
+LiteracyStatistics "1" o-- "many" LiteracyDisparityIndicator
+LiteracyStatistics "1" o-- "1" EducationalAttainmentDistribution
+LiteracyStatistics "1" o-- "many" LiteracyProgramImpact
+LiteracyStatistics "1" o-- "many" LiteracyGoalsProgress
+LiteracyStatistics -- ConfidenceLevel
+LiteracyStatistics -- AdminAreaLevel
+LiteracyByAge -- AgeGroup
+LiteracyByAge -- ConfidenceLevel
+LiteracyByEducation -- EducationLevel
+LiteracyByEducation -- ConfidenceLevel
+LiteracyTrendAnalysis -- TrendDirection
+LiteracyTrendAnalysis -- AdminAreaLevel
+LiteracyDisparityIndicator -- DisparityType
+LiteracyProgramImpact -- ProgramType
+@enduml
+----
+
+The data model captures the multifaceted nature of literacy demographics, with special attention to Nepal's unique educational context and challenges around literacy data collection.
+
+==== Core Entity: LiteracyStatistics
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the literacy statistics
+| demographicSummaryId | UUID | Reference to the demographic summary this distribution belongs to
+| adminAreaId | UUID | Reference to the administrative area
+| adminAreaCode | String | Code for the administrative area
+| adminAreaName | String | Name of the administrative area
+| adminAreaLevel | AdminAreaLevel | Level in the administrative hierarchy
+| year | Integer | Year of the literacy statistics data
+| periodType | String | Type of time period (CENSUS, ESTIMATE, PROJECTION)
+| referenceDate | LocalDate | Specific reference date for the data
+| isCensusData | Boolean | Whether this is official census data
+| censusReference | String | Reference to specific census
+| isProjected | Boolean | Whether this is projected rather than measured data
+| projectionMethod | String | Method used for projection if projected
+| overallLiteracyRate | Double | Overall literacy rate for the administrative area
+| maleLiteracyRate | Double | Literacy rate among male population
+| femaleLiteracyRate | Double | Literacy rate among female population
+| urbanLiteracyRate | Double | Literacy rate in urban areas
+| ruralLiteracyRate | Double | Literacy rate in rural areas
+| literacyGenderParity | Double | Ratio of female to male literacy rates
+| literacyUrbanRuralParity | Double | Ratio of rural to urban literacy rates
+| totalPopulationOverFive | Integer | Total population aged 5 and over
+| literateTotalCount | Integer | Count of literate people
+| illiterateTotalCount | Integer | Count of illiterate people
+| malePopulationOverFive | Integer | Male population aged 5 and over
+| literatedMaleCount | Integer | Count of literate males
+| illiterateMaleCount | Integer | Count of illiterate males
+| femalePopulationOverFive | Integer | Female population aged 5 and over
+| literatedFemaleCount | Integer | Count of literate females
+| illiterateFemaleCount | Integer | Count of illiterate females
+| literacyByAge | Map | Literacy rates and counts broken down by age group
+| youthLiteracyRate | Double | Literacy rate among youth (15-24)
+| adultLiteracyRate | Double | Literacy rate among adults (25-64)
+| elderlyLiteracyRate | Double | Literacy rate among elderly (65+)
+| educationalAttainment | Map | Educational attainment broken down by level
+| primaryCompletionRate | Double | Percentage that completed primary education
+| secondaryCompletionRate | Double | Percentage that completed secondary education
+| tertiaryEnrollmentRate | Double | Percentage enrolled in tertiary education
+| averageYearsOfSchooling | Double | Average years of schooling for the population
+| literacyByLanguage | Map | Literacy rates broken down by language
+| digitalLiteracyRate | Double | Rate of digital literacy
+| financialLiteracyRate | Double | Rate of financial literacy
+| functionalLiteracyRate | Double | Rate of functional literacy
+| dominantLanguageGroup | String | Dominant language group in the area
+| dominantScriptSystem | String | Dominant script system in the area
+| confidenceLevel | ConfidenceLevel | Confidence level of the data
+| dataSource | String | Source of the data
+| methodologyDescription | String | Description of methodology used
+| marginOfError | Double | Statistical margin of error
+| notes | String | Additional notes about the data
+| previousStatisticsId | UUID | Reference to previous time point
+| changeLiteracyRate | Double | Change in literacy rate from previous
+| changeLiteracyGenderParity | Double | Change in gender parity from previous
+| changeEducationalAttainment | Double | Change in educational attainment from previous
+| sourceDatasetId | UUID | Reference to source dataset
+| educationDepartmentReferenceId | UUID | Reference to education department data
+|===
+
+==== Supporting Entity: LiteracyByAge
+
+Breaks down literacy by age groups.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| ageGroup | AgeGroup | Age group category
+| populationCount | Integer | Population count in this age group
+| literateCount | Integer | Number of literate people in this age group
+| illiterateCount | Integer | Number of illiterate people in this age group
+| literacyRate | Double | Literacy rate in this age group
+| maleLiteracyRate | Double | Male literacy rate in this age group
+| femaleLiteracyRate | Double | Female literacy rate in this age group
+| genderParity | Double | Gender parity index for this age group
+| isEstimated | Boolean | Whether the data is estimated
+| confidenceLevel | ConfidenceLevel | Confidence level of the data
+|===
+
+==== Supporting Entity: LiteracyByEducation
+
+Breaks down population by educational attainment levels.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| level | EducationLevel | Educational level
+| populationCount | Integer | Population count at this educational level
+| percentOfPopulation | Double | Percentage of population at this level
+| malePercentage | Double | Percentage of males at this level
+| femalePercentage | Double | Percentage of females at this level
+| genderParity | Double | Gender parity at this educational level
+| urbanPercentage | Double | Percentage of urban population at this level
+| ruralPercentage | Double | Percentage of rural population at this level
+| isEstimated | Boolean | Whether the data is estimated
+| confidenceLevel | ConfidenceLevel | Confidence level of the data
+|===
+
+==== Supporting Entity: LiteracyTrendAnalysis
+
+Analyzes literacy trends over time.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| adminAreaId | UUID | Reference to the administrative area
+| adminAreaLevel | AdminAreaLevel | Level in the administrative hierarchy
+| startYear | Integer | First year in the analysis period
+| endYear | Integer | Last year in the analysis period
+| years | List<Integer> | List of years included in the analysis
+| overallRates | List<Double> | Overall literacy rates for each year
+| maleRates | List<Double> | Male literacy rates for each year
+| femaleRates | List<Double> | Female literacy rates for each year
+| genderParityIndices | List<Double> | Gender parity indices for each year
+| averageAnnualChange | Double | Average yearly change in literacy rate
+| trend | TrendDirection | Direction of change in literacy rate
+| projectedFutureRate | Double | Projected future literacy rate
+| projectionYear | Integer | Year for which projection is made
+| analysisNotes | String | Notes from the analysis
+| analyzedAt | LocalDateTime | When the analysis was performed
+|===
+
+==== Supporting Entity: LiteracyDisparityIndicator
+
+Identifies and characterizes literacy disparities.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| literacyStatisticsId | UUID | Reference to the literacy statistics
+| disparityType | DisparityType | Type of disparity
+| disparitySeverity | Double | Severity score of the disparity
+| possibleCauses | String | Potential causes of the disparity
+| implicationsDescription | String | Description of implications
+| recommendedInterventions | String | Recommended interventions
+| detectedAt | LocalDateTime | When the disparity was detected
+| isVerified | Boolean | Whether the disparity has been verified
+| verifiedBy | UUID | Who verified the disparity
+| verificationNotes | String | Notes from verification
+|===
+
+==== Supporting Entity: EducationalAttainmentDistribution
+
+Details population distribution across educational attainment levels.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| literacyStatisticsId | UUID | Reference to the literacy statistics
+| noFormalEducationCount | Integer | Count with no formal education
+| primaryPartialCount | Integer | Count with partial primary education
+| primaryCompleteCount | Integer | Count with completed primary education
+| lowerSecondaryCount | Integer | Count with lower secondary education
+| secondaryCount | Integer | Count with secondary education
+| higherSecondaryCount | Integer | Count with higher secondary education
+| bachelorCount | Integer | Count with bachelor's degree
+| masterCount | Integer | Count with master's degree
+| doctoralCount | Integer | Count with doctoral degree
+| technicalVocationalCount | Integer | Count with technical/vocational education
+| averageYearsOfSchooling | Double | Average years of schooling overall
+| maleAverageYears | Double | Average years of schooling for males
+| femaleAverageYears | Double | Average years of schooling for females
+| completionRateChangeRatio | Double | Ratio of change in completion rates
+| isEstimated | Boolean | Whether the data is estimated
+| confidenceLevel | ConfidenceLevel | Confidence level of the data
+|===
+
+==== Supporting Entity: LiteracyProgramImpact
+
+Tracks impact of literacy improvement programs.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| literacyStatisticsId | UUID | Reference to the literacy statistics
+| programName | String | Name of the literacy program
+| startDate | LocalDate | When the program started
+| endDate | LocalDate | When the program ended
+| participantCount | Integer | Number of participants
+| preInterventionRate | Double | Literacy rate before intervention
+| postInterventionRate | Double | Literacy rate after intervention
+| impactScore | Double | Calculated impact score
+| programType | ProgramType | Type of literacy program
+| completersCount | Integer | Number of participants who completed
+| completionRate | Double | Program completion rate
+| costPerParticipant | Double | Cost per participant
+| returnToEducationRate | Double | Rate of return to formal education
+| evaluationMethod | String | Method used to evaluate impact
+| implementingAgencyId | UUID | Reference to implementing agency
+|===
+
+==== Supporting Entity: LiteracyGoalsProgress
+
+Tracks progress toward literacy goals.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| literacyStatisticsId | UUID | Reference to the literacy statistics
+| goalName | String | Name of the literacy goal
+| targetValue | Double | Target value for the goal
+| currentValue | Double | Current value achieved
+| percentTowardsGoal | Double | Percentage progress toward goal
+| targetYear | Integer | Year by which goal should be achieved
+| interventions | List<String> | Interventions being implemented
+| onTrack | Boolean | Whether progress is on track
+| challengesFaced | String | Challenges faced in implementation
+| lastAssessedAt | LocalDate | When progress was last assessed
+| assessedBy | UUID | Who performed the assessment
+|===
+
+==== Enumerations
+
+===== AdminAreaLevel
+Administrative area levels in Nepal.
+
+* `WARD`: Ward level
+* `MUNICIPALITY`: Municipality level
+* `DISTRICT`: District level
+* `PROVINCE`: Province level
+* `COUNTRY`: National level
+
+===== AgeGroup
+Standard age group classifications.
+
+* `AGE_5_9`: Ages 5-9
+* `AGE_10_14`: Ages 10-14
+* ... [Other age groups]
+* `AGE_85_PLUS`: Ages 85 and above
+
+===== EducationLevel
+Educational attainment levels.
+
+* `NO_FORMAL_EDUCATION`: No formal education
+* `BASIC_LITERACY`: Basic reading and writing skills
+* `PRIMARY_PARTIAL`: Some primary education
+* `PRIMARY_COMPLETE`: Completed primary education
+* `LOWER_SECONDARY`: Lower secondary education
+* `SECONDARY`: Secondary education
+* `HIGHER_SECONDARY`: Higher secondary education
+* `BACHELOR`: Bachelor's degree
+* `MASTER`: Master's degree
+* `DOCTORAL`: Doctoral degree
+* `TECHNICAL_VOCATIONAL`: Technical or vocational education
+
+===== Language
+Major languages of Nepal.
+
+* `NEPALI`: Nepali (official language)
+* `MAITHILI`: Maithili
+* `BHOJPURI`: Bhojpuri
+* ... [Other languages]
+* `ENGLISH`: English
+* `OTHER`: Other languages
+
+===== ConfidenceLevel
+Indicates the level of confidence in the data.
+
+* `HIGH`: High confidence (typically census data)
+* `MEDIUM`: Medium confidence
+* `LOW`: Low confidence
+* `VERY_LOW`: Very low confidence
+* `UNKNOWN`: Confidence level cannot be determined
+
+===== TrendDirection
+Direction of change in time-series data.
+
+* `INCREASING`: Values are consistently increasing
+* `DECREASING`: Values are consistently decreasing
+* `STABLE`: Values remain relatively stable
+* `FLUCTUATING`: Values change without clear direction
+* `ACCELERATING`: Increase at an accelerating rate
+* `DECELERATING`: Increase at a decelerating rate
+
+===== DisparityType
+Types of literacy disparities.
+
+* `GENDER`: Disparity between genders
+* `URBAN_RURAL`: Disparity between urban and rural areas
+* `ETHNIC`: Disparity between ethnic groups
+* `LINGUISTIC`: Disparity based on language
+* `AGE_GROUP`: Disparity between age groups
+* `ECONOMIC`: Disparity based on economic status
+* `GEOGRAPHIC`: Disparity between geographic regions
+* `DISABILITY`: Disparity affecting persons with disabilities
+
+===== ProgramType
+Types of literacy programs.
+
+* `FORMAL_SCHOOL`: Programs within formal schools
+* `NON_FORMAL_EDUCATION`: Non-formal education programs
+* `ADULT_LITERACY`: Programs specifically for adults
+* `DIGITAL_LITERACY`: Programs focused on digital skills
+* `FINANCIAL_LITERACY`: Programs focused on financial skills
+* `MOTHER_TONGUE_BASED`: Programs in mother tongue
+* `VOCATIONAL_LITERACY`: Programs linked to vocational skills
+* `EARLY_CHILDHOOD`: Early childhood literacy programs
+* `REMEDIAL`: Remedial literacy programs
+* `MIXED_APPROACH`: Programs using mixed approaches
+
+===== RelationshipType
+Types of relationships between administrative areas.
+
+* `ADJACENT`: Areas share a border
+* `CONTAINING`: Area contains another area
+* `CONTAINED_WITHIN`: Area is contained within another
+* `MIGRATIONALLY_CONNECTED`: Areas connected by migration
+* `CULTURALLY_SIMILAR`: Areas with cultural similarities
+
+===== Gender
+Gender classifications for analysis.
+
+* `MALE`: Male gender
+* `FEMALE`: Female gender
+* `OTHER`: Other gender identities
+
+==== Database Schema Implementation
+
+The LiteracyStatistics entity and its related entities are mapped to the following database schema:
+
+```sql
+-- Main literacy statistics table
+CREATE TABLE literacy_statistics (
+  id UUID PRIMARY KEY,
+  demographic_summary_id UUID NOT NULL REFERENCES demographic_summary(id),
+  
+  -- Administrative context
+  admin_area_id UUID NOT NULL REFERENCES administrative_area(id),
+  admin_area_code VARCHAR(50) NOT NULL,
+  admin_area_name VARCHAR(100) NOT NULL,
+  admin_area_level VARCHAR(20) NOT NULL,
+  
+  -- Time context
+  year INT NOT NULL,
+  period_type VARCHAR(20),
+  reference_date DATE,
+  is_census_data BOOLEAN DEFAULT FALSE,
+  census_reference VARCHAR(50),
+  is_projected BOOLEAN DEFAULT FALSE,
+  projection_method VARCHAR(50),
+  
+  -- Overall literacy rates
+  overall_literacy_rate NUMERIC(5,2),
+  male_literacy_rate NUMERIC(5,2),
+  female_literacy_rate NUMERIC(5,2),
+  urban_literacy_rate NUMERIC(5,2),
+  rural_literacy_rate NUMERIC(5,2),
+  literacy_gender_parity NUMERIC(5,3),
+  literacy_urban_rural_parity NUMERIC(5,3),
+  
+  -- Population counts
+  total_population_over_five INT,
+  literate_total_count INT,
+  illiterate_total_count INT,
+  male_population_over_five INT,
+  literate_male_count INT,
+  illiterate_male_count INT,
+  female_population_over_five INT,
+  literate_female_count INT,
+  illiterate_female_count INT,
+  
+  -- Age-specific literacy
+  youth_literacy_rate NUMERIC(5,2),
+  adult_literacy_rate NUMERIC(5,2),
+  elderly_literacy_rate NUMERIC(5,2),
+  
+  -- Educational attainment
+  primary_completion_rate NUMERIC(5,2),
+  secondary_completion_rate NUMERIC(5,2),
+  tertiary_enrollment_rate NUMERIC(5,2),
+  average_years_of_schooling NUMERIC(4,2),
+  
+  -- Specialized metrics
+  digital_literacy_rate NUMERIC(5,2),
+  financial_literacy_rate NUMERIC(5,2),
+  functional_literacy_rate NUMERIC(5,2),
+  dominant_language_group VARCHAR(30),
+  dominant_script_system VARCHAR(30),
+  
+  -- Data quality
+  confidence_level VARCHAR(20) NOT NULL,
+  data_source VARCHAR(100),
+  methodology_description TEXT,
+  margin_of_error NUMERIC(5,2),
+  notes TEXT,
+  
+  -- Previous reference
+  previous_statistics_id UUID REFERENCES literacy_statistics(id),
+  change_literacy_rate NUMERIC(5,2),
+  change_literacy_gender_parity NUMERIC(5,2),
+  change_educational_attainment NUMERIC(5,2),
+  
+  -- External references
+  source_dataset_id UUID,
+  education_department_reference_id UUID,
+  
+  -- Audit fields
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  
+  -- Constraints
+  CONSTRAINT uk_literacy_admin_area_year UNIQUE (admin_area_id, year)
+);
+
+-- Literacy by age group
+CREATE TABLE literacy_by_age (
+  id UUID PRIMARY KEY,
+  literacy_statistics_id UUID NOT NULL REFERENCES literacy_statistics(id),
+  age_group VARCHAR(20) NOT NULL,
+  population_count INT,
+  literate_count INT,
+  illiterate_count INT,
+  literacy_rate NUMERIC(5,2),
+  male_literacy_rate NUMERIC(5,2),
+  female_literacy_rate NUMERIC(5,2),
+  gender_parity NUMERIC(5,3),
+  is_estimated BOOLEAN DEFAULT FALSE,
+  confidence_level VARCHAR(20),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  
+  CONSTRAINT uk_literacy_age_group UNIQUE (literacy_statistics_id, age_group)
+);
+
+-- Literacy by education level
+CREATE TABLE literacy_by_education (
+  id UUID PRIMARY KEY,
+  literacy_statistics_id UUID NOT NULL REFERENCES literacy_statistics(id),
+  education_level VARCHAR(30) NOT NULL,
+  population_count INT,
+  percent_of_population NUMERIC(5,2),
+  male_percentage NUMERIC(5,2),
+  female_percentage NUMERIC(5,2),
+  gender_parity NUMERIC(5,3),
+  urban_percentage NUMERIC(5,2),
+  rural_percentage NUMERIC(5,2),
+  is_estimated BOOLEAN DEFAULT FALSE,
+  confidence_level VARCHAR(20),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  
+  CONSTRAINT uk_literacy_education_level UNIQUE (literacy_statistics_id, education_level)
+);
+
+-- Literacy by language
+CREATE TABLE literacy_by_language (
+  literacy_statistics_id UUID NOT NULL REFERENCES literacy_statistics(id),
+  language VARCHAR(30) NOT NULL,
+  literacy_rate NUMERIC(5,2),
+  population_count INT,
+  is_mother_tongue BOOLEAN,
+  is_estimated BOOLEAN DEFAULT FALSE,
+  notes TEXT,
+  PRIMARY KEY (literacy_statistics_id, language)
+);
+
+-- Educational attainment distribution
+CREATE TABLE educational_attainment_distribution (
+  id UUID PRIMARY KEY,
+  literacy_statistics_id UUID NOT NULL REFERENCES literacy_statistics(id),
+  no_formal_education_count INT,
+  primary_partial_count INT,
+  primary_complete_count INT,
+  lower_secondary_count INT,
+  secondary_count INT,
+  higher_secondary_count INT,
+  bachelor_count INT,
+  master_count INT,
+  doctoral_count INT,
+  technical_vocational_count INT,
+  average_years_of_schooling NUMERIC(4,2),
+  male_average_years NUMERIC(4,2),
+  female_average_years NUMERIC(4,2),
+  completion_rate_change_ratio NUMERIC(5,3),
+  is_estimated BOOLEAN DEFAULT FALSE,
+  confidence_level VARCHAR(20),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  
+  CONSTRAINT uk_educational_attainment UNIQUE (literacy_statistics_id)
+);
+
+-- Literacy trend analysis
+CREATE TABLE literacy_trend_analysis (
+  id UUID PRIMARY KEY,
+  admin_area_id UUID NOT NULL REFERENCES administrative_area(id),
+  admin_area_level VARCHAR(20) NOT NULL,
+  start_year INT NOT NULL,
+  end_year INT NOT NULL,
+  years JSON NOT NULL, -- Array of years
+  overall_rates JSON NOT NULL, -- Array of overall rates
+  male_rates JSON, -- Array of male rates
+  female_rates JSON, -- Array of female rates
+  gender_parity_indices JSON, -- Array of gender parity indices
+  average_annual_change NUMERIC(5,2),
+  trend VARCHAR(20),
+  projected_future_rate NUMERIC(5,2),
+  projection_year INT,
+  analysis_notes TEXT,
+  analyzed_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  
+  CONSTRAINT uk_literacy_trend_area_period UNIQUE (admin_area_id, start_year, end_year)
+);
+
+-- Literacy disparity indicators
+CREATE TABLE literacy_disparity_indicator (
+  id UUID PRIMARY KEY,
+  literacy_statistics_id UUID NOT NULL REFERENCES literacy_statistics(id),
+  disparity_type VARCHAR(30) NOT NULL,
+  disparity_severity NUMERIC(5,2) NOT NULL,
+  possible_causes TEXT,
+  implications_description TEXT,
+  recommended_interventions TEXT,
+  detected_at TIMESTAMP NOT NULL,
+  is_verified BOOLEAN DEFAULT FALSE,
+  verified_by UUID,
+  verification_notes TEXT,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL
+);
+
+-- Literacy program impact
+CREATE TABLE literacy_program_impact (
+  id UUID PRIMARY KEY,
+  literacy_statistics_id UUID NOT NULL REFERENCES literacy_statistics(id),
+  program_name VARCHAR(100) NOT NULL,
+  start_date DATE,
+  end_date DATE,
+  participant_count INT,
+  pre_intervention_rate NUMERIC(5,2),
+  post_intervention_rate NUMERIC(5,2),
+  impact_score NUMERIC(5,2),
+  program_type VARCHAR(30),
+  completers_count INT,
+  completion_rate NUMERIC(5,2),
+  cost_per_participant NUMERIC(10,2),
+  return_to_education_rate NUMERIC(5,2),
+  evaluation_method VARCHAR(100),
+  implementing_agency_id UUID,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL
+);
+
+-- Literacy goals progress
+CREATE TABLE literacy_goals_progress (
+  id UUID PRIMARY KEY,
+  literacy_statistics_id UUID NOT NULL REFERENCES literacy_statistics(id),
+  goal_name VARCHAR(100) NOT NULL,
+  target_value NUMERIC(5,2),
+  current_value NUMERIC(5,2),
+  percent_towards_goal NUMERIC(5,2),
+  target_year INT,
+  interventions JSON, -- Array of intervention strings
+  on_track BOOLEAN,
+  challenges_faced TEXT,
+  last_assessed_at DATE,
+  assessed_by UUID,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL
+);
+
+-- Indexes for performance
+CREATE INDEX idx_literacy_admin_area ON literacy_statistics(admin_area_id);
+CREATE INDEX idx_literacy_admin_level ON literacy_statistics(admin_area_level);
+CREATE INDEX idx_literacy_year ON literacy_statistics(year);
+CREATE INDEX idx_literacy_census ON literacy_statistics(is_census_data);
+CREATE INDEX idx_literacy_confidence ON literacy_statistics(confidence_level);
+CREATE INDEX idx_literacy_previous ON literacy_statistics(previous_statistics_id);
+CREATE INDEX idx_literacy_by_age ON literacy_by_age(literacy_statistics_id);
+CREATE INDEX idx_literacy_by_education ON literacy_by_education(literacy_statistics_id);
+CREATE INDEX idx_literacy_disparity ON literacy_disparity_indicator(literacy_statistics_id);
+CREATE INDEX idx_literacy_trend_area ON literacy_trend_analysis(admin_area_id);
+CREATE INDEX idx_literacy_program ON literacy_program_impact(literacy_statistics_id);
+CREATE INDEX idx_literacy_goals ON literacy_goals_progress(literacy_statistics_id);
+```
+
+This database schema efficiently organizes the complex data required for literacy analysis while maintaining the relationships between entities. The use of proper foreign keys ensures referential integrity, while multiple indexes support the performance requirements of literacy queries across administrative levels and time periods.
+
+===== Nepal-Specific Implementation Details
+
+Several aspects of the schema are specifically designed for Nepal's literacy context:
+
+1. **Mother Tongue Literacy**: The schema includes support for literacy in multiple languages, reflecting Nepal's diverse linguistic landscape where many citizens are literate in one language but not another.
+
+2. **Administrative Structure**: The admin_area_level field accommodates Nepal's federal structure with its multiple administrative tiers (ward, municipality, district, province, country).
+
+3. **Dominant Script System**: The dominant_script_system field acknowledges that Nepal uses multiple script systems, primarily Devanagari but also others for ethnic languages.
+
+4. **Education Level Classifications**: The education levels are aligned with Nepal's education system structure, including technical/vocational options that are important in Nepal's education landscape.
+
+5. **Program Impact Tracking**: The dedicated tables for program impact and goals progress support Nepal's active literacy campaign efforts, allowing tracking of interventions like the National Literacy Campaign.
+
+6. **Disparity Analysis**: Strong support for identifying and analyzing literacy disparities helps address Nepal's challenges with literacy gaps between urban/rural areas, ethnic groups, and genders.
+
+These Nepal-specific features ensure the data model can accurately represent and analyze the country's unique literacy context and challenges, providing a foundation for evidence-based educational planning at all levels of governance.

@@ -1,0 +1,343 @@
+===== DataAggregatable Implementation
+
+The AbsenteePopulation entity implements the DataAggregatable interface to enable powerful aggregation of migration data across different administrative levels, time periods, and demographic dimensions.
+
+[plantuml]
+----
+@startuml
+participant "MigrationAnalysisService" as Service
+participant "AbsenteePopulation\nimplements DataAggregatable" as Absentee
+participant "AggregationEngine" as Engine
+participant "ValidationService" as Validation
+participant "AdminHierarchyService" as Hierarchy
+participant "MigrationPatternAnalyzer" as Analyzer
+
+Service -> Absentee: aggregateData(absenteeStats, targetLevel)
+activate Absentee
+
+Absentee -> Hierarchy: verifyAdminHierarchy(sourceIds, targetId)
+activate Hierarchy
+Absentee <-- Hierarchy: hierarchyVerified
+deactivate Hierarchy
+
+Absentee -> Absentee: validateForAggregation(absenteeStats)
+activate Absentee
+Absentee -> Absentee: checkAdminLevelConsistency()
+Absentee -> Absentee: checkTimeConsistency()
+Absentee -> Absentee: checkMethodologicalConsistency()
+Absentee -> Absentee: verifyNoStatisticalOverlap()
+Absentee <-- Absentee: aggregatableStats
+deactivate Absentee
+
+Absentee -> Engine: aggregateAbsenteePopulation(aggregatableStats)
+activate Engine
+Engine -> Engine: calculateTotalAbsentees()
+Engine -> Engine: aggregateByDestination()
+Engine -> Engine: aggregateByDuration()
+Engine -> Engine: aggregateByReason()
+Engine -> Engine: aggregateByDemographic()
+Engine -> Engine: aggregateByOccupation()
+Engine -> Engine: calculateRatesAndProportions()
+Absentee <-- Engine: aggregatedStatistics
+deactivate Engine
+
+Absentee -> Validation: validateAggregation(aggregatedStatistics)
+activate Validation
+Validation -> Validation: checkTotalConsistency()
+Validation -> Validation: verifyRateCalculations()
+Validation -> Validation: validateDemographicProportions()
+Absentee <-- Validation: validationResult
+deactivate Validation
+
+Absentee -> Absentee: finalizeAggregation(aggregatedStatistics)
+activate Absentee
+Absentee -> Absentee: setAdminAreaLevel(targetLevel)
+Absentee -> Absentee: setAdminAreaId(targetId)
+Absentee -> Absentee: assignConfidenceLevel()
+Absentee -> Absentee: recordSourceStatistics()
+Absentee -> Absentee: addAggregationMetadata()
+Absentee <-- Absentee: finalAggregatedStatistics
+deactivate Absentee
+
+Service <-- Absentee: aggregatedAbsenteeStatistics
+deactivate Absentee
+
+Service -> Absentee: aggregateTimePeriod(statisticsId, startYear, endYear, method)
+activate Absentee
+
+Absentee -> Absentee: getStatisticsForPeriod(statisticsId, startYear, endYear)
+activate Absentee
+Absentee <-- Absentee: periodStatistics
+deactivate Absentee
+
+Absentee -> Absentee: validateTimeSeriesStatistics(periodStatistics)
+activate Absentee
+Absentee -> Absentee: checkTemporalContinuity()
+Absentee -> Absentee: identifyMethodologicalBreaks()
+Absentee -> Absentee: validateConsistentGeography()
+Absentee <-- Absentee: validatedStatistics
+deactivate Absentee
+
+Absentee -> Engine: aggregateTimeSeries(validatedStatistics, method)
+activate Engine
+alt method == TREND_ANALYSIS
+  Engine -> Engine: calculateMigrationTrends()
+  Engine -> Engine: identifySeasonalPatterns()
+  Engine -> Engine: assessGrowthRates()
+else method == COHORT_ANALYSIS
+  Engine -> Engine: trackAbsencesByDuration()
+  Engine -> Engine: calculateReturnRates()
+  Engine -> Engine: analyzeRepeatMigration()
+else method == CUMULATIVE
+  Engine -> Engine: calculateTotalOutflows()
+  Engine -> Engine: assessNetMigrationFlow()
+  Engine -> Engine: evaluatePopulationImpact()
+else method == EVENT_IMPACT
+  Engine -> Engine: identifyEventRelatedChanges()
+  Engine -> Engine: quantifyEventImpacts()
+  Engine -> Engine: assessRecoveryTrajectories()
+end
+Absentee <-- Engine: timeAggregatedResult
+deactivate Engine
+
+Absentee -> Analyzer: analyzeMigrationPatterns(timeAggregatedResult)
+activate Analyzer
+Analyzer -> Analyzer: identifyCorridorDynamics()
+Analyzer -> Analyzer: detectEmergingDestinations()
+Analyzer -> Analyzer: assessCircularMigrationPatterns()
+Analyzer -> Analyzer: evaluateRemittanceCorrelations()
+Absentee <-- Analyzer: patternAnalysis
+deactivate Analyzer
+
+Absentee -> Absentee: finalizeTimeAggregation(timeAggregatedResult, patternAnalysis)
+activate Absentee
+Absentee -> Absentee: setTimeAggregationMetadata()
+Absentee -> Absentee: assignTemporalConfidenceScores()
+Absentee -> Absentee: recordAnalysisSummary()
+Absentee <-- Absentee: finalizedTimeAggregation
+deactivate Absentee
+
+Service <-- Absentee: timeAggregatedStatistics
+deactivate Absentee
+
+Service -> Absentee: aggregateByDemographic(statisticsId, demographicType)
+activate Absentee
+
+Absentee -> Absentee: getStatisticsForDemographic(statisticsId, demographicType)
+activate Absentee
+Absentee <-- Absentee: demographicStatistics
+deactivate Absentee
+
+Absentee -> Engine: aggregateDemographicPattern(demographicStatistics)
+activate Engine
+alt demographicType == AGE_GROUP
+  Engine -> Engine: calculateAgeDistribution()
+  Engine -> Engine: identifyHighMigrationAgeGroups()
+else demographicType == GENDER
+  Engine -> Engine: analyzeGenderDistribution()
+  Engine -> Engine: calculateGenderImbalanceMetrics()
+else demographicType == EDUCATION
+  Engine -> Engine: assessEducationLevelDistribution()
+  Engine -> Engine: calculateSkillComposition()
+else demographicType == ETHNICITY
+  Engine -> Engine: analyzeEthnicDistribution()
+  Engine -> Engine: identifyCommunityMigrationPatterns()
+end
+Absentee <-- Engine: demographicAggregation
+deactivate Engine
+
+Service <-- Absentee: demographicAggregatedStatistics
+deactivate Absentee
+@enduml
+----
+
+The AbsenteePopulation entity's implementation of DataAggregatable provides sophisticated capabilities for aggregating migration data across administrative boundaries, time periods, and demographic segments, addressing Nepal's complex migration patterns.
+
+===== Spatial Aggregation Implementation
+
+Spatial aggregation enables the combination of absentee population data from lower administrative levels to create aggregated statistics for higher administrative units, supporting Nepal's multi-tiered federal structure.
+
+*Administrative Hierarchy Validation*
+
+Before performing spatial aggregation, the system validates that the specified source statistics form a complete set for the target administrative unit:
+
+1. **Completeness Check**: Ensures all constituent units of the target administrative area are represented in the source data
+2. **Boundary Validation**: Confirms administrative boundaries have not changed between data collection periods
+3. **Hierarchical Consistency**: Validates that all source data belongs to the same administrative level
+
+This validation is particularly important in Nepal's context where the 2017 federal restructuring created new administrative boundaries, and migration data must be properly aggregated across these changing boundaries.
+
+*Migration-Specific Aggregation Methodology*
+
+The aggregation process applies specialized methods for absentee population data:
+
+1. **Origin-Destination Matrix Preservation**: Maintains the complex relationships between origin areas and migration destinations during aggregation
+
+2. **Demographic-Aware Aggregation**: Preserves important demographic characteristics of migrants (age, gender, education, occupation) during upward aggregation
+
+3. **Duration-Based Classification**: Maintains distinction between short-term, long-term, and permanent migration categories
+
+4. **Purpose-Based Categorization**: Preserves migration reason categories (labor, education, family, conflict, disaster) in aggregated data
+
+5. **Household Impact Integration**: Aggregates household-level impacts of migration to higher administrative levels
+
+*Confidence Level Propagation*
+
+The system propagates confidence information during aggregation:
+
+1. **Lowest Common Confidence**: The aggregated statistics receive the lowest confidence level of any constituent statistics
+
+2. **Estimation Transparency**: Clear labeling of which components of aggregated statistics are based on estimation versus direct enumeration
+
+3. **Methodological Discrepancy Penalty**: Confidence is reduced when combining data collected through different methodologies
+
+4. **Border Region Adjustment**: Special confidence reduction for areas with significant undocumented cross-border movement (particularly the Nepal-India border)
+
+*Special Considerations for Nepal*
+
+Several specialized aggregation features address Nepal's unique migration context:
+
+1. **Ecological Zone Differentiation**: Ability to maintain distinctions between mountain, hill, and terai (plains) migration patterns during upward aggregation
+
+2. **Remittance Corridor Preservation**: Special handling to maintain visibility of major remittance corridors in aggregated data
+
+3. **Seasonal Migration Patterns**: Mechanisms to preserve seasonal migration cycles in aggregated statistics
+
+4. **Post-Disaster Displacement**: Special categorization for disaster-induced temporary absence versus economic migration
+
+===== Temporal Aggregation Implementation
+
+Temporal aggregation enables analysis of migration trends over time and supports various time-based analysis methods.
+
+*Time Period Selection*
+
+The system supports flexible time period selection for aggregation:
+
+1. **Census Periods**: Aggregation between official census periods (2001, 2011, 2021)
+2. **Policy-Aligned Periods**: Time frames aligned with major migration policy changes or bilateral labor agreements
+3. **Custom Ranges**: User-defined time periods for specific analysis needs
+4. **Crisis-Based Periods**: Time frames surrounding major events affecting migration (earthquakes, economic crises, pandemics)
+
+*Data Continuity Validation*
+
+Before temporal aggregation, the system validates time series consistency:
+
+1. **Coverage Check**: Ensures consistent administrative coverage across time periods
+2. **Methodological Breaks**: Identifies and flags changes in data collection methodology
+3. **Definition Changes**: Adjusts for changes in how migration is categorized over time
+4. **Policy Impact Assessment**: Identifies periods with significant policy changes affecting migration data
+
+*Multiple Temporal Aggregation Methods*
+
+The system supports different approaches to temporal aggregation:
+
+1. **Trend Analysis**: Computing pattern lines to characterize migration changes:
+   - Linear trend analysis for overall migration rates
+   - Destination-specific trend analysis
+   - Gender-differentiated trend analysis
+   - Socioeconomic category trends
+
+2. **Cohort Analysis**: Following migration patterns for specific groups over time:
+   - Duration-based cohort analysis (tracking how many migrants return after specific periods)
+   - Repeat migration analysis (identifying patterns of circular migration)
+   - Age-group progression (how migration propensity changes as cohorts age)
+   - Education-based migration transitions
+
+3. **Cumulative Analysis**: Examining aggregate migration effects over periods:
+   - Total outflow calculations
+   - Net migration balance assessment
+   - Cumulative remittance impacts
+   - Accumulated skill transfer effects
+
+4. **Event Impact Analysis**: Studying how specific events affect migration:
+   - Pre-post event comparison
+   - Recovery trajectory analysis
+   - Policy intervention impact assessment
+   - Economic shock response patterns
+
+*Migration-Specific Time Series Considerations*
+
+Several temporal factors specific to migration data are addressed:
+
+1. **Migration Cycle Recognition**: Identification of recurring patterns in migration flows, particularly seasonal labor migration to India and agricultural cycles
+
+2. **Contract Period Alignment**: Analysis tools that align with common foreign employment contract periods (typically 2-3 years for Gulf countries)
+
+3. **Return Migration Tracking**: Methodologies to connect outmigration with subsequent return migration across time periods
+
+4. **Destination Switching Detection**: Identification of migrants changing destination countries in subsequent migrations
+
+*Smoothing and Projection Techniques*
+
+For incomplete time series data, the system provides:
+
+1. **Gap Filling**: Statistical methods to estimate missing years in incomplete migration time series
+2. **Trend Projection**: Forward projection of migration trends based on historical patterns and known causal factors
+3. **Scenario Modeling**: "What-if" analysis for different economic and policy scenarios affecting migration
+4. **Shock Response Modeling**: Specialized analysis of how migration responds to economic or environmental shocks
+
+===== Demographic Aggregation Implementation
+
+The system implements specialized demographic aggregation capabilities for migration data:
+
+*Age-Based Aggregation*
+
+1. **Age Band Customization**: Flexible age grouping to highlight migration-relevant age patterns
+2. **Working-Age Focus**: Special analysis of working-age population segments most prone to migration
+3. **Youth Migration Analysis**: Targeted aggregation of educational and early-career migration
+4. **Elderly Isolation**: Metrics on elderly populations with primary caregivers absent due to migration
+
+*Gender-Based Aggregation*
+
+1. **Gender-Specific Patterns**: Separate aggregation of male and female migration streams, which follow distinctly different patterns in Nepal
+2. **Household Responsibility Shifts**: Analysis of changing household leadership due to gendered migration
+3. **Feminization of Migration Tracking**: Metrics to track the increasing participation of women in international labor migration
+4. **Gender Gap Analysis**: Comparative analysis of male versus female migration rates, destinations, and return patterns
+
+*Education-Based Aggregation*
+
+1. **Skill Level Classification**: Aggregation by skill categories to track brain drain impacts
+2. **Educational Attainment Analysis**: Correlation between education levels and migration propensity
+3. **Student Migration Tracking**: Specialized metrics for educational migration
+4. **Technical Skills Mapping**: Analysis of technical and vocational skills lost through migration
+
+*Ethnicity-Based Aggregation*
+
+1. **Community Migration Patterns**: Aggregation of migration data by major ethnic and caste groups
+2. **Network Migration Analysis**: Identification of community-specific migration corridors
+3. **Cultural Factor Assessment**: Analysis of how cultural factors influence migration decisions
+4. **Linguistic Capability Correlation**: Relationship between language skills and destination selection
+
+===== Origin-Destination Matrix Aggregation
+
+A specialized feature of the AbsenteePopulation aggregation is the maintenance of origin-destination relationships:
+
+1. **Bilateral Flow Preservation**: Maintaining visibility of specific origin-destination pairs even in upward aggregation
+
+2. **Corridor Strength Calculation**: Metrics on the strength and maturity of specific migration corridors
+
+3. **Regional Specialization Detection**: Identification of regions with destination-specific migration patterns
+
+4. **Network Analysis Support**: Data structures supporting migration network analysis at various administrative levels
+
+This origin-destination preservation is particularly important for Nepal, where different regions have established distinct migration patterns (e.g., far-western districts to India, eastern hills to Gulf countries and Malaysia).
+
+===== Aggregation Edge Cases
+
+The implementation handles several important edge cases in migration data aggregation:
+
+1. **Completely Absent Households**: Special handling for households where all members are absent, which can be missed in conventional demographic surveys but are common in high-migration areas of Nepal.
+
+2. **Administrative Boundary Changes**: When boundaries change, historical migration data must be reaggregated to match current boundaries. The system uses spatial allocation methods to apportion historical migration data to new boundaries based on population distribution.
+
+3. **Irregular and Undocumented Migration**: Statistical techniques to estimate undocumented migration, particularly across the open border with India, ensuring that aggregations don't systematically undercount actual migration.
+
+4. **Conflict-Induced Displacement vs. Economic Migration**: Methods to distinguish between different types of population movement, particularly important for Nepal's post-conflict context.
+
+5. **Return Migration Attribution**: Techniques to link return migration with original outmigration events across different time periods and potentially different administrative units if internal relocation has occurred.
+
+6. **Transit Migration Handling**: Special processing for cases where Nepal serves as a transit country rather than origin or destination, maintaining the distinction from local migration patterns.
+
+7. **Refugee vs. Migrant Worker**: Clear categorization to distinguish refugee movements (particularly the Bhutanese and Tibetan refugee populations in Nepal) from economic migration patterns.
+
+This comprehensive DataAggregatable implementation enables sophisticated analysis of migration patterns across both administrative hierarchies and time periods, accounting for Nepal's complex migration dynamics, from cross-border seasonal movement to Gulf-based contract labor to educational migration to diversity visa emigration to developed countries.

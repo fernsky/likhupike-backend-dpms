@@ -1,0 +1,41 @@
+==== Demographic Projection
+
+Demographic Projection represents forward-looking population forecasts and scenario analyses for administrative areas, extending core domain models while providing specialized functionality for demographic planning.
+
+===== Core Model Integration
+
+include::demographic-projection/core-model-integration.adoc[leveloffset=+1]
+
+===== Projection Methodology
+
+include::demographic-projection/projection-methodology.adoc[leveloffset=+1]
+
+===== Scenario Management
+
+include::demographic-projection/scenario-management.adoc[leveloffset=+1]
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Demographic Projection is used in the system:
+
+include::demographic-projection/municipal-planning.adoc[leveloffset=+1]
+
+include::demographic-projection/healthcare-infrastructure.adoc[leveloffset=+1]
+
+include::demographic-projection/education-capacity-planning.adoc[leveloffset=+1]
+
+include::demographic-projection/labor-market-planning.adoc[leveloffset=+1]
+
+include::demographic-projection/retirement-system-sustainability.adoc[leveloffset=+1]
+
+===== Capability Implementations
+
+include::demographic-projection/custom-validatable-implementation.adoc[leveloffset=+1]
+
+include::demographic-projection/webhook-triggerable-implementation.adoc[leveloffset=+1]
+
+===== Additional Technical Details
+
+include::demographic-projection/data-model.adoc[leveloffset=+1]
+
+include::demographic-projection/events.adoc[leveloffset=+1]

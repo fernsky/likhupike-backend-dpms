@@ -1,0 +1,239 @@
+[plantuml]
+----
+@startuml
+|Projection Initialization|
+start
+:Select administrative area for projection;
+:Define baseline year and time horizon;
+:Retrieve baseline demographic data;
+
+|Component Selection|
+:Select projection methodology;
+note right
+  Available methods:
+  - Cohort Component Method
+  - Growth Rate Method
+  - Mathematical Models
+  - Structural Models
+  - Bayesian Probabilistic
+end note
+:Configure fertility assumptions;
+:Configure mortality assumptions;
+:Configure migration assumptions;
+:Define special assumptions;
+note right
+  Nepal-specific considerations:
+  - Labor migration patterns
+  - Earthquake impact recovery
+  - Urbanization acceleration
+  - Return migration scenarios
+  - Climate change effects
+end note
+
+|Scenario Definition|
+:Create baseline scenario;
+:Define alternative scenarios;
+note right
+  Common scenarios:
+  - High/low fertility
+  - High/low migration
+  - Policy intervention
+  - Disaster response
+  - Combined factors
+end note
+:Assign probability weights to scenarios;
+
+|Projection Execution|
+:Execute cohort progression;
+if (Using cohort component method?) then (yes)
+  :Project age cohorts forward;
+  :Apply fertility rates to generate births;
+  :Apply mortality rates by age-sex;
+  :Apply migration patterns by age-sex;
+else (no)
+  :Apply mathematical growth models;
+  :Distribute growth across demographic segments;
+endif
+:Calculate derived demographic indicators;
+:Apply spatial distribution patterns;
+
+|Uncertainty Analysis|
+:Perform sensitivity analysis;
+:Calculate confidence intervals;
+:Identify key uncertainty drivers;
+:Generate uncertainty visualizations;
+
+|Validation Process|
+:Compare with historical patterns;
+:Check against alternative models;
+:Validate demographic relationships;
+:Review extreme values and outliers;
+:Assess plausibility of outcomes;
+
+|Impact Assessment|
+:Analyze sectoral implications;
+:Project service demand changes;
+:Evaluate infrastructure requirements;
+:Assess socioeconomic impacts;
+:Generate policy recommendations;
+
+|Finalization|
+:Document methodology and assumptions;
+:Generate projection reports;
+:Prepare data for visualization;
+:Submit for review and approval;
+stop
+@enduml
+----
+
+The Demographic Projection entity implements a comprehensive, methodologically rigorous process for projecting future population characteristics. This process combines demographic theory with Nepal-specific contextual factors to produce projections that can inform policy and planning.
+
+===== Methodology Selection
+
+The system supports multiple projection methodologies to accommodate different purposes, timeframes, and data availability:
+
+1. **Cohort Component Method**: The primary method for comprehensive projections, which follows age-sex cohorts over time, applying fertility, mortality, and migration rates. This method produces detailed projections by age and sex, allowing for analysis of changing population structures. It is particularly valuable for projecting school-age populations, working-age populations, and elderly populations separately.
+
+2. **Growth Rate Method**: A simpler approach that projects total population based on observed or assumed growth rates. This method is useful for quick estimates and when detailed age-sex data is unavailable, but provides less insight into structural changes.
+
+3. **Mathematical Models**: Including exponential, logistic, and polynomial models that fit mathematical functions to historical population trends. These models can be useful for short-term projections in stable populations but are less reliable for capturing structural demographic shifts.
+
+4. **Structural Models**: These incorporate relationships between demographic variables and socioeconomic factors such as education, urbanization, and economic development. Particularly useful for policy intervention scenarios.
+
+5. **Bayesian Probabilistic Projection**: This advanced method incorporates uncertainty directly into the projection process, producing probability distributions rather than point estimates. This approach is especially valuable for longer-term projections where uncertainty increases.
+
+The methodology selection is guided by the projection's purpose, time horizon, data quality, and resources available for analysis. For most official projections in Nepal, the cohort component method is preferred due to its ability to capture structural demographic changes.
+
+===== Core Demographic Components
+
+Regardless of methodology, projections must address three fundamental demographic processes:
+
+*Fertility Projection*
+
+The system incorporates several approaches to projecting fertility:
+
+1. **Total Fertility Rate (TFR) Trends**: Analysis of historical TFR patterns and modeling of future trends, typically assuming continuation of fertility decline but at varying rates across scenarios
+
+2. **Age-Specific Fertility Rates (ASFR)**: Detailed modeling of fertility patterns by age group, essential for accurate birth projections
+
+3. **Socioeconomic Determinants**: Models that link fertility to factors such as female education, urbanization, economic development, and contraceptive prevalence
+
+4. **Nepal-Specific Factors**: Special consideration of factors like male labor migration, which affects marital fertility patterns, and cultural preferences regarding family size
+
+*Mortality Projection*
+
+Mortality projections incorporate:
+
+1. **Life Table Construction**: Building age-specific survival probabilities based on historical patterns and expected health improvements
+
+2. **Life Expectancy Trends**: Projecting future life expectancy gains, differentiated by gender and geographic region
+
+3. **Cause-of-Death Analysis**: For advanced projections, incorporating changing disease patterns and health intervention effects
+
+4. **Nepal-Specific Patterns**: Special consideration of factors such as spatial inequality in healthcare access, altitude effects on health, and disaster vulnerability
+
+*Migration Projection*
+
+Given Nepal's high mobility, migration projections are particularly important:
+
+1. **Internal Migration**: Modeling rural-urban flows, district-to-district movement, and emerging regional patterns
+
+2. **International Migration**: Projecting labor migration to India, Gulf countries, Malaysia, and other destinations
+
+3. **Return Migration**: Modeling patterns of return, particularly relevant as destination countries change policies or as migrants age
+
+4. **Migration Drivers Analysis**: Incorporating push factors (lack of opportunity, disasters) and pull factors (education, employment, services)
+
+5. **Special Considerations**: Modeling gendered migration patterns, educational selectivity in migration, and remittance effects on household formation
+
+===== Nepal-Specific Projection Factors
+
+The projection methodology incorporates several factors specific to Nepal's demographic context:
+
+1. **Post-Earthquake Recovery**: Special modeling of population redistribution and fertility/mortality effects following the 2015 earthquake
+
+2. **Federalization Impact**: Projection of population shifts due to the creation of new provincial and local government centers following Nepal's 2015 constitutional change
+
+3. **Climate Vulnerability**: Incorporation of potential displacement from climate-vulnerable areas, particularly in mountain regions facing glacial lake outburst flood risks
+
+4. **Caste/Ethnicity Dynamics**: Capability to produce differentiated projections by major caste/ethnic groups, acknowledging their distinct demographic behaviors
+
+5. **Economic Migration Cycles**: Modeling of dependency on migration cycles to Gulf countries and Malaysia, including potential disruption scenarios
+
+===== Scenario Development
+
+The system supports sophisticated scenario development to explore alternative demographic futures:
+
+1. **Standard Variant Set**: Most projections include at least three scenarios (medium, high, and low variants) that represent different combinations of fertility, mortality, and migration assumptions
+
+2. **Policy Intervention Scenarios**: Specialized scenarios that model the potential demographic impacts of specific policy changes:
+   - Educational expansion effects on fertility
+   - Healthcare improvement effects on mortality
+   - Economic development effects on migration
+   - Gender equality enhancement effects on multiple demographic parameters
+
+3. **Disaster Impact Scenarios**: Modeling population effects of potential major earthquakes, floods, or landslides
+
+4. **Structural Change Scenarios**: Exploring major shifts such as accelerated urbanization, economic transformation, or international migration policy changes
+
+5. **Compound Scenarios**: Combinations of multiple factors to explore complex but plausible futures
+
+Each scenario is assigned a relative probability or plausibility rating, allowing users to understand which outcomes are considered more or less likely based on current evidence.
+
+===== Uncertainty Handling
+
+Demographic projections inherently involve uncertainty, which increases with longer time horizons. The system employs several approaches to handle this uncertainty:
+
+1. **Confidence Intervals**: Calculating statistical confidence bounds for projected values, typically widening over time
+
+2. **Probabilistic Projections**: For some applications, full probabilistic projections that express results as probability distributions rather than point estimates
+
+3. **Scenario Spreads**: Using the range between high and low scenarios as an informal measure of uncertainty
+
+4. **Sensitivity Analysis**: Identifying which assumptions most strongly drive projection outcomes and merit closest attention
+
+5. **Time Horizon Appropriateness**: Enforcing shorter projection horizons when uncertainty is particularly high, and providing stronger caveats for longer-term projections
+
+===== Spatial Disaggregation
+
+The system supports projections at multiple administrative levels, with specialized methods for spatial disaggregation:
+
+1. **Top-Down Allocation**: Projecting national or provincial populations and then allocating to lower administrative levels based on historical distribution patterns
+
+2. **Bottom-Up Aggregation**: Projecting at local levels and aggregating upward, particularly useful when local growth dynamics vary significantly
+
+3. **Spatial Interaction Models**: For advanced applications, using models that incorporate factors like accessibility, land use, and economic opportunities to project migration between areas
+
+4. **Urban System Dynamics**: Specialized modeling of urban growth patterns, including core city growth, suburban expansion, and satellite town development
+
+In Nepal's context, spatial disaggregation is particularly important due to the country's extreme geographic diversity, with different demographic patterns in mountain, hill, and terai (plains) regions.
+
+===== Projection Validation
+
+To ensure projection quality, the system implements several validation approaches:
+
+1. **Historical Validation**: Testing projection methods against historical periods to assess accuracy
+
+2. **Expert Review**: Structured review process by demographic experts, particularly for official projections
+
+3. **Cross-Method Comparison**: Comparing results across different methodological approaches
+
+4. **Demographic Consistency Checks**: Verifying that projected age structures, sex ratios, and other demographic parameters remain plausible
+
+5. **International Comparison**: Benchmarking against similar countries and regions
+
+These validation processes help establish appropriate confidence levels for projections and identify potential methodological improvements.
+
+===== Special Projection Types
+
+The system supports several specialized projection types for specific planning purposes:
+
+1. **School-Age Population Projections**: Detailed projections of population by school grade level to support educational planning
+
+2. **Labor Force Projections**: Projecting working-age population combined with labor force participation assumptions to estimate future workforce size
+
+3. **Household Projections**: Converting population projections into household numbers using household formation rates, critical for housing and service planning
+
+4. **Special Population Projections**: Focused projections for specific groups like elderly, women of reproductive age, or voting-age population
+
+These specialized projections directly support sector-specific planning needs across government departments.

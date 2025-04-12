@@ -1,0 +1,347 @@
+===== Data Model
+
+The AbsenteePopulation entity implements a comprehensive data model to capture migration patterns, population movement, and their demographic impacts.
+
+[plantuml]
+----
+@startuml
+class AbsenteePopulation {
+  +UUID id
+  +UUID administrativeAreaId
+  +AdministrativeLevel adminLevel
+  +Integer year
+  +Integer quarter
+  +Date referenceDate
+  +Integer totalPopulation
+  +Integer totalAbsentPopulation
+  +Double absenteePercentage
+  +DataCollectionMethodology methodology
+  +ConfidenceLevel confidenceLevel
+  +String methodologyDescription
+  +Boolean isCensusData
+  +String dataSource
+  +Date lastUpdated
+  +UUID lastUpdatedBy
+}
+
+class MigrationCategory {
+  +UUID id
+  +UUID absenteePopulationId
+  +MigrationType type
+  +Integer count
+  +Double percentage
+  +String description
+}
+
+class DestinationRegion {
+  +UUID id
+  +UUID absenteePopulationId
+  +String destinationName
+  +DestinationType destinationType
+  +String countryCode
+  +String provinceCode
+  +String districtCode
+  +Integer count
+  +Double percentage
+  +Boolean isEstimated
+}
+
+class MigrationReason {
+  +UUID id
+  +UUID absenteePopulationId
+  +ReasonCategory category
+  +Integer count
+  +Double percentage
+  +String description
+  +Boolean isEstimated
+}
+
+class ReturneeStatus {
+  +UUID id
+  +UUID absenteePopulationId
+  +Integer returneeCount
+  +Double returneePercentage
+  +Integer plannedReturnCount
+  +Double averageAbsenceDuration
+  +Integer permanentMigrationCount
+  +Boolean isEstimated
+}
+
+class HouseholdImpact {
+  +UUID id
+  +UUID absenteePopulationId
+  +Integer affectedHouseholds
+  +Double percentageHouseholdsAffected
+  +Integer femaleHeadedDueToMigration
+  +Integer elderlyWithoutCaregivers
+  +Integer childrenWithAbsentParents
+  +Integer completelyAbsentHouseholds
+}
+
+class ForeignEmploymentRecord {
+  +UUID id
+  +UUID absenteePopulationId
+  +Integer laborPermitCount
+  +String topDestinations
+  +String majorOccupations
+  +Double averageContractDuration
+  +Double averageMonthlyRemittance
+  +Integer undocumentedEstimate
+  +String dataSource
+}
+
+class EducationalMigrationRecord {
+  +UUID id
+  +UUID absenteePopulationId
+  +Integer count
+  +String topDestinations
+  +String majorFieldsOfStudy
+  +Double averageDuration
+  +Integer returneeCount
+  +Double returnRate
+}
+
+class SeasonalMigrationPattern {
+  +UUID id
+  +UUID absenteePopulationId
+  +String sourceRegion
+  +String destinationRegion
+  +String migrationPeriod
+  +String returnPeriod
+  +String primaryActivity
+  +Integer estimatedCount
+  +String cycleDuration
+}
+
+enum MigrationType {
+  LABOR_MIGRATION
+  EDUCATIONAL
+  FAMILY_REUNIFICATION
+  CONFLICT_INDUCED
+  DISASTER_DISPLACEMENT
+  SEASONAL
+  PERMANENT_RESETTLEMENT
+  FOREIGN_EMPLOYMENT
+  DIPLOMATIC_SERVICE
+  MILITARY_SERVICE
+  OTHER
+}
+
+enum DestinationType {
+  INTERNAL_SAME_PROVINCE
+  INTERNAL_OTHER_PROVINCE
+  INTERNATIONAL_NEIGHBORING
+  INTERNATIONAL_GULF
+  INTERNATIONAL_EAST_ASIA
+  INTERNATIONAL_EUROPE
+  INTERNATIONAL_NORTH_AMERICA
+  INTERNATIONAL_OTHER
+}
+
+enum ReasonCategory {
+  EMPLOYMENT
+  EDUCATION
+  MARRIAGE
+  FAMILY_CARE
+  MEDICAL
+  DISASTER
+  CONFLICT
+  ECONOMIC_OPPORTUNITIES
+  SEASONAL_WORK
+  BUSINESS
+  GOVERNMENT_SERVICE
+  OTHER
+}
+
+enum AdministrativeLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  NATIONAL
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  ESTIMATED
+}
+
+enum DataCollectionMethodology {
+  CENSUS
+  SURVEY
+  ADMINISTRATIVE_RECORD
+  STATISTICAL_ESTIMATION
+  HYBRID
+}
+
+AbsenteePopulation "1" *-- "many" MigrationCategory : categories
+AbsenteePopulation "1" *-- "many" DestinationRegion : destinations
+AbsenteePopulation "1" *-- "many" MigrationReason : reasons
+AbsenteePopulation "1" *-- "1" ReturneeStatus : returneeStatus
+AbsenteePopulation "1" *-- "1" HouseholdImpact : householdImpact
+AbsenteePopulation "1" *-- "1" ForeignEmploymentRecord : foreignEmployment
+AbsenteePopulation "1" *-- "1" EducationalMigrationRecord : educationalMigration
+AbsenteePopulation "1" *-- "many" SeasonalMigrationPattern : seasonalPatterns
+
+MigrationCategory -- MigrationType
+DestinationRegion -- DestinationType
+MigrationReason -- ReasonCategory
+AbsenteePopulation -- AdministrativeLevel
+AbsenteePopulation -- ConfidenceLevel
+AbsenteePopulation -- DataCollectionMethodology
+@enduml
+----
+
+==== Core Entity Structure
+
+The AbsenteePopulation entity serves as the primary record for absentee population data within a specific administrative area and time period. It extends BaseEntity and implements several capability interfaces.
+
+===== Primary Attributes
+
+|===
+| Attribute | Type | Description
+| administrativeAreaId | UUID | Reference to the administrative area (ward, municipality, district, province, or national)
+| adminLevel | AdministrativeLevel | Level of the administrative area in Nepal's federal structure
+| year | Integer | Year of the absentee population data
+| quarter | Integer | Quarter (1-4) for quarterly data (nullable)
+| referenceDate | Date | Reference date for the absentee statistics
+| totalPopulation | Integer | Total official population of the administrative area
+| totalAbsentPopulation | Integer | Count of absent population at reference date
+| absenteePercentage | Double | Percentage of population that is absent
+| methodology | DataCollectionMethodology | Method used to collect the data
+| confidenceLevel | ConfidenceLevel | Confidence level in the data accuracy
+| methodologyDescription | String | Detailed description of methodology
+| isCensusData | Boolean | Whether this is from official census
+| dataSource | String | Source organization or system
+|===
+
+===== Related Components
+
+The AbsenteePopulation entity uses a composition pattern with several related entities that provide detailed information about different aspects of migration:
+
+1. **MigrationCategory**: Categorizes absentees by type of migration (labor, educational, etc.)
+   - Links migration volumes to specific types
+   - Allows analysis by migration category across geographies
+   - Supports trend analysis for each migration type
+
+2. **DestinationRegion**: Records domestic and international destinations
+   - Maps migration corridors from source to destination
+   - Supports origin-destination matrix analysis
+   - Enables geographic pattern detection in migration flows
+
+3. **MigrationReason**: Documents reasons for migration
+   - Captures motivations behind migration decisions
+   - Supports causal analysis of migration patterns
+   - Enables policy targeting based on migration drivers
+
+4. **ReturneeStatus**: Tracks return migration patterns
+   - Documents circular migration cycles
+   - Captures permanent versus temporary migration
+   - Records duration patterns of absence
+
+5. **HouseholdImpact**: Records impacts on household structure
+   - Captures de facto female-headed household creation
+   - Tracks children left behind by migrant parents
+   - Documents elderly left without caregivers
+   - Records completely absent households
+
+6. **ForeignEmploymentRecord**: Detailed information about labor migration
+   - Links to official labor migration data
+   - Tracks formal versus informal migration channels
+   - Records occupational distribution of migrants
+   - Estimates economic impact through remittances
+
+7. **EducationalMigrationRecord**: Tracks educational migration
+   - Documents student migration patterns
+   - Captures educational field distribution
+   - Tracks return rates after education completion
+   - Supports brain drain/gain analysis
+
+8. **SeasonalMigrationPattern**: Documents seasonal migration cycles
+   - Captures cyclical movement patterns
+   - Links to agricultural and climate cycles
+   - Documents traditional nomadic or semi-nomadic patterns
+   - Records economic activities associated with seasonal movement
+
+==== Nepal-Specific Model Features
+
+The AbsenteePopulation data model incorporates several features specific to Nepal's migration context:
+
+1. **Destination Types for Nepal's Migration Corridors**:
+   - INTERNAL_SAME_PROVINCE: Migration within the same province
+   - INTERNAL_OTHER_PROVINCE: Cross-province migration, particularly to Kathmandu Valley
+   - INTERNATIONAL_NEIGHBORING: Migration to India and China, with special emphasis on India due to the open border
+   - INTERNATIONAL_GULF: Migration to Gulf Cooperation Council countries, a major destination for Nepali workers
+   - INTERNATIONAL_EAST_ASIA: Migration to Malaysia, South Korea, and Japan
+   - INTERNATIONAL_EUROPE, NORTH_AMERICA: Emerging destinations with different migration patterns
+   
+2. **Nepal-Specific Reason Categories**:
+   - Includes categories particularly relevant to Nepal's context like disaster displacement (reflecting earthquake and flood impacts)
+   - Conflict-induced migration (reflecting Nepal's post-conflict context)
+   - Seasonal work (reflecting agricultural cycles in different ecological zones)
+
+3. **Administrative Level Alignment**:
+   - Aligns with Nepal's federal structure following the 2015 Constitution
+   - Supports tracking at ward, municipality, district, province, and national levels
+
+4. **Seasonal Migration Tracking**:
+   - Captures traditional seasonal migration patterns between ecological zones
+   - Documents India-Nepal seasonal labor flows
+   - Records high-altitude to low-altitude winter migrations
+   - Tracks transhumance (seasonal livestock herding migration)
+
+==== Data Quality Management
+
+The AbsenteePopulation entity implements robust data quality management through:
+
+1. **Multiple Confidence Levels**:
+   - HIGH: Census data with good coverage
+   - MEDIUM: Administrative data or robust surveys
+   - LOW: Limited survey or administrative data
+   - VERY_LOW: Significant estimation component
+   - ESTIMATED: Primarily derived through estimation
+
+2. **Methodology Documentation**:
+   - Explicit recording of data collection methodology
+   - Detailed description of estimation methods
+   - Source organization and method documentation
+   - Temporal consistency indicators
+
+3. **Estimation Flagging**:
+   - Clear indication of which components are directly measured versus estimated
+   - Particular focus on flagging estimates for undocumented migration
+   - Transparent handling of India migration estimates, which are often based on indirect methods due to the open border
+
+==== Technical Implementation Considerations
+
+The AbsenteePopulation data model is implemented with several technical considerations:
+
+1. **Temporal Dimensions**:
+   - Support for both annual and quarterly data
+   - Reference date tracking for point-in-time accuracy
+   - Time series compatibility for trend analysis
+
+2. **Statistical Aggregation Support**:
+   - Attributes designed to support correct statistical aggregation
+   - Clear population denominators for rate calculations
+   - Percentage fields pre-calculated for consistent representation
+
+3. **Flexible Categorization**:
+   - Extensible enumeration types allowing for addition of new categories
+   - Description fields for capturing nuance beyond categorization
+   - Support for multi-factor categorization through many-to-many relationships
+
+4. **Integration Hooks**:
+   - Designed for synchronization with external systems like the Foreign Employment Board
+   - Compatible with international migration databases
+   - Support for integration with census data systems
+
+5. **Spatial Analysis Capabilities**:
+   - Designed to support GIS integration
+   - Structured for migration corridor mapping
+   - Compatible with spatial visualization requirements
+
+This comprehensive data model provides the foundation for sophisticated migration analysis, policy planning, and service delivery targeting in Nepal's high-migration context.

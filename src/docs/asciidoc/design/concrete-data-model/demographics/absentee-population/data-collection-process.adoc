@@ -1,0 +1,225 @@
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Design absentee population questionnaire;
+:Train census enumerators on migration questions;
+:Develop proxy reporting protocols;
+
+|Field Data Collection|
+:Conduct household census interviews;
+:Document absent household members;
+:Record destination and duration of absence;
+:Collect migration reason information;
+note right
+  Nepal-specific challenges:
+  - High absentee rates in some VDCs
+  - Entire absent households missed
+  - Limited information from proxy reporters
+  - Undocumented cross-border movement to India
+end note
+
+|Foreign Employment Board|
+:Compile labor permit records;
+:Document authorized departures;
+:Track contract renewals;
+:Record official returnee data;
+note right
+  Documentation challenges:
+  - Undocumented labor migration
+  - Overstay beyond permit periods
+  - Non-renewal of permits while abroad
+  - Incomplete returnee tracking
+end note
+
+|Local Government|
+:Maintain migration registers;
+:Record household departures;
+:Update voter lists with absentees;
+:Document seasonal migration;
+note right
+  Local governance factors:
+  - Varying record quality between municipalities
+  - Limited capacity in rural municipalities
+  - Recent restructuring disrupting historical data
+  - Better tracking of high-remittance households
+end note
+
+|Department of Immigration|
+:Process passport and visa data;
+:Track immigration/emigration;
+:Categorize migration purposes;
+:Record destination countries;
+
+|System|
+:Import migration data from multiple sources;
+:Reconcile data inconsistencies;
+:Flag data quality concerns;
+:Generate absentee population metrics;
+:Calculate absence rates by demographic;
+
+|Remittance Service Providers|
+:Provide anonymized remittance flow data;
+:Map remittance corridors;
+:Document remittance recipient demographics;
+:Track remittance seasonality;
+
+|Missing Persons Unit|
+:Document unaccounted migrations;
+:Track human trafficking cases;
+:Identify involuntary disappearances;
+:Record refugee movement;
+
+|Statistical Analysis|
+:Validate migration patterns;
+:Estimate undocumented migration;
+:Adjust for data collection biases;
+:Calculate confidence intervals;
+:Prepare official migration statistics;
+
+|Quality Assurance|
+:Perform consistency checks;
+:Compare with prior migration waves;
+:Validate against destination country records;
+:Document estimation methods;
+:Flag data limitations;
+
+|Data Users|
+:Access migration statistics by geography;
+:View destination country distributions;
+:Analyze returnee demographics;
+:Examine temporal migration patterns;
+:Develop targeted support programs;
+
+stop
+@enduml
+----
+
+===== Multi-Source Data Integration
+
+Absentee population data presents unique collection challenges due to the mobile nature of the population being measured. Nepal's high international and internal migration rates require a sophisticated multi-source approach to data collection:
+
+1. **Census Enumeration (Primary Source)**
+   - The Central Bureau of Statistics conducts a census every 10 years
+   - Proxy reporting by household members for absent members
+   - Detailed questions on destination, duration, and purpose of absence
+   - Special protocols for completely absent households through neighbor interviews
+
+2. **Foreign Employment Board Records**
+   - Official labor permits issued for foreign employment
+   - Destination country, contract duration, and occupation data
+   - Return certification when migrant workers complete their contracts
+   - Special tracking for vulnerable destination countries
+
+3. **Local Government Registration**
+   - Ward-level migration registers maintained by local governments
+   - Particular focus on areas with high migration rates
+   - Regular updates through community reporting mechanisms
+   - Better coverage of internal migration than other sources
+
+4. **Immigration Department Data**
+   - Passport issuance and visa processing records
+   - Border crossing data (primarily at airports and major border posts)
+   - Limited coverage of India-Nepal border crossings due to open border policy
+   - Exit permits and return documentation
+
+5. **Specialized Surveys**
+   - Nepal Living Standards Survey includes detailed migration modules
+   - Labor Force Survey captures labor migration patterns
+   - Migration-focused surveys in high-migration districts
+   - Household registration drives by local governments
+
+Each data source has different strengths, coverage patterns, and limitations. The system implements a sophisticated data triangulation methodology to reconcile these sources.
+
+===== Nepal-Specific Data Collection Challenges
+
+Absentee population data collection in Nepal faces several unique challenges that require specialized methodological approaches:
+
+1. **Open Border with India**
+   - The Nepal-India open border allows undocumented movement
+   - Seasonal migration often goes unrecorded
+   - System applies estimation models for India-bound migration based on sample surveys
+   - Remittance patterns help validate migration estimates
+
+2. **Completely Absent Households**
+   - Some households have no members present during census enumeration
+   - Local key informant protocols capture information about entirely absent households
+   - Property tax records help identify abandoned versus temporarily vacant properties
+   - The system flags areas with unusually high complete household absence for verification
+
+3. **Proxy Reporting Limitations**
+   - Information about absent members is often provided by relatives
+   - Limited knowledge about exact destination, employment, or return plans
+   - System implements confidence scoring for proxy-reported data
+   - Cross-validation with destination country data when available
+
+4. **Politically Sensitive Migration**
+   - Undocumented labor migration to certain countries is politically sensitive
+   - Migration to conflict zones or for military service may be underreported
+   - System maintains transparency about knowledge gaps
+   - Multiple collection methodologies help overcome reporting biases
+
+5. **Post-Earthquake Migration**
+   - The 2015 earthquake created significant temporary displacement
+   - Distinguishing disaster displacement from economic migration
+   - System implements specialized categorization for disaster-induced absence
+   - Temporal analysis helps identify return patterns post-disaster
+
+===== Special Collection Methodologies
+
+To address these challenges, the system implements several specialized collection methods:
+
+1. **Snowball Sampling for Destination Communities**
+   - Identification of migrant networks at destinations through initial contacts
+   - Particularly effective for mapping Nepali communities in India, Gulf countries, and Malaysia
+   - Provides validation of migration estimates from source data
+
+2. **Remittance Triangulation**
+   - Using anonymized remittance flow data to validate migration patterns
+   - Particularly useful for destinations with limited official migration data
+   - Helps identify major undocumented migration corridors
+
+3. **Social Media Sampling**
+   - Analysis of location data from social media platforms
+   - Identification of Nepali expatriate community groups
+   - Used as a validation mechanism rather than primary source
+
+4. **Destination Country Collaboration**
+   - Bilateral data sharing with major destination countries
+   - Diplomatic missions providing aggregated statistics on Nepali nationals
+   - Special arrangements with countries hosting large Nepali populations
+
+5. **Satellite Imagery for Seasonal Movement**
+   - Using changes in settlement patterns visible in satellite imagery
+   - Particularly useful for tracking transhumance (seasonal herding migration) in mountain regions
+   - Validates seasonal movement patterns reported in other sources
+
+===== Data Quality Management
+
+Each AbsenteePopulation record includes explicit quality indicators:
+
+1. **Data Source Classification**:
+   - CENSUS (highest reliability for covered population)
+   - ADMINISTRATIVE (foreign employment and immigration records)
+   - SURVEY (sample-based estimates)
+   - LOCAL_GOVERNMENT (ward and municipality records)
+   - ESTIMATED (statistical projections where direct data unavailable)
+
+2. **Coverage Assessment**:
+   - Geographic coverage (which areas have reliable data)
+   - Demographic coverage (which population segments are well-represented)
+   - Temporal coverage (time periods with consistent data)
+
+3. **Confidence Scoring**:
+   - High (census data with good coverage)
+   - Medium (administrative data or robust surveys)
+   - Low (areas with known undercounting or methodological challenges)
+   - Very Low (pure estimates based on limited indicators)
+
+4. **Known Limitations Flag**:
+   - Explicit documentation of known data gaps
+   - Transparency about methodology limitations
+   - Guidance for appropriate interpretation and use
+
+These quality indicators ensure that data users understand the reliability of different aspects of absentee population data, which is particularly important for policymaking and resource allocation.

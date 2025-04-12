@@ -1,0 +1,235 @@
+===== CustomValidatable Implementation
+
+The DemographicChangeAnalysis entity implements the CustomValidatable interface to ensure demographic data integrity and analytical soundness through sophisticated validation mechanisms.
+
+[plantuml]
+----
+@startuml
+participant "PlanningDepartment" as Service
+participant "DemographicChangeAnalysis\nimplements CustomValidatable" as Demo
+participant "ValidationEngine" as Engine
+participant "MethodologyValidator" as Methodology
+participant "DataConsistencyValidator" as Consistency
+participant "TrendPlausibilityValidator" as Trend
+participant "ChangeSignificanceValidator" as Significance
+
+Service -> Demo: validate()
+activate Demo
+
+Demo -> Demo: prepareForValidation()
+activate Demo
+Demo -> Demo: gatherDemographicMeasures()
+Demo -> Demo: identifyTimeSeriesData()
+Demo -> Demo: collectReferenceBenchmarks()
+Demo -> Demo: retrieveRelatedDemographicData()
+Demo <-- Demo: validationContext
+deactivate Demo
+
+Demo -> Engine: validateDemographicAnalysis(context)
+activate Engine
+
+Engine -> Methodology: validateMethodology(analysis)
+activate Methodology
+Methodology -> Methodology: checkMethodologicalConsistency()
+Methodology -> Methodology: validateDataSourceReliability()
+Methodology -> Methodology: assessTimeframeAppropriateness()
+Methodology -> Methodology: evaluateConfidenceLevelAssignment()
+Engine <-- Methodology: methodologyValidationResults
+deactivate Methodology
+
+Engine -> Consistency: validateDataConsistency(analysis)
+activate Consistency
+Consistency -> Consistency: checkDemographicBalanceEquations()
+Consistency -> Consistency: validateAgeCohortRelationships()
+Consistency -> Consistency: assessSpatialConsistency()
+Consistency -> Consistency: checkAggregationIntegrity()
+Engine <-- Consistency: consistencyValidationResults
+deactivate Consistency
+
+Engine -> Trend: validateTrendPlausibility(analysis)
+activate Trend
+Trend -> Trend: assessHistoricalConsistency()
+Trend -> Trend: checkOutlierMagnitudes()
+Trend -> Trend: validateAnnualChangeRates()
+Trend -> Trend: compareWithDemographicModels()
+Engine <-- Trend: trendValidationResults
+deactivate Trend
+
+Engine -> Significance: validateChangeSignificance(analysis)
+activate Significance
+Significance -> Significance: checkStatisticalSignificance()
+Significance -> Significance: validatePracticalRelevance()
+Significance -> Significance: assessImpactPotential()
+Significance -> Significance: evaluateComparisonBases()
+Engine <-- Significance: significanceValidationResults
+deactivate Significance
+
+Engine -> Engine: compileFinalValidationResult()
+activate Engine
+Engine -> Engine: aggregateValidationResults()
+Engine -> Engine: prioritizeValidationIssues()
+Engine -> Engine: generateRecommendations()
+Engine -> Engine: assignValidationScore()
+Engine <-- Engine: finalValidationResult
+deactivate Engine
+
+Demo <-- Engine: validationResults
+deactivate Engine
+
+Demo -> Demo: handleValidationResults(results)
+activate Demo
+Demo -> Demo: updateValidationStatus()
+Demo -> Demo: storeValidationIssues()
+Demo -> Demo: applyCorrectionSuggestions()
+Demo -> Demo: logValidationProcess()
+Demo <-- Demo: processedResults
+deactivate Demo
+
+Service <-- Demo: validationResponse
+deactivate Demo
+
+Service -> Demo: registerValidator(customValidator)
+activate Demo
+Demo -> Demo: addToValidatorRegistry(customValidator)
+Service <-- Demo: validatorRegistered
+deactivate Demo
+
+Service -> Demo: getValidationRules()
+activate Demo
+Demo -> Demo: compileDemographicRules()
+Service <-- Demo: demographicValidationRules
+deactivate Demo
+@enduml
+----
+
+The DemographicChangeAnalysis entity implements CustomValidatable to enforce rigorous validation rules for demographic change data, ensuring that analyses are methodologically sound, statistically valid, and correctly interpreted.
+
+===== Demographic-Specific Validation Rules
+
+The implementation includes specialized validation rules that address the unique characteristics of demographic change analysis:
+
+*Demographic Balance Equation Validation*
+
+Every demographic change analysis must satisfy fundamental demographic equations:
+
+```
+Final Population = Initial Population + Births - Deaths + Immigration - Emigration
+```
+
+The validation engine checks these relationships across all demographic measures, ensuring mathematical consistency. For Nepal's context, this includes specialized handling for:
+
+1. **Migration Estimation**: Validating that migration estimates are plausible given Nepal's international mobility patterns
+2. **Age-Cohort Progression**: Ensuring that age cohort changes follow logical patterns over time
+3. **Component Method Consistency**: Verifying that population changes are consistent with component changes (births, deaths, migration)
+
+*Trend Plausibility Validation*
+
+The system applies demographic knowledge to validate trend plausibility:
+
+1. **Rate of Change Limits**: Ensuring demographic changes fall within historically plausible ranges
+   - Example: Fertility rate changes typically don't exceed 0.5 children per woman in a 5-year period
+
+2. **Transition Pattern Conformity**: Validating that changes follow known demographic transition patterns
+   - Example: Declining child mortality typically precedes declining fertility
+
+3. **Spatial Consistency**: Checking that geographic patterns of change are consistent with known mobility and development patterns
+   - Example: Rural-to-urban migration follows expected corridors based on infrastructure and economic opportunity
+
+4. **Temporal Logic**: Enforcing logical temporal sequences in demographic events
+   - Example: Working-age population changes follow youth population changes with appropriate time lag
+
+*Methodological Validation*
+
+The system validates the analytical methodologies used in demographic change analysis:
+
+1. **Appropriate Time Periods**: Ensuring that the time period selected is appropriate for the demographic phenomenon being analyzed
+   - Example: Migration analysis requires at least 5-year periods to distinguish trends from noise
+
+2. **Reference Period Selection**: Validating that comparison periods are methodologically sound
+   - Example: Comparing census years (2011 vs 2021) rather than mixing census and intercensal estimates
+
+3. **Data Source Compatibility**: Verifying that data sources being compared use compatible definitions and methodologies
+   - Example: Ensuring consistent definition of "urban" areas across time periods
+
+4. **Statistical Significance**: Validating that identified changes exceed statistical noise thresholds
+   - Example: Ensuring that a 2% change in literacy rate in a small ward is actually significant
+
+===== Nepal-Specific Validation Adaptations
+
+The validation implementation includes several adaptations specific to Nepal's demographic context:
+
+1. **Federal Restructuring Adjustment**: Special validation for analyses spanning Nepal's 2017 federal restructuring, which created new administrative boundaries
+
+2. **Disaster Impact Validation**: Enhanced plausibility checks for areas affected by the 2015 earthquake, which caused significant population displacement
+
+3. **Labor Migration Patterns**: Specialized validation for areas with high international labor migration, accounting for circular migration patterns
+
+4. **Census Methodology Changes**: Validation rules that account for changes in census methodology between 2011 and 2021
+
+5. **Multilingual Demographic Data**: Validation for consistency across data collected in multiple languages, particularly important in Nepal's diverse linguistic landscape
+
+These Nepal-specific validations ensure that demographic change analyses accurately reflect the country's unique demographic dynamics rather than flagging valid patterns as errors based on generic demographic assumptions.
+
+===== Dynamic Validation Registration
+
+The CustomValidatable implementation allows for dynamic registration of specialized validators:
+
+1. **Ecological Zone Validators**: Custom validators for mountain, hill, and terai regions, which have distinct demographic patterns
+
+2. **Ethnic Demographic Validators**: Specialized validators for areas with high concentrations of specific ethnic groups, whose demographic behaviors may differ from national patterns
+
+3. **Border Region Validators**: Custom validation for border areas with India, which have unique cross-border mobility patterns
+
+4. **Urban Tier Validators**: Different validation rules for metropolitan cities, sub-metropolitan cities, municipalities, and rural municipalities
+
+These dynamic validators can be registered at runtime, allowing the system to adapt validation to specific local contexts while maintaining a consistent validation framework.
+
+===== Validation Response Handling
+
+The implementation provides sophisticated handling of validation results:
+
+1. **Tiered Severity Classification**: Validation issues are classified from "Critical" (mathematical impossibilities) to "Advisory" (unusual but possible patterns)
+
+2. **Contextual Recommendations**: Each validation issue includes specific recommendations for resolution, tailored to the type of demographic data
+
+3. **Auto-Correction Suggestions**: Where appropriate, the system suggests specific corrections with statistical justification
+
+4. **Validation History**: Maintains a record of validation attempts, issues, and resolutions for audit purposes
+
+5. **Confidence Level Adjustment**: Automatically adjusts the confidence level of analyses based on validation results
+
+This approach ensures that demographic analyses maintain high quality standards while providing flexibility for Nepal's diverse demographic contexts.
+
+===== Integration with Demographic Change Events
+
+The validation system integrates with the domain event system, publishing validation-related events:
+
+1. **DemographicAnalysisValidatedEvent**: Published when validation completes, regardless of outcome
+
+2. **ValidationFailureEvent**: Triggered when critical validation issues are identified
+
+3. **AnomalyDetectedEvent**: Published when unusual but valid demographic patterns are detected
+
+4. **MethodologicalWarningEvent**: Triggered when methodological concerns are identified
+
+These events allow other system components to respond appropriately to validation results, such as flagging analyses for human review or adjusting confidence levels in dependent calculations.
+
+===== Real-World Example: Migration Impact Validation
+
+When validating a demographic analysis of migration impact in Dhading district:
+
+1. The system checks whether the reported decline in working-age males (-18% over 5 years) is demographically plausible
+
+2. The validation engine compares this decline against:
+   - Historical migration patterns in similar hill districts
+   - Labor migration statistics from the Department of Foreign Employment
+   - Age-sex pyramid changes in comparable districts
+
+3. The system validates that the decline is consistent with:
+   - Known destination countries for Nepali migrants
+   - Remittance data trends for the district
+   - Changes in household composition within the district
+
+4. Upon validation confirmation, the system adds a "High Migration Impact" tag and adjusts service planning recommendations accordingly
+
+This real-world example demonstrates how the CustomValidatable implementation ensures that demographic analyses accurately capture Nepal's complex migration dynamics while maintaining data integrity.

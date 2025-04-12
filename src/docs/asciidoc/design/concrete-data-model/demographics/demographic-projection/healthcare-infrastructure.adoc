@@ -1,0 +1,131 @@
+===== Healthcare Infrastructure Planning
+
+*Scenario:* Using demographic projections to plan healthcare facility development and service allocation
+
+[plantuml]
+----
+@startuml
+actor "Provincial Health\nDirectorate" as Health
+actor "Health Infrastructure\nPlanner" as Planner
+participant "DemographicProjection" as Demo
+participant "AgeStructureAnalysisService" as Age
+participant "HealthcareNeedsService" as Needs
+participant "GeographicAccessService" as Access
+participant "FacilityRequirementService" as Facility
+
+Health -> Demo: createProvinceHealthProjection(provinceId, 15)
+activate Demo
+Demo -> Demo: initializeWithHealthDemographics()
+Demo -> Demo: analyzePopulationAgeTransition()
+Demo -> Demo: createMortalityStructureScenarios()
+Demo -> Demo: projectMorbidityPatterns()
+Health <-- Demo: healthDemographicProjection
+deactivate Demo
+
+Health -> Age: analyzeAgingDynamics()
+activate Age
+Age -> Age: calculateAgeDependencyShifts()
+Age -> Age: projectElderlyPopulationGrowth()
+Age -> Age: analyzeChildPopulationTrends()
+Age -> Age: assessReproductiveAgeCohorts()
+Health <-- Age: ageStructureAnalysis
+deactivate Age
+
+Health -> Needs: projectHealthcareNeeds()
+activate Needs
+Needs -> Needs: calculateOutpatientServiceDemand()
+Needs -> Needs: estimateInpatientBedRequirements()
+Needs -> Needs: projectEmergencyServiceNeeds()
+Needs -> Needs: analyzeSpecialtyCareRequirements()
+Needs -> Needs: assessPreventiveHealthNeeds()
+Health <-- Needs: healthcareNeedsProjection
+deactivate Needs
+
+Planner -> Access: analyzeGeographicAccess()
+activate Access
+Access -> Access: mapTravelTimeToFacilities()
+Access -> Access: identifyAccessGaps()
+Access -> Access: projectTransportationChanges()
+Access -> Access: assessSeasonalAccessibility()
+Planner <-- Access: accessibilityAnalysis
+deactivate Access
+
+Planner -> Facility: calculateFacilityRequirements()
+activate Facility
+Facility -> Facility: determinePrimaryCareFacilities()
+Facility -> Facility: projectSecondaryHospitalNeeds()
+Facility -> Facility: estimateTertiaryCareRequirements()
+Facility -> Facility: analyzeSpecializedUnitNeeds()
+Facility -> Facility: calculateHealthWorkforceNeeds()
+Planner <-- Facility: facilityRequirementPlan
+deactivate Facility
+
+Health -> Demo: testHealthcareScenarios()
+activate Demo
+Demo -> Demo: modelBasicServiceScenario()
+Demo -> Demo: modelComprehensiveScenario()
+Demo -> Demo: analyzePreventionInvestmentScenario()
+Demo -> Demo: assessResourceConstrainedScenario()
+Health <-- Demo: scenarioComparisonAnalysis
+deactivate Demo
+
+Planner -> Planner: developImplementationStrategy()
+activate Planner
+Planner -> Planner: prioritizeFacilityInvestments()
+Planner -> Planner: establishConstructionTimeline()
+Planner -> Planner: designStaffingExpansionPlan()
+Planner -> Planner: createEquipmentAcquisitionStrategy()
+deactivate Planner
+
+Health -> Health: finalizeHealthcareInfrastructurePlan()
+activate Health
+Health -> Health: allocateCapitalBudget()
+Health -> Health: establishImportMechanismsForEquipment()
+Health -> Health: developMaintenanceStrategy()
+Health -> Health: createMonitoringFramework()
+deactivate Health
+
+Health -> Planner: implementHealthcareInfrastructurePlan()
+@enduml
+----
+
+*Real-World Context:*
+Karnali Province, Nepal's most remote and mountainous province, is developing a 15-year healthcare infrastructure plan. The province faces significant challenges in healthcare access, with many residents living several days' walk from the nearest health facility and health indicators substantially below national averages.
+
+The planning process begins with creating detailed demographic projections for the province. The baseline data shows Karnali's population of 1.68 million (2021) is widely dispersed across difficult terrain, with a crude birth rate of 24.8 per 1,000 (higher than the national average of 20.9) and a maternal mortality ratio nearly twice the national average. The age structure shows a higher proportion of children and lower proportion of working-age adults than the national average, influenced by high outmigration of working-age males.
+
+The projection system creates province-specific scenarios: The baseline scenario projects modest population growth to 1.87 million by 2036, with gradually declining fertility but also decreasing outmigration as local opportunities improve. The high-fertility scenario models slower adoption of family planning, reaching 2.01 million by 2036. The high-outmigration scenario envisions continued exodus of working-age residents, reaching only 1.72 million despite natural increase. Special attention is given to mortality structure scenarios, modeling different outcomes from healthcare investments.
+
+The Age Structure Analysis Service examines the changing composition of the population, identifying critical dynamics for healthcare planning. Age dependency is projected to improve slightly from 78.2 dependent persons per 100 working-age adults to 74.6 by 2036 in the baseline scenario. The elderly population (65+) is projected to increase by 68% over the planning period, growing from 5.8% to 8.4% of the total population, with significant implications for chronic disease management. Child population trends show a gradual decline in the proportion of under-5 children from 12.4% to 10.1%, suggesting declining but still significant demand for maternal and child health services.
+
+The Healthcare Needs Service translates these demographic projections into specific service requirements. Outpatient service demand is projected to increase by approximately 31% overall, but with a 78% increase for services commonly required by elderly populations (hypertension, diabetes, arthritis management). Inpatient bed requirements are projected to increase from the current 1,280 to approximately 1,890 by 2036, with changing distribution requirements matching population shifts. Emergency service needs assessment identifies the need for establishing trauma centers in strategic locations, given the province's high rates of accidents combined with difficult evacuation terrain.
+
+The Geographic Access Service conducts a detailed spatial analysis of healthcare accessibility. Travel time mapping reveals that only 38% of the population currently lives within two hours of a primary healthcare center, with some communities requiring up to three days to reach secondary care. Access gap identification highlights five priority areas where over 15,000 people have extremely limited healthcare access. Seasonal accessibility assessment shows that during monsoon season, approximately 22% of the population becomes effectively cut off from formal healthcare facilities due to road and trail conditions.
+
+Based on this comprehensive analysis, the Facility Requirement Service develops a healthcare infrastructure plan. The assessment determines a need for 24 additional primary healthcare centers and 4 additional primary hospitals strategically located to maximize population coverage within geographic constraints. Secondary hospital projections identify the need for expanding two existing facilities and establishing one new secondary hospital in the western part of the province. Tertiary care analysis recommends developing specialty services in the provincial capital rather than establishing a complete tertiary hospital, with critical cases continuing to require referral to facilities outside the province.
+
+The health workforce needs calculation reveals substantial human resource requirements: 68 additional doctors, 215 nurses, and 320 auxiliary health workers needed over the plan period. The analysis highlights particular shortages in specialist positions, recommending a scholarship program tied to mandatory service in the province to address critical gaps in specialties like obstetrics, anesthesiology, and geriatrics.
+
+The Provincial Health Directorate tests several healthcare investment scenarios against the demographic projections. The basic service scenario focuses on minimal standards of care across the province, while the comprehensive scenario models universal access to a broader range of services. The prevention investment scenario models greater resources for preventive care and its effect on future treatment needs. The resource-constrained scenario addresses the reality of limited provincial budgets, identifying the highest-impact investments if full funding is unavailable.
+
+Based on this analysis, the Health Infrastructure Planner develops a phased implementation strategy. The first phase (1-5 years) prioritizes establishing new primary care facilities in the most underserved areas and beginning construction of the new secondary hospital. The second phase (6-10 years) focuses on upgrading existing facilities to accommodate growing elderly care needs and establishing specialized units for non-communicable diseases. The third phase completes the facility network while emphasizing technological solutions like telemedicine to address specialist gaps.
+
+The final Healthcare Infrastructure Plan establishes a clear capital investment timeline requiring NPR 12.4 billion (approximately USD 103 million) over 15 years, with 54% coming from the federal conditional grants, 28% from provincial resources, and 18% from development partners. The plan includes specific equipment procurement strategies that acknowledge the challenges of maintaining complex medical equipment in remote settings, emphasizing appropriate technology choices and robust maintenance systems.
+
+This evidence-based approach allows Karnali Province to make strategic healthcare infrastructure investments that address both current access gaps and future demographic shifts, maximizing health impact despite limited resources and challenging geography.
+
+===== Special Considerations for Nepal's Healthcare Context
+
+The healthcare infrastructure planning application incorporates several considerations specific to Nepal's context:
+
+1. **Extreme Geographic Challenges**: Healthcare planning that addresses Nepal's mountainous terrain, where physical access is a primary constraint and specialized facility distribution strategies are required
+
+2. **Federalism Transition**: Consideration of evolving responsibilities between federal, provincial, and local governments in healthcare provision following Nepal's transition to federalism
+
+3. **Traditional Healing Integration**: Acknowledgment of traditional healing practices that remain important in remote areas and strategies for appropriate integration with formal healthcare
+
+4. **Seasonal Accessibility**: Planning that accounts for monsoon season isolation of communities when roads and trails become impassable
+
+5. **Altitude-Related Health Needs**: Recognition of specific health challenges in high-altitude communities, including higher rates of certain conditions and complications in care delivery
+
+By incorporating these contextual factors, demographic projections become a powerful tool for healthcare infrastructure planning that addresses Nepal's unique geographic, cultural, and institutional challenges.

@@ -1,0 +1,782 @@
+===== Domain Events
+
+The AbsenteePopulation entity publishes and consumes domain events to facilitate integration with other system components and maintain data consistency across demographic, economic, and governance domains.
+
+[plantuml]
+----
+@startuml
+class AbsenteePopulationCreatedEvent {
+  +UUID absenteePopulationId
+  +UUID adminAreaId
+  +String adminAreaLevel
+  +Integer year
+  +Integer totalAbsentPopulation
+  +Double absenteePercentage
+  +Boolean isCensusData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AbsenteePopulationUpdatedEvent {
+  +UUID absenteePopulationId
+  +UUID adminAreaId
+  +Integer year
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AbsenteePopulationImportedEvent {
+  +UUID absenteePopulationId
+  +UUID adminAreaId
+  +String importSource
+  +String importFormat
+  +Integer recordCount
+  +Boolean hadErrors
+  +String errorSummary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AbsenteePopulationQualityCheckedEvent {
+  +UUID absenteePopulationId
+  +UUID adminAreaId
+  +List<QualityCheckResult> checkResults
+  +Boolean passedAllChecks
+  +String suggestedActions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class MigrationPatternDetectedEvent {
+  +UUID patternId
+  +UUID adminAreaId
+  +PatternType patternType
+  +Double patternStrength
+  +String patternDescription
+  +Map<String, Object> patternDetails
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class RemittanceCorridorIdentifiedEvent {
+  +UUID corridorId
+  +UUID sourceAreaId
+  +String destinationCountry
+  +Double estimatedAnnualVolume
+  +Integer estimatedMigrantCount
+  +Double averageRemittance
+  +String majorOccupations
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class VulnerableHouseholdDetectedEvent {
+  +UUID vulnerabilityAssessmentId
+  +UUID adminAreaId
+  +VulnerabilityType vulnerabilityType
+  +Integer affectedHouseholdCount
+  +String vulnerabilityDescription
+  +Map<String, Object> vulnerabilityDetails
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ReturnMigrationSurgeDetectedEvent {
+  +UUID surgeDetnectionId
+  +UUID adminAreaId
+  +String primarySourceCountries
+  +Integer estimatedReturneeCount
+  +String potentialCauses
+  +String projectedImpacts
+  +Map<String, Object> surgeDetails
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AbsenteePopulationProjectedEvent {
+  +UUID sourceStatisticsId
+  +UUID projectedStatisticsId
+  +UUID adminAreaId
+  +Integer targetYear
+  +String projectionMethod
+  +String methodologyDescription
+  +ConfidenceLevel confidenceLevel
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AbsenteePopulationAggregatedEvent {
+  +UUID resultStatisticsId
+  +List<UUID> sourceStatisticsIds
+  +UUID targetAdminAreaId
+  +AdminAreaLevel resultLevel
+  +Integer year
+  +AggregationMethod method
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AbsenteePopulationComparedEvent {
+  +UUID baseStatisticsId
+  +UUID comparisonStatisticsId
+  +String comparisonType
+  +Map<String, Object> keyDifferences
+  +String analysisNotes
+  +Map<String, Double> changeMagnitudes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class MigrationTrendAnalyzedEvent {
+  +UUID trendAnalysisId
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startYear
+  +Integer endYear
+  +TrendDirection migrationTrend
+  +Double averageAnnualChange
+  +Integer projectedFutureMigration
+  +Integer projectionYear
+  +String analysisNotes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class MigrationImpactAssessedEvent {
+  +UUID impactAssessmentId
+  +UUID adminAreaId
+  +ImpactDimensionType dimensionType
+  +Double impactScore
+  +String impactDescription
+  +Map<String, Object> impactDetails
+  +String recommendedInterventions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ExternalSystemSyncCompletedEvent {
+  +UUID syncOperationId
+  +UUID absenteePopulationId
+  +String externalSystemId
+  +String syncDirection
+  +Integer recordsProcessed
+  +Integer recordsCreated
+  +Integer recordsUpdated
+  +Integer recordsRejected
+  +Map<String, Object> syncStatistics
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LaborMigrationDataUpdatedEvent {
+  +UUID foreignEmploymentRecordId
+  +UUID absenteePopulationId
+  +String sourceSystem
+  +Integer laborPermitCount
+  +Map<String, Integer> destinationCountryCounts
+  +Map<String, Integer> occupationalDistribution
+  +LocalDateTime recordPeriodStart
+  +LocalDateTime recordPeriodEnd
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum PatternType {
+  SEASONAL_CYCLE
+  DESTINATION_SHIFT
+  CIRCULAR_MIGRATION
+  STEP_MIGRATION
+  CHAIN_MIGRATION
+  BRAIN_DRAIN
+  FAMILY_MIGRATION
+  DISTRESS_MIGRATION
+  RETURN_FLOW
+  INTERNAL_DISPLACEMENT
+}
+
+enum VulnerabilityType {
+  ELDERLY_WITHOUT_CARE
+  CHILDREN_LEFT_BEHIND
+  FEMALE_HEADED_HOUSEHOLD
+  REMITTANCE_DEPENDENT
+  COMPLETELY_ABSENT
+  DISABLED_MEMBER_WITHOUT_CARE
+  DEBT_BURDENED_MIGRATION
+  UNDOCUMENTED_MIGRATION
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AggregationMethod {
+  SUM
+  WEIGHTED_AVERAGE
+  PROPORTIONAL
+  CUSTOM
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  ACCELERATING
+  DECELERATING
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum ImpactDimensionType {
+  ECONOMIC
+  SOCIAL
+  DEMOGRAPHIC
+  LABOR_MARKET
+  GENDER_ROLES
+  AGRICULTURAL
+  HOUSING_MARKET
+  CHILD_WELFARE
+  ELDERLY_CARE
+  HEALTHCARE_ACCESS
+  EDUCATIONAL
+  POLITICAL
+}
+
+class QualityCheckResult {
+  +String checkType
+  +Boolean passed
+  +Double score
+  +String description
+  +String recommendation
+}
+
+abstract class DomainEvent
+DomainEvent <|-- AbsenteePopulationCreatedEvent
+DomainEvent <|-- AbsenteePopulationUpdatedEvent
+DomainEvent <|-- AbsenteePopulationImportedEvent
+DomainEvent <|-- AbsenteePopulationQualityCheckedEvent
+DomainEvent <|-- MigrationPatternDetectedEvent
+DomainEvent <|-- RemittanceCorridorIdentifiedEvent
+DomainEvent <|-- VulnerableHouseholdDetectedEvent
+DomainEvent <|-- ReturnMigrationSurgeDetectedEvent
+DomainEvent <|-- AbsenteePopulationProjectedEvent
+DomainEvent <|-- AbsenteePopulationAggregatedEvent
+DomainEvent <|-- AbsenteePopulationComparedEvent
+DomainEvent <|-- MigrationTrendAnalyzedEvent
+DomainEvent <|-- MigrationImpactAssessedEvent
+DomainEvent <|-- ExternalSystemSyncCompletedEvent
+DomainEvent <|-- LaborMigrationDataUpdatedEvent
+
+MigrationPatternDetectedEvent -- PatternType
+VulnerableHouseholdDetectedEvent -- VulnerabilityType
+AbsenteePopulationProjectedEvent -- ConfidenceLevel
+AbsenteePopulationAggregatedEvent -- AdminAreaLevel
+AbsenteePopulationAggregatedEvent -- AggregationMethod
+AbsenteePopulationQualityCheckedEvent *-- "many" QualityCheckResult
+MigrationTrendAnalyzedEvent -- TrendDirection
+MigrationTrendAnalyzedEvent -- AdminAreaLevel
+MigrationImpactAssessedEvent -- ImpactDimensionType
+@enduml
+----
+
+==== Core Domain Events
+
+===== AbsenteePopulationCreatedEvent
+
+Triggered when a new absentee population dataset is created for an administrative area.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| absenteePopulationId | Unique identifier of the newly created absentee population statistics
+| adminAreaId | Administrative area this statistics belongs to
+| adminAreaLevel | Level of the administrative area (WARD, MUNICIPALITY, etc.)
+| year | Year of the absentee population data
+| totalAbsentPopulation | Total count of absent population
+| absenteePercentage | Percentage of population that is absent
+| isCensusData | Whether this is official census data
+| timestamp | When the event occurred
+| actorId | User or system that created the statistics
+|===
+
+*Business Impact:* This event initiates various secondary processes including data quality checks, pattern detection, and vulnerability assessments. In Nepal's context, new absentee population data is particularly significant for migration management planning, remittance policy, and service provision in high-migration communities.
+
+===== AbsenteePopulationUpdatedEvent
+
+Triggered when changes are made to existing absentee population data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| absenteePopulationId | Identifier of the updated statistics
+| adminAreaId | Administrative area identifier
+| year | Year of the statistics data
+| changedFields | Map of fields that were changed with their old and new values
+| updateType | Type of update (CORRECTION, REVISION, ENHANCEMENT)
+| isRevision | Whether this is an official revision
+| updateReason | Reason for the update
+| timestamp | When the event occurred
+| actorId | User who made the update
+|===
+
+*Business Impact:* This event may trigger recalculation of migration indicators, re-aggregation of higher-level administrative areas, and reassessment of migration trends. For Nepal, the ability to track changes is especially important for maintaining transparency in migration data, which influences policies related to labor export, returnee support, and development planning.
+
+===== AbsenteePopulationImportedEvent
+
+Triggered when absentee population data is imported from an external source.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| absenteePopulationId | Identifier of the imported statistics
+| adminAreaId | Administrative area identifier
+| importSource | Source of the imported data (CBS, Foreign Employment Board, etc.)
+| importFormat | Format of the imported data (CSV, Excel, etc.)
+| recordCount | Number of records imported
+| hadErrors | Whether there were errors during import
+| errorSummary | Summary of any errors encountered
+| timestamp | When the import occurred
+| actorId | User who performed the import
+|===
+
+*Business Impact:* Data import is a common operation in Nepal's migration statistics system, where absentee data may originate from multiple sources including the Central Bureau of Statistics, Foreign Employment Board, Department of Immigration, and international organizations. This event initiates data validation processes and ensures proper attribution of data sources.
+
+==== Specialized Domain Events
+
+===== MigrationPatternDetectedEvent
+
+Triggered when significant migration patterns are detected in the data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| patternId | Identifier of the detected pattern
+| adminAreaId | Administrative area identifier
+| patternType | Type of migration pattern detected
+| patternStrength | Quantified strength of the pattern
+| patternDescription | Description of the identified pattern
+| patternDetails | Detailed information about the pattern
+| timestamp | When the pattern was detected
+| actorId | User or system that detected the pattern
+|===
+
+*Business Impact:* Pattern detection helps identify emerging migration trends that may require policy interventions. In Nepal, this has been particularly valuable for detecting shifts in destination countries (e.g., the growth of South Korea as a destination) or changes in migration driver patterns (e.g., post-disaster migration surges).
+
+===== RemittanceCorridorIdentifiedEvent
+
+Triggered when a significant remittance corridor is identified.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| corridorId | Identifier of the remittance corridor
+| sourceAreaId | Source administrative area identifier
+| destinationCountry | Destination country of migrants
+| estimatedAnnualVolume | Estimated annual remittance volume
+| estimatedMigrantCount | Estimated number of migrants in corridor
+| averageRemittance | Average remittance per migrant
+| majorOccupations | Primary occupations in this corridor
+| timestamp | When the corridor was identified
+| actorId | User or system that identified the corridor
+|===
+
+*Business Impact:* Remittance corridors are critical to Nepal's economy, where remittances constitute approximately 25% of GDP. This event allows financial systems, development planners, and economic analysts to understand and monitor these vital economic lifelines and design appropriate financial services for specific corridors.
+
+===== VulnerableHouseholdDetectedEvent
+
+Triggered when the system identifies household vulnerabilities related to migration.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| vulnerabilityAssessmentId | Identifier of the vulnerability assessment
+| adminAreaId | Administrative area identifier
+| vulnerabilityType | Type of vulnerability detected
+| affectedHouseholdCount | Number of affected households
+| vulnerabilityDescription | Description of the vulnerability
+| vulnerabilityDetails | Detailed information about the vulnerability
+| timestamp | When the vulnerability was identified
+| actorId | User or system that identified the vulnerability
+|===
+
+*Business Impact:* Migration creates specific vulnerabilities in households, such as elderly left without caregivers or children with absent parents. This event allows social welfare systems to identify and prioritize interventions for these vulnerable populations, which is particularly important in Nepal's high-migration districts where social support systems may be strained.
+
+===== ReturnMigrationSurgeDetectedEvent
+
+Triggered when a significant surge in return migration is detected.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| surgeDetectionId | Identifier of the surge detection
+| adminAreaId | Administrative area identifier
+| primarySourceCountries | Main countries migrants are returning from
+| estimatedReturneeCount | Estimated number of returnees
+| potentialCauses | Potential causes of the return surge
+| projectedImpacts | Projected impacts on local economy and services
+| surgeDetails | Detailed information about the return surge
+| timestamp | When the surge was detected
+| actorId | User or system that detected the surge
+|===
+
+*Business Impact:* Return migration surges, like those seen during the COVID-19 pandemic or Gulf diplomatic crises, create sudden pressure on local economies and services. This event allows government agencies to mobilize appropriate support services, reintegration programs, and economic interventions to manage these periodic return waves.
+
+===== AbsenteePopulationProjectedEvent
+
+Triggered when a new absentee population projection is created for a future year.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| sourceStatisticsId | Identifier of the source statistics
+| projectedStatisticsId | Identifier of the created projection
+| adminAreaId | Administrative area identifier
+| targetYear | Year being projected
+| projectionMethod | Projection method used
+| methodologyDescription | Description of methodology
+| confidenceLevel | Confidence level of the projection
+| timestamp | When the projection was created
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Projections are essential for Nepal's planning processes, particularly for anticipating future migration patterns, remittance flows, and potential pressure points in high-migration areas. This event allows planning departments to be notified of new migration projections relevant to their sector and geography.
+
+===== MigrationImpactAssessedEvent
+
+Triggered when an assessment of migration's impact on a community is completed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| impactAssessmentId | Identifier of the impact assessment
+| adminAreaId | Administrative area identifier
+| dimensionType | Type of impact dimension assessed
+| impactScore | Quantified impact score
+| impactDescription | Description of the identified impact
+| impactDetails | Detailed information about the impact
+| recommendedInterventions | Suggested interventions to address impacts
+| timestamp | When the assessment was performed
+| actorId | User who performed the assessment
+|===
+
+*Business Impact:* Migration has profound and complex impacts on source communities, from labor market changes to social structure shifts. This event supports the development of targeted interventions to address both positive and negative impacts of migration in Nepal's communities, such as specialized agricultural programs for areas with labor shortages or educational support for children of migrants.
+
+===== ExternalSystemSyncCompletedEvent
+
+Triggered when synchronization with an external migration-related system is completed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| syncOperationId | Identifier of the synchronization operation
+| absenteePopulationId | Identifier of the absentee population statistics
+| externalSystemId | Identifier of the external system
+| syncDirection | Direction of synchronization (IMPORT, EXPORT, BIDIRECTIONAL)
+| recordsProcessed | Number of records processed during sync
+| recordsCreated | Number of new records created
+| recordsUpdated | Number of existing records updated
+| recordsRejected | Number of records rejected during sync
+| syncStatistics | Detailed statistics about the synchronization
+| timestamp | When the synchronization occurred
+| actorId | User or system that initiated the synchronization
+|===
+
+*Business Impact:* Migration data in Nepal is distributed across multiple systems including the Foreign Employment Board, Department of Immigration, and census databases. This event provides transparency and traceability for data synchronization operations, ensuring that stakeholders are aware of data updates from external sources.
+
+===== LaborMigrationDataUpdatedEvent
+
+Triggered when labor migration-specific data is updated.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| foreignEmploymentRecordId | Identifier of the foreign employment record
+| absenteePopulationId | Related absentee population statistics ID
+| sourceSystem | Source system of the labor data
+| laborPermitCount | Number of labor permits issued
+| destinationCountryCounts | Distribution of migrants by destination country
+| occupationalDistribution | Distribution of migrants by occupation
+| recordPeriodStart | Start of the record period
+| recordPeriodEnd | End of the record period
+| timestamp | When the update occurred
+| actorId | User or system that updated the data
+|===
+
+*Business Impact:* Labor migration is the dominant form of international migration from Nepal, and this specific event supports specialized labor migration analysis, skill-development planning, and labor diplomacy with destination countries. It allows education and training systems to align with international labor market demands and helps diplomatic missions plan appropriate consular resources.
+
+==== Event Handling Architecture
+
+[plantuml]
+----
+@startuml
+participant "ForeignEmploymentService" as Service
+participant "AbsenteePopulation" as Absentee
+participant "EventPublisher" as Publisher
+participant "QualityCheckService" as Quality
+participant "PatternDetectionService" as Pattern
+participant "VulnerabilityAssessment" as Vulnerability
+participant "NotificationService" as Notify
+participant "IndexingService" as Index
+participant "AuditService" as Audit
+
+Service -> Absentee: createAbsenteePopulation(adminAreaId, year, data)
+activate Absentee
+
+Absentee -> Absentee: constructAbsenteeStatistics()
+Absentee -> Absentee: calculateMigrationRates()
+Absentee -> Publisher: publishEvent(AbsenteePopulationCreatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Quality: scheduleQualityChecks(absenteePopulationId)
+activate Quality
+Quality -> Quality: performDataChecks()
+Quality -> Quality: validateMigrationConsistency()
+Quality -> Quality: checkDemographicDistribution()
+Quality -> Publisher: publishEvent(AbsenteePopulationQualityCheckedEvent)
+Publisher <-- Quality: checksScheduled
+deactivate Quality
+
+Publisher -> Pattern: detectMigrationPatterns(absenteePopulationId)
+activate Pattern
+Pattern -> Pattern: analyzeSeasonalPatterns()
+Pattern -> Pattern: detectDestinationShifts()
+Pattern -> Pattern: identifyCircularMigration()
+Pattern -> Publisher: publishEvent(MigrationPatternDetectedEvent)
+Publisher <-- Pattern: patternDetectionTriggered
+deactivate Pattern
+
+Publisher -> Vulnerability: assessVulnerability(absenteePopulationId)
+activate Vulnerability
+Vulnerability -> Vulnerability: identifyVulnerableHouseholds()
+Vulnerability -> Vulnerability: assessRemittanceDependence()
+Vulnerability -> Vulnerability: evaluateCaregiverAbsence()
+Vulnerability -> Publisher: publishEvent(VulnerableHouseholdDetectedEvent)
+Publisher <-- Vulnerability: vulnerabilityAssessmentTriggered
+deactivate Vulnerability
+
+Publisher -> Index: updateSearchIndex(absenteePopulationId)
+activate Index
+Index -> Index: extractSearchableFields()
+Index -> Index: buildIndexEntries()
+Publisher <-- Index: indexUpdated
+deactivate Index
+
+Publisher -> Notify: sendAnalystNotification(absenteePopulationId)
+activate Notify
+Notify -> Notify: identifyInterestedStakeholders()
+Notify -> Notify: prepareNotificationContent()
+Notify -> Notify: dispatchNotifications()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Absentee <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Absentee: absenteePopulationCreated
+deactivate Absentee
+
+Service -> Absentee: updateAbsenteePopulation(absenteePopulationId, updatedData)
+activate Absentee
+Absentee -> Absentee: validateUpdates()
+Absentee -> Absentee: applyChanges()
+Absentee -> Absentee: recalculateMigrationRates()
+Absentee -> Publisher: publishEvent(AbsenteePopulationUpdatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Pattern: reassessMigrationPatterns(absenteePopulationId)
+activate Pattern
+Pattern -> Pattern: reevaluateDetectedPatterns()
+Publisher <-- Pattern: reassessmentTriggered
+deactivate Pattern
+
+Publisher -> Vulnerability: updateVulnerabilityAssessment(absenteePopulationId)
+activate Vulnerability
+Vulnerability -> Vulnerability: recalculateVulnerabilityMetrics()
+Publisher <-- Vulnerability: assessmentUpdateTriggered
+deactivate Vulnerability
+
+Publisher -> Index: updateSearchIndex(absenteePopulationId)
+activate Index
+Publisher <-- Index: indexUpdated
+deactivate Index
+
+Publisher -> Notify: sendUpdateNotification(absenteePopulationId, changedFields)
+activate Notify
+Notify -> Notify: identifyImpactedStakeholders()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Absentee <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Absentee: absenteePopulationUpdated
+deactivate Absentee
+@enduml
+----
+
+The diagram above illustrates how events flow through the system when absentee population data is created or updated. The process demonstrates several key patterns:
+
+1. **Event-Driven Data Quality Assurance**: Data quality checks are triggered automatically after creation events, ensuring all migration data is validated for consistency and plausibility.
+
+2. **Automatic Analysis Workflows**: The creation of absentee statistics automatically triggers specialized analysis processes including pattern detection and vulnerability assessment.
+
+3. **Stakeholder Notification**: Relevant stakeholders are notified of migration data changes that affect their domains, ensuring that planning is based on the latest information.
+
+4. **Audit Trail**: All events are recorded for audit purposes, maintaining transparency and traceability in migration data management.
+
+5. **Search Indexing**: New and updated migration data is automatically indexed for search capabilities, enabling efficient discovery of migration patterns.
+
+==== Event Application Use Cases
+
+===== Labor Migration Monitoring and Protection
+
+When new absentee population data reveals vulnerability patterns in labor migration:
+
+1. The `AbsenteePopulationCreatedEvent` triggers automatic analysis.
+2. The PatternDetectionService identifies emerging destination countries with high risk factors.
+3. The `MigrationPatternDetectedEvent` is published with patternType = DESTINATION_SHIFT.
+4. The Foreign Employment Board receives notification about the changing destination pattern.
+5. Diplomatic missions adjust consular service provisions based on emerging migration corridors.
+6. Pre-departure training programs update content to address risks in new destination countries.
+
+This process ensures that Nepal's labor migration management systems can quickly adapt to changing migration patterns, particularly important given the dynamic nature of international labor markets and the vulnerability of migrant workers to exploitation.
+
+===== Remittance Flow Optimization
+
+When analyzing economic dimensions of migration:
+
+1. A `RemittanceCorridorIdentifiedEvent` is published after analyzing migration-remittance patterns.
+2. The event includes details on transfer methods, volumes, and costs in specific corridors.
+3. Financial institutions receive notifications about significant remittance corridors.
+4. Central bank and commercial bank services target high-volume corridors for cost reduction.
+5. Digital financial services develop tailored products for specific migration corridors.
+
+This process supports Nepal's remittance-dependent economy by optimizing remittance channels, reducing transfer costs, and improving financial services for migrants and their families, which is critical in a country where remittances constitute approximately 25% of GDP.
+
+===== Vulnerable Household Support
+
+When identifying migration-related social vulnerabilities:
+
+1. The `VulnerableHouseholdDetectedEvent` identifies communities with high rates of children with absent parents.
+2. Local government social welfare departments receive notifications about affected households.
+3. The system suggests targeted interventions based on vulnerability profiles.
+4. School support programs are mobilized for areas with high rates of parental absence.
+5. Community care networks are established for elderly left without caregivers.
+
+This event-driven approach helps address the social costs of migration in Nepal, ensuring that the benefits of migration (primarily economic) are not outweighed by social costs to vulnerable household members, particularly children, women, and the elderly.
+
+===== Return Migration Crisis Response
+
+When detecting unusual return migration patterns:
+
+1. A `ReturnMigrationSurgeDetectedEvent` identifies a sudden increase in returns from Gulf countries.
+2. The event captures scale, source countries, and potential causes.
+3. Emergency response systems are notified of potential service pressure points.
+4. Local governments in high-migration areas prepare reception services.
+5. Employment agencies receive alerts about returning worker profiles and skills.
+6. Reintegration programs scale up to accommodate increased returnee volume.
+
+This process supports Nepal's ability to respond to periodic migration crises, like those seen during the COVID-19 pandemic or Gulf diplomatic disputes, when thousands of migrant workers may return suddenly, creating both humanitarian needs and economic pressures.
+
+===== Migration Impact on Agricultural Systems
+
+When analyzing sectoral impacts of migration:
+
+1. A `MigrationImpactAssessedEvent` with dimensionType = AGRICULTURAL identifies labor shortages affecting farming.
+2. The event provides detailed analysis of specific agricultural activities impacted.
+3. Agricultural extension services receive notifications about affected areas.
+4. The system suggests targeted mechanization initiatives for migration-affected areas.
+5. Agricultural cooperatives receive recommendations for labor-sharing arrangements.
+6. Agricultural finance programs are notified about remittance investment opportunities in farming.
+
+This analysis supports Nepal's food security and rural development, helping to address the agricultural labor shortages that often result from high male outmigration from rural areas, while leveraging remittance capital for agricultural modernization.
+
+===== Educational Planning in High-Migration Areas
+
+When analyzing migration impacts on education:
+
+1. A `MigrationImpactAssessedEvent` with dimensionType = EDUCATIONAL analyzes school enrollment and performance.
+2. The analysis shows correlation between parental absence and educational outcomes.
+3. Education departments receive notifications about schools in high-migration catchment areas.
+4. The system recommends specialized teacher training for working with children of migrants.
+5. Scholarship programs are targeted to children with absent parents.
+6. School counseling resources are allocated to areas with high parental absence rates.
+
+This process addresses the complex educational impacts of migration in Nepal, where parental absence can affect educational outcomes despite increased financial resources from remittances.
+
+==== Integration with External Systems
+
+===== Foreign Employment Board System
+
+The AbsenteePopulation entity integrates with Nepal's Foreign Employment Board system through event-driven mechanisms:
+
+1. When labor migration data is updated, `LaborMigrationDataUpdatedEvent` events trigger data synchronization.
+2. The Foreign Employment Board receives targeted notifications based on emerging patterns.
+3. Labor approvals and permit data from the Board generates events that update AbsenteePopulation records.
+
+This bidirectional event flow ensures that both systems maintain consistent migration data while operating independently.
+
+===== Central Bureau of Statistics Integration
+
+The AbsenteePopulation entity integrates with the CBS system through:
+
+1. The `AbsenteePopulationImportedEvent` captures data imported from CBS census and survey data.
+2. CBS receives notification events when migration statistics derived from their data change.
+3. When CBS publishes revised official statistics, these trigger updates through the system.
+
+This integration ensures that the system maintains alignment with official national statistics while providing more detailed and timely analysis capabilities.
+
+===== Local Government Integration
+
+The federal structure of Nepal requires integration with local government systems:
+
+1. Migration events trigger notifications to relevant municipal and ward-level government dashboards.
+2. The `AbsenteePopulationAggregatedEvent` provides roll-up data for district and provincial planning.
+3. Local governments receive targeted `VulnerableHouseholdDetectedEvent` notifications for issues in their jurisdiction.
+
+This multi-tiered event distribution ensures that migration information flows to the appropriate level of government for action, supporting Nepal's decentralized governance model.
+
+===== International Organization Integration
+
+Nepal's migration sector involves significant international organization engagement:
+
+1. Selected migration events trigger notifications to relevant UN agencies (IOM, ILO) and development partners.
+2. International organizations receive aggregated migration statistics through scheduled event-driven reports.
+3. Pattern detection events help international organizations target their migration programming.
+
+This integration supports collaborative international efforts to improve migration governance in Nepal, particularly through UN Migration Network and various development partner initiatives.
+
+==== Security and Compliance Considerations
+
+All absentee population events are subject to:
+
+1. **Data Classification**: Events are classified according to sensitivity levels, with appropriate access controls.
+2. **Audit Trail**: Complete event histories are maintained for all migration statistics changes.
+3. **Privacy Controls**: Personal information is stripped from events in accordance with Nepal's Privacy Act.
+4. **Access Control**: Event consumption is restricted to authorized systems and users only.
+
+These controls ensure that sensitive migration data is protected while enabling the necessary information flow for effective migration governance and planning.

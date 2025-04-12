@@ -1,0 +1,419 @@
+===== Visualization Capabilities
+
+The LiteracyStatistics entity provides specialized visualization capabilities that transform literacy demographic data into accessible visual insights to support planning and policy development.
+
+[plantuml]
+----
+@startuml
+participant "EducationDashboard" as Dashboard
+participant "LiteracyStatistics" as Literacy
+participant "VisualizationEngine" as VisEngine
+participant "ChartConfigService" as Config
+participant "DataTransformer" as Transformer
+participant "RenderingService" as Renderer
+participant "ExportService" as Export
+
+Dashboard -> Literacy: requestVisualization(visualType, parameters)
+activate Literacy
+
+Literacy -> Literacy: prepareVisualizationData()
+activate Literacy
+Literacy -> Literacy: validateData()
+Literacy -> Literacy: applyFilters()
+Literacy -> Literacy: extractLiteracyMetrics()
+Literacy <-- Literacy: preparedData
+deactivate Literacy
+
+Literacy -> Config: getVisualizationConfiguration(visualType)
+activate Config
+Config -> Config: loadDefaultSettings()
+Config -> Config: applyUserPreferences()
+Config -> Config: resolveLocalizations()
+Literacy <-- Config: visualizationConfig
+deactivate Config
+
+Literacy -> Transformer: transformForVisualization(preparedData, visualType)
+activate Transformer
+Transformer -> Transformer: structureDataSeries()
+Transformer -> Transformer: calculateDerivedValues()
+Transformer -> Transformer: prepareLabels()
+Transformer -> Transformer: formatNumbers()
+Literacy <-- Transformer: transformedData
+deactivate Transformer
+
+Literacy -> VisEngine: generateVisualization(transformedData, visualizationConfig)
+activate VisEngine
+
+alt visualType == LITERACY_RATE_MAP
+  VisEngine -> Renderer: createThematicMap()
+  activate Renderer
+  Renderer -> Renderer: setupMapCanvas()
+  Renderer -> Renderer: applyColorScale()
+  Renderer -> Renderer: renderAdminAreas()
+  Renderer -> Renderer: addLegend()
+  VisEngine <-- Renderer: thematicMapVisualization
+  deactivate Renderer
+else visualType == LITERACY_COMPARISON
+  VisEngine -> Renderer: createBarChart()
+  activate Renderer
+  Renderer -> Renderer: setupChartLayout()
+  Renderer -> Renderer: renderComparativeBars()
+  Renderer -> Renderer: addReferenceLines()
+  Renderer -> Renderer: addLabels()
+  VisEngine <-- Renderer: barChartVisualization
+  deactivate Renderer
+else visualType == LITERACY_TREND
+  VisEngine -> Renderer: createLineChart()
+  activate Renderer
+  Renderer -> Renderer: setupTrendLayout()
+  Renderer -> Renderer: renderTrendLines()
+  Renderer -> Renderer: addTimelineEvents()
+  Renderer -> Renderer: configureInteractions()
+  VisEngine <-- Renderer: trendVisualization
+  deactivate Renderer
+else visualType == EDUCATION_PYRAMID
+  VisEngine -> Renderer: createEducationPyramid()
+  activate Renderer
+  Renderer -> Renderer: setupPyramidLayout()
+  Renderer -> Renderer: renderEducationLevelBars()
+  Renderer -> Renderer: addGenderComparison()
+  Renderer -> Renderer: addMetadataAnnotations()
+  VisEngine <-- Renderer: pyramidVisualization
+  deactivate Renderer
+end
+
+Literacy <-- VisEngine: visualization
+deactivate VisEngine
+
+Dashboard <-- Literacy: visualizationResponse
+deactivate Literacy
+
+Dashboard -> Literacy: exportVisualization(visualizationId, format)
+activate Literacy
+Literacy -> VisEngine: retrieveVisualization(visualizationId)
+activate VisEngine
+Literacy <-- VisEngine: visualization
+deactivate VisEngine
+
+Literacy -> Export: formatForExport(visualization, format)
+activate Export
+Export -> Export: prepareHighResVersion()
+Export -> Export: addMetadata()
+Export -> Export: packageWithDataTable()
+Literacy <-- Export: exportedPackage
+deactivate Export
+
+Dashboard <-- Literacy: exportedVisualization
+deactivate Literacy
+@enduml
+----
+
+The LiteracyStatistics entity transforms complex literacy and educational attainment data into accessible visualizations tailored to Nepal's unique educational and demographic context.
+
+===== Core Visualization Types
+
+*Literacy Rate Map*
+
+The thematic map visualization displays literacy rates across administrative areas, making geographic patterns immediately visible.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/map.puml
+
+<sprite:map> **Adult Literacy Rate by Province**
+
+|= Province |= Rate |= Category |= Color |
+| Koshi | 72.3% | MEDIUM_HIGH | <back:LightGreen>    </back>|
+| Madhesh | 58.7% | MEDIUM_LOW | <back:LightYellow>   </back>|
+| Bagmati | 78.6% | HIGH | <back:Green>    </back>|
+| Gandaki | 74.5% | MEDIUM_HIGH | <back:LightGreen> </back>|
+| Lumbini | 67.3% | MEDIUM | <back:LightYellow>      </back>|
+| Karnali | 61.8% | MEDIUM | <back:LightYellow>    </back>|
+| Sudurpashchim | 63.5% | MEDIUM | <back:LightYellow>    </back>|
+
+Legend: Adult Literacy Rate (Age 15+)
+@enduml
+----
+
+Key features of literacy rate maps include:
+
+1. **Customizable Classification**: Users can apply different classification schemes (natural breaks, quantiles, equal intervals) to highlight different patterns in the data.
+
+2. **Multi-Category Visualization**: Rather than just overall literacy, maps can display female literacy, youth literacy, or linguistic literacy rates.
+
+3. **Administrative Level Control**: Maps can be generated at any administrative level with drill-down capabilities from national to ward level.
+
+4. **Literacy Gap Overlay**: Option to overlay gender literacy gaps or urban-rural literacy disparities to visualize multiple dimensions simultaneously.
+
+5. **Time Animation**: Ability to animate maps across multiple census years to show changes in literacy patterns over time.
+
+*Literacy Comparison Chart*
+
+This visualization compares literacy rates across administrative areas, demographic groups, or time periods in a bar or column format.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Female Literacy Rate by District - Province 1**
+
+|= District |= Female Literacy |
+| Morang | 68.7% |
+| Sunsari | 71.2% |
+| Jhapa | 70.5% |
+| Ilam | 73.8% |
+| Taplejung | 62.3% |
+| Panchthar | 64.1% |
+| Dhankuta | 69.4% |
+
+Reference Line: Provincial Average (67.5%)
+@enduml
+----
+
+Key features of literacy comparison charts include:
+
+1. **Reference Lines**: Inclusion of reference lines for provincial or national averages, educational targets, or Sustainable Development Goal benchmarks.
+
+2. **Multi-Variable Comparison**: Ability to display male/female literacy side by side, or compare literacy across multiple education levels simultaneously.
+
+3. **Demographic Filtering**: Options to filter by age groups, ethnic communities, or urban/rural status for targeted analysis.
+
+4. **Ranked Presentation**: Ability to sort administrative areas by performance to quickly identify high and low performers.
+
+5. **Gap Visualization**: Special formats to emphasize gender gaps, generational gaps, or urban-rural divides in literacy.
+
+*Literacy Trend Visualization*
+
+This visualization shows how literacy rates change over time, essential for understanding progress and planning interventions.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Literacy Rate Trend: Kaski District 2001-2021**
+
+scale max 1000
+concise "Overall Literacy" as Overall
+concise "Female Literacy" as Female
+concise "Male Literacy" as Male
+
+@2001
+Overall is 650
+Female is 550
+Male is 750
+
+@2011
+Overall is 720
+Female is 650
+Male is 790
+
+@2021
+Overall is 790
+Female is 750
+Male is 830
+
+@enduml
+----
+
+Key features of literacy trend visualization include:
+
+1. **Event Annotation**: Important events affecting literacy (e.g., education policy changes, conflict periods, major disasters) can be marked on the timeline.
+
+2. **Multi-Series Comparison**: Display of overall, male, female, and age-specific literacy trends in the same chart for gap analysis.
+
+3. **Projection Extension**: Trend lines can include projections with confidence intervals based on historical patterns and demographic projections.
+
+4. **Milestone Highlighting**: Target years or benchmark achievements can be visually emphasized on the timeline.
+
+5. **Comparative Trends**: Option to display multiple administrative areas on the same trend chart for comparative trajectory analysis.
+
+*Educational Attainment Pyramid*
+
+This visualization displays the population distribution across different educational attainment levels, often with gender comparison.
+
+[plantuml]
+----
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+!includeurl SPRITESURL/chart.puml
+
+<sprite:chart> **Educational Attainment Pyramid - Kathmandu 2021**
+
+|= Education Level |= Males |= |= Females |
+| Higher Degree    | <:▍     | | ▎:>     |
+| Bachelor         | <:▊     | | ▌:>     |
+| Higher Secondary | <:█▍    | | █:>     |
+| Secondary        | <:██    | | █▋:>    |
+| Lower Secondary  | <:██▍   | | █▉:>    |
+| Primary          | <:███   | | ██▌:>   |
+| Basic Literacy   | <:███▍  | | ███:>   |
+| Illiterate       | <:█▌    | | ██▏:>   |
+
+Males: 563,235          Females: 542,892
+@enduml
+----
+
+Key features of educational attainment pyramids include:
+
+1. **Gender Comparison**: Side-by-side display of male and female educational achievement to visualize gender gaps at different education levels.
+
+2. **Age Cohort Options**: Ability to filter by age cohorts to observe generational changes in educational attainment.
+
+3. **Comparative Overlays**: Options to compare different time periods or different administrative areas using outline overlays.
+
+4. **Completion Rate Highlights**: Special highlighting for key educational transition points (primary completion, secondary completion).
+
+5. **Benchmark Indicators**: Visual indicators for national targets or international comparison points.
+
+===== Advanced Visualization Features
+
+*Multilingual Literacy Visualizations*
+
+Specialized visualizations for Nepal's multilingual context:
+
+1. **Language Literacy Map**: Geographic visualization of literacy in different languages across Nepal's diverse linguistic landscape
+
+2. **Mother Tongue vs. Official Language**: Comparative visualization of literacy rates in mother tongue compared to literacy in Nepal's official language
+
+3. **Script Distribution**: Visualization of literacy by script (Devanagari, Tibetan, etc.) in areas with multiple writing systems
+
+4. **Language Transition Analysis**: Visualization of educational pathways from mother tongue instruction to official language mastery
+
+*Education Access Visualization*
+
+Visualizations focused on the physical and social dimensions of education access:
+
+1. **School Proximity Maps**: Heat maps showing distance to educational facilities overlaid with literacy rates
+
+2. **Teacher-Student Ratio Analysis**: Visualization of teacher availability correlated with literacy outcomes
+
+3. **School Completion Flow**: Sankey diagrams showing student flow from enrollment through various education levels to completion
+
+4. **Dropout Pattern Visualization**: Visual analysis of where and when students leave the education system
+
+*Functional Literacy Analysis*
+
+Visualizations that go beyond basic literacy to analyze practical literacy application:
+
+1. **Digital Literacy Maps**: Geographic distribution of digital literacy skills
+
+2. **Financial Literacy Analysis**: Visualization of financial literacy distribution and correlations with economic outcomes
+
+3. **Document Literacy Heatmap**: Assessment of ability to complete forms and understand official documents
+
+4. **Information Access Visualization**: Analysis of how different populations access and process information
+
+*Demographic Correlation Analysis*
+
+Visualizations exploring relationships between literacy and other demographic factors:
+
+1. **Literacy-Income Correlation**: Scatter plots and heat maps showing relationships between literacy and income levels
+
+2. **Literacy-Health Correlation**: Visualization of relationships between maternal literacy and health outcomes
+
+3. **Literacy-Age Distribution**: Age-based literacy distribution analysis showing generational patterns
+
+4. **Migration-Literacy Impact**: Visualization of how migration patterns affect literacy rates in source and destination communities
+
+===== Implementation Details
+
+*Dynamic Data Transformation*
+
+The visualization system dynamically transforms literacy data to match visualization requirements:
+
+1. **Category Generation**: Automatic categorization of continuous literacy rate data into meaningful categories (e.g., "Very Low" for rates below 50%)
+
+2. **User-Configurable Thresholds**: Adjustable thresholds for categorical classifications based on context and purpose
+
+3. **Statistical Transformation**: Calculation of derived statistics like percent change, standard deviation from mean, etc.
+
+4. **Temporal Alignment**: Adjustment for different data collection timeframes to enable valid comparisons
+
+*Culturally Appropriate Visualization*
+
+Visualizations are customized for Nepal's cultural context:
+
+1. **Dual Script Support**: All visualizations include both Nepali and English labels
+
+2. **Nepali Calendar Integration**: Support for Bikram Sambat dates alongside Gregorian calendar
+
+3. **Culturally Appropriate Color Schemes**: Use of culturally neutral color schemes that avoid problematic color associations
+
+4. **Local Administrative Names**: Use of official Nepali terminology for administrative divisions
+
+*Accessibility Features*
+
+Visualizations implement accessibility best practices:
+
+1. **Color Blindness Safe**: All color schemes tested for color vision deficiencies
+
+2. **Screen Reader Support**: Text equivalents for all visual elements
+
+3. **Data Table Alternatives**: All visual data available in accessible tabular format
+
+4. **Mobile Optimization**: Responsive design for Nepal's predominantly mobile-first internet users
+
+*Export and Sharing Options*
+
+Visualizations support multiple export formats:
+
+1. **High-Resolution Images**: PNG and SVG formats for reports and publications
+
+2. **Interactive HTML**: Self-contained interactive versions for digital sharing
+
+3. **Data Export**: Underlying data in CSV, Excel, and JSON formats
+
+4. **Report Integration**: Direct integration with report generation systems
+
+5. **Social Media Formats**: Export optimized for WhatsApp and Facebook sharing, the dominant platforms in Nepal
+
+*Edge Cases and Special Considerations*
+
+The visualization system handles several edge cases specific to Nepal's context:
+
+1. **Small Population Areas**: Statistical smoothing for wards with very small populations to avoid extreme values
+
+2. **Missing Data Handling**: Clear visualization of areas with incomplete data
+
+3. **Pre/Post-Restructuring View**: Ability to view data in both pre-2017 and post-2017 administrative structures
+
+4. **Partially Literate Category**: Special handling for the "partially literate" category used in some Nepali surveys but not in others
+
+5. **Remote Area Data**: Special indicators for areas where data is based on small samples or estimates due to accessibility challenges
+
+===== Context-Specific Dashboard Examples
+
+*Provincial Education Planning Dashboard*
+
+A specialized dashboard for provincial education departments with:
+
+1. **Literacy Gap Map**: Heat map highlighting gender and urban-rural literacy gaps
+2. **Intervention Impact Analysis**: Visualization of literacy changes in areas with specific educational interventions
+3. **Resource Allocation Optimizer**: Visual tools showing optimal resource distribution based on literacy needs
+4. **Progress Tracking**: Visual comparison of current literacy rates against targets
+
+*Local Language Promotion Dashboard*
+
+A dashboard specifically designed for language promotion initiatives:
+
+1. **Language Vitality Map**: Visualization of language use and literacy patterns across regions
+2. **Intergenerational Transmission**: Age-cohort visualization of language literacy preservation
+3. **Mother Tongue Education Impact**: Comparative visualization of educational outcomes in areas with and without mother tongue-based multilingual education
+4. **Script Usage Tracking**: Visualization of script awareness and usage in areas with indigenous writing systems
+
+*National SDG Monitoring Dashboard*
+
+A dashboard aligned with Sustainable Development Goal monitoring:
+
+1. **SDG Target Tracking**: Visual progress towards literacy targets in SDG 4 (Quality Education)
+2. **Equity Dimension Analysis**: Visualization of literacy disparities by gender, location, and wealth quintile
+3. **International Comparison**: Benchmarking against regional countries and development peers
+4. **Projection Analysis**: Visual forecasting of when different areas will reach SDG literacy targets
+
+These visualization capabilities transform complex literacy demographic data into accessible insights that support evidence-based planning and policy development. The visualizations are designed to bridge technical demographic analysis and practical decision-making, making literacy patterns accessible to policymakers, planners, and citizens across Nepal's diverse contexts.

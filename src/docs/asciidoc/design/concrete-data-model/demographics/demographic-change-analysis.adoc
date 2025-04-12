@@ -1,0 +1,41 @@
+==== Demographic Change Analysis
+
+Demographic Change Analysis represents analytical data about population dynamics and demographic transitions, extending core domain models while providing specialized functionality for understanding and visualizing demographic shifts over time.
+
+===== Core Model Integration
+
+include::demographic-change-analysis/core-model-integration.adoc[leveloffset=+1]
+
+===== Demographic Change Detection Process
+
+include::demographic-change-analysis/change-detection-process.adoc[leveloffset=+1]
+
+===== Demographic Pattern Recognition
+
+include::demographic-change-analysis/pattern-recognition.adoc[leveloffset=+1]
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Demographic Change Analysis is used in the system:
+
+include::demographic-change-analysis/urbanization-analysis.adoc[leveloffset=+1]
+
+include::demographic-change-analysis/aging-population-planning.adoc[leveloffset=+1]
+
+include::demographic-change-analysis/youth-employment-strategy.adoc[leveloffset=+1]
+
+include::demographic-change-analysis/migration-impact-assessment.adoc[leveloffset=+1]
+
+include::demographic-change-analysis/demographic-dividend-analysis.adoc[leveloffset=+1]
+
+===== Capability Implementations
+
+include::demographic-change-analysis/custom-validatable-implementation.adoc[leveloffset=+1]
+
+include::demographic-change-analysis/webhook-triggerable-implementation.adoc[leveloffset=+1]
+
+===== Additional Technical Details
+
+include::demographic-change-analysis/data-model.adoc[leveloffset=+1]
+
+include::demographic-change-analysis/events.adoc[leveloffset=+1]

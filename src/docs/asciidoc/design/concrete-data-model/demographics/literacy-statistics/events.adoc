@@ -1,0 +1,779 @@
+===== Domain Events
+
+The LiteracyStatistics entity publishes and consumes domain events to facilitate integration with other system components and maintain data consistency across the demographic and education domains.
+
+[plantuml]
+----
+@startuml
+class LiteracyStatisticsCreatedEvent {
+  +UUID literacyStatisticsId
+  +UUID adminAreaId
+  +String adminAreaLevel
+  +Integer year
+  +Double overallLiteracyRate
+  +Double maleLiteracyRate
+  +Double femaleLiteracyRate
+  +Boolean isCensusData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyStatisticsUpdatedEvent {
+  +UUID literacyStatisticsId
+  +UUID adminAreaId
+  +Integer year
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyStatisticsImportedEvent {
+  +UUID literacyStatisticsId
+  +UUID adminAreaId
+  +String importSource
+  +String importFormat
+  +Integer recordCount
+  +Boolean hadErrors
+  +String errorSummary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyStatisticsQualityCheckedEvent {
+  +UUID literacyStatisticsId
+  +UUID adminAreaId
+  +List<QualityCheckResult> checkResults
+  +Boolean passedAllChecks
+  +String suggestedActions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyDisparityDetectedEvent {
+  +UUID literacyStatisticsId
+  +UUID adminAreaId
+  +DisparityType disparityType
+  +Double disparitySeverity
+  +String possibleCauses
+  +Map<String, Object> disparityDetails
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyGoalProgressUpdatedEvent {
+  +UUID goalProgressId
+  +UUID literacyStatisticsId
+  +UUID adminAreaId
+  +String goalName
+  +Double previousValue
+  +Double currentValue
+  +Double percentTowardsGoal
+  +Boolean onTrack
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyProgramImpactRecordedEvent {
+  +UUID programImpactId
+  +UUID literacyStatisticsId
+  +UUID adminAreaId
+  +String programName
+  +ProgramType programType
+  +Double impactScore
+  +Integer participantCount
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyStatisticsProjectedEvent {
+  +UUID sourceStatisticsId
+  +UUID projectedStatisticsId
+  +UUID adminAreaId
+  +Integer targetYear
+  +String projectionMethod
+  +String methodologyDescription
+  +ConfidenceLevel confidenceLevel
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyStatisticsAggregatedEvent {
+  +UUID resultStatisticsId
+  +List<UUID> sourceStatisticsIds
+  +UUID targetAdminAreaId
+  +AdminAreaLevel resultLevel
+  +Integer year
+  +AggregationMethod method
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyStatisticsComparedEvent {
+  +UUID baseStatisticsId
+  +UUID comparisonStatisticsId
+  +String comparisonType
+  +Map<String, Object> keyDifferences
+  +String analysisNotes
+  +Map<String, Double> changeMagnitudes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LiteracyTrendAnalyzedEvent {
+  +UUID trendAnalysisId
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startYear
+  +Integer endYear
+  +TrendDirection literacyTrend
+  +Double averageAnnualChange
+  +Double projectedFutureRate
+  +Integer projectionYear
+  +String analysisNotes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class EducationalAttainmentAnalyzedEvent {
+  +UUID attainmentDistributionId
+  +UUID adminAreaId
+  +Double averageYearsOfSchooling
+  +Double genderGapInYears
+  +Double urbanRuralGapInYears
+  +EducationLevel mostCommonLevel
+  +Double secondaryCompletionRate
+  +Map<String, Object> attainmentDistribution
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum DisparityType {
+  GENDER
+  URBAN_RURAL
+  ETHNIC
+  LINGUISTIC
+  AGE_GROUP
+  ECONOMIC
+  GEOGRAPHIC
+  DISABILITY
+}
+
+enum ProgramType {
+  FORMAL_SCHOOL
+  NON_FORMAL_EDUCATION
+  ADULT_LITERACY
+  DIGITAL_LITERACY
+  FINANCIAL_LITERACY
+  MOTHER_TONGUE_BASED
+  VOCATIONAL_LITERACY
+  EARLY_CHILDHOOD
+  REMEDIAL
+  MIXED_APPROACH
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AgeGroup {
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum AggregationMethod {
+  SUM
+  WEIGHTED_AVERAGE
+  PROPORTIONAL
+  CUSTOM
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  ACCELERATING
+  DECELERATING
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum EducationLevel {
+  NO_FORMAL_EDUCATION
+  BASIC_LITERACY
+  PRIMARY_PARTIAL
+  PRIMARY_COMPLETE
+  LOWER_SECONDARY
+  SECONDARY
+  HIGHER_SECONDARY
+  BACHELOR
+  MASTER
+  DOCTORAL
+  TECHNICAL_VOCATIONAL
+}
+
+class QualityCheckResult {
+  +String checkType
+  +Boolean passed
+  +Double score
+  +String description
+  +String recommendation
+}
+
+abstract class DomainEvent
+DomainEvent <|-- LiteracyStatisticsCreatedEvent
+DomainEvent <|-- LiteracyStatisticsUpdatedEvent
+DomainEvent <|-- LiteracyStatisticsImportedEvent
+DomainEvent <|-- LiteracyStatisticsQualityCheckedEvent
+DomainEvent <|-- LiteracyDisparityDetectedEvent
+DomainEvent <|-- LiteracyGoalProgressUpdatedEvent
+DomainEvent <|-- LiteracyProgramImpactRecordedEvent
+DomainEvent <|-- LiteracyStatisticsProjectedEvent
+DomainEvent <|-- LiteracyStatisticsAggregatedEvent
+DomainEvent <|-- LiteracyStatisticsComparedEvent
+DomainEvent <|-- LiteracyTrendAnalyzedEvent
+DomainEvent <|-- EducationalAttainmentAnalyzedEvent
+
+LiteracyDisparityDetectedEvent -- DisparityType
+LiteracyProgramImpactRecordedEvent -- ProgramType
+LiteracyStatisticsProjectedEvent -- ConfidenceLevel
+LiteracyStatisticsAggregatedEvent -- AdminAreaLevel
+LiteracyStatisticsAggregatedEvent -- AggregationMethod
+LiteracyStatisticsQualityCheckedEvent *-- "many" QualityCheckResult
+LiteracyTrendAnalyzedEvent -- TrendDirection
+LiteracyTrendAnalyzedEvent -- AdminAreaLevel
+EducationalAttainmentAnalyzedEvent -- EducationLevel
+@enduml
+----
+
+==== Core Domain Events
+
+===== LiteracyStatisticsCreatedEvent
+
+Triggered when a new literacy statistics dataset is created for an administrative area.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| literacyStatisticsId | Unique identifier of the newly created literacy statistics
+| adminAreaId | Administrative area this statistics belongs to
+| adminAreaLevel | Level of the administrative area (WARD, MUNICIPALITY, etc.)
+| year | Year of the literacy statistics data
+| overallLiteracyRate | Overall literacy rate recorded
+| maleLiteracyRate | Male literacy rate recorded
+| femaleLiteracyRate | Female literacy rate recorded
+| isCensusData | Whether this is official census data
+| timestamp | When the event occurred
+| actorId | User or system that created the statistics
+|===
+
+*Business Impact:* This event initiates various secondary processes including data quality checks, disparity detection, and goal alignment assessment. In Nepal's context, new literacy data is particularly significant for education planning and SDG progress monitoring, which is a priority for the Ministry of Education.
+
+===== LiteracyStatisticsUpdatedEvent
+
+Triggered when changes are made to existing literacy statistics data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| literacyStatisticsId | Identifier of the updated statistics
+| adminAreaId | Administrative area identifier
+| year | Year of the statistics data
+| changedFields | Map of fields that were changed with their old and new values
+| updateType | Type of update (CORRECTION, REVISION, ENHANCEMENT)
+| isRevision | Whether this is an official revision
+| updateReason | Reason for the update
+| timestamp | When the event occurred
+| actorId | User who made the update
+|===
+
+*Business Impact:* This event may trigger recalculation of education indicators, re-aggregation of higher-level administrative areas, and reassessment of literacy goals. For Nepal, the ability to track changes is especially important for maintaining transparency in education data, which influences resource allocation and international development funding.
+
+===== LiteracyStatisticsImportedEvent
+
+Triggered when literacy statistics data is imported from an external source.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| literacyStatisticsId | Identifier of the imported statistics
+| adminAreaId | Administrative area identifier
+| importSource | Source of the imported data (CBS, Ministry of Education, etc.)
+| importFormat | Format of the imported data (CSV, Excel, etc.)
+| recordCount | Number of records imported
+| hadErrors | Whether there were errors during import
+| errorSummary | Summary of any errors encountered
+| timestamp | When the import occurred
+| actorId | User who performed the import
+|===
+
+*Business Impact:* Data import is a common operation in Nepal's educational statistics system, where literacy data may originate from multiple sources including the Central Bureau of Statistics, Ministry of Education, and international organizations like UNESCO or UNICEF. This event initiates data validation processes and ensures proper attribution of data sources.
+
+==== Specialized Domain Events
+
+===== LiteracyStatisticsQualityCheckedEvent
+
+Triggered when quality checks are performed on literacy statistics data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| literacyStatisticsId | Identifier of the checked statistics
+| adminAreaId | Administrative area identifier
+| checkResults | Results of individual quality checks
+| passedAllChecks | Whether all checks were passed
+| suggestedActions | Suggested actions for failed checks
+| timestamp | When checks were performed
+| actorId | User or system that performed the checks
+|===
+
+*Business Impact:* Data quality is a significant concern in Nepal's literacy demographic data, particularly regarding self-reported literacy versus directly tested literacy, and challenges in data collection in remote areas. This event allows systems to flag potentially problematic data patterns and suggest corrective measures.
+
+===== LiteracyDisparityDetectedEvent
+
+Triggered when a significant literacy disparity is detected in statistics.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| literacyStatisticsId | Identifier of the statistics with disparity
+| adminAreaId | Administrative area identifier
+| disparityType | Type of literacy disparity detected
+| disparitySeverity | Quantified severity of the disparity
+| possibleCauses | Potential causes of the disparity
+| disparityDetails | Detailed information about the disparity
+| timestamp | When the disparity was detected
+| actorId | User or system that detected the disparity
+|===
+
+*Business Impact:* Literacy disparities in Nepal are often indicators of important social inequalities like gender discrimination, urban-rural divides, or ethnic marginalization. This event can trigger notifications to relevant education authorities when significant disparities are detected, prompting targeted interventions to address educational inequality.
+
+===== LiteracyGoalProgressUpdatedEvent
+
+Triggered when progress toward a literacy goal is updated.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| goalProgressId | Identifier of the goal progress record
+| literacyStatisticsId | Identifier of the associated statistics
+| adminAreaId | Administrative area identifier
+| goalName | Name of the literacy goal
+| previousValue | Previous progress value
+| currentValue | Current progress value
+| percentTowardsGoal | Percentage progress toward goal
+| onTrack | Whether progress is on track
+| timestamp | When the update occurred
+| actorId | User who updated the progress
+|===
+
+*Business Impact:* Nepal has committed to several educational goals, including SDG 4 (Quality Education), and tracks progress at national and subnational levels. This event allows educational planning systems to monitor goal progress and flag areas where interventions may be needed to achieve targets.
+
+===== LiteracyProgramImpactRecordedEvent
+
+Triggered when impact data for a literacy program is recorded.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| programImpactId | Identifier of the program impact record
+| literacyStatisticsId | Identifier of the associated statistics
+| adminAreaId | Administrative area identifier
+| programName | Name of the literacy program
+| programType | Type of literacy program
+| impactScore | Quantified program impact
+| participantCount | Number of program participants
+| timestamp | When the impact was recorded
+| actorId | User who recorded the impact
+|===
+
+*Business Impact:* Nepal implements numerous literacy programs, from formal education to non-formal adult literacy campaigns. This event helps track program effectiveness, allowing education authorities to direct resources to the most successful interventions and scale up proven approaches.
+
+===== LiteracyStatisticsProjectedEvent
+
+Triggered when a new literacy statistics projection is created for a future year.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| sourceStatisticsId | Identifier of the source statistics
+| projectedStatisticsId | Identifier of the created projection
+| adminAreaId | Administrative area identifier
+| targetYear | Year being projected
+| projectionMethod | Projection method used
+| methodologyDescription | Description of methodology
+| confidenceLevel | Confidence level of the projection
+| timestamp | When the projection was created
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Projections are essential for Nepal's educational planning processes, particularly for anticipating future resource needs and setting realistic goals. This event allows planning departments to be notified of new literacy projections relevant to their sector and geography.
+
+===== LiteracyStatisticsAggregatedEvent
+
+Triggered when ward-level literacy data is aggregated to higher administrative levels.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| resultStatisticsId | Identifier of the aggregated statistics
+| sourceStatisticsIds | Identifiers of source statistics
+| targetAdminAreaId | Identifier of the target administrative area
+| resultLevel | Administrative level of the result
+| year | Year of the aggregated data
+| method | Method used for aggregation
+| timestamp | When the aggregation occurred
+| actorId | User or system that performed the aggregation
+|===
+
+*Business Impact:* Aggregation events are vital in Nepal's federal structure where educational planning happens at multiple administrative levels. Provincial and federal education departments rely on these aggregations for policy development, particularly for allocating resources for literacy programs.
+
+===== LiteracyStatisticsComparedEvent
+
+Triggered when two literacy statistics records are formally compared.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| baseStatisticsId | Identifier of the base statistics
+| comparisonStatisticsId | Identifier of the comparison statistics
+| comparisonType | Type of comparison (TIME, GEOGRAPHY, SCENARIO)
+| keyDifferences | Map of key differences identified
+| analysisNotes | Notes from the comparison analysis
+| changeMagnitudes | Magnitudes of changes in key metrics
+| timestamp | When the comparison was performed
+| actorId | User who performed the comparison
+|===
+
+*Business Impact:* Comparative analysis is essential for understanding literacy transitions in Nepal's diverse regions, particularly contrasting urban and rural literacy patterns or before/after impacts of significant events like the 2015 earthquake or major educational reforms like the federalization of education.
+
+===== LiteracyTrendAnalyzedEvent
+
+Triggered when literacy trend analysis is completed over a time period.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| trendAnalysisId | Identifier of the trend analysis
+| adminAreaId | Administrative area identifier
+| adminAreaLevel | Level of the administrative area
+| startYear | First year in the analysis period
+| endYear | Last year in the analysis period
+| literacyTrend | Direction of change in literacy rate
+| averageAnnualChange | Average yearly change in literacy rate
+| projectedFutureRate | Projected future literacy rate
+| projectionYear | Year for which projection is made
+| analysisNotes | Notes from the analysis
+| timestamp | When the analysis was performed
+| actorId | User who performed the analysis
+|===
+
+*Business Impact:* Trend analysis helps identify long-term literacy patterns that may require policy interventions. In Nepal, this has been particularly valuable for understanding changing literacy dynamics as the country transitions from very low literacy (41% in 2001) to improving literacy (68% in 2011 and 78% in 2021).
+
+===== EducationalAttainmentAnalyzedEvent
+
+Triggered when educational attainment data is specifically analyzed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| attainmentDistributionId | Identifier of the attainment distribution
+| adminAreaId | Administrative area identifier
+| averageYearsOfSchooling | Average years of education completed
+| genderGapInYears | Gender gap in years of schooling
+| urbanRuralGapInYears | Urban-rural gap in years of schooling
+| mostCommonLevel | Most common education level attained
+| secondaryCompletionRate | Secondary education completion rate
+| attainmentDistribution | Distribution across education levels
+| timestamp | When the analysis was performed
+| actorId | User who performed the analysis
+|===
+
+*Business Impact:* Educational attainment analysis provides deeper insights than basic literacy rates, showing the quality and extent of education. For Nepal, where graduating from primary and secondary education remains a challenge despite improved basic literacy, this analysis helps target interventions to improve educational completion rates.
+
+==== Event Handling Architecture
+
+[plantuml]
+----
+@startuml
+participant "EducationDepartmentService" as Service
+participant "LiteracyStatistics" as Statistics
+participant "EventPublisher" as Publisher
+participant "QualityCheckService" as Quality
+participant "DisparityDetectionService" as Disparity
+participant "GoalProgressService" as Goals
+participant "NotificationService" as Notify
+participant "IndexingService" as Index
+participant "AuditService" as Audit
+
+Service -> Statistics: createLiteracyStatistics(adminAreaId, year, data)
+activate Statistics
+
+Statistics -> Statistics: constructStatistics()
+Statistics -> Statistics: calculateLiteracyRates()
+Statistics -> Publisher: publishEvent(LiteracyStatisticsCreatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Quality: scheduleQualityChecks(statisticsId)
+activate Quality
+Quality -> Quality: performDataChecks()
+Quality -> Quality: validateLiteracyConsistency()
+Quality -> Quality: checkDemographicRelationships()
+Quality -> Publisher: publishEvent(LiteracyStatisticsQualityCheckedEvent)
+Publisher <-- Quality: checksScheduled
+deactivate Quality
+
+Publisher -> Disparity: detectDisparities(statisticsId)
+activate Disparity
+Disparity -> Disparity: analyzeGenderDisparity()
+Disparity -> Disparity: analyzeUrbanRuralDisparity()
+Disparity -> Disparity: analyzeEthnicDisparity()
+Disparity -> Publisher: publishEvent(LiteracyDisparityDetectedEvent)
+Publisher <-- Disparity: disparityDetectionTriggered
+deactivate Disparity
+
+Publisher -> Goals: assessGoalProgress(statisticsId)
+activate Goals
+Goals -> Goals: compareWithTargets()
+Goals -> Goals: updateProgressMetrics()
+Goals -> Goals: evaluateTrajectory()
+Goals -> Publisher: publishEvent(LiteracyGoalProgressUpdatedEvent)
+Publisher <-- Goals: goalAssessmentTriggered
+deactivate Goals
+
+Publisher -> Index: updateSearchIndex(statisticsId)
+activate Index
+Index -> Index: extractSearchableFields()
+Index -> Index: buildIndexEntries()
+Publisher <-- Index: indexUpdated
+deactivate Index
+
+Publisher -> Notify: sendAnalystNotification(statisticsId)
+activate Notify
+Notify -> Notify: identifyInterestedStakeholders()
+Notify -> Notify: prepareNotificationContent()
+Notify -> Notify: dispatchNotifications()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Statistics <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Statistics: statisticsCreated
+deactivate Statistics
+
+Service -> Statistics: updateLiteracyStatistics(statisticsId, updatedData)
+activate Statistics
+Statistics -> Statistics: validateUpdates()
+Statistics -> Statistics: applyChanges()
+Statistics -> Statistics: recalculateLiteracyRates()
+Statistics -> Publisher: publishEvent(LiteracyStatisticsUpdatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Disparity: reassessDisparities(statisticsId)
+activate Disparity
+Disparity -> Disparity: reevaluateCurrentDisparities()
+Publisher <-- Disparity: reassessmentTriggered
+deactivate Disparity
+
+Publisher -> Goals: updateGoalProgress(statisticsId)
+activate Goals
+Goals -> Goals: recalculateProgressMetrics()
+Publisher <-- Goals: progressUpdateTriggered
+deactivate Goals
+
+Publisher -> Index: updateSearchIndex(statisticsId)
+activate Index
+Publisher <-- Index: indexUpdated
+deactivate Index
+
+Publisher -> Notify: sendUpdateNotification(statisticsId, changedFields)
+activate Notify
+Notify -> Notify: identifyImpactedStakeholders()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Statistics <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Statistics: statisticsUpdated
+deactivate Statistics
+@enduml
+----
+
+The diagram above illustrates how events flow through the system when literacy statistics data is created or updated. The process demonstrates several key patterns:
+
+1. **Event-Driven Data Quality Assurance**: Data quality checks are triggered automatically after creation events, ensuring all literacy data is validated for consistency and plausibility.
+
+2. **Automatic Analysis Workflows**: The creation of literacy statistics automatically triggers specialized analysis processes including disparity detection and goal progress assessment.
+
+3. **Stakeholder Notification**: Relevant stakeholders are notified of literacy data changes that affect their domains, ensuring that educational planning is based on the latest information.
+
+4. **Audit Trail**: All events are recorded for audit purposes, maintaining transparency and traceability in literacy data management.
+
+5. **Search Indexing**: New and updated literacy data is automatically indexed for search capabilities, enabling efficient discovery of literacy patterns.
+
+==== Event Application Use Cases
+
+===== Education Resource Allocation Based on Gender Disparity
+
+When literacy statistics reveal a significant gender gap in literacy:
+
+1. The `LiteracyStatisticsCreatedEvent` triggers automatic analysis.
+2. The DisparityDetectionService identifies a severe gender disparity (female literacy 30% lower than male).
+3. The `LiteracyDisparityDetectedEvent` is published with disparityType = GENDER and high severity.
+4. This notifies the Educational Planning Division about the gender disparity.
+5. The system recommends specific interventions based on disparity patterns, such as female teacher recruitment, girl-friendly infrastructure, or targeted scholarships.
+
+This process ensures education departments can respond to gender disparities in literacy, particularly important in Nepal's context where female literacy continues to lag behind male literacy in many districts, with gaps widest in remote areas and certain ethnic communities.
+
+===== Literacy Program Impact Assessment
+
+When evaluating the effectiveness of literacy interventions:
+
+1. A `LiteracyProgramImpactRecordedEvent` is published after assessing a non-formal education program.
+2. The event includes pre-intervention and post-intervention literacy rates, showing a 12 percentage point improvement.
+3. The system automatically correlates this with program cost data to calculate cost-effectiveness.
+4. Educational resource allocation systems are notified of high-impact programs.
+5. Similar communities with low literacy receive recommendations for implementing the successful program model.
+
+This process supports Nepal's extensive non-formal education initiatives, which are critical for reaching adults missed by formal education and for achieving UNESCO Sustainable Development Goal 4 targets for literacy, to which Nepal is committed.
+
+===== Educational Goal Progress Tracking
+
+When monitoring progress toward national literacy goals:
+
+1. The `LiteracyGoalProgressUpdatedEvent` tracks progress against Nepal's National Education Plan targets.
+2. The event captures whether progress is on-track or falling behind schedule.
+3. For areas falling behind, automatic notifications are sent to provincial and local education offices.
+4. The system suggests intervention strategies based on successful models from similar demographics.
+5. Planning dashboards are updated to highlight areas requiring additional attention or resources.
+
+This event-driven approach helps Nepal's education system maintain accountability for national and international commitments, including the Sustainable Development Goals' education targets, by providing early warning when progress is insufficient and creating a data-driven basis for intervention decisions.
+
+===== Multilingual Education Planning
+
+When literacy data shows language-based disparities:
+
+1. A `LiteracyDisparityDetectedEvent` with disparityType = LINGUISTIC identifies areas where mother-tongue illiteracy is significantly higher than national language illiteracy.
+2. This triggers analysis through language demographics to identify specific language communities affected.
+3. The Mother Tongue-Based Multilingual Education (MTB-MLE) planning system receives notifications.
+4. The system generates recommendations for language-specific educational interventions.
+5. Resource allocation systems prioritize multilingual materials and teacher training for affected areas.
+
+This process supports Nepal's constitutional commitment to mother tongue education, helping to direct resources to communities where linguistic barriers are impeding literacy development and educational access.
+
+===== Literacy Trend Analysis for Policy Development
+
+When analyzing long-term literacy patterns:
+
+1. A `LiteracyTrendAnalyzedEvent` provides analysis of literacy changes over a 10-year period.
+2. The event identifies accelerating improvements in youth literacy but stagnation in adult literacy.
+3. Policy recommendation systems use this trend data to suggest targeted interventions.
+4. Resource allocation systems redirect funds toward adult education in areas with stagnant rates.
+5. Future projection data informs long-term educational infrastructure planning.
+
+This analysis supports evidence-based policy making in Nepal's education sector, helping to identify which interventions are working, which population segments are being left behind, and where future resources should be directed for maximum impact.
+
+===== Cross-Border Migration Impact Assessment
+
+When analyzing literacy patterns in high-migration areas:
+
+1. A `LiteracyStatisticsComparedEvent` compares literacy in high-migration vs. low-migration districts.
+2. The analysis shows significant differences in male literacy patterns due to labor migration.
+3. Education planning systems receive notifications about migration-affected literacy distributions.
+4. The system suggests specialized education interventions for returned migrants and left-behind families.
+5. Resource allocation systems adjust to the unique demographic patterns of migration-affected areas.
+
+This process addresses Nepal's specific context where international labor migration significantly impacts demographic patterns, with many households having adult males working abroad. The event-driven analysis helps education authorities adapt their approaches to these unique demographic circumstances.
+
+==== Integration with External Systems
+
+===== Ministry of Education Management Information System (EMIS)
+
+The LiteracyStatistics entity integrates with Nepal's EMIS through event-driven mechanisms:
+
+1. When literacy statistics are created or updated, relevant events trigger data synchronization with the EMIS.
+2. The EMIS consumes these events to update its literacy indicators and educational planning dashboards.
+3. Changes in the EMIS's educational data that affect literacy metrics generate corresponding events consumed by the LiteracyStatistics system.
+
+This bidirectional event flow ensures that both systems maintain consistent literacy data while operating independently.
+
+===== Central Bureau of Statistics (CBS) Integration
+
+The LiteracyStatistics entity integrates with the CBS system through:
+
+1. The `LiteracyStatisticsImportedEvent` captures data imported from CBS census and survey data.
+2. CBS receives notification events when literacy statistics derived from their data change.
+3. When CBS publishes revised official statistics, these trigger updates through the system.
+
+This integration ensures that the system maintains alignment with official national statistics while providing more detailed and timely analysis capabilities.
+
+===== Provincial and Local Government Systems
+
+The federal structure of Nepal requires integration with provincial and local government systems:
+
+1. Literacy events trigger notifications to relevant provincial and local government dashboards.
+2. The `LiteracyStatisticsAggregatedEvent` provides roll-up data for provincial-level planning.
+3. Local governments receive targeted `LiteracyDisparityDetectedEvent` notifications for issues in their jurisdiction.
+
+This multi-tiered event distribution ensures that literacy information flows to the appropriate level of government for action, supporting Nepal's decentralized education planning model.
+
+===== International Development Partner Systems
+
+Nepal's education sector involves significant international development partner support:
+
+1. Selected literacy events trigger notifications to relevant development partner systems.
+2. Development partners receive aggregated literacy statistics through scheduled event-driven reports.
+3. Program impact events help development partners evaluate the effectiveness of their educational investments.
+
+This integration supports collaborative international efforts to improve literacy in Nepal, particularly through UNESCO, UNICEF, and development bank programs focused on education.
+
+==== Security and Compliance Considerations
+
+All literacy statistics events are subject to:
+
+1. **Data Classification**: Events are classified according to sensitivity levels, with appropriate access controls.
+2. **Audit Trail**: Complete event histories are maintained for all literacy statistics changes.
+3. **Privacy Controls**: Personal information is stripped from events in accordance with Nepal's Privacy Act.
+4. **Access Control**: Event consumption is restricted to authorized systems and users only.
+
+These controls ensure that sensitive education data is protected while enabling the necessary information flow for effective educational planning and governance.

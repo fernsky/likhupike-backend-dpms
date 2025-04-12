@@ -1,0 +1,41 @@
+==== Absentee Population
+
+Absentee Population represents demographic data about citizens who are temporarily or permanently absent from their registered places of residence, extending core domain models while providing specialized functionality for tracking migration patterns and population movements.
+
+===== Core Model Integration
+
+include::absentee-population/core-model-integration.adoc[leveloffset=+1]
+
+===== Absentee Data Collection Process
+
+include::absentee-population/data-collection-process.adoc[leveloffset=+1]
+
+===== Migration Pattern Analysis
+
+include::absentee-population/migration-pattern-analysis.adoc[leveloffset=+1]
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Absentee Population data is used in the system:
+
+include::absentee-population/labor-migration-tracking.adoc[leveloffset=+1]
+
+include::absentee-population/remittance-flow-analysis.adoc[leveloffset=+1]
+
+include::absentee-population/service-planning-for-left-behind.adoc[leveloffset=+1]
+
+include::absentee-population/returnee-reintegration.adoc[leveloffset=+1]
+
+include::absentee-population/disaster-response-planning.adoc[leveloffset=+1]
+
+===== Capability Implementations
+
+include::absentee-population/external-system-syncable-implementation.adoc[leveloffset=+1]
+
+include::absentee-population/data-aggregatable-implementation.adoc[leveloffset=+1]
+
+===== Additional Technical Details
+
+include::absentee-population/data-model.adoc[leveloffset=+1]
+
+include::absentee-population/events.adoc[leveloffset=+1]

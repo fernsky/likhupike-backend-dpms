@@ -1,0 +1,180 @@
+===== Service Planning for Left-Behind Families
+
+*Scenario:* Using absentee population data to design supportive services for family members who remain behind when individuals migrate for work
+
+[plantuml]
+----
+@startuml
+actor "Social Welfare\nDepartment" as Social
+actor "Service Planning\nCoordinator" as Coordinator
+participant "AbsenteePopulation" as Absentee
+participant "HouseholdVulnerability\nService" as Vulnerability
+participant "EducationSupportService" as Education
+participant "FinancialLiteracyService" as Financial
+participant "PsychosocialService" as Psychosocial
+participant "HealthcareService" as Healthcare
+
+Social -> Absentee: retrieveLeftBehindData(municipalityId)
+activate Absentee
+Absentee -> Absentee: identifyHouseholdsWithAbsentMembers()
+Absentee -> Absentee: categorizeByMigrantRelationship()
+Absentee -> Absentee: analyzeChildrenWithAbsentParents()
+Absentee -> Absentee: identifyElderlyWithoutCaregivers()
+Absentee -> Absentee: assessWomenHeadedHouseholds()
+Social <-- Absentee: leftBehindProfile
+deactivate Absentee
+
+Social -> Vulnerability: assessVulnerabilityFactors()
+activate Vulnerability
+Vulnerability -> Vulnerability: analyzeRemittanceDependence()
+Vulnerability -> Vulnerability: evaluateCaregiverAvailability()
+Vulnerability -> Vulnerability: assessSupportNetworks()
+Vulnerability -> Vulnerability: identifyHighRiskHouseholds()
+Social <-- Vulnerability: vulnerabilityAssessment
+deactivate Vulnerability
+
+Coordinator -> Education: analyzeEducationalNeeds()
+activate Education
+Education -> Education: assessSchoolPerformance()
+Education -> Education: identifyAttendanceIssues()
+Education -> Education: evaluateParentalGuidanceGaps()
+Education -> Education: analyzeEducationalSupport()
+Coordinator <-- Education: educationalNeedsReport
+deactivate Education
+
+Coordinator -> Financial: assessFinancialManagementNeeds()
+activate Financial
+Financial -> Financial: evaluateRemittanceManagement()
+Financial -> Financial: analyzeHouseholdBudgeting()
+Financial -> Financial: identifySavingsPractices()
+Financial -> Financial: assessInvestmentLiteracy()
+Coordinator <-- Financial: financialNeedsAssessment
+deactivate Financial
+
+Coordinator -> Psychosocial: evaluatePsychosocialNeeds()
+activate Psychosocial
+Psychosocial -> Psychosocial: assessEmotionalWellbeing()
+Psychosocial -> Psychosocial: analyzeFamilySeparationImpact()
+Psychosocial -> Psychosocial: identifySocialIsolation()
+Psychosocial -> Psychosocial: evaluateCommunicationPatterns()
+Coordinator <-- Psychosocial: psychosocialNeedsReport
+deactivate Psychosocial
+
+Coordinator -> Healthcare: analyzeHealthcareAccess()
+activate Healthcare
+Healthcare -> Healthcare: assessPreventiveCareUtilization()
+Healthcare -> Healthcare: evaluateChronicConditionManagement()
+Healthcare -> Healthcare: analyzeMentalHealthSupport()
+Healthcare -> Healthcare: identifyCareBurdenDistribution()
+Coordinator <-- Healthcare: healthcareNeedsAnalysis
+deactivate Healthcare
+
+Social -> Absentee: analyzeSuccessfulSupportModels()
+activate Absentee
+Absentee -> Absentee: identifyEffectiveInterventions()
+Absentee -> Absentee: assessCommunityBasedSupport()
+Absentee -> Absentee: evaluateRemoteGuidanceMechanisms()
+Absentee -> Absentee: analyzeReturneeIntegrationImpact()
+Social <-- Absentee: supportModelAnalysis
+deactivate Absentee
+
+Coordinator -> Coordinator: developSupportPrograms()
+activate Coordinator
+Coordinator -> Coordinator: designChildSupportInitiatives()
+Coordinator -> Coordinator: createElderCareSupportSystem()
+Coordinator -> Coordinator: developWomenEmpowermentPrograms()
+Coordinator -> Coordinator: establishCommunityNetworks()
+deactivate Coordinator
+
+Social -> Social: finalizeServicePlan()
+activate Social
+Social -> Social: allocateResources()
+Social -> Social: establishDeliveryMechanisms()
+Social -> Social: developMonitoringFramework()
+Social -> Social: createEvaluationPlan()
+deactivate Social
+
+Social -> Coordinator: implementSupportServices()
+@enduml
+----
+
+*Real-World Context:*
+The Social Welfare Department of Dhankuta Municipality is developing comprehensive support services for families left behind by migrant workers. Like many hill municipalities in Eastern Nepal, Dhankuta has experienced high rates of outmigration, primarily of working-age males to destinations including Gulf countries, Malaysia, and South Korea. This has created significant numbers of households where wives, children, and elderly parents remain behind.
+
+The process begins with retrieving detailed left-behind household data for the municipality. Analysis reveals that 28.3% of households have at least one member currently working abroad, with 7.2% having multiple absent members. The left-behind population includes 1,240 children under 15 with at least one parent absent (including 283 with both parents absent, typically in the care of grandparents), 876 elderly individuals (65+) with primary caregivers absent, and 1,458 women now serving as de facto household heads due to spousal migration.
+
+The Vulnerability Assessment identifies several critical factors affecting these households. While 82% receive remittances, there are significant vulnerabilities: 34% of remittance-receiving households report irregular or unpredictable remittance flows, creating financial instability. Caregiver analysis shows particular strain on elderly grandparents caring for grandchildren, with 47% reporting health issues that limit caregiving capacity. Social network mapping reveals that 26% of left-behind households have limited community support, particularly those that have recently relocated within the municipality or belong to minority ethnic groups.
+
+The Educational Needs analysis identifies concerning patterns among children with absent parents. School performance data shows these children have 18% lower average academic performance compared to peers with both parents present. Attendance issues are more prevalent, with 23% having irregular attendance compared to 9% in non-migrant households. The most significant gap identified is parental guidance—68% of teachers report minimal parental involvement from left-behind households in children's education.
+
+The Financial Management assessment reveals that while remittances provide economic stability, financial literacy remains a challenge. Only 38% of remittance-receiving households have formal banking relationships, with many still relying on informal money transfer systems. Household budgeting is particularly problematic, with 54% of left-behind households reporting difficulties managing irregular remittance flows against ongoing expenses. Only 28% have systematic savings practices, and investment literacy is extremely low, with just 16% having any knowledge of productive investment opportunities for remittance funds.
+
+The Psychosocial Needs evaluation identifies emotional well-being as a major concern. 47% of left-behind spouses report symptoms of anxiety or depression, with rates higher among those with less frequent communication with migrants. Children with absent parents show elevated rates of behavioral issues (32% compared to 12% in non-migrant households), particularly those with limited communication with their absent parent. Social isolation affects 38% of elderly left behind, with reduced community participation and limited social interactions.
+
+Based on this comprehensive analysis, the Service Planning Coordinator develops a multi-faceted support program with several key components:
+
+1. **Child-Centered Support Initiative**:
+   - After-school supervision and homework support program at four strategic locations
+   - Mentorship program pairing children of migrants with trained adult mentors
+   - Specialized teacher training for supporting children in migrant households
+   - Parent-teacher communication system adapted for absent parents, including video conferences
+
+2. **Elder Care Support System**:
+   - Mobile health check-up service visiting communities with high concentrations of elderly left behind
+   - Caregiver respite program providing temporary relief for grandparents raising grandchildren
+   - Volunteer companionship network to reduce social isolation
+   - Emergency response system with priority for households with elderly living alone
+
+3. **Women's Empowerment Program**:
+   - Leadership and decision-making training for women serving as de facto household heads
+   - Peer support groups for wives of migrants to share experiences and strategies
+   - Financial management training specifically designed for remittance-receiving households
+   - Income generation opportunities to reduce complete dependence on remittances
+
+4. **Community Solidarity Networks**:
+   - Formation of "Left-Behind Family Support Groups" in each ward
+   - Training of community volunteers to identify and assist vulnerable migrant households
+   - Regular community events specifically including left-behind family members
+   - Information sharing system about government services available to migrant families
+
+5. **Digital Connection Initiative**:
+   - Digital literacy training to improve communication with absent family members
+   - Community video-calling facilities for those without personal devices
+   - WhatsApp/Viber group formation for households with members in similar destination countries
+   - Simple digital tools for financial management of remittances
+
+The Social Welfare Department establishes a monitoring framework that tracks both implementation (services delivered, participation rates) and outcomes (improved well-being indicators for left-behind family members). The framework includes quarterly reviews of progress and an annual comprehensive evaluation of impact, with adjustments made based on emerging needs and effectiveness data.
+
+This comprehensive approach recognizes that migration's effects on left-behind families extend beyond economic impacts to include social, emotional, educational, and health dimensions—all of which require coordinated support interventions.
+
+===== Special Considerations for Nepal's Left-Behind Context
+
+The service planning approach incorporates several considerations specific to Nepal's unique migration and family context:
+
+1. **Caste/Ethnicity Dimensions**: Support programs recognize that left-behind experiences vary significantly across Nepal's diverse ethnic and caste groups, with some communities having stronger traditional support systems while others face greater isolation.
+
+2. **Remittance Dependency Cycle**: Interventions acknowledge the complex dynamics where remittances both support immediate needs but may also create long-term dependency and vulnerability, particularly when not directed toward sustainable investments.
+
+3. **Communication Infrastructure**: Plans account for varying levels of digital access and literacy, with special attention to remote hill communities where consistent internet connectivity remains challenging.
+
+4. **Masculine Role Transition**: Support recognizes the significant cultural transitions occurring as women assume traditionally male responsibilities in household decision-making and public representation.
+
+5. **Intergenerational Impacts**: Services specifically address the reshaping of grandparent-grandchild relationships when parents migrate, acknowledging both the strengths and strains of these arrangements.
+
+By incorporating these contextual factors, absentee population data becomes a powerful tool for designing services that address the real-world challenges faced by Nepal's left-behind populations, contributing to stronger, more resilient communities despite the disruptions of large-scale labor migration.
+
+===== Psychosocial Well-being Focus
+
+A critical dimension of the left-behind support strategy is its emphasis on psychosocial well-being, addressing the emotional and psychological impacts of family separation:
+
+1. **Attachment Disruption Support**: Specialized counseling approaches for children experiencing disrupted attachment due to parental absence, particularly important for children under 10.
+
+2. **Grief and Uncertainty Processing**: Safe spaces and facilitated sessions for left-behind family members to process complex emotions of "ambiguous loss" where loved ones are physically absent but psychologically present.
+
+3. **Identity and Role Transition**: Support for women navigating expanded roles and responsibilities, balancing empowerment with the stress of role overload.
+
+4. **Communication Quality Enhancement**: Guidance for improving the quality of remote communication, moving beyond logistics to meaningful emotional connection despite distance.
+
+5. **Return Adjustment Preparation**: Preparation for the psychological adjustments required when migrants return, whether temporarily or permanently, addressing changed family dynamics and expectations.
+
+This psychosocial dimension acknowledges that the impacts of migration on left-behind families extend far beyond economic considerations, affecting fundamental aspects of emotional well-being, family functioning, and community integration. By incorporating these elements, the service planning process creates more holistic support that addresses both practical and emotional dimensions of the left-behind experience.

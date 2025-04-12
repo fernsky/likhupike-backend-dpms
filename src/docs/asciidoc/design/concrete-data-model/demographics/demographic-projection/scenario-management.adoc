@@ -1,0 +1,295 @@
+[plantuml]
+----
+@startuml
+participant "Planning Department" as Planner
+participant "DemographicProjection" as Projection
+participant "ScenarioManager" as Manager
+participant "ScenarioBuilder" as Builder
+participant "AssumptionLibrary" as Library
+participant "ScenarioComparator" as Comparator
+participant "ImpactAnalyzer" as Impact
+
+Planner -> Projection: createNewProjection(adminAreaId, baselineYear, horizon)
+activate Projection
+Projection -> Projection: initializeProjection()
+Planner <-- Projection: newProjection
+deactivate Projection
+
+Planner -> Manager: createBaselineScenario(projectionId)
+activate Manager
+Manager -> Builder: buildScenario(ScenarioType.BASELINE)
+activate Builder
+Builder -> Library: getDefaultAssumptions(BASELINE)
+activate Library
+Builder <-- Library: defaultAssumptions
+deactivate Library
+Builder -> Builder: configureStandardParameters()
+Manager <-- Builder: baselineScenario
+deactivate Builder
+Planner <-- Manager: createdScenario
+deactivate Manager
+
+Planner -> Manager: createAlternativeScenario(projectionId, HIGH_GROWTH)
+activate Manager
+Manager -> Builder: buildScenario(ScenarioType.HIGH_GROWTH)
+activate Builder
+Builder -> Library: getDefaultAssumptions(HIGH_GROWTH)
+activate Library
+Builder <-- Library: highGrowthAssumptions
+deactivate Library
+Builder -> Builder: adjustParametersForHighGrowth()
+Manager <-- Builder: highGrowthScenario
+deactivate Builder
+Planner <-- Manager: createdScenario
+deactivate Manager
+
+Planner -> Manager: createCustomScenario(projectionId, "Climate Migration")
+activate Manager
+Manager -> Builder: buildCustomScenario("Climate Migration")
+activate Builder
+Builder -> Builder: initializeEmptyScenario()
+Builder -> Library: getComponentAssumptions(CLIMATE_IMPACT)
+activate Library
+Builder <-- Library: climateAssumptions
+deactivate Library
+Builder -> Builder: integrateCustomAssumptions()
+Manager <-- Builder: customScenario
+deactivate Builder
+Planner <-- Manager: createdScenario
+deactivate Manager
+
+Planner -> Manager: calculateAllScenarios(projectionId)
+activate Manager
+Manager -> Projection: runAllScenarios()
+activate Projection
+Projection -> Projection: executeDemographicProjections()
+Planner <-- Projection: projectionResults
+deactivate Projection
+Planner <-- Manager: scenariosCalculated
+deactivate Manager
+
+Planner -> Comparator: compareScenarios(projectionId, scenarioIds)
+activate Comparator
+Comparator -> Comparator: analyzeDeviation()
+Comparator -> Comparator: identifyKeyDifferences()
+Comparator -> Comparator: generateVarianceTables()
+Planner <-- Comparator: scenarioComparison
+deactivate Comparator
+
+Planner -> Impact: analyzeScenarioImpacts(projectionId, scenarioId)
+activate Impact
+Impact -> Impact: assessSectoralImpacts()
+Impact -> Impact: calculateServiceDemands()
+Impact -> Impact: evaluateInfrastructureNeeds()
+Impact -> Impact: generateRecommendations()
+Planner <-- Impact: impactAssessment
+deactivate Impact
+
+Planner -> Manager: setScenarioProbabilities(scenarioWeights)
+activate Manager
+Manager -> Manager: validateProbabilityDistribution()
+Manager -> Manager: assignWeightsToScenarios()
+Manager -> Manager: calculateCompositeForecast()
+Planner <-- Manager: probabilitiesAssigned
+deactivate Manager
+
+Planner -> Projection: finalizeProjectionWithScenarios()
+activate Projection
+Projection -> Projection: validateScenarioCompleteness()
+Projection -> Projection: prepareForApproval()
+Planner <-- Projection: finalizedProjection
+deactivate Projection
+@enduml
+----
+
+The Demographic Projection entity implements a sophisticated scenario management capability that enables planners to explore multiple possible demographic futures. This functionality is essential for robust planning that accounts for uncertainty and alternative policy paths.
+
+===== Scenario Types and Structure
+
+The system supports a comprehensive range of demographic scenarios:
+
+*Standard Demographic Scenario Types*
+
+1. **Baseline Scenario**: Represents the most likely demographic future based on current trends and policies. This typically assumes a moderate continuation of fertility decline, steady mortality improvement, and migration patterns similar to recent observations.
+
+2. **High Growth Scenario**: Models faster population growth through combinations of higher fertility, lower mortality, and/or increased net in-migration.
+
+3. **Low Growth Scenario**: Models slower population growth or potential population decline through lower fertility, higher mortality, and/or increased net out-migration.
+
+4. **Fertility Variants**: Specific scenarios focused on alternative fertility assumptions while keeping other factors constant, useful for isolating the impact of fertility changes.
+
+5. **Mortality Variants**: Scenarios exploring different mortality trajectories, particularly valuable for aging-related planning.
+
+6. **Migration Variants**: Given Nepal's high migration rates, scenarios specifically exploring different international and internal migration patterns.
+
+*Nepal-Specific Scenario Types*
+
+1. **Disaster Impact Scenarios**: Models demographic effects of earthquakes, floods, and landslides, including temporary displacement, permanent migration, and medium-term fertility responses.
+
+2. **Climate Change Scenarios**: Projects population redistribution due to changing agricultural viability, water availability, and disaster risks related to climate change.
+
+3. **Return Migration Scenarios**: Specifically modeling different patterns of return for Nepal's large overseas worker population, particularly relevant when considering economic shocks in destination countries.
+
+4. **Federalization Impact**: Modeling population redistribution linked to Nepal's new federal structure and emerging provincial capitals.
+
+5. **Economic Transformation**: Scenarios tied to different economic development trajectories, including industrialization, tourism expansion, or agricultural modernization.
+
+*Custom and Policy Scenarios*
+
+The system also supports the creation of custom scenarios to model specific policy interventions or combinations of factors:
+
+1. **Education Expansion**: Modeling how increased education access affects fertility, mortality, and migration.
+
+2. **Healthcare Investment**: Scenarios tied to healthcare improvement and its mortality effects.
+
+3. **Urbanization Policy**: Modeling different urban growth management approaches.
+
+4. **Composite Scenarios**: Combining multiple factors to create comprehensive alternative futures.
+
+===== Scenario Components and Parameters
+
+Each scenario consists of several configurable components:
+
+*Fertility Components*
+
+1. **Total Fertility Rate (TFR) Trajectory**: The most basic parameter, projecting the average number of children per woman over time.
+
+2. **Age-Specific Fertility Pattern**: Distribution of fertility across reproductive age groups (typically 15-49).
+
+3. **Urban-Rural Fertility Differential**: Different fertility assumptions for urban and rural areas.
+
+4. **Educational Fertility Differential**: Fertility variations by women's educational attainment.
+
+*Mortality Components*
+
+1. **Life Expectancy Trajectory**: Projected gains in life expectancy over the projection period.
+
+2. **Age-Specific Mortality Pattern**: Mortality rates across age groups, typically using model life tables or historical patterns.
+
+3. **Sex Mortality Differential**: Different mortality assumptions for males and females.
+
+4. **Cause-of-Death Structure**: For advanced scenarios, projecting changes in major causes of death.
+
+*Migration Components*
+
+1. **Net Migration Rate**: Overall balance of in- and out-migration.
+
+2. **Age-Sex Migration Pattern**: Distribution of migration across age and sex groups.
+
+3. **Origin-Destination Flows**: For spatial projections, specific flows between administrative areas.
+
+4. **International Migration Components**: Separately modeling emigration to and return from international destinations.
+
+*Special Parameters*
+
+1. **Disaster Probability**: For risk-aware projections, incorporating probability and demographic impact of natural disasters.
+
+2. **Policy Implementation Timing**: When policy changes are expected to take effect.
+
+3. **Economic Development Trajectory**: How economic changes might influence demographic behaviors.
+
+===== Scenario Creation Workflow
+
+The system implements a flexible workflow for scenario creation:
+
+1. **Template-Based Creation**: Users can select from pre-defined scenario templates (high growth, low growth, etc.) that automatically set appropriate parameters.
+
+2. **Component Assembly**: For custom scenarios, users can select specific components from different scenario types and combine them.
+
+3. **Parameter Adjustment**: Fine-tuning of specific parameters within scenarios to reflect local knowledge or special considerations.
+
+4. **Assumption Documentation**: Comprehensive tracking of all assumptions made in each scenario, ensuring transparency and reproducibility.
+
+5. **Scenario Inheritance**: New scenarios can inherit parameters from existing ones with specific modifications, facilitating the creation of scenario families.
+
+===== Assumption Library
+
+The system maintains a library of standard demographic assumptions that can be assembled into scenarios:
+
+1. **UN Fertility Variants**: Standard United Nations high, medium, and low fertility assumptions adapted to Nepal's context.
+
+2. **WHO Mortality Improvements**: World Health Organization projections for mortality improvements by cause and age.
+
+3. **Historical Migration Patterns**: Documented migration patterns from different periods that can be applied to future projections.
+
+4. **Nepal-Specific Pattern Library**: Country-specific demographic patterns observed in different regions and periods.
+
+This assumption library allows for rapid scenario creation while ensuring methodological consistency and adherence to international demographic standards.
+
+===== Scenario Comparison and Analysis
+
+The system provides powerful tools for comparing and analyzing different scenarios:
+
+1. **Side-by-Side Comparison**: Direct visual and tabular comparison of key demographic indicators across scenarios.
+
+2. **Variance Analysis**: Statistical analysis of how much scenarios diverge over time and which factors drive the differences.
+
+3. **Crossover Detection**: Identification of points where different scenarios intersect or diverge significantly.
+
+4. **Demographic Structure Comparison**: Analysis of how population structures (age pyramids, dependency ratios) differ between scenarios.
+
+5. **Timing Analysis**: Examination of when critical demographic milestones (e.g., population peak, dependency ratio minimum) occur in different scenarios.
+
+These comparison capabilities help planners understand the range of possible demographic futures and their implications.
+
+===== Probability Weighting
+
+For comprehensive planning, scenarios can be assigned probability weights that reflect their relative likelihood:
+
+1. **Expert Assessment**: Weights assigned based on expert judgment about the relative plausibility of different scenarios.
+
+2. **Historical Validation**: Weights informed by how well similar scenarios have predicted past demographic changes.
+
+3. **Dynamic Weighting**: Capability to adjust weights over time as new data emerges.
+
+4. **Composite Forecasts**: Creating weighted averages across scenarios for use when a single projection is required.
+
+This probability framework helps decision-makers understand both the range of possibilities and their relative likelihoods.
+
+===== Impact Assessment
+
+Each scenario is linked to impact assessments across key sectors:
+
+1. **Education Impact**: Projecting student populations, teacher requirements, and facility needs.
+
+2. **Healthcare Impact**: Estimating healthcare demand by type and location.
+
+3. **Housing and Infrastructure**: Projecting housing unit requirements and infrastructure needs.
+
+4. **Labor Market**: Estimating workforce size, composition, and potential skill gaps.
+
+5. **Social Protection**: Assessing sustainability of pension systems and other age-related social programs.
+
+These impact assessments translate demographic scenarios into actionable planning insights across government departments.
+
+===== Nepal-Specific Implementation Features
+
+The scenario management system includes several Nepal-specific features:
+
+1. **Ecological Zone Differentiation**: Capability to create distinct scenarios for mountain, hill, and terai regions, recognizing their different demographic dynamics.
+
+2. **Remittance-Sensitive Modeling**: Scenarios that incorporate remittance flows and their effects on household formation and consumption.
+
+3. **Post-Disaster Reconstruction**: Special scenario types for modeling population recovery and redistribution following major disasters.
+
+4. **Federalism Trajectory**: Scenarios specifically modeling the population effects of Nepal's ongoing federal restructuring.
+
+5. **Caste/Ethnicity Components**: Optional capability to incorporate distinct demographic behaviors of major caste and ethnic groups into projection scenarios.
+
+These Nepal-specific features ensure that the scenario management system addresses the country's unique demographic context and planning needs.
+
+===== Scenario Documentation and Communication
+
+The system provides comprehensive tools for documenting and communicating scenarios:
+
+1. **Assumption Transparency**: Clear documentation of all scenario assumptions for transparency and reproducibility.
+
+2. **Narrative Development**: Tools for creating narrative descriptions that explain scenarios in non-technical language.
+
+3. **Visualization Templates**: Standardized visualization formats for consistent communication of scenario implications.
+
+4. **Uncertainty Communication**: Methods for effectively communicating the uncertainties inherent in different scenarios.
+
+5. **Policy Relevance Mapping**: Explicit connections between scenarios and relevant policy decisions or planning processes.
+
+This documentation and communication capability ensures that the technical complexity of demographic scenarios can be effectively translated into useful planning information for diverse stakeholders.

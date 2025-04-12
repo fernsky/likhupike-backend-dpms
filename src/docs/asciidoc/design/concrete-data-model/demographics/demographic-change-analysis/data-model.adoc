@@ -1,0 +1,540 @@
+===== Data Model
+
+The Demographic Change Analysis functionality is supported by a set of specialized entities that work together to detect, analyze, and communicate demographic transitions over time.
+
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+class DemographicChangeAnalysis {
+  +id: UUID
+  +adminAreaId: UUID
+  +adminAreaLevel: AdminAreaLevel
+  +analysisTitle: String
+  +analysisDescription: String
+  +startPeriod: Year
+  +endPeriod: Year
+  +author: UUID
+  +createdAt: Instant
+  +updatedAt: Instant
+  +status: AnalysisStatus
+  +confidenceLevel: ConfidenceLevel
+  +methodology: String
+  +publicationReady: Boolean
+  +analysisResults: JsonB
+  +generateReport(): DemographicReport
+  +identifySignificantChanges(): List<DemographicChange>
+  +estimateChangeDirection(): TrendDirection
+  +calculateChangeVelocity(): Double
+  +compareToHistoricalPatterns(): PatternMatchResult
+}
+
+class DemographicChange {
+  +id: UUID
+  +analysisId: UUID
+  +demographicMeasure: DemographicMeasure
+  +measureType: MeasureType
+  +startValue: Double
+  +endValue: Double
+  +percentageChange: Double
+  +absoluteChange: Double
+  +changeType: ChangeType
+  +significance: ChangeSignificance
+  +impactAssessment: String
+  +policyImplications: String
+  +comparedToProvincial: Double
+  +comparedToNational: Double
+  +assessImpact(): ImpactAssessment
+  +compareToBenchmarks(): BenchmarkComparisonResult
+}
+
+class ChangeDetectionRule {
+  +id: UUID
+  +measureType: MeasureType
+  +thresholdPercentage: Double
+  +thresholdAbsolute: Double
+  +minSignificancePeriod: Integer
+  +significanceTestType: SignificanceTest
+  +sensitivity: RuleSensitivity
+  +applicationLevel: AdminAreaLevel
+  +applyRule(startData: Double, endData: Double, period: Integer): ChangeResult
+  +calibrateRule(historicalData: List<Double>): void
+}
+
+class DemographicPatternTemplate {
+  +id: UUID
+  +templateName: String
+  +patternType: PatternType
+  +patternDescription: String
+  +referenceDataPoints: List<DataPoint>
+  +patternSignature: String
+  +confidenceThreshold: Double
+  +matches(demographicData: List<DataPoint>): MatchResult
+  +calculateConfidence(demographicData: List<DataPoint>): Double
+}
+
+class DemographicReport {
+  +id: UUID
+  +analysisId: UUID
+  +reportTitle: String
+  +generatedAt: Instant
+  +reportFormat: ReportFormat
+  +languageCode: String
+  +generatedBy: UUID
+  +reportContent: Blob
+  +visualizations: List<Visualization>
+  +referenceMaterials: List<Reference>
+}
+
+class DemographicProjection {
+  +id: UUID
+  +analysisId: UUID
+  +baselineYear: Year
+  +projectionEndYear: Year
+  +scenarioName: String
+  +projectionMethod: ProjectionMethod
+  +assumptionDescription: String
+  +confidenceInterval: Double
+  +projectionDataPoints: List<ProjectionPoint>
+  +projectionImpacts: List<ProjectedImpact>
+}
+
+class ProjectionPoint {
+  +id: UUID
+  +projectionId: UUID
+  +year: Year
+  +demographicMeasure: DemographicMeasure
+  +projectedValue: Double
+  +confidenceMin: Double
+  +confidenceMax: Double
+}
+
+class ProjectedImpact {
+  +id: UUID
+  +projectionId: UUID
+  +impactSector: ImpactSector
+  +impactDescription: String
+  +impactMagnitude: ImpactMagnitude
+  +timeframe: ImpactTimeframe
+  +recommendedActions: String
+}
+
+enum DemographicMeasure {
+  TOTAL_POPULATION
+  POPULATION_DENSITY
+  HOUSEHOLD_COUNT
+  HOUSEHOLD_SIZE
+  GENDER_RATIO
+  MEDIAN_AGE
+  DEPENDENCY_RATIO
+  YOUTH_RATIO
+  ELDERLY_RATIO
+  WORKING_AGE_RATIO
+  LITERACY_RATE
+  NET_MIGRATION_RATE
+  NATURAL_GROWTH_RATE
+  URBANIZATION_RATE
+  ETHNIC_COMPOSITION
+  LANGUAGE_DISTRIBUTION
+}
+
+enum MeasureType {
+  ABSOLUTE_VALUE
+  PERCENTAGE
+  RATIO
+  RATE_PER_1000
+  INDEX
+  COMPOSITION
+}
+
+enum ChangeType {
+  GROWTH
+  DECLINE
+  REDISTRIBUTION
+  COMPOSITION_SHIFT
+  ACCELERATION
+  DECELERATION
+  REVERSAL
+  STABILIZATION
+}
+
+enum ChangeSignificance {
+  VERY_HIGH
+  HIGH
+  MODERATE
+  LOW
+  NEGLIGIBLE
+  STATISTICALLY_INSIGNIFICANT
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum ConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MODERATE
+  LOW
+  VERY_LOW
+  EXPERIMENTAL
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  CYCLICAL
+  ACCELERATING
+  DECELERATING
+}
+
+enum SignificanceTest {
+  PERCENTAGE_THRESHOLD
+  STANDARD_DEVIATION
+  TREND_ANALYSIS
+  STATISTICAL_SIGNIFICANCE
+  COMPARATIVE_BENCHMARK
+}
+
+enum RuleSensitivity {
+  VERY_HIGH
+  HIGH
+  MODERATE
+  LOW
+  VERY_LOW
+  CUSTOM
+}
+
+enum AnalysisStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  PUBLISHED
+  DEPRECATED
+  ARCHIVED
+}
+
+enum PatternType {
+  URBANIZATION
+  AGING
+  YOUTH_BULGE
+  MIGRATION_DRIVEN
+  DEMOGRAPHIC_TRANSITION
+  POST_DISASTER
+  ECONOMIC_RESPONSE
+  POLICY_RESPONSE
+}
+
+enum ReportFormat {
+  PDF
+  HTML
+  DOCX
+  INTERACTIVE_DASHBOARD
+  DATA_EXPORT
+}
+
+enum ProjectionMethod {
+  COHORT_COMPONENT
+  EXPONENTIAL_GROWTH
+  LINEAR_TREND
+  LOGISTIC
+  REGRESSION_BASED
+  COMPONENT_METHOD
+  MULTI_REGIONAL
+  BAYESIAN_PROBABILISTIC
+}
+
+enum ImpactSector {
+  EDUCATION
+  HEALTHCARE
+  HOUSING
+  TRANSPORTATION
+  EMPLOYMENT
+  SOCIAL_SERVICES
+  INFRASTRUCTURE
+  ENVIRONMENT
+  FISCAL
+}
+
+enum ImpactMagnitude {
+  TRANSFORMATIVE
+  MAJOR
+  MODERATE
+  MINOR
+  NEGLIGIBLE
+}
+
+enum ImpactTimeframe {
+  IMMEDIATE
+  SHORT_TERM
+  MEDIUM_TERM
+  LONG_TERM
+  INTERGENERATIONAL
+}
+
+DemographicChangeAnalysis "1" *-- "many" DemographicChange
+DemographicChangeAnalysis "1" *-- "many" ChangeDetectionRule
+DemographicChangeAnalysis "1" -- "many" DemographicReport
+DemographicChangeAnalysis "1" *-- "many" DemographicProjection
+DemographicProjection "1" *-- "many" ProjectionPoint
+DemographicProjection "1" *-- "many" ProjectedImpact
+
+DemographicChange -- DemographicMeasure
+DemographicChange -- MeasureType
+DemographicChange -- ChangeType
+DemographicChange -- ChangeSignificance
+DemographicChangeAnalysis -- AnalysisStatus
+DemographicChangeAnalysis -- AdminAreaLevel
+DemographicChangeAnalysis -- ConfidenceLevel
+DemographicChangeAnalysis -- TrendDirection
+ChangeDetectionRule -- MeasureType
+ChangeDetectionRule -- SignificanceTest
+ChangeDetectionRule -- RuleSensitivity
+ChangeDetectionRule -- AdminAreaLevel
+DemographicPatternTemplate -- PatternType
+DemographicReport -- ReportFormat
+DemographicProjection -- ProjectionMethod
+ProjectionPoint -- DemographicMeasure
+ProjectedImpact -- ImpactSector
+ProjectedImpact -- ImpactMagnitude
+ProjectedImpact -- ImpactTimeframe
+@enduml
+----
+
+==== Entity Descriptions
+
+===== DemographicChangeAnalysis
+
+The core entity for demographic change analysis that represents a comprehensive examination of demographic shifts for a specific administrative area over a defined time period.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the analysis
+| adminAreaId | Reference to the administrative area being analyzed
+| adminAreaLevel | Level of the administrative area (ward, municipality, district, province, country)
+| analysisTitle | Human-readable title for the analysis
+| analysisDescription | Detailed description of the analysis focus and context
+| startPeriod | Beginning year of the analysis period
+| endPeriod | Ending year of the analysis period
+| author | Reference to the user who created the analysis
+| createdAt | Timestamp when the analysis was created
+| updatedAt | Timestamp when the analysis was last modified
+| status | Current status in the analysis workflow
+| confidenceLevel | Assessment of the analysis reliability
+| methodology | Description of analytical methods employed
+| publicationReady | Whether the analysis is ready for public consumption
+| analysisResults | Structured JSON containing analysis outcomes and metrics
+|===
+
+The DemographicChangeAnalysis entity implements the CustomValidatable and WebhookTriggerable interfaces to ensure analysis quality and enable integration with other systems.
+
+===== DemographicChange
+
+Represents a specific demographic shift detected during analysis. Each DemographicChangeAnalysis typically contains multiple DemographicChange instances representing different aspects of demographic transformation.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the demographic change
+| analysisId | Reference to the parent analysis
+| demographicMeasure | Type of demographic measure being analyzed
+| measureType | Categorization of the measurement approach
+| startValue | Value at the beginning of the analysis period
+| endValue | Value at the end of the analysis period
+| percentageChange | Proportional change over the period
+| absoluteChange | Absolute difference between start and end values
+| changeType | Categorization of the type of demographic change
+| significance | Assessment of the change's significance
+| impactAssessment | Analysis of the change's impact on the community
+| policyImplications | Potential policy responses to the demographic change
+| comparedToProvincial | How this change compares to provincial averages
+| comparedToNational | How this change compares to national averages
+|===
+
+===== ChangeDetectionRule
+
+Encapsulates the rules and thresholds used to identify significant demographic changes. These rules can be calibrated to different administrative levels and types of demographic measures.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the rule
+| measureType | Type of measurement the rule applies to
+| thresholdPercentage | Percentage change threshold for significance
+| thresholdAbsolute | Absolute change threshold for significance
+| minSignificancePeriod | Minimum time period for changes to be considered significant
+| significanceTestType | Statistical approach for determining significance
+| sensitivity | Level of sensitivity for change detection
+| applicationLevel | Administrative level the rule applies to
+|===
+
+===== DemographicPatternTemplate
+
+Defines recognizable patterns in demographic change that can be matched against observed data to identify common demographic transitions.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the pattern template
+| templateName | Human-readable name of the pattern
+| patternType | Categorization of the demographic pattern
+| patternDescription | Detailed description of what the pattern represents
+| referenceDataPoints | Standard data points defining the pattern
+| patternSignature | Compact representation of the pattern for quick matching
+| confidenceThreshold | Minimum confidence level for pattern match
+|===
+
+===== DemographicReport
+
+Represents a formatted report generated from demographic change analysis, suitable for presentation to stakeholders.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the report
+| analysisId | Reference to the analysis the report is based on
+| reportTitle | Title of the report
+| generatedAt | When the report was generated
+| reportFormat | Format of the report document
+| languageCode | Language the report is written in
+| generatedBy | Reference to user who generated the report
+| reportContent | Actual content of the report
+| visualizations | List of visualizations included in the report
+| referenceMaterials | Supplementary materials and references
+|===
+
+===== DemographicProjection
+
+Encapsulates forward-looking projections based on demographic analysis, helping planners anticipate future demographic states.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the projection
+| analysisId | Reference to the analysis the projection is based on
+| baselineYear | Starting year for the projection
+| projectionEndYear | End year for the projection
+| scenarioName | Name of the projection scenario
+| projectionMethod | Methodology used for projection
+| assumptionDescription | Description of assumptions made
+| confidenceInterval | Statistical confidence interval for projections
+| projectionDataPoints | Projected values at different time points
+| projectionImpacts | Assessed impacts of projected changes
+|===
+
+===== ProjectionPoint
+
+Represents a single projected data point within a demographic projection.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the projection point
+| projectionId | Reference to the parent projection
+| year | Year this projection point represents
+| demographicMeasure | Type of demographic measure being projected
+| projectedValue | Projected value for the measure
+| confidenceMin | Lower bound of the confidence interval
+| confidenceMax | Upper bound of the confidence interval
+|===
+
+===== ProjectedImpact
+
+Captures the projected impacts of demographic changes on different sectors.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| id | Unique identifier for the projected impact
+| projectionId | Reference to the parent projection
+| impactSector | Sector affected by demographic change
+| impactDescription | Description of the projected impact
+| impactMagnitude | Assessment of the impact's magnitude
+| timeframe | When the impact is expected to manifest
+| recommendedActions | Suggested responses to mitigate or prepare for the impact
+|===
+
+==== Nepal-Specific Extensions
+
+The Demographic Change Analysis data model includes several extensions specific to Nepal's context:
+
+===== EthnicDemographicChange
+
+An extension of DemographicChange that captures shifts specific to Nepal's ethnic groups.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ethnicGroup | The ethnic group being analyzed
+| ethnicProportionStart | Starting proportion of the population
+| ethnicProportionEnd | Ending proportion of the population
+| interethnicMigrationRate | Rate of migration between ethnic communities
+| languageRetentionRate | Rate at which ethnic language is being retained
+|===
+
+===== RemittanceImpactAnalysis
+
+A specialized analysis component that examines the demographic effects of Nepal's high international labor migration.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| remittanceSourceCountries | Primary countries sending remittances
+| remittancePercentageOfEconomy | Remittance as percentage of local economy
+| absenteeHouseholdPercentage | Percentage of households with absent members
+| demographicDistortionIndex | Measure of demographic structure distortion due to migration
+| returnMigrationTrend | Trend in return migration patterns
+|===
+
+===== DisasterImpactDemographics
+
+Given Nepal's vulnerability to natural disasters, this extension captures disaster-induced demographic changes.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| disasterType | Type of disaster (earthquake, flood, landslide)
+| disasterDate | When the disaster occurred
+| displacementMagnitude | Number of people displaced
+| returnRate | Rate at which displaced people returned
+| reconstructionImpact | Impact of reconstruction on demographics
+| vulnerabilityChange | Changes in vulnerability patterns post-disaster
+|===
+
+==== Data Storage Considerations
+
+The DemographicChangeAnalysis system employs several specialized data storage approaches:
+
+1. **Time Series Storage**: Demographic change data is stored in time series format to enable efficient temporal analysis, using both relational and specialized time series storage.
+
+2. **JSON Document Storage**: Complex analysis results are stored in JSON format within the `analysisResults` field, allowing for flexible representation of diverse analytical outputs.
+
+3. **Geometric Data**: Spatial patterns of demographic change are stored using PostgreSQL's PostGIS extension, enabling spatial analysis of demographic phenomena.
+
+4. **Versioned Storage**: Historical versions of analyses are maintained to track how understanding of demographic patterns evolves over time.
+
+5. **Hierarchical Aggregation**: Results are stored at different administrative levels with links to enable drill-down and roll-up analysis.
+
+==== Data Privacy Considerations
+
+The demographic change analysis system implements several privacy protections:
+
+1. **Aggregation Level Controls**: Ensures that data aggregation levels prevent individual identification, with minimum population thresholds for each analysis level.
+
+2. **Sensitive Attribute Protection**: Special handling for sensitive demographic attributes like ethnicity, religion, and economic status.
+
+3. **Differential Privacy**: Implementation of differential privacy techniques when analyzing small populations.
+
+4. **Analysis Purpose Limitation**: Documentation and enforcement of analysis purpose in alignment with Nepal's data protection principles.
+
+5. **Access Controls**: Tiered access based on administrative level, analysis status, and user role.
+
+These privacy measures ensure that demographic analysis provides valuable planning insights while protecting the privacy rights of Nepal's citizens.

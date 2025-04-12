@@ -1,0 +1,146 @@
+===== Multilingual Education Planning
+
+*Scenario:* Using literacy statistics to design mother tongue-based multilingual education programs
+
+[plantuml]
+----
+@startuml
+actor "Provincial Education\nDirectorate" as Education
+actor "Multilingual Education\nSpecialist" as Specialist
+participant "LiteracyStatistics" as Literacy
+participant "LanguageMapping\nService" as Language
+participant "SchoolReadiness\nService" as School
+participant "TeacherAvailability\nService" as Teacher
+participant "CurriculumDevelopment\nService" as Curriculum
+
+Education -> Literacy: retrieveLiteracyByLanguage(provinceId)
+activate Literacy
+Literacy -> Literacy: extractLinguisticDemographics()
+Literacy -> Literacy: analyzePrimaryLanguageLiteracy()
+Literacy -> Literacy: assessOfficialLanguageLiteracy()
+Literacy -> Literacy: calculateLanguageLiteracyGaps()
+Education <-- Literacy: languageLiteracyProfile
+deactivate Literacy
+
+Education -> Language: mapDominantLanguages()
+activate Language
+Language -> Language: identifyLanguageDistribution()
+Language -> Language: analyzeLanguageDensity()
+Language -> Language: assessLanguageVitality()
+Language -> Language: evaluateScriptUsage()
+Education <-- Language: languageMappingReport
+deactivate Language
+
+Specialist -> School: assessMultilingualReadiness()
+activate School
+School -> School: evaluateExistingCapacity()
+School -> School: analyzeInfrastructureNeeds()
+School -> School: assessCommunityAttitudes()
+School -> School: reviewPastImplementations()
+Specialist <-- School: readinessAssessment
+deactivate School
+
+Specialist -> Teacher: analyzeTeacherCapabilities()
+activate Teacher
+Teacher -> Teacher: identifyLanguageCompetentTeachers()
+Teacher -> Teacher: assessTrainingNeeds()
+Teacher -> Teacher: evaluateTeacherDistribution()
+Teacher -> Teacher: analyzeCommunityResources()
+Specialist <-- Teacher: teacherCapabilityReport
+deactivate Teacher
+
+Education -> Curriculum: assessCurriculumStatus()
+activate Curriculum
+Curriculum -> Curriculum: reviewExistingMaterials()
+Curriculum -> Curriculum: evaluateScriptStandardization()
+Curriculum -> Curriculum: identifyContentGaps()
+Curriculum -> Curriculum: analyzeTransitionApproaches()
+Education <-- Curriculum: curriculumAssessment
+deactivate Curriculum
+
+Specialist -> Literacy: analyzeTransitionOutcomes()
+activate Literacy
+Literacy -> Literacy: assessMTBMLEImpactData()
+Literacy -> Literacy: evaluateLanguageTransitionPatterns()
+Literacy -> Literacy: analyzeLiteracyProgressionRates()
+Specialist <-- Literacy: outcomeAnalysis
+deactivate Literacy
+
+Education -> Curriculum: developMultilingualProgram()
+activate Curriculum
+Curriculum -> Curriculum: designLanguageTransitionModel()
+Curriculum -> Curriculum: developTeachingMaterials()
+Curriculum -> Curriculum: createAssessmentTools()
+Curriculum -> Curriculum: establishLanguageBridgingStrategies()
+Education <-- Curriculum: programDesign
+deactivate Curriculum
+
+Specialist -> Teacher: developTeacherTraining()
+activate Teacher
+Teacher -> Teacher: designLinguisticCompetencyTraining()
+Teacher -> Teacher: createMethodologyWorkshops()
+Teacher -> Teacher: developPedagogicalResources()
+Teacher -> Teacher: establishMentorNetworks()
+Specialist <-- Teacher: trainingProgram
+deactivate Teacher
+
+Education -> Education: finalizeMultilingualStrategy()
+activate Education
+Education -> Education: prioritizeImplementationSchools()
+Education -> Education: allocateLanguageResources()
+Education -> Education: establishMonitoringFramework()
+Education -> Education: developPhasedExpansion()
+deactivate Education
+
+Education -> Specialist: implementMultilingualEducation()
+@enduml
+----
+
+*Real-World Context:*
+Province 1's Education Directorate is developing a comprehensive Mother Tongue-Based Multilingual Education (MTB-MLE) program to address educational challenges in linguistically diverse districts. The province is home to several language communities including Limbu, Rai, Tamang, and Sherpa, alongside Nepali speakers. Educational outcomes have historically been lower in non-Nepali speaking communities, particularly in early grades.
+
+The process begins with retrieving detailed language-specific literacy statistics for the province. The data reveals significant disparities: while overall literacy in the province is 72.8%, this drops to 63.5% in primarily Limbu-speaking communities and 61.2% in Rai-speaking areas. More concerning is that only 38% of Limbu speakers and 42% of Rai speakers are also literate in Nepali, creating barriers to accessing higher education and government services which operate primarily in Nepali.
+
+The Language Mapping Service conducts a detailed analysis of language distribution across the province. In eastern districts like Panchthar and Taplejung, Limbu is the mother tongue for over 40% of the population. Various Rai languages (Bantawa, Chamling, Kulung) dominate in Khotang and parts of Bhojpur. The analysis also assesses language vitality, finding that while Limbu has strong intergenerational transmission, smaller Rai languages are showing signs of declining use among younger generations. Script usage analysis shows that while Limbu has its own script (Sirijonga), it's familiar to only about 15% of Limbu speakers, with most using Devanagari script instead.
+
+The School Readiness Service evaluates the existing capacity for multilingual education. Only 22% of schools in language-minority areas have any mother tongue instructional materials, and less than 5% offer any form of mother tongue-based instruction. Community attitudes vary dramatically - Limbu communities show strong support for mother tongue education (86% positive), while attitudes in Rai communities are more mixed (54% positive), with economic concerns about the practical value of mother tongue education frequently cited.
+
+The Teacher Capability assessment identifies a critical gap: while 68% of teachers in Limbu-dominant areas are themselves Limbu speakers, only 23% have any training in multilingual teaching methodologies. The situation is more challenging in Rai areas, where only 45% of teachers speak any Rai language and virtually none have training in multilingual pedagogy. The assessment also identifies 37 community members across the province with both linguistic expertise and potential for teacher training, an important resource for program development.
+
+The Curriculum assessment finds limited existing materials: some basic readers in Limbu developed by NGOs and a handful of supplementary materials in two Rai languages. Script standardization is well-established for Limbu, but several Rai languages lack standardized orthographies. The assessment identifies the need for transition approaches that begin with mother tongue in early grades and gradually introduce Nepali, with content aligned to the national curriculum framework.
+
+Based on this comprehensive analysis, the Education Directorate develops a phased multilingual education program with several key components:
+
+1. **Language Prioritization**: Initial focus on Limbu, Bantawa Rai, and Chamling Rai based on speaker population, community readiness, and material availability
+
+2. **Transitional Model**: Mother tongue instruction for pre-primary through grade 3, with gradual introduction of Nepali as a subject from grade 1 and as a partial medium of instruction from grade 4
+
+3. **Curriculum Development**: Creation of mother tongue primers and readers for early grades following a standardized template adaptable to different languages
+
+4. **Teacher Development**: Two-tier training program with intensive linguistics and pedagogy training for 35 master trainers (primarily drawn from the community) who will then train 420 classroom teachers
+
+5. **Community Engagement**: Formation of language committees in each target community to validate materials and build support for the program
+
+6. **Material Production**: Establishment of a multilingual education resource center at the Provincial Education Training Center, with capacity to develop, print, and distribute mother tongue materials
+
+7. **Assessment Adaptation**: Development of reading assessments in mother tongues to evaluate program effectiveness while maintaining alignment with national assessment frameworks
+
+The Education Directorate establishes clear targets: implement the program in 75 schools in year one, focusing on pre-primary and grade 1, and expand to 200 schools and higher grades in subsequent years. The implementation timeline prioritizes Limbu-speaking areas first due to greater readiness, followed by phased implementation in Rai-speaking regions.
+
+This evidence-based approach ensures that multilingual education resources are targeted where they can have the greatest impact, with objectives and methods tailored to each language community's specific context, rather than using a one-size-fits-all approach that ignores linguistic and social differences.
+
+===== Special Considerations for Nepal's Multilingual Education Context
+
+The multilingual education planning process incorporates several considerations specific to Nepal's linguistic and educational context:
+
+1. **Constitutional Rights**: Nepal's constitution guarantees the right to education in mother tongue, providing a legal foundation for multilingual education programs.
+
+2. **Writing System Variations**: Some languages have their own scripts (like Limbu), while others use adapted Devanagari script, requiring different approaches to materials development.
+
+3. **Border Language Communities**: In border areas, some languages (like Maithili) are also spoken in neighboring India, allowing for potential cross-border resource sharing.
+
+4. **Religious Considerations**: For some communities, language is closely tied to religious practices, and educational materials must be culturally appropriate.
+
+5. **Migration Effects**: Internal migration patterns are changing linguistic demographics, requiring flexible planning that anticipates demographic shifts.
+
+By incorporating these contextual factors, literacy statistics become a powerful tool for designing culturally appropriate, linguistically sound educational programs that support both mother tongue development and successful transition to Nepal's national language.

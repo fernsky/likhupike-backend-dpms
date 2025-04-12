@@ -1,0 +1,343 @@
+[plantuml]
+----
+@startuml
+skinparam componentStyle rectangle
+
+component "Migration Pattern Analysis" {
+  [Temporal Analysis] as Time
+  [Spatial Analysis] as Space
+  [Demographic Analysis] as Demo
+  [Economic Analysis] as Econ
+  [Network Analysis] as Network
+  [Causal Analysis] as Cause
+  [Return Migration Analysis] as Return
+  [Impact Analysis] as Impact
+}
+
+cloud "Analysis Inputs" {
+  [Absentee Population Data]
+  [Household Statistics]
+  [Economic Indicators]
+  [Educational Data]
+  [Geographic Information]
+  [Historical Trends]
+  [Policy Changes]
+  [External Events]
+}
+
+cloud "Analysis Outputs" {
+  [Migration Corridors]
+  [Vulnerability Mapping]
+  [Remittance Forecasts]
+  [Service Needs Projections]
+  [Labor Market Impact Assessment]
+  [Brain Drain Indicators]
+  [Return Migration Forecasts]
+  [Household Risk Profiles]
+}
+
+[Absentee Population Data] --> Time
+[Absentee Population Data] --> Space
+[Absentee Population Data] --> Demo
+[Absentee Population Data] --> Econ
+[Absentee Population Data] --> Network
+[Absentee Population Data] --> Cause
+[Absentee Population Data] --> Return
+[Absentee Population Data] --> Impact
+
+[Household Statistics] --> Demo
+[Household Statistics] --> Impact
+
+[Economic Indicators] --> Econ
+[Economic Indicators] --> Cause
+[Economic Indicators] --> Return
+
+[Educational Data] --> Demo
+[Educational Data] --> Cause
+
+[Geographic Information] --> Space
+[Geographic Information] --> Network
+
+[Historical Trends] --> Time
+[Historical Trends] --> Cause
+
+[Policy Changes] --> Cause
+[Policy Changes] --> Return
+
+[External Events] --> Cause
+[External Events] --> Time
+[External Events] --> Return
+
+Time --> [Migration Corridors]
+Time --> [Return Migration Forecasts]
+
+Space --> [Migration Corridors]
+Space --> [Vulnerability Mapping]
+Space --> [Service Needs Projections]
+
+Demo --> [Brain Drain Indicators]
+Demo --> [Service Needs Projections]
+Demo --> [Vulnerability Mapping]
+
+Econ --> [Remittance Forecasts]
+Econ --> [Labor Market Impact Assessment]
+
+Network --> [Migration Corridors]
+Network --> [Return Migration Forecasts]
+
+Cause --> [Vulnerability Mapping]
+Cause --> [Brain Drain Indicators]
+
+Return --> [Return Migration Forecasts]
+Return --> [Service Needs Projections]
+Return --> [Labor Market Impact Assessment]
+
+Impact --> [Household Risk Profiles]
+Impact --> [Service Needs Projections]
+Impact --> [Labor Market Impact Assessment]
+@enduml
+----
+
+The AbsenteePopulation entity integrates several analytical methodologies to transform raw migration data into actionable insights for planning and policy development.
+
+===== Temporal Analysis
+
+Migration patterns in Nepal exhibit significant temporal variation, which the system analyzes through specialized techniques:
+
+1. **Seasonal Migration Cycles**
+   - Identification of agricultural season-based migration to India (harvest periods)
+   - Tracking of festival-related return migration (Dashain, Tihar, etc.)
+   - Measurement of climate-induced seasonal movement (winter migration from mountain regions)
+
+2. **Long-Term Trend Analysis**
+   - Multi-year migration trajectory analysis
+   - Growth rate calculation for specific migration corridors
+   - Policy impact assessment through before-after comparisons
+
+3. **Shock Event Response**
+   - Assessment of migration pattern changes following earthquakes, floods, or political events
+   - Return migration surges during global crises (e.g., COVID-19, Gulf conflicts)
+   - Recovery pattern analysis after disruption events
+
+4. **Cyclic Pattern Detection**
+   - Identification of multi-year migration cycles
+   - Contract renewal patterns for labor migrants
+   - Educational migration cycles aligned with academic calendars
+
+This temporal analysis enables the system to distinguish between temporary fluctuations and structural changes in migration patterns, critical for appropriate policy responses.
+
+===== Spatial Analysis
+
+The system implements several spatial analysis methods to understand geographic dimensions of migration:
+
+1. **Origin-Destination Mapping**
+   - Visualization of migration corridors between source and destination regions
+   - Weighted flow analysis based on migration volume
+   - Geographic concentration assessment at both origin and destination
+
+2. **Hotspot Analysis**
+   - Identification of high-migration source areas (e.g., Far-Western districts for India migration)
+   - Detection of emerging migration source regions
+   - Spatial correlation with socioeconomic indicators
+
+3. **Ecological Zone Patterns**
+   - Analysis of migration patterns specific to mountain, hill, and terai (plains) regions
+   - Assessment of altitude-based seasonal movement
+   - Urban-rural migration corridor identification
+
+4. **Accessibility Analysis**
+   - Correlation between migration rates and transportation infrastructure
+   - Impact of road development on migration patterns
+   - Proximity analysis to border crossings and transportation hubs
+
+This spatial dimension is particularly important in Nepal's context, where migration patterns vary dramatically between ecological zones and administrative regions.
+
+===== Demographic Analysis
+
+Migration in Nepal shows strong demographic patterns that the system analyzes through specialized methods:
+
+1. **Age-Gender-Specific Migration**
+   - Age-specific migration rate calculation
+   - Gender ratio analysis of migration streams
+   - Youth outmigration mapping for educational and employment purposes
+
+2. **Educational Attainment Correlation**
+   - Brain drain assessment through education-specific migration rates
+   - Skill-level analysis of labor migration
+   - Education-destination correlation (e.g., higher education to specific countries)
+
+3. **Ethnic and Caste Dimensions**
+   - Migration pattern differences across ethnic and caste groups
+   - Historical migration corridor persistence by community
+   - Cultural factors influencing migration decisions
+
+4. **Family Status Analysis**
+   - Household composition of migrants (married, single, with children)
+   - Life-stage analysis of migration decisions
+   - Family reunification pattern detection
+
+This demographic analysis helps identify which population segments are most affected by migration and how migration itself shapes demographic structures in source communities.
+
+===== Economic Analysis
+
+Economic factors are primary drivers of migration in Nepal, which the system analyzes through:
+
+1. **Wage Differential Analysis**
+   - Comparison of wages between origin areas and destination markets
+   - Sector-specific wage gap assessment
+   - Purchasing power adjusted comparisons
+
+2. **Remittance Flow Analysis**
+   - Mapping of remittance corridors and volumes
+   - Calculation of average remittances by destination and occupation
+   - Seasonality of remittance patterns
+   - Remittance utilization analysis
+
+3. **Economic Push-Pull Modeling**
+   - Correlation between local economic indicators and outmigration rates
+   - Assessment of economic opportunities at destinations
+   - Cost-benefit analysis of migration from migrant perspective
+
+4. **Labor Market Impact**
+   - Labor supply changes due to outmigration
+   - Sector-specific labor shortages in source regions
+   - Wage inflation effects in high-outmigration areas
+
+This economic dimension is crucial for understanding Nepal's migration-remittance economy, where foreign employment contributes significantly to national GDP through remittances.
+
+===== Network Analysis
+
+Migration networks play a critical role in shaping movement patterns, which the system analyzes through:
+
+1. **Migration Corridor Maturity Assessment**
+   - Classification of migration corridors by development stage (emerging, established, mature)
+   - Network density calculation for migration pathways
+   - Historical persistence of specific migration routes
+
+2. **Social Network Mapping**
+   - Community-based migration chain identification
+   - Role of pioneer migrants in establishing corridors
+   - Information flow through migrant networks
+
+3. **Recruitment Channel Analysis**
+   - Formal versus informal recruitment pathways
+   - Role of labor recruiters and agencies
+   - Social connection-based recruitment patterns
+
+4. **Diaspora Community Assessment**
+   - Formation and growth of Nepali communities abroad
+   - Role of destination-based networks in facilitating migration
+   - Return migration influence on origin communities
+
+This network perspective is particularly important for understanding how migration becomes self-sustaining through social connections and information sharing.
+
+===== Causal Analysis
+
+Understanding why people migrate is essential for effective policy, which the system analyzes through:
+
+1. **Multi-factor Causal Assessment**
+   - Classification of migration drivers (economic, educational, family, security, etc.)
+   - Weighting of different factors in migration decisions
+   - Change in motivation patterns over time
+
+2. **Aspiration-Capability Framework**
+   - Analysis of aspirational drivers versus capability facilitators
+   - Barriers to migration for different population segments
+   - Resource requirements for different migration pathways
+
+3. **Event Response Analysis**
+   - Migration responses to specific events (disasters, conflicts, policy changes)
+   - Threshold effects in migration decision-making
+   - Tipping point identification for migration surges
+
+4. **Policy Impact Assessment**
+   - Effects of sending and receiving country policies on migration patterns
+   - Bilateral agreement impacts on migration volumes and conditions
+   - Recruitment regulation effects on migration channels
+
+This causal understanding helps design interventions that address root causes rather than symptoms of problematic migration patterns.
+
+===== Return Migration Analysis
+
+Return migration is increasingly important in Nepal's migration cycle, which the system analyzes through:
+
+1. **Return Pattern Classification**
+   - Categorization of returns (successful completion, premature, forced, retirement)
+   - Duration-specific return rate calculation
+   - Destination-specific return patterns
+
+2. **Reintegration Assessment**
+   - Economic reintegration success measurement
+   - Skills utilization after return
+   - Re-migration probability assessment
+   - Entrepreneurship among returnees
+
+3. **Crisis Return Analysis**
+   - Special analysis of mass returns during crises
+   - Absorption capacity assessment of local economies
+   - Support needs projection for returnee populations
+
+4. **Circular Migration Detection**
+   - Identification of repeat migrants
+   - Rest periods between migration episodes
+   - Destination switching patterns in sequential migrations
+
+This return dimension completes the migration cycle analysis and is crucial for understanding the long-term impacts of migration on Nepal's development.
+
+===== Impact Analysis
+
+Migration affects both migrants and sending communities, which the system analyzes through:
+
+1. **Household-Level Impact Assessment**
+   - Changes in household composition due to absence
+   - Economic status changes in migrant-sending households
+   - Well-being indicators for households with absent members
+   - Gender role transformations in migrant households
+
+2. **Community-Level Analysis**
+   - Labor market effects in high-migration communities
+   - Agricultural practice changes due to labor shortages
+   - Social structure changes in sending communities
+   - Development impacts of remittance investments
+
+3. **Service Needs Projection**
+   - Specialized service requirements for left-behind families
+   - Educational support needs for children of migrants
+   - Healthcare implications of migration patterns
+   - Elderly care gaps in high-migration communities
+
+4. **Vulnerability Mapping**
+   - Identification of particularly vulnerable left-behind groups
+   - Risk assessment for households dependent on remittances
+   - Psychosocial impact measurement in high-migration communities
+
+This impact assessment is essential for designing supportive interventions for those affected by migration, both directly and indirectly.
+
+===== Analysis Integration and Implementation
+
+These analytical dimensions are implemented through a combination of:
+
+1. **Automated Statistical Processing**
+   - Regular calculation of standard migration metrics
+   - Trend analysis against historical baselines
+   - Anomaly detection in migration patterns
+   - Confidence interval calculation for estimates
+
+2. **Interactive Analysis Tools**
+   - GIS-based spatial analysis capabilities
+   - Time-series visualization tools
+   - Demographic pyramid comparisons with/without migration
+   - Scenario modeling for policy analysis
+
+3. **Integrated Dashboards**
+   - Purpose-specific views combining multiple analytical dimensions
+   - Contextual presentation with related socioeconomic indicators
+   - Targeted views for different stakeholders (local government, national planning, international cooperation)
+
+4. **Specialized Reports**
+   - Thematic deep-dive analysis on specific migration issues
+   - Periodic migration status assessments
+   - Policy briefs based on migration analysis
+   - Vulnerability assessments for targeted interventions
+
+This comprehensive analytical framework transforms raw absentee population data into actionable insights for policy development, service planning, and intervention design in Nepal's high-migration context.

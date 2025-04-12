@@ -1,0 +1,121 @@
+The AbsenteePopulation entity leverages several core domain models to provide a comprehensive representation of population movement and migration patterns within Nepal's administrative units.
+
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+' Core Domain Models
+package "Core Domain Models" {
+  abstract class BaseEntity
+  abstract class SpatialEntity
+  abstract class SoftDeletableEntity
+  
+  interface ExternalSystemSyncable
+  interface DataAggregatable
+  interface HistoryViewable
+  interface BatchProcessable
+  interface FullTextSearchable
+}
+
+' AbsenteePopulation Entity
+package "Absentee Population Domain" {
+  class AbsenteePopulation
+  class MigrationCategory
+  class DestinationRegion
+  class MigrationReason
+  class ReturneeStatus
+  class HouseholdImpact
+  class ForeignEmploymentRecord
+  class EducationalMigrationRecord
+  class SeasonalMigrationPattern
+  
+  ' Associations
+  AbsenteePopulation "1" o-- "many" MigrationCategory
+  AbsenteePopulation "1" o-- "many" DestinationRegion
+  AbsenteePopulation "1" o-- "many" MigrationReason
+  AbsenteePopulation "1" o-- "many" ReturneeStatus
+  AbsenteePopulation "1" o-- "many" HouseholdImpact
+  AbsenteePopulation "1" o-- "many" ForeignEmploymentRecord
+  AbsenteePopulation "1" o-- "many" EducationalMigrationRecord
+  AbsenteePopulation "1" o-- "many" SeasonalMigrationPattern
+}
+
+' Inheritance and Interface Implementation
+BaseEntity <|-- AbsenteePopulation
+AbsenteePopulation ..|> ExternalSystemSyncable
+AbsenteePopulation ..|> DataAggregatable
+AbsenteePopulation ..|> HistoryViewable
+AbsenteePopulation ..|> BatchProcessable
+AbsenteePopulation ..|> FullTextSearchable
+
+' Related Domains
+AbsenteePopulation -- "1" SpatialEntity : "associated with ▶"
+
+@enduml
+----
+
+===== Core Model Inheritance
+
+The AbsenteePopulation entity extends BaseEntity, inheriting fundamental capabilities:
+
+|===
+| Inherited Capability | Usage in AbsenteePopulation
+| Unique Identifier | Identifies distinct absentee population records for an administrative area
+| Audit Information | Tracks who created and modified absentee population data and when
+| Version Control | Maintains the version history of absentee statistics as they're updated
+| Status Tracking | Indicates whether the absentee data is preliminary, verified, or official
+|===
+
+===== Core Capability Implementation
+
+The entity implements several key capability interfaces:
+
+|===
+| Interface | Implementation Details
+| ExternalSystemSyncable | Enables synchronization with external migration databases, Foreign Employment Board systems, and passport/visa data
+| DataAggregatable | Supports aggregation of absentee population data across administrative levels, from ward to national level
+| HistoryViewable | Provides time-series capabilities to track migration trends over time
+| BatchProcessable | Enables bulk processing of migration statistics from census and survey data
+| FullTextSearchable | Allows searching across migration reasons, destinations, and demographic characteristics
+|===
+
+===== Domain-Specific Relationships
+
+The AbsenteePopulation entity maintains relationships with several domain-specific components:
+
+|===
+| Component | Relationship Type | Purpose
+| SpatialEntity | Association | Links absentee data to administrative areas and enables spatial analysis
+| MigrationCategory | Composition | Classifies absentees by type (labor, education, conflict, etc.)
+| DestinationRegion | Composition | Records domestic and international destinations of absentees
+| MigrationReason | Composition | Documents reasons for migration (economic, educational, family, etc.)
+| ReturneeStatus | Composition | Tracks return migration patterns and returnee categories
+| HouseholdImpact | Composition | Records impacts on households with absent members
+| ForeignEmploymentRecord | Composition | Detailed information about foreign employment migration
+| EducationalMigrationRecord | Composition | Tracks educational migration patterns and institutions
+| SeasonalMigrationPattern | Composition | Documents seasonal migration cycles commonly found in Nepal
+|===
+
+===== Core Model Extension Points
+
+The AbsenteePopulation entity extends core models in specific ways to address Nepal's unique migration context:
+
+1. **Geographic Hierarchy Integration**
+   - Extends SpatialEntity to organize absentee data across Nepal's federal structure
+   - Implements specialized province-to-province internal migration tracking
+
+2. **Temporal Dimension**
+   - Extends base temporal tracking to accommodate seasonal migration patterns common in Nepal
+   - Implements special handling for fiscal-year based reporting aligned with government periods
+
+3. **Status Tracking Enhancement**
+   - Extends standard status tracking to include migration-specific statuses like "Estimated", "Reported by Household", "Officially Documented", and "Consular Verified"
+   - Implements confidence scoring for different data collection methodologies
+
+4. **Cross-Domain Integration**
+   - Establishes linkages to Household Statistics for analyzing household-level impacts
+   - Integrates with Economic Indicators to correlate migration with economic factors
+   - Connects to International Relations domain for diplomatic aspects of international migration
+
+This integration with core models provides a solid foundation for representing Nepal's complex migration patterns, particularly the significant foreign labor migration to Gulf countries, Malaysia, and India, as well as internal migration patterns between ecological zones and rural-urban movement.
