@@ -1,0 +1,294 @@
+[plantuml]
+----
+@startuml
+|Statistics Department|
+start
+:Define household time series metrics;
+:Collect historical household data;
+:Identify key trend indicators;
+
+|System|
+:Create household time series;
+:Import historical household data;
+:Set baseline reference year;
+:Configure time intervals;
+
+|Statistical Analyst|
+:Review historical household data;
+:Check for collection methodology changes;
+if (Methodology Changed?) then (yes)
+  :Apply methodology adjustments;
+  :Document adjustment factors;
+else (no)
+  :Verify data consistency;
+endif
+
+|System|
+:Calculate period-over-period changes;
+:Compute household trend indicators;
+:Generate household category distributions;
+:Identify statistically significant changes;
+
+|Statistical Analyst|
+:Analyze household structure trends;
+:Document housing condition changes;
+:Monitor economic status shifts;
+:Add contextual annotations;
+
+|System|
+:Generate household trend visualizations;
+:Create income distribution comparisons;
+:Map housing quality changes;
+:Show remittance impact over time;
+
+stop
+@enduml
+----
+
+===== Temporal Data Management Architecture
+
+[plantuml]
+----
+@startuml
+package "Household Time Series Management" {
+  class HouseholdTimeSeries {
+    +UUID id
+    +UUID householdStatisticsId
+    +String timeSeriesType
+    +String periodicity
+    +LocalDate startDate
+    +LocalDate endDate
+    +Boolean interpolated
+    +Integer baselineYear
+    +String dataSource
+    +TimeSeriesStatus status
+  }
+  
+  class TimeSeriesEntry {
+    +UUID id
+    +UUID timeSeriesId
+    +LocalDate entryDate
+    +Integer value
+    +Double changeRate
+    +Boolean isActual
+    +Boolean isRevised
+    +String notes
+    +DataQualityIndicator dataQuality
+  }
+  
+  class TimeSeriesQuery {
+    +UUID timeSeriesId
+    +LocalDate startDate
+    +LocalDate endDate
+    +String aggregationLevel
+    +InterpolationMethod interpolationMethod
+    +Boolean includeRevised
+    +Set<String> metrics
+  }
+  
+  enum TimeSeriesStatus {
+    ACTIVE
+    PROVISIONAL
+    SUPERSEDED
+    ARCHIVED
+    INCOMPLETE
+  }
+  
+  enum DataQualityIndicator {
+    VERIFIED
+    ESTIMATED
+    PROJECTED
+    INTERPOLATED
+    LOW_CONFIDENCE
+    DISPUTED
+  }
+  
+  enum InterpolationMethod {
+    LINEAR
+    CUBIC_SPLINE
+    SEASONAL_ADJUSTMENT
+    NEAREST_NEIGHBOR
+    NONE
+  }
+  
+  class Seasonality {
+    +UUID id
+    +UUID timeSeriesId
+    +SeasonalPattern pattern
+    +Integer cycleLength
+    +Double[] seasonalFactors
+    +LocalDate patternStartDate
+    +String patternDescription
+  }
+  
+  enum SeasonalPattern {
+    ANNUAL
+    QUARTERLY
+    MONTHLY
+    CUSTOM
+  }
+  
+  HouseholdTimeSeries "1" *-- "many" TimeSeriesEntry
+  HouseholdTimeSeries -- TimeSeriesStatus
+  TimeSeriesEntry -- DataQualityIndicator
+  TimeSeriesQuery -- InterpolationMethod
+  HouseholdTimeSeries "1" -- "0..1" Seasonality
+  Seasonality -- SeasonalPattern
+}
+@enduml
+----
+
+===== Time Series Collection Frequencies
+
+The system supports multiple collection frequencies for household statistics time series data:
+
+* *Decennial Census Data*: Comprehensive baseline data collected every 10 years
+* *Annual Survey Data*: Regular surveys with smaller sample sizes but annual coverage
+* *Quarterly Monitoring*: Targeted data collection for specific indicators in selected areas
+* *Post-Event Surveys*: Special collections following disasters or significant social changes
+* *Continuous Panel Studies*: Ongoing tracking of selected household panels
+
+===== Nepal-Specific Time Series Implementation
+
+The household time series implements specialized handling for Nepal-specific temporal patterns:
+
+1. **Nepali Calendar Integration**: Time series data can be stored and retrieved using both Gregorian (CE) and Bikram Sambat (BS) calendar systems, essential for aligning with official Nepal government statistics which use BS dates for all reporting.
+
+2. **Census Cycle Management**: Accommodates Nepal's 10-year census cycle with specialized interpolation for the inter-censal period, addressing the scarcity of comprehensive data between major census operations.
+
+3. **Methodology Transition Handling**: Implements statistical adjustments when methodologies change between collection periods, which occurred significantly between the 2001, 2011, and 2021 Nepal censuses as collection methods modernized.
+
+4. **Seasonal Adjustment Factors**: Accounts for Nepal's monsoon season impact on data collection, adjusting for systematic variations in reporting and collection quality during June-September when access to remote areas is limited.
+
+===== Time Series Data Validation Process
+
+[plantuml]
+----
+@startuml
+start
+:Receive new time period household data;
+:Compare with historical trends;
+
+if (Significant Deviation?) then (yes)
+  :Flag for detailed review;
+  :Identify specific anomalous indicators;
+  :Calculate deviation magnitude;
+  
+  if (Deviation Explainable?) then (yes)
+    :Document contextual factors;
+    :Add explanatory notes;
+    :Mark data as verified with explanation;
+  else (no)
+    if (Collection Error Suspected?) then (yes)
+      :Return to data collection team;
+      :Request verification or correction;
+      stop
+    else (no)
+      :Mark as potential true change;
+      :Request secondary verification;
+    endif
+  endif
+else (no)
+  :Apply standard validation checks;
+endif
+
+:Validate internal consistency;
+if (Internally Consistent?) then (yes)
+  :Proceed to integration;
+else (no)
+  :Generate inconsistency report;
+  :Request data reconciliation;
+  stop
+endif
+
+:Calculate derived indicators;
+:Integrate into time series;
+:Update trend analysis;
+stop
+@enduml
+----
+
+===== Interpolation Strategies for Household Data
+
+The system implements multiple interpolation strategies to address data gaps common in Nepal's challenging data collection environment:
+
+1. **Rural-Urban Differentiated Interpolation**: Applies different interpolation models for rural areas (which change more slowly) versus urban areas (with more rapid demographic transitions)
+
+2. **Topography-Based Adjustment**: Adjusts interpolation models based on geographic region (Mountain, Hill, Terai) to account for region-specific demographic patterns
+
+3. **Remittance-Sensitive Modeling**: Incorporates international migration patterns and remittance flow data when interpolating household economic indicators, critical in a country where remittances represent about 25% of GDP
+
+4. **Disaster Impact Adjustment**: Specially flags periods following major disasters (like the 2015 earthquake) where normal interpolation models are inappropriate and reconstruction-specific models are applied
+
+===== Time Series Visualization Techniques
+
+[plantuml]
+----
+@startuml
+participant "Visualization\nEngine" as VizEngine
+participant "HouseholdTimeSeries" as TimeSeries
+participant "TimeSeriesRepository" as Repository
+participant "InterpolationService" as Interpolation
+participant "ChartGenerator" as Charts
+
+activate VizEngine
+VizEngine -> Repository : getTimeSeriesData(parameters)
+activate Repository
+Repository --> VizEngine : rawTimeSeriesData
+deactivate Repository
+
+VizEngine -> Interpolation : fillDataGaps(rawData)
+activate Interpolation
+Interpolation -> Interpolation : detectGaps()
+Interpolation -> Interpolation : selectInterpolationStrategy()
+Interpolation -> Interpolation : applyInterpolation()
+Interpolation --> VizEngine : completeTimeSeriesData
+deactivate Interpolation
+
+VizEngine -> VizEngine : determineVisualRepresentation()
+alt Trend Analysis
+  VizEngine -> Charts : createTrendLine(data)
+  activate Charts
+  Charts --> VizEngine : trendVisualization
+  deactivate Charts
+else Time Point Comparison
+  VizEngine -> Charts : createPeriodicBarChart(data)
+  activate Charts
+  Charts --> VizEngine : comparisonVisualization
+  deactivate Charts
+else Distribution Change
+  VizEngine -> Charts : createStackedAreaChart(data)
+  activate Charts
+  Charts --> VizEngine : distributionChangeVisualization
+  deactivate Charts
+else Geographic Pattern
+  VizEngine -> Charts : createChoroplethMap(data)
+  activate Charts
+  Charts --> VizEngine : geographicVisualization
+  deactivate Charts
+else Comparative Analysis
+  VizEngine -> Charts : createMultiSeriesChart(data)
+  activate Charts
+  Charts --> VizEngine : comparativeVisualization
+  deactivate Charts
+end
+
+VizEngine -> VizEngine : applyInteractivityLayer()
+VizEngine -> VizEngine : addDataExportOptions()
+VizEngine -> VizEngine : configureTimeRangeControls()
+deactivate VizEngine
+@enduml
+----
+
+===== Real-World Application: Tracking Post-Earthquake Housing Recovery
+
+An important use case for the household time series management is tracking housing recovery following the 2015 Nepal earthquake. The system implements specialized time series tracking that:
+
+1. Establishes pre-earthquake baseline housing conditions from the 2011 Census
+2. Integrates post-earthquake damage assessment data as an extraordinary data point
+3. Tracks reconstruction progress through quarterly updates from the National Reconstruction Authority
+4. Monitors housing quality improvements (building materials, earthquake resistance features) over time
+5. Compares recovery rates across affected districts to identify areas needing additional support
+6. Projects full recovery timelines based on reconstruction trends
+
+This implementation enables government agencies to measure not just recovery to pre-disaster conditions, but to track "build back better" improvements in housing quality that increase resilience to future earthquakes.

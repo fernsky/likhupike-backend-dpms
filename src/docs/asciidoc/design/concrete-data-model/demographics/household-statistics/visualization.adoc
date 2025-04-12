@@ -1,0 +1,588 @@
+[plantuml]
+----
+@startuml
+participant "DashboardService" as Service
+participant "HouseholdStatistics" as HouseholdStats
+participant "VisualizationEngine" as Viz
+participant "ThematicMapper" as Mapper
+participant "DataAnalyticsEngine" as Analytics
+
+Service -> HouseholdStats : getHouseholdCompositionData(regionId)
+activate HouseholdStats
+Service <-- HouseholdStats : householdCompositionData
+deactivate HouseholdStats
+
+Service -> Viz : createHouseholdSizeDistribution(compositionData)
+activate Viz
+Viz -> Viz : formatDataForChart()
+Viz -> Viz : applyChartConfiguration()
+Service <-- Viz : householdSizeChart
+deactivate Viz
+
+Service -> HouseholdStats : getHousingMaterialsData(regionId)
+activate HouseholdStats
+Service <-- HouseholdStats : housingMaterialsData
+deactivate HouseholdStats
+
+Service -> Mapper : createMaterialDistributionMap(materialsData)
+activate Mapper
+Mapper -> Mapper : createThematicLayers()
+Mapper -> Mapper : applyColorGradients()
+Mapper -> Mapper : addRegionalBoundaries()
+Service <-- Mapper : housingMaterialMap
+deactivate Mapper
+
+Service -> HouseholdStats : getEconomicIndicators(regionId)
+activate HouseholdStats
+Service <-- HouseholdStats : economicData
+deactivate HouseholdStats
+
+Service -> Viz : createIncomeDistributionChart(economicData)
+activate Viz
+Viz -> Viz : formatForBoxPlot()
+Viz -> Viz : calculateQuantiles()
+Service <-- Viz : incomeDistributionChart
+deactivate Viz
+
+Service -> HouseholdStats : getTimeSeries(regionId, "averageHouseholdSize", 10)
+activate HouseholdStats
+Service <-- HouseholdStats : timeSeriesData
+deactivate HouseholdStats
+
+Service -> Viz : createTimeSeriesTrend(timeSeriesData)
+activate Viz
+Viz -> Viz : formatTimeAxis()
+Viz -> Viz : drawTrendLine()
+Viz -> Viz : addRegressionLine()
+Service <-- Viz : trendChart
+deactivate Viz
+
+Service -> HouseholdStats : getMultivariateData(regionId)
+activate HouseholdStats
+Service <-- HouseholdStats : multivariateData
+deactivate HouseholdStats
+
+Service -> Analytics : performClusterAnalysis(multivariateData)
+activate Analytics
+Analytics -> Analytics : identifyHouseholdClusters()
+Analytics -> Analytics : characterizeClusters()
+Service <-- Analytics : householdSegments
+deactivate Analytics
+
+Service -> Viz : createClusterVisualization(householdSegments)
+activate Viz
+Viz -> Viz : setupScatterPlot()
+Viz -> Viz : colorByCluster()
+Viz -> Viz : addClusterLabels()
+Service <-- Viz : clusterChart
+deactivate Viz
+@enduml
+----
+
+===== Specialized Household Visualization Components
+
+The Household Statistics module implements several specialized visualization components to represent the unique socioeconomic and demographic characteristics of Nepalese households:
+
+==== Geographic Visualization Architecture
+
+[plantuml]
+----
+@startuml
+package "Household Geographic Visualization" {
+  class HouseholdGeoVisualization {
+    +UUID id
+    +String name
+    +String description
+    +VisualizationType type
+    +Map<String, Object> configuration
+    +Set<UUID> adminAreaIds
+    +Integer adminLevel
+    +String thematicVariable
+    +ChartColorScheme colorScheme
+    +Boolean showLegend
+    +Boolean showLabels
+    +String projectionType
+    +Double zoom
+    +GeoPoint center
+    +UUID baseMapId
+    +Map<String, Layer> layers
+    +LocalDateTime lastUpdated
+  }
+  
+  class Layer {
+    +UUID id
+    +String name
+    +String dataSource
+    +Boolean visible
+    +Integer zIndex
+    +String dataVariable
+    +VisualizationStyle style
+    +Double opacity
+    +Map<String, Object> properties
+  }
+  
+  enum VisualizationType {
+    CHOROPLETH
+    DOT_DENSITY
+    PROPORTIONAL_SYMBOL
+    HEAT_MAP
+    ISOLINE
+    BIVARIATE
+    SEGMENTATION
+    CARTOGRAM
+  }
+  
+  enum ChartColorScheme {
+    SEQUENTIAL_BLUES
+    SEQUENTIAL_GREENS
+    SEQUENTIAL_REDS
+    SEQUENTIAL_PURPLES
+    DIVERGING_RED_BLUE
+    DIVERGING_BROWN_TEAL
+    QUALITATIVE_ACCENT
+    QUALITATIVE_SET1
+    ELEVATION
+    CUSTOM
+  }
+  
+  class VisualizationStyle {
+    +String fillColor
+    +String strokeColor
+    +Double strokeWidth
+    +String strokeDashArray
+    +String symbolType
+    +Double symbolSize
+    +Map<String, Object> customProperties
+  }
+  
+  HouseholdGeoVisualization o-- "many" Layer
+  HouseholdGeoVisualization -- VisualizationType
+  HouseholdGeoVisualization -- ChartColorScheme
+  Layer -- VisualizationStyle
+}
+@enduml
+----
+
+==== Household Composition Visualizations
+
+These visualizations specifically address Nepal's complex household structures, including joint family arrangements, extended families, and changing family patterns:
+
+[plantuml]
+----
+@startuml
+participant "HouseholdDashboard" as Dashboard
+participant "CompositionChart" as Composition
+participant "HouseholdStatistics" as Stats
+participant "ChartRenderer" as Renderer
+participant "LocalizationService" as L10N
+
+Dashboard -> Stats : getHouseholdCompositionData(provinceId)
+activate Stats
+Stats -> Stats : aggregateHouseholdTypes()
+Stats -> Stats : calculateDistributions()
+Dashboard <-- Stats : compositionData
+deactivate Stats
+
+Dashboard -> Composition : createHouseholdStructureVisualization()
+activate Composition
+Composition -> Composition : configureChartType("STACKED_BAR")
+Composition -> L10N : getLocalizedCategoryLabels()
+activate L10N
+Composition <-- L10N : nepaliLabels
+deactivate L10N
+
+Composition -> Composition : configureData(compositionData)
+Composition -> Composition : setupAxes("District", "Percentage")
+Composition -> Composition : setColorPalette("QUALITATIVE_SET1")
+
+Composition -> Renderer : render()
+activate Renderer
+Renderer -> Renderer : createSVGElements()
+Renderer -> Renderer : applyStyles()
+Renderer -> Renderer : addInteractivity()
+Composition <-- Renderer : chartSVG
+deactivate Renderer
+
+Dashboard <-- Composition : householdCompositionChart
+deactivate Composition
+
+Dashboard -> Composition : createFamilyTypeDistribution()
+activate Composition
+Composition -> Composition : configureChartType("PIE")
+Composition -> L10N : getLocalizedTypeLabels()
+activate L10N
+Composition <-- L10N : nepaliLabels
+deactivate L10N
+
+Composition -> Composition : aggregateByFamilyType(compositionData)
+Composition -> Composition : setSortOrder(["Nuclear", "Joint", "Extended"])
+Composition -> Composition : addTooltips()
+
+Composition -> Renderer : render()
+activate Renderer
+Renderer -> Renderer : createPieSegments()
+Renderer -> Renderer : addLabelsAndValues()
+Renderer -> Renderer : addLegend()
+Composition <-- Renderer : pieChartSVG
+deactivate Renderer
+
+Dashboard <-- Composition : familyTypePieChart
+deactivate Composition
+
+Dashboard -> Composition : createGeoVariationMap()
+activate Composition
+Composition -> Composition : configureChoroplethMap()
+Composition -> Composition : setAdminLevel(DISTRICT)
+Composition -> Composition : setVariable("JOINT_FAMILY_PERCENTAGE")
+Composition -> Composition : setColorGradient("SEQUENTIAL_REDS")
+
+Composition -> Renderer : renderMap()
+activate Renderer
+Renderer -> Renderer : createGeoJsonLayers()
+Renderer -> Renderer : applyColorMappings()
+Renderer -> Renderer : addDistrictLabels()
+Composition <-- Renderer : choroplethMapSVG
+deactivate Renderer
+
+Dashboard <-- Composition : householdGeographicDistribution
+deactivate Composition
+@enduml
+----
+
+==== Remittance Impact Visualization
+
+This specialized visualization component addresses Nepal's high remittance dependency by showing household economic patterns related to foreign employment:
+
+[plantuml]
+----
+@startuml
+participant "PolicyDashboard" as Policy
+participant "RemittanceVisualization" as Remittance
+participant "HouseholdStatistics" as Stats
+participant "MapService" as Map
+participant "ChartEngine" as Chart
+
+Policy -> Stats : getRemittanceData(parameters)
+activate Stats
+Stats -> Stats : aggregateRemittanceStats()
+Stats -> Stats : calculateRemittanceDependency()
+Policy <-- Stats : remittanceData
+deactivate Stats
+
+Policy -> Remittance : createRemittanceSourceMap()
+activate Remittance
+Remittance -> Remittance : configureSankeyDiagram()
+Remittance -> Remittance : defineSources(["Gulf", "Malaysia", "India", "Korea", "Other"])
+Remittance -> Remittance : defineRegions(provinceList)
+Remittance -> Remittance : setFlowVolumes(remittanceData)
+
+Remittance -> Chart : renderSankey()
+activate Chart
+Chart -> Chart : createNodeLinks()
+Chart -> Chart : calculateFlowWidths()
+Chart -> Chart : applyColors()
+Remittance <-- Chart : sankeyDiagramSVG
+deactivate Chart
+
+Policy <-- Remittance : remittanceFlowVisualization
+deactivate Remittance
+
+Policy -> Remittance : createRemittanceImpactCorrelation()
+activate Remittance
+Remittance -> Remittance : configureScatterPlot()
+Remittance -> Remittance : setXAxis("Remittance Dependency %")
+Remittance -> Remittance : setYAxis("Housing Quality Index") 
+Remittance -> Remittance : setupDistrictPoints(districtData)
+Remittance -> Remittance : calculateRegressionLine()
+
+Remittance -> Chart : renderScatter()
+activate Chart
+Chart -> Chart : plotPoints()
+Chart -> Chart : addRegressionLine()
+Chart -> Chart : addConfidenceInterval()
+Remittance <-- Chart : scatterPlotSVG
+deactivate Chart
+
+Policy <-- Remittance : remittanceCorrelationChart
+deactivate Remittance
+
+Policy -> Remittance : createRemittanceDependencyMap()
+activate Remittance
+Remittance -> Remittance : configureChoropleth()
+Remittance -> Remittance : setBoundaries("DISTRICT")
+Remittance -> Remittance : setVariable("REMITTANCE_PERCENTAGE_OF_INCOME")
+Remittance -> Remittance : setColorGradient("SEQUENTIAL_BLUES")
+
+Remittance -> Map : renderChoropleth()
+activate Map
+Map -> Map : loadDistrictBoundaries()
+Map -> Map : applyThematicMapping()
+Map -> Map : addLegend()
+Remittance <-- Map : choroplethMapSVG
+deactivate Map
+
+Policy <-- Remittance : remittanceDependencyMap
+deactivate Remittance
+
+Policy -> Remittance : createRemittanceTimelineTrend()
+activate Remittance
+Remittance -> Remittance : configureLineChart()
+Remittance -> Remittance : setXAxis("Year")
+Remittance -> Remittance : setYAxes(["% of Households", "Average Amount"])
+Remittance -> Remittance : setTemporalRange("2001-2021")
+Remittance -> Remittance : configureLineSeries()
+
+Remittance -> Chart : renderDualAxis()
+activate Chart
+Chart -> Chart : createTimeSeries()
+Chart -> Chart : applyDualScaling()
+Chart -> Chart : addEventMarkers(["Economic Crisis", "COVID-19"])
+Remittance <-- Chart : timeSeriesChartSVG
+deactivate Chart
+
+Policy <-- Remittance : remittanceTrendVisualization
+deactivate Remittance
+@enduml
+----
+
+==== Housing Quality Visualization
+
+This component visualizes Nepal's diverse housing quality patterns from traditional to modern construction:
+
+[plantuml]
+----
+@startuml
+participant "HousingDashboard" as Dashboard
+participant "HousingQualityVisualization" as Housing
+participant "HouseholdStatistics" as Stats
+participant "ChartLibrary" as Chart
+participant "GeoVisualization" as Geo
+
+Dashboard -> Stats : getHousingQualityData(parameters)
+activate Stats
+Stats -> Stats : aggregateHousingMaterials()
+Stats -> Stats : calculateQualityIndices()
+Dashboard <-- Stats : housingData
+deactivate Stats
+
+Dashboard -> Housing : createBuildingMaterialsBreakdown()
+activate Housing
+Housing -> Housing : configureStackedBarChart()
+Housing -> Housing : defineCategories(["Mud-bonded", "Cement-bonded", "RCC", "Other"])
+Housing -> Housing : groupByRegion()
+Housing -> Housing : calculatePercentages()
+
+Housing -> Chart : renderStackedBar()
+activate Chart
+Chart -> Chart : createStackedBars()
+Chart -> Chart : applyLegend()
+Chart -> Chart : addPercentageLabels()
+Housing <-- Chart : materialBreakdownChart
+deactivate Chart
+
+Dashboard <-- Housing : buildingMaterialsVisualization
+deactivate Housing
+
+Dashboard -> Housing : createUrbanRuralComparison()
+activate Housing
+Housing -> Housing : configureGroupedBarChart()
+Housing -> Housing : setCategories(["Urban", "Rural"])
+Housing -> Housing : groupByMaterial()
+Housing -> Housing : calculateUrbanRuralDifference()
+
+Housing -> Chart : renderGroupedBar()
+activate Chart
+Chart -> Chart : createGroupedBars()
+Chart -> Chart : addComparisonIndicators()
+Chart -> Chart : highlightSignificantDifferences()
+Housing <-- Chart : urbanRuralComparisonChart
+deactivate Chart
+
+Dashboard <-- Housing : urbanRuralComparisonVisualization
+deactivate Housing
+
+Dashboard -> Housing : createHousingImprovementTimeline()
+activate Housing
+Housing -> Housing : configureAreaChart()
+Housing -> Housing : setTimeRange("2001-2021")
+Housing -> Housing : trackMaterialTransitions()
+Housing -> Housing : addEarthquakeMarker(2015)
+
+Housing -> Chart : renderAreaChart()
+activate Chart
+Chart -> Chart : createStackedAreas()
+Chart -> Chart : addEventLineMarkers()
+Chart -> Chart : setupInteractiveTooltips()
+Housing <-- Chart : timelineChart
+deactivate Chart
+
+Dashboard <-- Housing : housingImprovementVisualization
+deactivate Housing
+
+Dashboard -> Housing : createSpatialQualityMap()
+activate Housing
+Housing -> Housing : configureChoroplethMap()
+Housing -> Housing : setVariable("HOUSING_QUALITY_INDEX")
+Housing -> Housing : defineClassBreaks([0.2, 0.4, 0.6, 0.8])
+Housing -> Housing : setColorScheme("SEQUENTIAL_BLUES")
+
+Housing -> Geo : renderChoropleth()
+activate Geo
+Geo -> Geo : loadAdminBoundaries()
+Geo -> Geo : applyThematicColoring()
+Geo -> Geo : addLegendWithBreaks()
+Housing <-- Geo : qualityIndexMap
+deactivate Geo
+
+Dashboard <-- Housing : spatialQualityVisualization
+deactivate Housing
+@enduml
+----
+
+===== Nepal-Specific Visualization Adaptations
+
+The visualization components include several Nepal-specific adaptations to address the country's unique demographic and geographic context:
+
+1. **Ecological Zone Stratification**: All visualizations can be stratified by Nepal's three ecological zones (Mountain, Hill, Terai) to highlight the dramatic differences in household characteristics across these distinct geographic regions.
+
+2. **Administrative Boundary Transitions**: The system includes specialized visualization logic to handle Nepal's transition from the old VDC/Municipality system (pre-2017) to the new federal structure with 753 local units, allowing for time-series continuity.
+
+3. **Multilingual Display**: Visualization components support both Nepali (Devanagari) and English labels, with all charts and maps able to dynamically switch between scripts.
+
+4. **Caste/Ethnicity Sensitive Color Schemes**: Color palettes for visualizations involving ethnic/caste data are carefully designed to avoid unintentional hierarchical implications, using neutral coloring that doesn't reinforce historical inequalities.
+
+5. **Remittance-Focused Indicators**: Special visualization tools highlight the remittance economy's impact, showing correlations between foreign employment and household structure, housing quality, and economic status.
+
+6. **Rural Accessibility Overlays**: Housing and infrastructure visualizations include overlays showing road network proximity and accessibility metrics, crucial for Nepal's challenging terrain where housing quality is strongly tied to accessibility.
+
+7. **Disaster Vulnerability Visualization**: Specialized components visualize household vulnerability to earthquakes, floods, and landslides based on housing materials, location, and household composition.
+
+8. **Low-Bandwidth Optimizations**: All visualizations are designed with simplified versions that can function on low-bandwidth connections common in rural Nepal, using vector-based SVG formats with progressive loading.
+
+===== Interactive Visualization Use Case: Policy Planning Dashboard
+
+The following use case demonstrates how interactive household statistics visualizations support policy planning:
+
+[plantuml]
+----
+@startuml
+actor "Provincial Planning\nCommission" as PPC
+participant "InteractiveVisualization\nDashboard" as Dashboard
+participant "HouseholdStatistics" as Stats
+participant "VisualizationEngine" as Viz
+participant "PolicySimulation" as Simulation
+
+PPC -> Dashboard : openProvincialDashboard("Gandaki")
+activate Dashboard
+Dashboard -> Stats : getProvincialOverview("Gandaki")
+activate Stats
+Dashboard <-- Stats : provincialData
+deactivate Stats
+
+Dashboard -> Viz : renderProvincialSummary(provincialData)
+activate Viz
+Viz -> Viz : createDemographicCards()
+Viz -> Viz : renderToplineIndicators()
+Viz -> Viz : generateComparativeMetrics()
+Dashboard <-- Viz : summaryVisualizations
+deactivate Viz
+PPC <-- Dashboard : provincialOverviewDashboard
+deactivate Dashboard
+
+PPC -> Dashboard : exploreRuralUrbanDisparity()
+activate Dashboard
+Dashboard -> Stats : getRuralUrbanComparison("Gandaki")
+activate Stats
+Dashboard <-- Stats : disparityData
+deactivate Stats
+
+Dashboard -> Viz : createRuralUrbanComparisonViz(disparityData)
+activate Viz
+Viz -> Viz : renderSplitBarCharts()
+Viz -> Viz : calculateDisparityIndices()
+Viz -> Viz : highlightKeyDifferences()
+Dashboard <-- Viz : comparativeVisualizations
+deactivate Viz
+PPC <-- Dashboard : ruralUrbanComparisonView
+deactivate Dashboard
+
+PPC -> Dashboard : interactWithVisualization("MouseClick", "PovertyHotspot")
+activate Dashboard
+Dashboard -> Viz : drillDownToDistrict("Myagdi")
+activate Viz
+Viz -> Stats : getDistrictDetails("Myagdi")
+activate Stats
+Viz <-- Stats : districtData
+deactivate Stats
+Dashboard <-- Viz : districtVisualization
+deactivate Viz
+PPC <-- Dashboard : districtFocusView
+deactivate Dashboard
+
+PPC -> Dashboard : applyFilters(remoteMountainCommunities)
+activate Dashboard
+Dashboard -> Stats : getFilteredHouseholdData(filterCriteria)
+activate Stats
+Dashboard <-- Stats : filteredHouseholdData
+deactivate Stats
+
+Dashboard -> Viz : updateVisualizationsWithFilter(filteredData)
+activate Viz
+Viz -> Viz : recalculateMetrics()
+Viz -> Viz : highlightFilteredSubset()
+Dashboard <-- Viz : filteredVisualizations
+deactivate Viz
+PPC <-- Dashboard : filteredViewForRemoteCommunities
+deactivate Dashboard
+
+PPC -> Dashboard : simulatePolicyEffect("SubsidizedSolarInstallation")
+activate Dashboard
+Dashboard -> Simulation : runPolicySimulation(policy, householdData)
+activate Simulation
+Simulation -> Simulation : applyPolicyRules()
+Simulation -> Simulation : calculateImpactMetrics()
+Simulation -> Simulation : estimateCosts()
+Dashboard <-- Simulation : policySimulationResults
+deactivate Simulation
+
+Dashboard -> Viz : visualizeSimulationResults(policyResults)
+activate Viz
+Viz -> Viz : createBeforeAfterComparison()
+Viz -> Viz : renderImpactDistribution()
+Viz -> Viz : showCostBenefitVisualization()
+Dashboard <-- Viz : policyImpactVisualizations
+deactivate Viz
+PPC <-- Dashboard : policySimulationView
+deactivate Dashboard
+
+PPC -> Dashboard : exportAnalysisForPresentation()
+activate Dashboard
+Dashboard -> Dashboard : generateReportDocument()
+Dashboard -> Dashboard : exportVisualizationsAsSVG()
+Dashboard -> Dashboard : compileKeyFindings()
+PPC <-- Dashboard : exportedAnalysisPackage
+deactivate Dashboard
+@enduml
+----
+
+This interactive visualization dashboard enables Nepali policymakers to explore household statistics dynamically, test policy interventions, and generate visual evidence for planning decisions. The dashboard is particularly valuable for Nepal's geographically diverse context, allowing planners to understand how household characteristics vary dramatically across ecological zones and administrative boundaries.
+
+===== Data Visualization Ethics
+
+The household statistics visualization system implements the following ethical guidelines specific to Nepal's social context:
+
+1. **Privacy-Preserving Visualization**: All household-level data is aggregated to appropriate administrative levels to prevent identification of individual households, especially important in small communities.
+
+2. **Culturally Sensitive Representation**: Visualization of sensitive topics like caste, ethnicity, and religion follows Nepal's constitutional principles of equality and inclusion.
+
+3. **Accessibility Standards**: Visualizations are designed to be interpretable by users with varying levels of data literacy, including non-technical government officials and community representatives.
+
+4. **Transparency in Methodology**: All visualizations include access to metadata explaining how indicators are calculated and any limitations in the underlying data.
+
+5. **Alternative Text Descriptions**: Charts and maps include detailed textual descriptions to support users with visual impairments and to function in contexts where visual elements might not load properly due to connectivity issues.
+
+6. **Historical Context Preservation**: Time-series visualizations maintain clear indicators of administrative boundary changes following Nepal's federal restructuring.
+
+7. **Uncertainty Visualization**: Charts and maps explicitly represent data quality and statistical confidence, particularly important for data from remote areas with limited sample sizes.
+
+8. **Digital Divide Consideration**: Visualizations are designed to be accessible on basic devices and limited bandwidth, recognizing the uneven distribution of digital access across Nepal.

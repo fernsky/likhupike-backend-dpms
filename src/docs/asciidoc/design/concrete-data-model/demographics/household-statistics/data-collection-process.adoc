@@ -1,0 +1,65 @@
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Define household survey methodology;
+:Prepare household questionnaire;
+:Train enumerators on household data;
+
+|Field Enumerators|
+:Collect household-level data;
+:Document household composition;
+:Record economic indicators;
+:Map housing characteristics;
+:Submit collected data;
+
+|System|
+:Process household survey data;
+:Validate data structure;
+if (Valid Structure?) then (yes)
+  :Create household statistics;
+else (no)
+  :Generate validation errors;
+  |Field Enumerators|
+  :Correct data issues;
+  note right
+    Return to validation
+  end note
+endif
+
+|Data Verification Team|
+:Review household statistics;
+:Verify against previous surveys;
+if (Data Plausible?) then (yes)
+  :Mark data as verified;
+else (no)
+  :Flag anomalies for review;
+  |Field Enumerators|
+  :Investigate and correct;
+  note right
+    Return to verification
+  end note
+endif
+
+|Statistics Division|
+:Calculate derived metrics;
+:Compute household averages;
+:Generate distribution tables;
+:Group households by categories;
+:Set confidence levels;
+
+|System|
+:Link to demographic summaries;
+:Index for search;
+:Enable time series comparisons;
+:Prepare visualization data;
+
+|Data Consumers|
+:Access household statistics;
+:Analyze household trends;
+:Use for policy planning;
+
+stop
+@enduml
+----

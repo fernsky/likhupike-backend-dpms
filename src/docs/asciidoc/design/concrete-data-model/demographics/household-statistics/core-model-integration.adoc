@@ -1,0 +1,192 @@
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+
+' HouseholdStatistics implementation
+class HouseholdStatistics {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core household data
+  +Integer totalHouseholds
+  +Double averageHouseholdSize
+  +Integer totalPopulationInHouseholds
+  +Integer institutionalPopulation
+  +Double householdDensity
+  +Map<HouseholdSizeCategory, Integer> householdsBySize
+  +Map<HouseholdType, Integer> householdsByType
+  +Map<HouseholdComposition, Integer> householdsByComposition
+  
+  ' Household economic data
+  +Map<IncomeCategory, Integer> householdsByIncome
+  +Double averageAnnualIncome
+  +Double medianAnnualIncome
+  +MonetaryAmount averageMonthlyExpenditure
+  +Map<PovertyStatus, Integer> householdsByPovertyStatus
+  +Double povertyRate
+  +Double foodInsecurityRate
+  
+  ' Housing characteristics
+  +Map<OwnershipStatus, Integer> householdsByOwnership
+  +Map<BuildingMaterial, Integer> householdsByBuildingMaterial
+  +Map<RoofType, Integer> householdsByRoofType
+  +Map<WaterSource, Integer> householdsByWaterSource
+  +Map<SanitationFacility, Integer> householdsBySanitation
+  +Map<CookingFuel, Integer> householdsByCookingFuel
+  +Map<LightingSource, Integer> householdsByLightingSource
+  +Double percentWithElectricity
+  +Double percentWithInternet
+  
+  ' Migration and remittance data
+  +Integer householdsWithMigrants
+  +Double percentHouseholdsWithMigrants
+  +Map<RemittanceCategory, Integer> householdsByRemittance
+  +MonetaryAmount averageAnnualRemittance
+  +Double percentHouseholdsReceivingRemittances
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +StatisticsConfidenceLevel confidenceLevel
+  +String methodology
+  +String notes
+  +LocalDate lastUpdated
+  +UUID lastUpdatedBy
+  +Boolean isProjected
+  +CollectionMethod collectionMethod
+}
+
+' Supporting classes
+class HouseholdTimeSeries {
+  +UUID id
+  +UUID householdStatisticsId
+  +List<TimeSeriesEntry> timeSeriesData
+  +String timeSeriesType
+  +String periodicity
+  +LocalDate startDate
+  +LocalDate endDate
+  +Boolean interpolated
+  +Integer baselineYear
+}
+
+class TimeSeriesEntry {
+  +UUID id
+  +LocalDate date
+  +Integer value
+  +Double changeRate
+  +String notes
+  +Boolean isActual
+}
+
+' Enumerations
+enum HouseholdSizeCategory {
+  SINGLE_PERSON
+  TWO_PERSONS
+  THREE_TO_FOUR_PERSONS
+  FIVE_TO_SIX_PERSONS
+  SEVEN_TO_NINE_PERSONS
+  TEN_PLUS_PERSONS
+}
+
+enum HouseholdType {
+  SINGLE_PERSON
+  NUCLEAR_FAMILY
+  EXTENDED_FAMILY
+  MULTIGENERATIONAL
+  SINGLE_PARENT
+  UNRELATED_PERSONS
+  JOINT_FAMILY
+}
+
+enum HouseholdComposition {
+  ADULT_ONLY
+  ADULTS_WITH_CHILDREN
+  ELDERLY_ONLY
+  FEMALE_HEADED
+  MALE_HEADED
+  CHILD_HEADED
+  DISABLED_MEMBER
+}
+
+enum IncomeCategory {
+  EXTREMELY_LOW
+  LOW
+  LOWER_MIDDLE
+  MIDDLE
+  UPPER_MIDDLE
+  HIGH
+}
+
+enum PovertyStatus {
+  EXTREME_POVERTY
+  BELOW_POVERTY_LINE
+  NEAR_POVERTY_LINE
+  ABOVE_POVERTY_LINE
+  MIDDLE_INCOME
+  UPPER_INCOME
+}
+
+enum OwnershipStatus {
+  OWNED
+  RENTED
+  RENT_FREE
+  INSTITUTIONAL
+  SQUATTER
+  COMMUNAL
+}
+
+enum BuildingMaterial {
+  MUD_BONDED
+  CEMENT_BONDED
+  RCC_WITH_PILLAR
+  WOODEN_PILLAR
+  ADOBE
+  BAMBOO
+  OTHER
+}
+
+enum RemittanceCategory {
+  NO_REMITTANCE
+  DOMESTIC_REMITTANCE
+  FOREIGN_REMITTANCE
+  BOTH_DOMESTIC_AND_FOREIGN
+}
+
+' Inheritance relationships
+BaseEntity <|-- HouseholdStatistics
+BaseEntity <|-- HouseholdTimeSeries
+BaseEntity <|-- TimeSeriesEntry
+
+' Interface implementation
+HouseholdStatistics ..|> DataAggregatable
+HouseholdStatistics ..|> HistoryViewable
+
+' Class relationships
+HouseholdStatistics "1" -- "0..1" HouseholdTimeSeries
+HouseholdTimeSeries "1" o-- "many" TimeSeriesEntry
+HouseholdStatistics -- HouseholdSizeCategory
+HouseholdStatistics -- HouseholdType
+HouseholdStatistics -- HouseholdComposition
+HouseholdStatistics -- IncomeCategory
+HouseholdStatistics -- PovertyStatus
+HouseholdStatistics -- OwnershipStatus
+HouseholdStatistics -- BuildingMaterial
+HouseholdStatistics -- RemittanceCategory
+@enduml
+----

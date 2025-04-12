@@ -1,0 +1,113 @@
+===== Post-Earthquake Housing Reconstruction Monitoring
+
+*Scenario:* Monitoring household recovery after a major earthquake
+
+[plantuml]
+----
+@startuml
+actor "National Reconstruction\nAuthority" as NRA
+actor "District Disaster\nManagement Committee" as DDMC
+participant "HouseholdStatistics" as HouseholdStats
+participant "HousingReconstruction\nDatabase" as HRD
+participant "MonetaryAmount" as Money
+participant "GIS\nMapping" as GIS
+participant "Building\nStandards Office" as BSO
+
+NRA -> HouseholdStats: Request pre-earthquake baseline
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: retrieveBaselineData(districtId, 2014)
+NRA <-- HouseholdStats: Pre-earthquake housing statistics
+deactivate HouseholdStats
+
+NRA -> DDMC: Conduct post-earthquake assessment
+activate DDMC
+DDMC -> DDMC: Survey damaged households
+DDMC -> DDMC: Classify damage categories
+NRA <-- DDMC: Damage assessment data
+deactivate DDMC
+
+NRA -> HouseholdStats: Create post-disaster household dataset
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: createPostDisasterStatistics()
+HouseholdStats -> HouseholdStats: mapDamageLevels()
+HouseholdStats -> HouseholdStats: setOwnershipStatus()
+HouseholdStats -> HouseholdStats: setBuildingMaterial()
+HouseholdStats -> HouseholdStats: setConfidenceLevel(HIGH)
+NRA <-- HouseholdStats: Post-disaster dataset created
+deactivate HouseholdStats
+
+NRA -> HRD: Import household reconstruction grants data
+activate HRD
+HRD -> HRD: ProcessGrantDisbursements()
+HRD -> HRD: TrackCompletionStatus()
+NRA <-- HRD: Grant statistics by household
+deactivate HRD
+
+NRA -> HouseholdStats: Link reconstruction data
+activate HouseholdStats
+HouseholdStats -> Money: createReconstructionGrants()
+activate Money
+Money -> Money: setReconstructionGrantAmount()
+Money -> Money: setDisbursementPhases()
+Money -> Money: calculateAverageGrantPerHousehold()
+HouseholdStats <-- Money: Grant statistics added
+deactivate Money
+NRA <-- HouseholdStats: Reconstruction data linked
+deactivate HouseholdStats
+
+NRA -> HouseholdStats: Generate reconstruction progress report
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: calculateRebuildingRate()
+HouseholdStats -> HouseholdStats: analyzeRebuildingByHouseholdType()
+HouseholdStats -> HouseholdStats: compareHousingMaterialChanges()
+NRA <-- HouseholdStats: Reconstruction progress statistics
+deactivate HouseholdStats
+
+NRA -> GIS: Map reconstruction progress
+activate GIS
+GIS -> GIS: CreateRecoveryHeatmap()
+GIS -> GIS: IdentifySlowRecoveryAreas()
+GIS -> GIS: VisualizeHousingMaterialChanges()
+NRA <-- GIS: Geographic reconstruction maps
+deactivate GIS
+
+NRA -> HouseholdStats: Analyze building code compliance
+activate HouseholdStats
+HouseholdStats -> BSO: checkBuildingStandards()
+activate BSO
+BSO -> BSO: EvaluateEarthquakeResistance()
+BSO -> BSO: ComparePre-PostConstructionQuality()
+HouseholdStats <-- BSO: Compliance statistics
+deactivate BSO
+HouseholdStats -> HouseholdStats: integrateComplianceData()
+NRA <-- HouseholdStats: Building code compliance statistics
+deactivate HouseholdStats
+
+NRA -> HouseholdStats: Project recovery timeline
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: analyzeCompletionRates()
+HouseholdStats -> HouseholdStats: projectRemainingReconstruction()
+HouseholdStats -> HouseholdStats: identifyAccelerationNeeds()
+NRA <-- HouseholdStats: Recovery timeline projection
+deactivate HouseholdStats
+@enduml
+----
+
+*Real-World Context:*
+Following the devastating 2015 earthquake in Nepal that damaged or destroyed over 800,000 homes, the National Reconstruction Authority (NRA) used household-level statistics to track reconstruction progress across affected districts. This earthquake was Nepal's largest disaster in modern history, and the recovery effort represented an unprecedented challenge for the government.
+
+The HouseholdStatistics entity provides critical baseline data about pre-earthquake housing conditions, including building material types (traditionally mud-bonded in rural areas and RCC with pillars in urban areas) and household ownership status. This baseline is essential for measuring both reconstruction progress and improvements in building quality.
+
+The system captures household-level data that reflects Nepal's unique housing patterns. For example, it distinguishes between nuclear families and joint families - an important cultural distinction in Nepal where extended family living arrangements are common but were disrupted by the earthquake. In some areas, the earthquake accelerated the transition from traditional joint family households to nuclear family units as people rebuilt smaller homes.
+
+The MonetaryAmount component tracks the three-tranche reconstruction grants (typically NPR 50,000, 150,000, and 100,000) distributed to eligible households. This grant tracking is linked to household statistics to analyze how different types of households progress through reconstruction phases. The data reveals patterns like slower reconstruction rates among female-headed households and households in remote areas - insights that guided targeted support programs.
+
+The HouseholdStatistics component also captures changes in building materials post-earthquake, showing the shift from vulnerable mud-bonded structures to more earthquake-resistant RCC construction, especially in districts like Sindhupalchok and Dolakha where over 95% of structures were damaged. This material transition tracking was vital for Nepal's "Build Back Better" initiative.
+
+Remittance data within household statistics proved particularly important in the Nepali context, as households receiving remittances from family members working abroad (approximately 30% of households in some regions) rebuilt faster and with better materials than those without remittance income. This revealed the significant role of Nepal's foreign employment economy in disaster recovery.
+
+The system's spatial capabilities allow recovery progress to be mapped geographically, revealing disparities between accessible areas (which rebuilt quickly) and remote hill villages (which lagged significantly). This geographic lens was crucial given Nepal's extreme terrain variations and how they impacted recovery.
+
+For monitoring building code compliance, the system tracks construction methods against Nepal's National Building Code (NBC), showing adoption rates of earthquake-resistant features like through-stones, corner stitching, and proper banding - technical elements vital for future earthquake resilience.
+
+Over time, the household statistics revealed a phenomenon unique to Nepal's post-disaster context: many households upgraded their homes during reconstruction, moving from traditional materials to modern construction, effectively leap-frogging development stages. This data informed future disaster preparedness planning and housing policy development.

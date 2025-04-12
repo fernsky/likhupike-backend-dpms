@@ -1,0 +1,103 @@
+===== Rural-Urban Migration Tracking for Service Planning
+
+*Scenario:* Monitoring household migration patterns to plan urban infrastructure and rural development
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nUrban Development" as MoUD
+actor "Rural Development\nAgency" as RDA
+participant "HouseholdStatistics" as HouseholdStats
+participant "HouseholdTimeSeries" as TimeSeries
+participant "UrbanPlanning\nDepartment" as UrbanPlanning
+participant "InfrastructureGap\nAnalysis" as InfraGap
+participant "RuralRevitalization\nProgram" as RuralProgram
+
+MoUD -> HouseholdStats: Request migration trend analysis
+activate HouseholdStats
+HouseholdStats -> TimeSeries: retrieveHouseholdCountTimeSeries()
+activate TimeSeries
+TimeSeries -> TimeSeries: analyzeUrbanGrowthRate()
+TimeSeries -> TimeSeries: calculateRuralDeclineRate()
+HouseholdStats <-- TimeSeries: household migration trends
+deactivate TimeSeries
+MoUD <-- HouseholdStats: Rural-Urban migration patterns
+deactivate HouseholdStats
+
+MoUD -> HouseholdStats: Analyze urban household characteristics
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: compareUrbanVsRuralHouseholdSize()
+HouseholdStats -> HouseholdStats: analyzeUrbanHousingTypeDistribution()
+HouseholdStats -> HouseholdStats: measureRentalVsOwnership()
+MoUD <-- HouseholdStats: Urban household profile
+deactivate HouseholdStats
+
+MoUD -> UrbanPlanning: Project urban growth requirements
+activate UrbanPlanning
+UrbanPlanning -> UrbanPlanning: CalculateHousingDeficit()
+UrbanPlanning -> UrbanPlanning: ProjectWaterDemand()
+UrbanPlanning -> UrbanPlanning: EstimateWasteManagementNeeds()
+MoUD <-- UrbanPlanning: Urban infrastructure requirements
+deactivate UrbanPlanning
+
+MoUD -> InfraGap: Identify critical infrastructure gaps
+activate InfraGap
+InfraGap -> InfraGap: AnalyzeWaterSupplyShortfall()
+InfraGap -> InfraGap: CalculateElectricityDemandGrowth()
+InfraGap -> InfraGap: MeasureTransportationCongestion()
+InfraGap -> InfraGap: AssessSchoolCapacityShortfalls()
+MoUD <-- InfraGap: Infrastructure gap assessment
+deactivate InfraGap
+
+RDA -> HouseholdStats: Analyze rural household changes
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: identifyHighOutmigrationAreas()
+HouseholdStats -> HouseholdStats: analyzeRemainingHouseholdComposition()
+HouseholdStats -> HouseholdStats: measureLandAbandonment()
+RDA <-- HouseholdStats: Rural household transformation data
+deactivate HouseholdStats
+
+RDA -> RuralProgram: Develop rural retention strategies
+activate RuralProgram
+RuralProgram -> RuralProgram: DesignEconomicIncentives()
+RuralProgram -> RuralProgram: PlanServiceImprovements()
+RuralProgram -> RuralProgram: CreateAgricultureModernization()
+RDA <-- RuralProgram: Rural development recommendations
+deactivate RuralProgram
+
+MoUD -> HouseholdStats: Track informal settlement growth
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: identifySquatterHouseholds()
+HouseholdStats -> HouseholdStats: mapInformalSettlementGrowth()
+HouseholdStats -> HouseholdStats: analyzeVulnerabilityFactors()
+MoUD <-- HouseholdStats: Informal settlement statistics
+deactivate HouseholdStats
+
+MoUD -> RDA: Coordinate balanced development strategy
+activate RDA
+RDA -> RDA: IdentifyPriorityAreas()
+RDA -> RDA: AllocateResources()
+RDA -> RDA: CoordinateInterventions()
+MoUD <-- RDA: Integrated development plan
+deactivate RDA
+@enduml
+----
+
+*Real-World Context:*
+Nepal is experiencing one of the world's fastest urbanization rates, with urban population growing at 3.5% annually while rural areas face population decline. The HouseholdStatistics entity tracks this dramatic demographic shift at the household level, providing essential data for both urban infrastructure planning and rural development strategies.
+
+The HouseholdTimeSeries component captures the longitudinal view of household migration patterns, showing how rapidly rural municipal populations are declining in hill and mountain districts while urban centers like Kathmandu, Pokhara, and Bharatpur are expanding exponentially. This time-series data reveals acceleration in these trends, with migration rates doubling in many areas following the 2015 earthquake.
+
+The system records detailed household characteristics that reveal how urban migration is transforming Nepal's traditional household structure. Urban migrants typically form smaller nuclear family households (average 3.2 persons) compared to rural joint family households (average 5.1 persons), affecting housing demand patterns. Urban areas show higher percentages of rental housing (up to 40% in Kathmandu) compared to rural areas where home ownership exceeds 90% - crucial insights for urban housing policy.
+
+Housing characteristics tracked by the system show how urban infrastructure is struggling to keep pace with migration. In rapidly growing urban areas, households report deteriorating access to consistent water supply (available only 2-3 hours daily in many areas) and inadequate waste management - specific pain points that guide infrastructure prioritization.
+
+For rural areas experiencing outmigration, the system captures the resulting household composition changes - particularly the rise in elderly-only households and female-headed households where working-age males have migrated. These demographic shifts create specific challenges for rural service delivery that the system helps quantify, such as increased need for elderly care services and agricultural mechanization to compensate for labor loss.
+
+The system's ability to track ownership status identifies the growth of informal settlements (sukumbasi bastis) around major urban centers, where migrants without land title establish unplanned communities. This data shows approximately 12% of urban population growth occurring in these settlements, creating specific challenges for service provision and eventual formalization.
+
+Building material statistics reveal the urban-rural housing quality gap, with RCC construction dominant in urban areas while vulnerable mud-bonded structures remain common in rural areas. This disparity informs both rural housing improvement programs and urban building code enforcement priorities.
+
+Income and remittance data show how these migration patterns connect to economic factors, with households receiving foreign remittances more likely to migrate to urban areas to access better education and healthcare. This remittance-urbanization link represents a distinct pattern in Nepal that the system helps quantify for policy planning.
+
+The integrated rural-urban view provided by the HouseholdStatistics component supports Nepal's development goal of creating more balanced urban networks rather than continued primacy of Kathmandu Valley. The data identifies mid-sized municipalities with potential to absorb migration through targeted infrastructure investment, potentially relieving pressure on the capital region while providing alternatives to rural residents seeking urban opportunities.

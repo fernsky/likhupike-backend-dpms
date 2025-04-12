@@ -1,0 +1,108 @@
+===== Household Economic Survey for Poverty Reduction Planning
+
+*Scenario:* Using household economic statistics for targeted poverty reduction programs
+
+[plantuml]
+----
+@startuml
+actor "National Planning\nCommission" as NPC
+actor "Ministry of\nPoverty Alleviation" as MPA
+participant "HouseholdStatistics" as HouseholdStats
+participant "MonetaryAmount" as Money
+participant "HouseholdSurvey\nDatabase" as Survey
+participant "GIS\nMapping" as GIS
+participant "ProgramEligibility\nCalculator" as Calculator
+
+NPC -> Survey: Conduct National Living Standards Survey
+activate Survey
+Survey -> Survey: SampleHouseholds()
+Survey -> Survey: CollectConsumptionData()
+Survey -> Survey: MeasureIncome()
+Survey -> Survey: AssessLivingConditions()
+NPC <-- Survey: Survey data collected
+deactivate Survey
+
+NPC -> HouseholdStats: Process economic survey data
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: setAverageAnnualIncome()
+HouseholdStats -> HouseholdStats: setMedianAnnualIncome()
+HouseholdStats -> Money: createAverageMonthlyExpenditure()
+activate Money
+Money -> Money: setCurrency("NPR")
+Money -> Money: setAmount(baseExpenditure)
+Money -> Money: breakdownByCategory()
+HouseholdStats <-- Money: Expenditure data created
+deactivate Money
+NPC <-- HouseholdStats: Economic data processed
+deactivate HouseholdStats
+
+NPC -> HouseholdStats: Calculate poverty statistics
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: setPovertyLine(NPR 19,261)
+HouseholdStats -> HouseholdStats: calculateHouseholdsByPovertyStatus()
+HouseholdStats -> HouseholdStats: setPovertyRate(provincialRate)
+HouseholdStats -> HouseholdStats: setFoodInsecurityRate(districtRate)
+NPC <-- HouseholdStats: Poverty statistics calculated
+deactivate HouseholdStats
+
+NPC -> HouseholdStats: Analyze vulnerability factors
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: correlateHouseholdCompositionWithPoverty()
+HouseholdStats -> HouseholdStats: analyzeRemittanceImpact()
+HouseholdStats -> HouseholdStats: identifyHighRiskCategories()
+NPC <-- HouseholdStats: Vulnerability analysis
+deactivate HouseholdStats
+
+NPC -> GIS: Map poverty pockets
+activate GIS
+GIS -> GIS: CreatePovertyDensityMaps()
+GIS -> GIS: OverlayWithAccessibility()
+GIS -> GIS: IdentifyClusteredVulnerability()
+NPC <-- GIS: Geographical poverty mapping
+deactivate GIS
+
+NPC -> MPA: Share poverty analysis
+MPA -> Calculator: Determine program eligibility
+activate Calculator
+Calculator -> Calculator: SetProgramCriteria()
+Calculator -> Calculator: CalculateVulnerabilityScores()
+Calculator -> Calculator: RankHouseholdsByNeed()
+MPA <-- Calculator: Program eligibility data
+deactivate Calculator
+
+MPA -> HouseholdStats: Project intervention impacts
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: modelCashTransferEffects()
+HouseholdStats -> HouseholdStats: simulateSkillTrainingOutcomes()
+HouseholdStats -> HouseholdStats: estimatePovertyReduction()
+MPA <-- HouseholdStats: Impact projections
+deactivate HouseholdStats
+
+MPA -> HouseholdStats: Create program monitoring baseline
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: setBaselineIndicators()
+HouseholdStats -> HouseholdStats: defineMeasurableOutcomes()
+HouseholdStats -> HouseholdStats: establishMonitoringTimeframes()
+MPA <-- HouseholdStats: Monitoring baseline established
+deactivate HouseholdStats
+@enduml
+----
+
+*Real-World Context:*
+Nepal's National Planning Commission conducts the Nepal Living Standards Survey (NLSS) to gather detailed household economic data that informs the country's poverty reduction strategies. The HouseholdStatistics entity captures this complex data in a structured format that supports targeted intervention planning.
+
+What makes this particularly relevant to Nepal's context is the multi-dimensional nature of poverty. The system records not just income, but also consumption patterns, which economists consider more reliable indicators in Nepal's largely informal economy where many rural households practice subsistence agriculture with little cash income. The MonetaryAmount component captures average monthly expenditure with breakdowns that reflect Nepal's consumption patterns - where food typically comprises 60-70% of poor household expenditure.
+
+The system accommodates Nepal's official poverty line (NPR 19,261 per person per year in the most recent measure) while allowing for regional variations that reflect the significant cost-of-living differences between urban areas like Kathmandu Valley and remote mountain districts. This geographic variation is crucial for accurate poverty measurement in Nepal's diverse landscape.
+
+The HouseholdComposition enumeration captures demographic factors that correlate strongly with poverty in Nepal, such as female-headed households (which represent about 25% of households in some districts due to male outmigration) and households with disabled members (who face particular challenges in Nepal's difficult terrain and limited accessibility infrastructure).
+
+Remittance data tracking is especially significant in Nepal, where overseas remittances contribute nearly 30% of GDP. The system analyzes how remittances impact household economic status, revealing patterns like temporary poverty reduction that may not be sustainable if remittance flows decrease - a key policy concern for Nepal's planners.
+
+The geographic mapping capabilities allow identification of poverty pockets, which in Nepal often align with specific ethnic or caste group settlements and remote areas with limited access to markets and services. This spatial dimension is essential for Nepal's targeted programs that aim to address persistent disparities between advantaged and disadvantaged groups.
+
+For program planning, the ProgramEligibilityCalculator uses HouseholdStatistics to identify potential beneficiaries for initiatives like the Prime Minister Employment Program or targeted cash transfers to vulnerable groups. The system can simulate the effects of different interventions - whether direct subsidies, skills development, or agricultural modernization - on household poverty metrics.
+
+The system also tracks housing characteristics like building materials, cooking fuel, and sanitation facilities that serve as visible indicators of economic status in Nepal. These tangible measures help validate income and consumption data in a context where conventional economic measures can be difficult to verify.
+
+Over time, the HouseholdStatistics component builds a longitudinal view of how Nepal's household economics are evolving, capturing important national trends like the declining average household size (from 5.4 persons in 1991 to 4.1 in recent years), increasing urbanization, and the rise of nuclear family structures - all crucial indicators for social service and infrastructure planning.

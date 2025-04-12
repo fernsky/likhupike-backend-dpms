@@ -1,0 +1,105 @@
+===== Remittance Dependency Analysis for Economic Planning
+
+*Scenario:* Analyzing the impact of foreign remittances on household economics and dependency
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nFinance" as MoF
+actor "Department of\nForeign Employment" as DoFE
+participant "HouseholdStatistics" as HouseholdStats
+participant "MonetaryAmount" as Money
+participant "RemittanceAnalysis\nService" as RemitAnalysis
+participant "CoordinationCommittee" as Coordination
+participant "EconomicModeling\nService" as EconModel
+
+MoF -> HouseholdStats: Request remittance statistics
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: retrieveHouseholdsWithMigrants()
+HouseholdStats -> HouseholdStats: calculatePercentHouseholdsWithMigrants()
+HouseholdStats -> Money: retrieveAverageAnnualRemittance()
+activate Money
+Money -> Money: calculateAverageByDestinationCountry()
+Money -> Money: convertToPPP()
+HouseholdStats <-- Money: remittance statistics
+deactivate Money
+MoF <-- HouseholdStats: Remittance dependency data
+deactivate HouseholdStats
+
+MoF -> DoFE: Request migration data
+activate DoFE
+DoFE -> DoFE: CompileLaborPermits()
+DoFE -> DoFE: AggregateByDestination()
+DoFE -> DoFE: CalculateReturnMigration()
+MoF <-- DoFE: Migration statistics
+deactivate DoFE
+
+MoF -> RemitAnalysis: Analyze remittance patterns
+activate RemitAnalysis
+RemitAnalysis -> RemitAnalysis: CorrelateWithDestinations()
+RemitAnalysis -> RemitAnalysis: AnalyzeSeasonalVariations()
+RemitAnalysis -> RemitAnalysis: MeasureConsumptionImpacts()
+RemitAnalysis -> RemitAnalysis: TrackInvestmentPatterns()
+MoF <-- RemitAnalysis: Remittance pattern analysis
+deactivate RemitAnalysis
+
+MoF -> HouseholdStats: Map remittance dependency by region
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: calculateDistrictRemittanceDependency()
+HouseholdStats -> HouseholdStats: identifyHighDependencyAreas()
+HouseholdStats -> HouseholdStats: analyzeVulnerabilityToFluctuations()
+MoF <-- HouseholdStats: Regional dependency mapping
+deactivate HouseholdStats
+
+MoF -> EconModel: Model economic shock scenarios
+activate EconModel
+EconModel -> EconModel: SimulateGulfCrisisImpact()
+EconModel -> EconModel: ProjectMalaysiaSlowdown()
+EconModel -> EconModel: ModelPandemicDisruption()
+MoF <-- EconModel: Economic vulnerability analysis
+deactivate EconModel
+
+MoF -> Coordination: Establish interministerial coordination
+activate Coordination
+Coordination -> Coordination: FormRemittanceTaskForce()
+Coordination -> Coordination: DevelopContingencyPlans()
+Coordination -> Coordination: CoordinateWithCentralBank()
+MoF <-- Coordination: Coordination mechanisms
+deactivate Coordination
+
+MoF -> HouseholdStats: Develop remittance diversification metrics
+activate HouseholdStats
+HouseholdStats -> HouseholdStats: createRemittanceDiversificationIndex()
+HouseholdStats -> HouseholdStats: trackRemittanceUsePurposes()
+HouseholdStats -> HouseholdStats: measureProductiveInvestmentRatio()
+MoF <-- HouseholdStats: Diversification metrics
+deactivate HouseholdStats
+
+MoF -> DoFE: Create migration management strategy
+activate DoFE
+DoFE -> DoFE: DesignSkillEnhancementPrograms()
+DoFE -> DoFE: DevelopReturneeIntegrationPlans()
+DoFE -> DoFE: CoordinateWithDestinationCountries()
+MoF <-- DoFE: Migration management recommendations
+deactivate DoFE
+@enduml
+----
+
+*Real-World Context:*
+Nepal is one of the world's most remittance-dependent economies, with foreign remittances contributing approximately 25-30% of GDP in recent years. The HouseholdStatistics entity captures this crucial economic reality at the household level, providing detailed insights into how foreign employment shapes Nepal's economy and social structure.
+
+The system records both the prevalence of migration (the percentage of households with at least one migrant member) and the economic impact (the average annual remittance received). This dual perspective is critical in Nepal, where some districts like Kalikot and Bajhang have over 50% of households with migrants, creating significant demographic and economic dependencies.
+
+The MonetaryAmount component captures not just the raw value of remittances but also their source countries, reflecting the diverse migration patterns of Nepali workers to Gulf countries, Malaysia, India, and increasingly to Japan, South Korea, and European nations. This geographical breakdown is crucial as remittance amounts vary dramatically by destination - from an average of USD 500 monthly from workers in Qatar to USD 1,500 from South Korea.
+
+The system's ability to track remittance categories (domestic vs. foreign) acknowledges Nepal's dual migration patterns: the historical labor migration to India (which often involves seasonal, lower-paying work) and the newer migration to Gulf states and East Asia (which typically generates larger remittances). This nuanced view helps policymakers understand different vulnerability patterns among households.
+
+Housing characteristics tracked by the system reveal how remittances impact living standards in Nepal. Data shows remittance-receiving households are more likely to have improved building materials (cement-bonded rather than mud-bonded), better sanitation facilities, and modern cooking facilities - physically visible impacts of remittance flows that the system quantifies for development planning.
+
+The economic modeling capabilities help Nepal's policymakers anticipate external shocks. For example, during the 2020 pandemic when many migrant workers returned to Nepal, the system helped model which districts would face the largest remittance drops and therefore require targeted economic support. Similarly, diplomatic tensions with destination countries or economic downturns in the Gulf can be modeled for their household-level impacts in Nepal.
+
+The system's regional analysis capabilities are particularly important in Nepal, where remittance dependency varies dramatically by region. Western hill districts often show the highest dependency rates (with remittances comprising over 50% of household income in some areas), while Kathmandu Valley and some Terai districts show lower rates. These geographic patterns inform regionally-differentiated economic development strategies.
+
+For long-term planning, the system helps track whether remittances are flowing toward consumption or productive investment. This consumption-versus-investment pattern has been a key policy concern in Nepal, with efforts to channel more remittances toward enterprises that create domestic employment rather than imported consumer goods. The household expenditure tracking helps measure progress on this national economic priority.
+
+The HouseholdStatistics component also captures household vulnerability to remittance fluctuations, identifying households that have become highly dependent on foreign income with few alternative livelihoods. This vulnerability mapping helps social protection planning and guides vocational training programs for returnee migrants - an ongoing priority for Nepal's government as it seeks to reduce extreme economic dependency on foreign labor markets.

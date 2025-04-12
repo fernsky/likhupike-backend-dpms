@@ -1,0 +1,908 @@
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+
+' Supporting Classes
+class HouseholdTimeSeries {
+  +UUID id
+  +UUID householdStatisticsId
+  +List<TimeSeriesEntry> timeSeriesData
+  +String timeSeriesType
+  +String periodicity
+  +LocalDate startDate
+  +LocalDate endDate
+  +Boolean interpolated
+  +Integer baselineYear
+  +String dataSource
+  +Map<String, Object> metadata
+  +Double annualChangeRate
+  +Double cumulativeChangeRate
+  +Double projectedChangeRate
+  +LocalDateTime lastUpdated
+  +UUID lastUpdatedBy
+}
+
+class TimeSeriesEntry {
+  +UUID id
+  +UUID timeSeriesId
+  +LocalDate entryDate
+  +Integer value
+  +Double changeRate
+  +String notes
+  +Boolean isActual
+  +Boolean isRevised
+  +UUID dataSourceId
+  +Double confidenceInterval
+  +String dataQualityFlag
+}
+
+class HouseholdCompositionDetails {
+  +UUID id
+  +UUID householdStatisticsId
+  +Integer adultOnlyHouseholds
+  +Integer elderlyOnlyHouseholds
+  +Integer singleParentHouseholds
+  +Integer femaleHeadedHouseholds
+  +Integer maleHeadedHouseholds
+  +Integer childHeadedHouseholds
+  +Integer householdsWithDisabledMembers
+  +Integer householdsWithChronicIllness
+  +Integer householdsWithPregnantWomen
+  +Integer householdsWithInfants
+  +Integer multigenerationalHouseholds
+  +Integer nuclearFamilyHouseholds
+  +Integer singlePersonHouseholds
+  +Map<Integer, Integer> householdsByMemberCount
+  +Map<String, Integer> householdsByEthnicity
+  +Map<String, Integer> householdsByReligion
+  +Map<String, Integer> householdsByLanguage
+}
+
+class HousingConditionDetails {
+  +UUID id
+  +UUID householdStatisticsId
+  +Integer permanentStructures
+  +Integer temporaryStructures
+  +Integer semiPermanentStructures
+  +Integer householdsWithSafeWater
+  +Integer householdsWithElectricity
+  +Integer householdsWithToilet
+  +Integer householdsWithSolidWasteDisposal
+  +Integer householdsWithInternet
+  +Integer householdsWithMobilePhone
+  +Integer householdsWithTelevision
+  +Integer householdsWithRefrigerator
+  +Integer householdsWithMotorcycle
+  +Integer householdsWithAutomobile
+  +Map<String, Integer> householdsByRoofMaterial
+  +Map<String, Integer> householdsByWallMaterial
+  +Map<String, Integer> householdsByFloorMaterial
+  +Map<String, Integer> householdsByWaterSource
+  +Map<String, Integer> householdsBySanitationType
+  +Double averageDwellingSize
+  +Double averageNumberOfRooms
+}
+
+class EconomicStatusDetails {
+  +UUID id
+  +UUID householdStatisticsId
+  +Integer householdsWithSalariedEmployment
+  +Integer householdsWithSelfEmployment
+  +Integer householdsWithAgriculturalIncome
+  +Integer householdsWithBusinessIncome
+  +Integer householdsWithInvestmentIncome
+  +Integer householdsWithNoIncome
+  +Integer householdsWithMixedIncome
+  +Integer householdsWithForeignEmigrant
+  +Integer householdsWithDomesticMigrant
+  +Double averageAnnualIncome
+  +Double medianAnnualIncome
+  +Double povertyRate
+  +Double extremePovertyRate
+  +Double giniCoefficient
+  +Map<String, Integer> householdsByIncomeDecile
+  +Map<String, Integer> householdsByOccupationType
+  +Map<String, Integer> householdsByLandOwnership
+  +Map<String, Double> remittanceBySourceCountry
+}
+
+enum HouseholdSizeCategory {
+  SINGLE_PERSON
+  TWO_PERSONS
+  THREE_TO_FOUR_PERSONS
+  FIVE_TO_SIX_PERSONS
+  SEVEN_TO_NINE_PERSONS
+  TEN_PLUS_PERSONS
+}
+
+enum HouseholdType {
+  SINGLE_PERSON
+  NUCLEAR_FAMILY
+  EXTENDED_FAMILY
+  MULTIGENERATIONAL
+  SINGLE_PARENT
+  UNRELATED_PERSONS
+  JOINT_FAMILY
+}
+
+enum HouseholdComposition {
+  ADULT_ONLY
+  ADULTS_WITH_CHILDREN
+  ELDERLY_ONLY
+  FEMALE_HEADED
+  MALE_HEADED
+  CHILD_HEADED
+  DISABLED_MEMBER
+}
+
+enum IncomeCategory {
+  EXTREMELY_LOW
+  LOW
+  LOWER_MIDDLE
+  MIDDLE
+  UPPER_MIDDLE
+  HIGH
+}
+
+enum PovertyStatus {
+  EXTREME_POVERTY
+  BELOW_POVERTY_LINE
+  NEAR_POVERTY_LINE
+  ABOVE_POVERTY_LINE
+  MIDDLE_INCOME
+  UPPER_INCOME
+}
+
+enum OwnershipStatus {
+  OWNED
+  RENTED
+  RENT_FREE
+  INSTITUTIONAL
+  SQUATTER
+  COMMUNAL
+}
+
+enum BuildingMaterial {
+  MUD_BONDED
+  CEMENT_BONDED
+  RCC_WITH_PILLAR
+  WOODEN_PILLAR
+  ADOBE
+  BAMBOO
+  OTHER
+}
+
+enum RemittanceCategory {
+  NO_REMITTANCE
+  DOMESTIC_REMITTANCE
+  FOREIGN_REMITTANCE
+  BOTH_DOMESTIC_AND_FOREIGN
+}
+
+enum ValidationStatus {
+  NOT_VALIDATED
+  VALIDATION_PASSED
+  VALIDATION_FAILED
+  VALIDATION_WARNING
+  VALIDATION_IN_PROGRESS
+}
+
+enum DataSourceType {
+  CENSUS
+  HOUSEHOLD_SURVEY
+  ADMINISTRATIVE_DATA
+  DEMOGRAPHIC_SURVEY
+  POVERTY_SURVEY
+  HEALTH_SURVEY
+  ECONOMIC_SURVEY
+  ESTIMATION
+  PROJECTION
+}
+
+enum CollectionMethod {
+  CENSUS
+  RANDOM_SAMPLING
+  STRATIFIED_SAMPLING
+  SYSTEMATIC_SAMPLING
+  REGISTRATION_DATA
+  ADMINISTRATIVE_RECORDS
+  DIGITAL_COLLECTION
+  PAPER_SURVEY
+  REMOTE_SENSING
+}
+
+enum StatisticsConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+' HouseholdStatistics implementation
+class HouseholdStatistics {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core household data
+  +Integer totalHouseholds
+  +Double averageHouseholdSize
+  +Integer totalPopulationInHouseholds
+  +Integer institutionalPopulation
+  +Double householdDensity
+  +Map<HouseholdSizeCategory, Integer> householdsBySize
+  +Map<HouseholdType, Integer> householdsByType
+  +Map<HouseholdComposition, Integer> householdsByComposition
+  
+  ' Household economic data
+  +Map<IncomeCategory, Integer> householdsByIncome
+  +Double averageAnnualIncome
+  +Double medianAnnualIncome
+  +MonetaryAmount averageMonthlyExpenditure
+  +Map<PovertyStatus, Integer> householdsByPovertyStatus
+  +Double povertyRate
+  +Double foodInsecurityRate
+  
+  ' Housing characteristics
+  +Map<OwnershipStatus, Integer> householdsByOwnership
+  +Map<BuildingMaterial, Integer> householdsByBuildingMaterial
+  +Map<RoofType, Integer> householdsByRoofType
+  +Map<WaterSource, Integer> householdsByWaterSource
+  +Map<SanitationFacility, Integer> householdsBySanitation
+  +Map<CookingFuel, Integer> householdsByCookingFuel
+  +Map<LightingSource, Integer> householdsByLightingSource
+  +Double percentWithElectricity
+  +Double percentWithInternet
+  
+  ' Migration and remittance data
+  +Integer householdsWithMigrants
+  +Double percentHouseholdsWithMigrants
+  +Map<RemittanceCategory, Integer> householdsByRemittance
+  +MonetaryAmount averageAnnualRemittance
+  +Double percentHouseholdsReceivingRemittances
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +StatisticsConfidenceLevel confidenceLevel
+  +String methodology
+  +String notes
+  +LocalDate lastUpdated
+  +UUID lastUpdatedBy
+  +Boolean isProjected
+  +CollectionMethod collectionMethod
+  +DataSourceType dataSourceType
+  +ValidationStatus validationStatus
+  +Integer sampleSize
+  +Double marginOfError
+  
+  ' Relationships
+  +HouseholdCompositionDetails compositionDetails
+  +HousingConditionDetails housingDetails
+  +EconomicStatusDetails economicDetails
+  +List<HouseholdTimeSeries> timeSeriesData
+  
+  ' Methods
+  +Map<HouseholdType, Double> getHouseholdTypeDistribution()
+  +Map<HouseholdSizeCategory, Double> getHouseholdSizeDistribution()
+  +Double calculateOccupancyRate()
+  +Double calculateVacancyRate()
+  +Map<String, Object> generateHousingQualityIndices()
+  +Double calculateHouseholdVulnerabilityIndex()
+  +Map<String, Double> getCrowdingIndicators()
+  +List<Map<String, Object>> getHouseholdTrends(String metric, Integer years)
+  +Map<String, Object> compareWithRegionalAverages()
+  +Map<String, Object> compareWithNationalAverages()
+  +Map<String, Double> getEconomicIndicators()
+  +Map<String, Double> getWelfareIndicators()
+  +Map<String, Object> getAssetOwnershipProfile()
+  +Map<BuildingMaterial, Double> getBuildingMaterialDistribution()
+  +Map<String, Object> getEnergyProfile()
+  +Map<String, Object> getWaterSanitationProfile()
+  +HouseholdStatistics aggregate(List<UUID> childAreaIds)
+  +HouseholdStatistics disaggregate(List<String> dimensions)
+}
+
+' Inheritance relationships
+BaseEntity <|-- HouseholdStatistics
+BaseEntity <|-- HouseholdTimeSeries
+BaseEntity <|-- TimeSeriesEntry
+BaseEntity <|-- HouseholdCompositionDetails
+BaseEntity <|-- HousingConditionDetails
+BaseEntity <|-- EconomicStatusDetails
+
+' Interface implementation
+HouseholdStatistics ..|> DataAggregatable
+HouseholdStatistics ..|> HistoryViewable
+
+' Class relationships
+HouseholdStatistics "1" -- "0..many" HouseholdTimeSeries
+HouseholdStatistics "1" -- "1" HouseholdCompositionDetails
+HouseholdStatistics "1" -- "1" HousingConditionDetails
+HouseholdStatistics "1" -- "1" EconomicStatusDetails
+HouseholdTimeSeries "1" o-- "many" TimeSeriesEntry
+HouseholdStatistics -- HouseholdSizeCategory
+HouseholdStatistics -- HouseholdType
+HouseholdStatistics -- HouseholdComposition
+HouseholdStatistics -- IncomeCategory
+HouseholdStatistics -- PovertyStatus
+HouseholdStatistics -- OwnershipStatus
+HouseholdStatistics -- BuildingMaterial
+HouseholdStatistics -- RemittanceCategory
+HouseholdStatistics -- ValidationStatus
+HouseholdStatistics -- DataSourceType
+HouseholdStatistics -- CollectionMethod
+HouseholdStatistics -- StatisticsConfidenceLevel
+@enduml
+----
+
+## Household Statistics Data Dictionary
+
+### Core Entity: HouseholdStatistics
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the household statistics record
+| demographicSummaryId | UUID | Reference to the demographic summary this record belongs to
+| adminAreaId | UUID | Reference to the administrative area (ward, municipality, etc.)
+| adminAreaCode | String | Code for the administrative area
+| adminAreaType | AdminAreaType | Type of administrative area (WARD, MUNICIPALITY, etc.)
+| adminAreaName | String | Name of the administrative area
+| adminLevel | Integer | Administrative level (0=country, 1=province, etc.)
+| totalHouseholds | Integer | Total number of households in the area
+| averageHouseholdSize | Double | Average number of persons per household
+| totalPopulationInHouseholds | Integer | Total population living in private households
+| institutionalPopulation | Integer | Population living in institutional settings
+| householdDensity | Double | Number of households per square kilometer
+| householdsBySize | Map | Distribution of households by size category
+| householdsByType | Map | Distribution of households by family structure
+| householdsByComposition | Map | Distribution of households by demographic composition
+| householdsByIncome | Map | Distribution of households by income category
+| averageAnnualIncome | Double | Average annual household income in NPR
+| medianAnnualIncome | Double | Median annual household income in NPR
+| averageMonthlyExpenditure | MonetaryAmount | Average monthly household expenditure
+| householdsByPovertyStatus | Map | Distribution of households by poverty status
+| povertyRate | Double | Percentage of households below poverty line
+| foodInsecurityRate | Double | Percentage of households facing food insecurity
+| householdsByOwnership | Map | Distribution of households by ownership status
+| householdsByBuildingMaterial | Map | Distribution of households by building material type
+| householdsByRoofType | Map | Distribution of households by roof material type
+| householdsByWaterSource | Map | Distribution of households by primary water source
+| householdsBySanitation | Map | Distribution of households by sanitation facility type
+| householdsByCookingFuel | Map | Distribution of households by primary cooking fuel
+| householdsByLightingSource | Map | Distribution of households by primary lighting source
+| percentWithElectricity | Double | Percentage of households with electricity access
+| percentWithInternet | Double | Percentage of households with internet access
+| householdsWithMigrants | Integer | Number of households with at least one migrant member
+| percentHouseholdsWithMigrants | Double | Percentage of households with migrants
+| householdsByRemittance | Map | Distribution of households by remittance category
+| averageAnnualRemittance | MonetaryAmount | Average annual remittance received per receiving household
+| percentHouseholdsReceivingRemittances | Double | Percentage of households receiving remittances
+| dataSource | String | Source of the household data
+| yearOfData | Integer | Year the data was collected
+| confidenceLevel | StatisticsConfidenceLevel | Confidence level of the statistics
+| methodology | String | Methodology used for data collection
+| notes | String | Additional notes about the data
+| lastUpdated | LocalDate | When the data was last updated
+| lastUpdatedBy | UUID | Who last updated the data
+| isProjected | Boolean | Whether the data is projected rather than measured
+| collectionMethod | CollectionMethod | Method used to collect the data
+| dataSourceType | DataSourceType | Type of data source
+| validationStatus | ValidationStatus | Current validation status of the data
+| sampleSize | Integer | Size of sample used (if applicable)
+| marginOfError | Double | Statistical margin of error (if applicable)
+|===
+
+### Supporting Entity: HouseholdCompositionDetails
+
+Provides detailed breakdown of household composition characteristics.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the composition details
+| householdStatisticsId | UUID | Reference to the parent household statistics
+| adultOnlyHouseholds | Integer | Number of households with only adults
+| elderlyOnlyHouseholds | Integer | Number of households with only elderly members
+| singleParentHouseholds | Integer | Number of single-parent households
+| femaleHeadedHouseholds | Integer | Number of female-headed households
+| maleHeadedHouseholds | Integer | Number of male-headed households
+| childHeadedHouseholds | Integer | Number of child-headed households
+| householdsWithDisabledMembers | Integer | Number of households with disabled members
+| householdsWithChronicIllness | Integer | Number of households with chronically ill members
+| householdsWithPregnantWomen | Integer | Number of households with pregnant women
+| householdsWithInfants | Integer | Number of households with infants (under 1 year)
+| multigenerationalHouseholds | Integer | Number of households with three or more generations
+| nuclearFamilyHouseholds | Integer | Number of nuclear family households
+| singlePersonHouseholds | Integer | Number of single-person households
+| householdsByMemberCount | Map | Distribution of households by number of members
+| householdsByEthnicity | Map | Distribution of households by ethnicity of head
+| householdsByReligion | Map | Distribution of households by religion
+| householdsByLanguage | Map | Distribution of households by primary language
+|===
+
+### Supporting Entity: HousingConditionDetails
+
+Provides detailed breakdown of housing conditions and amenities.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the housing details
+| householdStatisticsId | UUID | Reference to the parent household statistics
+| permanentStructures | Integer | Number of permanent housing structures
+| temporaryStructures | Integer | Number of temporary housing structures
+| semiPermanentStructures | Integer | Number of semi-permanent structures
+| householdsWithSafeWater | Integer | Number of households with safe drinking water
+| householdsWithElectricity | Integer | Number of households with electricity
+| householdsWithToilet | Integer | Number of households with toilet facilities
+| householdsWithSolidWasteDisposal | Integer | Number of households with solid waste disposal
+| householdsWithInternet | Integer | Number of households with internet access
+| householdsWithMobilePhone | Integer | Number of households with mobile phones
+| householdsWithTelevision | Integer | Number of households with television
+| householdsWithRefrigerator | Integer | Number of households with refrigerator
+| householdsWithMotorcycle | Integer | Number of households with motorcycle
+| householdsWithAutomobile | Integer | Number of households with automobile
+| householdsByRoofMaterial | Map | Distribution of households by roof material
+| householdsByWallMaterial | Map | Distribution of households by wall material
+| householdsByFloorMaterial | Map | Distribution of households by floor material
+| householdsByWaterSource | Map | Distribution of households by water source
+| householdsBySanitationType | Map | Distribution of households by sanitation type
+| averageDwellingSize | Double | Average size of dwelling in square meters
+| averageNumberOfRooms | Double | Average number of rooms per dwelling
+|===
+
+### Supporting Entity: EconomicStatusDetails
+
+Provides detailed breakdown of economic characteristics of households.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the economic details
+| householdStatisticsId | UUID | Reference to the parent household statistics
+| householdsWithSalariedEmployment | Integer | Number of households with salaried employment
+| householdsWithSelfEmployment | Integer | Number of households with self-employment
+| householdsWithAgriculturalIncome | Integer | Number of households with agricultural income
+| householdsWithBusinessIncome | Integer | Number of households with business income
+| householdsWithInvestmentIncome | Integer | Number of households with investment income
+| householdsWithNoIncome | Integer | Number of households with no reported income
+| householdsWithMixedIncome | Integer | Number of households with mixed income sources
+| householdsWithForeignEmigrant | Integer | Number of households with foreign emigrants
+| householdsWithDomesticMigrant | Integer | Number of households with domestic migrants
+| averageAnnualIncome | Double | Average annual household income in NPR
+| medianAnnualIncome | Double | Median annual household income in NPR
+| povertyRate | Double | Percentage of households below poverty line
+| extremePovertyRate | Double | Percentage of households in extreme poverty
+| giniCoefficient | Double | Gini coefficient (income inequality measure)
+| householdsByIncomeDecile | Map | Distribution of households by income decile
+| householdsByOccupationType | Map | Distribution of households by primary occupation
+| householdsByLandOwnership | Map | Distribution of households by land ownership
+| remittanceBySourceCountry | Map | Remittance amounts by source country
+|===
+
+### Supporting Entity: HouseholdTimeSeries
+
+Tracks household statistics over time for trend analysis.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the time series
+| householdStatisticsId | UUID | Reference to the parent household statistics
+| timeSeriesType | String | Type of time series data (household_count, average_size, etc.)
+| periodicity | String | Frequency of time series data (annual, quarterly, etc.)
+| startDate | LocalDate | Start date of the time series
+| endDate | LocalDate | End date of the time series
+| interpolated | Boolean | Whether the series contains interpolated values
+| baselineYear | Integer | Baseline year for index calculations
+| dataSource | String | Source of the time series data
+| metadata | Map | Additional metadata about the time series
+| annualChangeRate | Double | Average annual rate of change
+| cumulativeChangeRate | Double | Cumulative rate of change over period
+| projectedChangeRate | Double | Projected future rate of change
+| lastUpdated | LocalDateTime | When the time series was last updated
+| lastUpdatedBy | UUID | Who last updated the time series
+|===
+
+### Supporting Entity: TimeSeriesEntry
+
+Individual data points within a household time series.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the time series entry
+| timeSeriesId | UUID | Reference to the parent time series
+| entryDate | LocalDate | Date of this data point
+| value | Integer | Value of the measurement
+| changeRate | Double | Rate of change from previous period
+| notes | String | Notes about this specific data point
+| isActual | Boolean | Whether this is an actual measurement or estimate
+| isRevised | Boolean | Whether this entry has been revised
+| dataSourceId | UUID | Reference to specific data source for this entry
+| confidenceInterval | Double | Statistical confidence interval
+| dataQualityFlag | String | Data quality indicator
+|===
+
+## Enumerations
+
+### HouseholdSizeCategory
+Categorizes households by number of members.
+
+* `SINGLE_PERSON`: One-person household
+* `TWO_PERSONS`: Two-person household
+* `THREE_TO_FOUR_PERSONS`: Three to four person household
+* `FIVE_TO_SIX_PERSONS`: Five to six person household
+* `SEVEN_TO_NINE_PERSONS`: Seven to nine person household
+* `TEN_PLUS_PERSONS`: Ten or more person household
+
+### HouseholdType
+Categorizes households by family structure.
+
+* `SINGLE_PERSON`: Individual living alone
+* `NUCLEAR_FAMILY`: Parents and their children
+* `EXTENDED_FAMILY`: Nuclear family plus relatives
+* `MULTIGENERATIONAL`: Three or more generations
+* `SINGLE_PARENT`: One parent with children
+* `UNRELATED_PERSONS`: Unrelated individuals sharing
+* `JOINT_FAMILY`: Multiple related families sharing
+
+### HouseholdComposition
+Categorizes households by demographic composition.
+
+* `ADULT_ONLY`: Household with only adults
+* `ADULTS_WITH_CHILDREN`: Household with adults and children
+* `ELDERLY_ONLY`: Household with only elderly members
+* `FEMALE_HEADED`: Household headed by a female
+* `MALE_HEADED`: Household headed by a male
+* `CHILD_HEADED`: Household headed by a child
+* `DISABLED_MEMBER`: Household with disabled member
+
+### IncomeCategory
+Categorizes households by income level.
+
+* `EXTREMELY_LOW`: Below 20% of median income
+* `LOW`: 20-50% of median income
+* `LOWER_MIDDLE`: 50-80% of median income
+* `MIDDLE`: 80-120% of median income
+* `UPPER_MIDDLE`: 120-200% of median income
+* `HIGH`: Above 200% of median income
+
+### PovertyStatus
+Categorizes households by poverty status.
+
+* `EXTREME_POVERTY`: Below 50% of poverty line
+* `BELOW_POVERTY_LINE`: Below poverty line
+* `NEAR_POVERTY_LINE`: Within 20% above poverty line
+* `ABOVE_POVERTY_LINE`: More than 20% above poverty line
+* `MIDDLE_INCOME`: Between 200-500% of poverty line
+* `UPPER_INCOME`: Above 500% of poverty line
+
+### OwnershipStatus
+Categorizes households by ownership status.
+
+* `OWNED`: Owner-occupied housing
+* `RENTED`: Rented housing
+* `RENT_FREE`: Living rent-free in another's property
+* `INSTITUTIONAL`: Living in institutional housing
+* `SQUATTER`: Informal settlements without legal ownership
+* `COMMUNAL`: Community-owned housing
+
+### BuildingMaterial
+Categorizes housing by primary building material.
+
+* `MUD_BONDED`: Traditional mud-bonded construction
+* `CEMENT_BONDED`: Cement-bonded brick or stone
+* `RCC_WITH_PILLAR`: Reinforced concrete construction
+* `WOODEN_PILLAR`: Wooden pillar construction
+* `ADOBE`: Adobe brick construction
+* `BAMBOO`: Bamboo-based construction
+* `OTHER`: Other materials
+
+### RemittanceCategory
+Categorizes households by remittance receipt.
+
+* `NO_REMITTANCE`: No remittances received
+* `DOMESTIC_REMITTANCE`: Remittances from within Nepal
+* `FOREIGN_REMITTANCE`: Remittances from abroad
+* `BOTH_DOMESTIC_AND_FOREIGN`: Both types of remittances
+
+### CollectionMethod
+Methods used to collect household data.
+
+* `CENSUS`: Complete enumeration
+* `RANDOM_SAMPLING`: Simple random sampling
+* `STRATIFIED_SAMPLING`: Stratified random sampling
+* `SYSTEMATIC_SAMPLING`: Systematic sampling approach
+* `REGISTRATION_DATA`: From administrative registration
+* `ADMINISTRATIVE_RECORDS`: From government records
+* `DIGITAL_COLLECTION`: Digital data collection methods
+* `PAPER_SURVEY`: Paper-based survey methods
+* `REMOTE_SENSING`: Remote sensing technologies
+
+### ValidationStatus
+Status of data validation.
+
+* `NOT_VALIDATED`: Data not yet validated
+* `VALIDATION_PASSED`: Data has passed validation
+* `VALIDATION_FAILED`: Data has failed validation
+* `VALIDATION_WARNING`: Data passed with warnings
+* `VALIDATION_IN_PROGRESS`: Validation in process
+
+### DataSourceType
+Type of data source.
+
+* `CENSUS`: Complete population census
+* `HOUSEHOLD_SURVEY`: Household sample survey
+* `ADMINISTRATIVE_DATA`: Administrative data sources
+* `DEMOGRAPHIC_SURVEY`: Specialized demographic survey
+* `POVERTY_SURVEY`: Poverty-focused survey
+* `HEALTH_SURVEY`: Health-focused survey
+* `ECONOMIC_SURVEY`: Economic-focused survey
+* `ESTIMATION`: Statistical estimation
+* `PROJECTION`: Statistical projection
+
+### StatisticsConfidenceLevel
+Confidence level of statistics.
+
+* `VERY_HIGH`: Highest confidence level
+* `HIGH`: High confidence level
+* `MEDIUM`: Medium confidence level
+* `LOW`: Low confidence level
+* `VERY_LOW`: Very low confidence level
+* `UNKNOWN`: Confidence level cannot be determined
+
+## Database Schema Implementation
+
+The HouseholdStatistics entity and its related entities are mapped to the following database schema:
+
+```sql
+-- Main household statistics table
+CREATE TABLE household_statistics (
+  id UUID PRIMARY KEY,
+  demographic_summary_id UUID NOT NULL REFERENCES demographic_summary(id),
+  admin_area_id UUID NOT NULL REFERENCES administrative_area(id),
+  admin_area_code VARCHAR(20) NOT NULL,
+  admin_area_type VARCHAR(20) NOT NULL,
+  admin_area_name VARCHAR(100) NOT NULL,
+  admin_level INT NOT NULL,
+  
+  total_households INT NOT NULL,
+  average_household_size NUMERIC(5,2) NOT NULL,
+  total_population_in_households INT NOT NULL,
+  institutional_population INT,
+  household_density NUMERIC(10,2),
+  
+  average_annual_income NUMERIC(14,2),
+  median_annual_income NUMERIC(14,2),
+  average_monthly_expenditure_amount NUMERIC(14,2),
+  average_monthly_expenditure_currency VARCHAR(3),
+  poverty_rate NUMERIC(5,2),
+  food_insecurity_rate NUMERIC(5,2),
+  
+  households_with_migrants INT,
+  percent_households_with_migrants NUMERIC(5,2),
+  average_annual_remittance_amount NUMERIC(14,2),
+  average_annual_remittance_currency VARCHAR(3),
+  percent_households_receiving_remittances NUMERIC(5,2),
+  
+  percent_with_electricity NUMERIC(5,2),
+  percent_with_internet NUMERIC(5,2),
+  
+  data_source VARCHAR(255),
+  year_of_data INT NOT NULL,
+  confidence_level VARCHAR(20) NOT NULL,
+  methodology TEXT,
+  notes TEXT,
+  is_projected BOOLEAN DEFAULT FALSE,
+  collection_method VARCHAR(30),
+  data_source_type VARCHAR(30),
+  validation_status VARCHAR(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+  sample_size INT,
+  margin_of_error NUMERIC(5,2),
+  
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  last_updated DATE,
+  last_updated_by UUID,
+  
+  CONSTRAINT fk_demographic_summary FOREIGN KEY (demographic_summary_id) REFERENCES demographic_summary(id),
+  CONSTRAINT fk_admin_area FOREIGN KEY (admin_area_id) REFERENCES administrative_area(id)
+);
+
+-- Household size categories distribution
+CREATE TABLE household_by_size (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  size_category VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, size_category)
+);
+
+-- Household type distribution
+CREATE TABLE household_by_type (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  household_type VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, household_type)
+);
+
+-- Household composition distribution
+CREATE TABLE household_by_composition (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  composition_type VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, composition_type)
+);
+
+-- Household income distribution
+CREATE TABLE household_by_income (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  income_category VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, income_category)
+);
+
+-- Household poverty status distribution
+CREATE TABLE household_by_poverty_status (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  poverty_status VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, poverty_status)
+);
+
+-- Household ownership status distribution
+CREATE TABLE household_by_ownership (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  ownership_status VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, ownership_status)
+);
+
+-- Household building material distribution
+CREATE TABLE household_by_building_material (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  building_material VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, building_material)
+);
+
+-- Household remittance category distribution
+CREATE TABLE household_by_remittance (
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  remittance_category VARCHAR(30) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_statistics_id, remittance_category)
+);
+
+-- Detailed household composition data
+CREATE TABLE household_composition_details (
+  id UUID PRIMARY KEY,
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  adult_only_households INT,
+  elderly_only_households INT,
+  single_parent_households INT,
+  female_headed_households INT,
+  male_headed_households INT,
+  child_headed_households INT,
+  households_with_disabled_members INT,
+  households_with_chronic_illness INT,
+  households_with_pregnant_women INT,
+  households_with_infants INT,
+  multigenerational_households INT,
+  nuclear_family_households INT,
+  single_person_households INT,
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  CONSTRAINT fk_household_statistics FOREIGN KEY (household_statistics_id) REFERENCES household_statistics(id)
+);
+
+-- Household composition by member count
+CREATE TABLE household_by_member_count (
+  household_composition_id UUID NOT NULL REFERENCES household_composition_details(id),
+  member_count INT NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_composition_id, member_count)
+);
+
+-- Household composition by ethnicity
+CREATE TABLE household_by_ethnicity (
+  household_composition_id UUID NOT NULL REFERENCES household_composition_details(id),
+  ethnicity VARCHAR(50) NOT NULL,
+  count INT NOT NULL,
+  PRIMARY KEY (household_composition_id, ethnicity)
+);
+
+-- Housing condition details
+CREATE TABLE housing_condition_details (
+  id UUID PRIMARY KEY,
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  permanent_structures INT,
+  temporary_structures INT,
+  semi_permanent_structures INT,
+  households_with_safe_water INT,
+  households_with_electricity INT,
+  households_with_toilet INT,
+  households_with_solid_waste_disposal INT,
+  households_with_internet INT,
+  households_with_mobile_phone INT,
+  households_with_television INT,
+  households_with_refrigerator INT,
+  households_with_motorcycle INT,
+  households_with_automobile INT,
+  average_dwelling_size NUMERIC(7,2),
+  average_number_of_rooms NUMERIC(4,2),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  CONSTRAINT fk_household_statistics FOREIGN KEY (household_statistics_id) REFERENCES household_statistics(id)
+);
+
+-- Time series for household data
+CREATE TABLE household_time_series (
+  id UUID PRIMARY KEY,
+  household_statistics_id UUID NOT NULL REFERENCES household_statistics(id),
+  time_series_type VARCHAR(50) NOT NULL,
+  periodicity VARCHAR(20) NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  interpolated BOOLEAN DEFAULT FALSE,
+  baseline_year INT,
+  data_source VARCHAR(255),
+  annual_change_rate NUMERIC(7,4),
+  cumulative_change_rate NUMERIC(7,4),
+  projected_change_rate NUMERIC(7,4),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  last_updated TIMESTAMP,
+  last_updated_by UUID,
+  CONSTRAINT fk_household_statistics FOREIGN KEY (household_statistics_id) REFERENCES household_statistics(id)
+);
+
+-- Time series entries
+CREATE TABLE time_series_entry (
+  id UUID PRIMARY KEY,
+  time_series_id UUID NOT NULL REFERENCES household_time_series(id),
+  entry_date DATE NOT NULL,
+  value INT NOT NULL,
+  change_rate NUMERIC(7,4),
+  notes TEXT,
+  is_actual BOOLEAN DEFAULT TRUE,
+  is_revised BOOLEAN DEFAULT FALSE,
+  data_source_id UUID,
+  confidence_interval NUMERIC(5,2),
+  data_quality_flag VARCHAR(20),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  CONSTRAINT fk_time_series FOREIGN KEY (time_series_id) REFERENCES household_time_series(id)
+);
+```
+
+This database schema provides efficient storage and retrieval of household statistics data while maintaining relationships between the main entity and its supporting entities. The use of junction tables for many-to-many relationships ensures normalized data storage for flexible analysis.

@@ -1,0 +1,45 @@
+==== Household Statistics
+
+Household Statistics represents detailed household-level demographic data for administrative areas, extending core domain models while providing specialized functionality for household analysis.
+
+===== Core Model Integration
+
+include::household-statistics/core-model-integration.adoc[leveloffset=+1]
+
+===== Household Statistics Data Collection Process
+
+include::household-statistics/data-collection-process.adoc[leveloffset=+1]
+
+===== Household Time Series Management
+
+include::household-statistics/time-series-management.adoc[leveloffset=+1]
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Household Statistics are used in the system:
+
+include::household-statistics/post-earthquake-reconstruction.adoc[leveloffset=+1]
+
+include::household-statistics/poverty-reduction-planning.adoc[leveloffset=+1]
+
+include::household-statistics/remittance-analysis.adoc[leveloffset=+1]
+
+include::household-statistics/rural-urban-migration.adoc[leveloffset=+1]
+
+include::household-statistics/disaster-vulnerability.adoc[leveloffset=+1]
+
+===== Capability Implementations
+
+include::household-statistics/data-aggregatable-implementation.adoc[leveloffset=+1]
+
+include::household-statistics/history-viewable-implementation.adoc[leveloffset=+1]
+
+===== Household Statistics Visualization
+
+include::household-statistics/visualization.adoc[leveloffset=+1]
+
+===== Additional Technical Details
+
+include::household-statistics/data-model.adoc[leveloffset=+1]
+
+include::household-statistics/events.adoc[leveloffset=+1]

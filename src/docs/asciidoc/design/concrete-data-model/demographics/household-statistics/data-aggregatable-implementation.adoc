@@ -1,0 +1,164 @@
+===== DataAggregatable Implementation
+
+HouseholdStatistics implements the DataAggregatable interface to support hierarchical data aggregation:
+
+[plantuml]
+----
+@startuml
+participant "PlanningService" as Service
+participant "HouseholdStatistics\nimplements DataAggregatable" as HouseholdStats
+participant "Repository" as Repo
+participant "AggregationEngine" as Engine
+participant "DataValidator" as Validator
+
+Service -> HouseholdStats : getAggregatedData(provinceId, "DISTRICT")
+activate HouseholdStats
+
+HouseholdStats -> HouseholdStats : validateAggregationRequest(provinceId, "DISTRICT")
+activate HouseholdStats
+HouseholdStats -> HouseholdStats : checkPermissions()
+HouseholdStats -> HouseholdStats : validateHierarchy()
+HouseholdStats <-- HouseholdStats : requestValid
+deactivate HouseholdStats
+
+HouseholdStats -> Repo : findChildHouseholdStats(provinceId, "DISTRICT")
+activate Repo
+HouseholdStats <-- Repo : districtHouseholdStats
+deactivate Repo
+
+HouseholdStats -> Engine : aggregateHouseholdData(districtHouseholdStats)
+activate Engine
+Engine -> Engine : sumHouseholdCounts()
+Engine -> Engine : calculateWeightedAverages()
+Engine -> Engine : deriveCompositeIndicators()
+HouseholdStats <-- Engine : aggregatedHouseholdData
+deactivate Engine
+
+HouseholdStats -> Engine : aggregateHousingData(districtHouseholdStats)
+activate Engine
+Engine -> Engine : aggregateBuildingMaterials()
+Engine -> Engine : aggregateWaterSources()
+Engine -> Engine : aggregateSanitationFacilities()
+HouseholdStats <-- Engine : aggregatedHousingData
+deactivate Engine
+
+HouseholdStats -> Engine : aggregateEconomicData(districtHouseholdStats)
+activate Engine
+Engine -> Engine : aggregateIncomeDistribution()
+Engine -> Engine : aggregateRemittanceStatistics()
+Engine -> Engine : calculatePovertyIndicators()
+HouseholdStats <-- Engine : aggregatedEconomicData
+deactivate Engine
+
+HouseholdStats -> Validator : validateAggregate(aggregatedData, provinceId)
+activate Validator
+Validator -> Validator : checkTotals()
+Validator -> Validator : validateConsistency()
+Validator -> Validator : flagAnomalies()
+HouseholdStats <-- Validator : validationResults
+deactivate Validator
+
+HouseholdStats -> HouseholdStats : applyValidationAdjustments(validationResults)
+HouseholdStats -> HouseholdStats : buildAggregateResponse()
+
+Service <-- HouseholdStats : aggregatedHouseholdData
+deactivate HouseholdStats
+
+Service -> HouseholdStats : drillDown(provinceId, "DISTRICT", districtId)
+activate HouseholdStats
+HouseholdStats -> Repo : findChildHouseholdStats(districtId, "MUNICIPALITY")
+activate Repo
+HouseholdStats <-- Repo : municipalityHouseholdStats
+deactivate Repo
+HouseholdStats -> Engine : aggregateHouseholdData(municipalityHouseholdStats)
+activate Engine
+HouseholdStats <-- Engine : aggregatedData
+deactivate Engine
+Service <-- HouseholdStats : districtDetailWithMunicipalities
+deactivate HouseholdStats
+@enduml
+----
+
+The DataAggregatable implementation in HouseholdStatistics enables the system to efficiently aggregate household-level data across Nepal's administrative hierarchy. This capability is essential for providing statistical insights at different administrative levels without duplicating data storage.
+
+===== Nepal-Specific Aggregation Logic
+
+Nepal's administrative structure includes:
+- 7 Provinces
+- 77 Districts
+- 753 Local Governments (Municipalities and Rural Municipalities)
+- 6,743 Wards
+
+The system's aggregation logic is specifically designed for this structure, providing valuable insights at each level:
+
+1. **Bottom-Up Aggregation**: Data is collected at the ward level through household surveys, then aggregated upward through municipalities, districts, and provinces.
+
+2. **Weighted Averaging**: For values like average household size, calculations use weighted averages based on population distribution, important in Nepal where household sizes vary significantly between urban centers (3.1 average) and remote areas (5.4 average).
+
+3. **Distribution Preservation**: When aggregating categorical data like building materials (common in Nepal's housing statistics), the system preserves distribution patterns rather than just totals:
+
+```java
+// Sample code: Aggregating building material distributions from municipalities to district
+Map<BuildingMaterial, Integer> aggregateBuildingMaterials(List<HouseholdStatistics> municipalityStats) {
+    Map<BuildingMaterial, Integer> result = new EnumMap<>(BuildingMaterial.class);
+    
+    for (HouseholdStatistics stats : municipalityStats) {
+        Map<BuildingMaterial, Integer> materials = stats.getHouseholdsByBuildingMaterial();
+        materials.forEach((material, count) -> 
+            result.merge(material, count, Integer::sum));
+    }
+    
+    return result;
+}
+```
+
+4. **Multi-dimensional Aggregation**: The system can aggregate across both administrative hierarchies and household categories simultaneously, such as aggregating female-headed households with migrants across all municipalities in a district:
+
+```java
+// Sample code: Complex aggregation for specific household types
+int aggregateSpecificHouseholdType(List<HouseholdStatistics> stats, 
+                                  HouseholdComposition composition,
+                                  boolean withMigrants) {
+    return stats.stream()
+        .map(stat -> {
+            if (withMigrants) {
+                // Get households that match both criteria
+                return getHouseholdCountByCompositionWithMigrants(stat, composition);
+            } else {
+                return stat.getHouseholdsByComposition().getOrDefault(composition, 0);
+            }
+        })
+        .reduce(0, Integer::sum);
+}
+```
+
+5. **Statistical Validation**: Aggregation includes built-in validation to detect inconsistencies that may arise from Nepal's challenging data collection environment:
+
+```java
+// Sample code: Validation logic for population totals
+boolean validatePopulationConsistency(HouseholdStatistics aggregated, List<HouseholdStatistics> sources) {
+    int totalFromSources = sources.stream()
+        .mapToInt(HouseholdStatistics::getTotalPopulationInHouseholds)
+        .sum();
+    
+    // Allow 0.5% margin of error for rounding issues
+    double difference = Math.abs(totalFromSources - aggregated.getTotalPopulationInHouseholds());
+    double percentDifference = difference / totalFromSources * 100;
+    
+    return percentDifference <= 0.5;
+}
+```
+
+===== Practical Applications
+
+The DataAggregatable implementation supports several critical functions in Nepal's planning context:
+
+1. **Resource Allocation**: When federal budget allocations are calculated, province and district-level household statistics (particularly on poverty and infrastructure indicators) inform the formula-based allocations.
+
+2. **Disaster Preparedness**: Aggregated household vulnerability statistics by building material type help disaster management authorities estimate potential impacts of earthquakes or floods at different administrative levels.
+
+3. **Service Planning**: Education and healthcare authorities use aggregated household demographics to project service needs and plan facility locations based on population distribution.
+
+4. **Political Representation**: Electoral boundary committees use household population statistics to ensure proportional representation across constituencies.
+
+By implementing DataAggregatable, HouseholdStatistics provides a powerful tool for understanding Nepal's socioeconomic patterns at different administrative scales, enabling evidence-based policy and planning decisions.

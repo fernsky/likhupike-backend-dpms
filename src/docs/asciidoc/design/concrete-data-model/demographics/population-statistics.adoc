@@ -1,0 +1,1420 @@
+==== Population Statistics
+
+Population Statistics represents detailed population count data for administrative areas, extending core domain models while providing specialized functionality for demographic analysis.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface BatchProcessable
+
+' PopulationStatistics implementation
+class PopulationStatistics {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core population data
+  +Integer totalPopulation
+  +Integer populationMale
+  +Integer populationFemale
+  +Integer populationOther
+  +Integer populationUnderAge18
+  +Integer populationAge18to60
+  +Integer populationOverAge60
+  +Double sexRatio
+  +Double populationChangePercent
+  +Integer populationChangeAbsolute
+  +Double annualGrowthRate
+  
+  ' Metadata
+  +String dataSource
+  +LocalDate referenceDate
+  +StatisticsConfidenceLevel confidenceLevel
+  +StatisticsType statisticsType
+  +StatisticsStatus status
+  +Integer sampleSize
+  +Double marginOfError
+  +String methodology
+  +UUID dataCollectorId
+  +LocalDate validationDate
+  +UUID validatedById
+  +String notes
+  +Map<String, Object> metadata
+  +Integer yearOfData
+  +Boolean isProjected
+  +CollectionMethod collectionMethod
+}
+
+' Supporting classes
+class PopulationTimeSeries {
+  +UUID id
+  +UUID populationStatisticsId
+  +List<TimeSeriesEntry> timeSeriesData
+  +String timeSeriesType
+  +String periodicity
+  +LocalDate startDate
+  +LocalDate endDate
+  +Boolean interpolated
+  +Integer baselineYear
+  +String dataSource
+}
+
+class TimeSeriesEntry {
+  +UUID id
+  +LocalDate date
+  +Integer value
+  +Double growthRate
+  +String notes
+  +Boolean isActual
+}
+
+' Enumerations
+enum StatisticsConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum StatisticsType {
+  CENSUS
+  ESTIMATE
+  PROJECTION
+  SURVEY
+  ADMINISTRATIVE_RECORD
+  DERIVED
+}
+
+enum StatisticsStatus {
+  PROVISIONAL
+  REVISED
+  FINAL
+  SUPERSEDED
+  DISPUTED
+  UNDER_REVIEW
+}
+
+enum CollectionMethod {
+  CENSUS
+  RANDOM_SAMPLING
+  STRATIFIED_SAMPLING
+  SYSTEMATIC_SAMPLING
+  REGISTRATION_DATA
+  ADMINISTRATIVE_RECORDS
+  DIGITAL_COLLECTION
+  PAPER_SURVEY
+  REMOTE_SENSING
+}
+
+' Inheritance relationships
+BaseEntity <|-- PopulationStatistics
+BaseEntity <|-- PopulationTimeSeries
+BaseEntity <|-- TimeSeriesEntry
+
+' Interface implementation
+PopulationStatistics ..|> HistoryViewable
+PopulationStatistics ..|> ExternalSystemSyncable
+PopulationStatistics ..|> BatchProcessable
+
+' Class relationships
+PopulationStatistics "1" -- "0..1" PopulationTimeSeries
+PopulationTimeSeries "1" o-- "many" TimeSeriesEntry
+PopulationStatistics -- StatisticsConfidenceLevel
+PopulationStatistics -- StatisticsType
+PopulationStatistics -- StatisticsStatus
+PopulationStatistics -- CollectionMethod
+@enduml
+----
+
+===== Population Statistics Data Collection Process
+
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Design population data collection;
+:Prepare collection methodology;
+:Configure collection parameters;
+
+|Field Enumerators|
+:Collect population data;
+:Validate field entries;
+:Submit collected data;
+
+|System|
+:Process raw data submissions;
+:Validate data structure;
+if (Valid Structure?) then (yes)
+  :Create population statistics records;
+else (no)
+  :Generate validation errors;
+  |Field Enumerators|
+  :Correct data issues;
+  note right
+    Return to validation
+  end note
+endif
+
+|Data Verification Team|
+:Review population data;
+:Cross-reference with other sources;
+if (Data Accurate?) then (yes)
+  :Mark data as verified;
+else (no)
+  :Flag anomalies for review;
+  |Field Enumerators|
+  :Investigate and correct;
+  note right
+    Return to verification
+  end note
+endif
+
+|System|
+:Calculate derived metrics;
+:Generate population indicators;
+:Verify statistical consistency;
+if (Consistent?) then (yes)
+  :Finalize population statistics;
+else (no)
+  :Generate inconsistency report;
+  |Data Verification Team|
+  :Review statistical issues;
+  note right
+    Return to calculation
+  end note
+endif
+
+|Statistics Division|
+:Perform final review;
+:Apply confidence levels;
+if (Approve?) then (yes)
+  :Approve for publication;
+else (no)
+  :Return with comments;
+  |Data Verification Team|
+  :Address comments;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Publish population statistics;
+:Update demographic summaries;
+:Index for search;
+:Trigger publication notifications;
+
+|Data Consumers|
+:Access population statistics;
+:Use data for planning and analysis;
+
+stop
+@enduml
+----
+
+===== Population Time Series Management
+
+[plantuml]
+----
+@startuml
+|Census Department|
+start
+:Define time series parameters;
+:Specify historical census years;
+:Set periodicity (annual, etc.);
+
+|System|
+:Create time series structure;
+:Import historical census data;
+:Set baseline reference year;
+
+|Statistics Analyst|
+:Review historical data points;
+:Validate time series continuity;
+if (Data Gaps?) then (yes)
+  :Apply interpolation methods;
+  :Document interpolation approach;
+else (no)
+  :Verify time series completeness;
+endif
+
+|System|
+:Calculate period-over-period changes;
+:Compute growth rates;
+:Generate trend visualizations;
+
+|Statistics Analyst|
+:Analyze population trends;
+:Document demographic transitions;
+:Add contextual notes to periods;
+
+|System|
+:Link to demographic projections;
+:Enable time-based comparisons;
+:Create time series visualizations;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Population Statistics are used in the system:
+
+====== Population Monitoring in Post-Disaster Context
+
+*Scenario:* Tracking population changes after a major earthquake in central Nepal
+
+[plantuml]
+----
+@startuml
+actor "Disaster Management\nAuthority" as DMA
+actor "Relief Coordination\nCommittee" as RCC
+participant "PopulationStatistics" as PopStats
+participant "PopulationTimeSeries" as TimeSeries
+participant "DisplacementTracker" as Displacement
+participant "ExternalSystems" as External
+participant "LocalGovernments" as Local
+
+DMA -> PopStats : Request pre-disaster baseline
+activate PopStats
+PopStats -> PopStats : retrieveStatistics(districtIds, pre-disaster)
+DMA <-- PopStats : Pre-disaster population data
+deactivate PopStats
+
+DMA -> Local : Request emergency assessments
+activate Local
+Local -> Local : Conduct rapid assessments
+Local -> Local : Gather ward-level reports
+DMA <-- Local : Initial population displacement data
+deactivate Local
+
+DMA -> PopStats : Create post-disaster statistics
+activate PopStats
+PopStats -> PopStats : createEmergencyDataset()
+PopStats -> PopStats : setStatisticsType(ESTIMATE)
+PopStats -> PopStats : setConfidenceLevel(MEDIUM)
+PopStats -> PopStats : setCollectionMethod(ADMINISTRATIVE_RECORDS)
+DMA <-- PopStats : Emergency dataset created
+deactivate PopStats
+
+DMA -> External : Request IDP camp registration data
+activate External
+External -> External : Extract camp population counts
+External -> External : Organize by origin district
+DMA <-- External : Camp registration data
+deactivate External
+
+DMA -> PopStats : Update with displacement data
+activate PopStats
+PopStats -> PopStats : updateDisplacedPopulation(campData)
+PopStats -> PopStats : calculateDisplacementRate()
+PopStats -> PopStats : setStatus(PROVISIONAL)
+DMA <-- PopStats : Displacement-adjusted statistics
+deactivate PopStats
+
+RCC -> PopStats : Generate affected population report
+activate PopStats
+PopStats -> Displacement : correlateWithDisplacement()
+activate Displacement
+PopStats <-- Displacement : Displacement patterns
+deactivate Displacement
+RCC <-- PopStats : Affected population report
+deactivate PopStats
+
+RCC -> TimeSeries : Track population weekly changes
+activate TimeSeries
+TimeSeries -> TimeSeries : createWeeklyTimeSeries()
+TimeSeries -> TimeSeries : setPeriodicity(WEEKLY)
+TimeSeries -> TimeSeries : setBaselineDate(disasterDate)
+RCC <-- TimeSeries : Weekly tracking initialized
+deactivate TimeSeries
+
+loop every week
+  Local -> PopStats : Submit updated counts
+  activate PopStats
+  PopStats -> TimeSeries : addTimeSeriesEntry(newData)
+  activate TimeSeries
+  TimeSeries -> TimeSeries : calculateWeeklyChange()
+  PopStats <-- TimeSeries : Updated time series
+  deactivate TimeSeries
+  Local <-- PopStats : Data recorded
+  deactivate PopStats
+end
+
+DMA -> TimeSeries : Analyze return migration trends
+activate TimeSeries
+TimeSeries -> TimeSeries : calculateReturnRate()
+TimeSeries -> TimeSeries : identifyStabilizationPoint()
+TimeSeries -> TimeSeries : projectRecoveryTimeline()
+DMA <-- TimeSeries : Return migration analysis
+deactivate TimeSeries
+
+RCC -> PopStats : Compare pre/post disaster demographics
+activate PopStats
+PopStats -> PopStats : comparePopulationStructure(preDisaster, current)
+PopStats -> PopStats : identifyVulnerableGroups(currentData)
+PopStats -> PopStats : calculateDemographicShifts()
+RCC <-- PopStats : Demographic impact assessment
+deactivate PopStats
+@enduml
+----
+
+*Real-World Context:*
+Following the 2015 Gorkha earthquake that severely affected 14 districts in central Nepal, the National Disaster Management Authority needed accurate population statistics to coordinate relief efforts and track population displacements.
+
+The PopulationStatistics entity provides a framework for maintaining pre-disaster baseline data while collecting rapidly evolving post-disaster population information. The system initially uses the last census data (2011) as baseline, but quickly incorporates emergency assessments conducted by local governments.
+
+What makes this use case particularly relevant to Nepal is the complex displacement patterns that occur after disasters. The system tracks both people moving to formal IDP (Internally Displaced Persons) camps and those utilizing traditional support networks, with many earthquake survivors temporarily relocating to relatives' homes across district boundaries or moving to open areas within their own municipalities.
+
+The CollectionMethod reflects Nepal's post-disaster reality, starting with ADMINISTRATIVE_RECORDS from village officials, then incorporating SYSTEMATIC_SAMPLING as humanitarian organizations establish more formal assessment protocols. The confidenceLevel is honestly marked as MEDIUM, acknowledging the challenges of data collection during emergencies while still providing actionable information.
+
+The ExternalSystemSyncable interface allows the PopulationStatistics to integrate data from multiple relief agencies and IDP camp registration systems, addressing a critical coordination challenge in Nepal's disaster response where multiple agencies collect overlapping data.
+
+The time series functionality proves essential as it tracks weekly population changes over time, revealing important patterns like:
+- Initial rapid outflow from heavily damaged mountain villages to urban centers
+- Formation of temporary settlements in specific VDCs (Village Development Committees)
+- Gradual return migration after monsoon season
+- Permanent demographic shifts where some villages lost 15-20% of young working-age population who relocated permanently
+
+For the Relief Coordination Committee, this data becomes the foundation for critical decisions:
+- Adjusting food aid quantities and delivery points based on population movements
+- Deploying healthcare resources to match current population concentrations
+- Shifting from emergency shelter to temporary housing in areas showing stable occupancy patterns
+- Planning reconstruction priorities based on return migration patterns
+
+The system's ability to track both absolute numbers and demographic composition helps identify particularly vulnerable populations requiring targeted assistance, such as households headed by elderly residents who remained in damaged mountain villages rather than relocating.
+
+The BatchProcessable interface supports the efficient processing of weekly population updates from all affected wards, allowing the disaster response agencies to maintain current population distribution maps with minimal manual processing delays.
+
+====== Census Data Collection and Dissemination
+
+*Scenario:* Conducting the decennial national population census
+
+[plantuml]
+----
+@startuml
+actor "Central Bureau\nof Statistics" as CBS
+actor "Census\nEnumerators" as Enumerators
+participant "PopulationStatistics" as PopStats
+participant "BatchProcessor" as Batch
+participant "ValidationEngine" as Validation
+participant "DataDissemination" as Dissemination
+participant "ProvinceGovernments" as Province
+
+CBS -> PopStats : Configure census parameters
+activate PopStats
+PopStats -> PopStats : setCensusYear(2021)
+PopStats -> PopStats : setStatisticsType(CENSUS)
+PopStats -> PopStats : defineMethodology("De facto household enumeration")
+PopStats -> PopStats : setConfidenceLevel(VERY_HIGH)
+CBS <-- PopStats : Census configuration complete
+deactivate PopStats
+
+CBS -> Enumerators : Deploy for data collection
+activate Enumerators
+Enumerators -> Enumerators : Collect household data
+Enumerators -> Enumerators : Record location details
+Enumerators -> PopStats : Submit enumeration data
+deactivate Enumerators
+
+PopStats -> Batch : Process census submissions
+activate Batch
+Batch -> Batch : GroupDataByAdministrativeUnit()
+Batch -> Batch : CalculateCompletionRates()
+PopStats <-- Batch : Processing status
+deactivate Batch
+
+PopStats -> Validation : Validate census data
+activate Validation
+Validation -> Validation : CheckInternalConsistency()
+Validation -> Validation : FlagStatisticalAnomalies()
+Validation -> Validation : VerifyGeographicCoverage()
+PopStats <-- Validation : Validation results
+deactivate Validation
+
+CBS -> PopStats : Review validation results
+activate PopStats
+PopStats -> PopStats : GenerateAnomalyReport()
+PopStats -> PopStats : CalculateResponseRates()
+CBS <-- PopStats : Data quality assessment
+deactivate PopStats
+
+CBS -> Enumerators : Address data gaps
+activate Enumerators
+Enumerators -> Enumerators : Conduct follow-up visits
+Enumerators -> Enumerators : Verify flagged data
+Enumerators -> PopStats : Submit corrections
+deactivate Enumerators
+
+CBS -> PopStats : Generate official statistics
+activate PopStats
+PopStats -> PopStats : AggregateHouseholdData()
+PopStats -> PopStats : CalculateDemographicIndicators()
+PopStats -> PopStats : ApplyWeightingFactors()
+PopStats -> PopStats : FinalizePopulationCounts()
+PopStats -> PopStats : setStatus(PROVISIONAL)
+CBS <-- PopStats : Provisional census results
+deactivate PopStats
+
+CBS -> Dissemination : Publish provisional results
+activate Dissemination
+Dissemination -> Dissemination : GenerateProvisionalReports()
+Dissemination -> Dissemination : PrepareDataVisualization()
+Dissemination -> Dissemination : PublishToOpenDataPortal()
+CBS <-- Dissemination : Publication complete
+deactivate Dissemination
+
+Province -> PopStats : Analyze province-level data
+activate PopStats
+PopStats -> PopStats : GenerateProvincialComparisons()
+PopStats -> PopStats : CalculateIntra-ProvinceVariation()
+PopStats -> PopStats : IdentifyDemographicClusters()
+Province <-- PopStats : Provincial analysis
+deactivate PopStats
+
+CBS -> PopStats : Review feedback and finalize
+activate PopStats
+PopStats -> PopStats : AddressPublicFeedback()
+PopStats -> PopStats : ApplyFinalAdjustments()
+PopStats -> PopStats : setStatus(FINAL)
+CBS <-- PopStats : Final census results
+deactivate PopStats
+
+CBS -> Dissemination : Publish detailed census reports
+activate Dissemination
+Dissemination -> Dissemination : GenerateThematicReports()
+Dissemination -> Dissemination : ProduceDisaggregatedDatasets()
+Dissemination -> Dissemination : CreateInteractiveAtlas()
+CBS <-- Dissemination : Comprehensive publication complete
+deactivate Dissemination
+@enduml
+----
+
+*Real-World Context:*
+The Census is Nepal's largest and most crucial statistical operation, involving the mobilization of thousands of enumerators to count approximately 30 million citizens across challenging terrain ranging from subtropical plains to high Himalayan settlements. The PopulationStatistics entity is designed to handle this massive data collection and processing effort.
+
+The system is configured to support Nepal's census methodology, which follows international standards while adapting to local conditions. The de facto household enumeration approach captures where people physically are on census night, which is critical in a country with high seasonal and labor migration patterns.
+
+One of the biggest challenges in Nepal's census is comprehensive coverage across remote areas with difficult access. The BatchProcessable interface enables efficient processing of data that arrives at different times from different regions, with some high mountain areas requiring weeks longer to complete enumeration than urban centers. The system tracks completion rates by geographical unit, helping census managers redirect resources to under-covered areas.
+
+The ValidationEngine applies statistical checks that are specifically calibrated for Nepal's demographic patterns. For example, the system flags unusual male-to-female ratios in working-age cohorts that deviate from expected patterns in areas known for labor migration. It also identifies potential undercounting in remote settlements by comparing with previous census data and administrative records.
+
+After initial data collection, the system helps manage the crucial verification phase where enumerators revisit households with anomalous data or conduct additional enumeration in areas with unexpectedly low coverage. This is particularly important in areas with seasonal migration patterns, such as the high-altitude Himalayan regions where communities may relocate seasonally.
+
+The provisionally generated statistics undergo multiple rounds of validation before being officially released. This multi-stage validation approach acknowledges both the technical challenges of census-taking in Nepal's diverse geography and the political sensitivity of population statistics, which affect resource allocation and electoral representation.
+
+For provincial governments, the system provides detailed population profiles that support decentralized planning under Nepal's federal structure. Each of Nepal's seven provinces receives customized demographic analysis highlighting their specific patterns, such as:
+- Province 1's rapidly aging population due to youth outmigration
+- Madhesh Province's higher population density and cross-border mobility with India
+- Bagmati Province's urbanization trends and internal migration patterns
+- Gandaki Province's tourism-influenced settlement patterns
+- Lumbini Province's religious demographic diversity
+- Karnali Province's sparse population and seasonal migration
+- Sudurpashchim Province's remittance-dependent economic demographics
+
+The final published data becomes the authoritative population dataset for the next decade, driving everything from parliamentary seat allocation to budget distribution. The system's ability to disaggregate data along multiple dimensions (geographical, demographic, socioeconomic) supports Nepal's development planning and policy formulation.
+
+====== Population Projection for Development Planning
+
+*Scenario:* Creating population projections for long-term infrastructure planning
+
+[plantuml]
+----
+@startuml
+actor "National Planning\nCommission" as NPC
+actor "Urban Development\nDepartment" as UDD
+participant "PopulationStatistics" as PopStats
+participant "PopulationTimeSeries" as TimeSeries
+participant "DemographicProjection" as Projection
+participant "ScenarioEngine" as Scenario
+participant "MunicipalityService" as Municipal
+
+NPC -> PopStats : Request historical population data
+activate PopStats
+PopStats -> PopStats : retrieveHistoricalData(20 years)
+NPC <-- PopStats : Historical population trends
+deactivate PopStats
+
+NPC -> TimeSeries : Analyze historical growth patterns
+activate TimeSeries
+TimeSeries -> TimeSeries : calculateAnnualGrowthRates()
+TimeSeries -> TimeSeries : identifyGrowthPatterns()
+TimeSeries -> TimeSeries : detectDemographicTransitions()
+NPC <-- TimeSeries : Growth trend analysis
+deactivate TimeSeries
+
+NPC -> Projection : Configure projection parameters
+activate Projection
+Projection -> Projection : setBaseYear(2021)
+Projection -> Projection : setHorizon(25 years)
+Projection -> Projection : setComponentMethod("Cohort Component")
+NPC <-- Projection : Projection parameters set
+deactivate Projection
+
+NPC -> Scenario : Define projection scenarios
+activate Scenario
+Scenario -> Scenario : createScenario("High Growth")
+Scenario -> Scenario : setFertilityRate(2.5)
+Scenario -> Scenario : setMortalityRate(6.2)
+Scenario -> Scenario : setMigrationRate(1.5)
+
+Scenario -> Scenario : createScenario("Medium Growth")
+Scenario -> Scenario : setFertilityRate(2.2)
+Scenario -> Scenario : setMortalityRate(6.5)
+Scenario -> Scenario : setMigrationRate(0.8)
+
+Scenario -> Scenario : createScenario("Low Growth")
+Scenario -> Scenario : setFertilityRate(1.9)
+Scenario -> Scenario : setMortalityRate(6.8)
+Scenario -> Scenario : setMigrationRate(0.2)
+NPC <-- Scenario : Scenarios defined
+deactivate Scenario
+
+NPC -> Projection : Generate national projections
+activate Projection
+Projection -> Projection : runCohortComponentModel()
+Projection -> Projection : generateAgeStructures()
+Projection -> Projection : calculateDependencyRatios()
+NPC <-- Projection : National population projections
+deactivate Projection
+
+NPC -> Municipal : Distribute to municipalities
+activate Municipal
+Municipal -> Municipal : disaggregateProjections()
+Municipal -> Municipal : applyLocalGrowthFactors()
+Municipal -> Municipal : adjustForUrbanization()
+NPC <-- Municipal : Municipal-level projections
+deactivate Municipal
+
+UDD -> PopStats : Access municipal projections
+activate PopStats
+PopStats -> PopStats : retrieveProjectedPopulation(municipalityId)
+PopStats -> PopStats : setStatisticsType(PROJECTION)
+PopStats -> PopStats : setConfidenceLevel(MEDIUM)
+UDD <-- PopStats : Municipality projections
+deactivate PopStats
+
+UDD -> Projection : Calculate infrastructure needs
+activate Projection
+Projection -> Projection : estimateWaterDemand()
+Projection -> Projection : calculateRoadCapacityNeeds()
+Projection -> Projection : projectHousingRequirements()
+Projection -> Projection : calculatePublicServiceNeeds()
+UDD <-- Projection : Infrastructure requirements
+deactivate Projection
+
+UDD -> Scenario : Perform sensitivity analysis
+activate Scenario
+Scenario -> Scenario : compareScenarioOutcomes()
+Scenario -> Scenario : identifyCostedDifferences()
+Scenario -> Scenario : recommendPhaseableApproach()
+UDD <-- Scenario : Adaptive planning recommendations
+deactivate Scenario
+
+UDD -> Municipal : Share projections with municipalities
+activate Municipal
+Municipal -> Municipal : createMunicipalityReports()
+Municipal -> Municipal : generateGrowthVisualization()
+Municipal -> Municipal : providePlanningGuidelines()
+UDD <-- Municipal : Municipality planning packages
+deactivate Municipal
+@enduml
+----
+
+*Real-World Context:*
+Nepal's National Planning Commission relies on population projections to develop the country's periodic plans and guide infrastructure investment. The PopulationStatistics entity provides the foundation for these projections, starting with historical census data and extending 25 years into the future.
+
+What makes this particularly relevant to Nepal's context is the country's rapid demographic transition. Nepal has experienced a dramatic fertility decline from 4.6 children per woman in 1996 to approximately 2.3 today. Simultaneously, life expectancy has increased from 55 to 71 years. These rapid changes create both challenges and opportunities that need to be carefully modeled.
+
+The system employs the cohort component method, which is internationally recognized but adapted to Nepal's specific demographic patterns. These include:
+- High outmigration of working-age males to Gulf countries and Malaysia
+- Rapid urbanization (4.2% annual urban growth rate)
+- Significant rural-to-urban internal migration
+- Spatial variation in fertility decline (faster in urban areas)
+- Return migration of educated youth to medium-sized cities
+
+The projection scenarios create three potential futures that help planners prepare for different possibilities:
+- The high growth scenario anticipates continued rural-to-urban migration accelerating urbanization beyond current trends
+- The medium growth scenario represents a continuation of current trends
+- The low growth scenario anticipates further fertility decline and slower urbanization
+
+For the Urban Development Department, these projections become essential tools for infrastructure planning. The system translates population projections into concrete infrastructure needs using Nepal-specific parameters:
+- Water demand calculations based on Nepal's urban water supply standards (135 liters per person per day)
+- Road capacity requirements using Nepal's Road Standards (2018)
+- Housing needs based on decreasing household size trends specific to Nepali urban areas
+- Educational facilities based on Nepal's School Sector Development Plan standards
+- Healthcare needs based on the Nepal Health Sector Strategy
+
+The municipal-level disaggregation addresses Nepal's administrative reality where 753 local governments have been granted significant planning authority under the new federal constitution. Each municipality receives customized projections that reflect their specific growth dynamics, such as:
+- Rapidly growing urban centers like Pokhara and Bharatpur
+- Border municipalities influenced by cross-border dynamics with India
+- Tourism-dominated municipalities with seasonal population fluctuations
+- Mountain municipalities experiencing continued outmigration
+
+The sensitivity analysis helps municipalities prepare adaptive plans that can be adjusted as actual population trends emerge. This is particularly valuable in Nepal where limited financial resources require careful phasing of infrastructure investments. The system's ability to model population by age cohorts also helps municipalities anticipate shifting service needs, such as initial investments in schools followed by transitions to elderly services as the population ages.
+
+These projections ultimately inform Nepal's Integrated Urban Development Plans, which are mandatory planning documents for municipalities that guide everything from land use zoning to capital investment programs.
+
+====== Population Monitoring for Federal Resource Allocation
+
+*Scenario:* Using population statistics to determine fiscal transfers to provincial and local governments
+
+[plantuml]
+----
+@startuml
+actor "National Natural Resources &\nFiscal Commission" as NNRFC
+actor "Ministry of\nFinance" as MoF
+participant "PopulationStatistics" as PopStats
+participant "ResourceAllocation" as Resources
+participant "FiscalEqualization" as Fiscal
+participant "LocalGovernments" as Local
+participant "DemographicIndexing" as Index
+
+NNRFC -> PopStats : Request latest population data
+activate PopStats
+PopStats -> PopStats : retrievePopulationByProvince()
+PopStats -> PopStats : retrievePopulationByMunicipality()
+PopStats -> PopStats : retrievePopulationByRuralMunicipality()
+NNRFC <-- PopStats : Current population statistics
+deactivate PopStats
+
+NNRFC -> Index : Calculate demographic indicators
+activate Index
+Index -> Index : computePopulationDensity()
+Index -> Index : calculateDependencyRatio()
+Index -> Index : measureHumanDevelopmentIndex()
+Index -> Index : determineInfrastructureIndex()
+Index -> Index : assessServiceDeliveryEfficiency()
+NNRFC <-- Index : Local government indexes
+deactivate Index
+
+NNRFC -> Resources : Define allocation formula
+activate Resources
+Resources -> Resources : setPopulationWeight(70%)
+Resources -> Resources : setAreaWeight(15%)
+Resources -> Resources : setHDIWeight(5%)
+Resources -> Resources : setInfrastructureWeight(10%)
+NNRFC <-- Resources : Formula configured
+deactivate Resources
+
+NNRFC -> Fiscal : Calculate fiscal gaps
+activate Fiscal
+Fiscal -> Fiscal : estimateExpendatureNeeds()
+Fiscal -> Fiscal : assessRevenueCapacity()
+Fiscal -> Fiscal : calculateFiscalGap()
+NNRFC <-- Fiscal : Fiscal gap analysis
+deactivate Fiscal
+
+NNRFC -> Resources : Generate equalization grants
+activate Resources
+Resources -> Resources : applyEqualizationFormula()
+Resources -> Resources : calculateBasicGrants()
+Resources -> Resources : calculatePerformanceBonuses()
+NNRFC <-- Resources : Equalization grant amounts
+deactivate Resources
+
+NNRFC -> MoF : Submit funding recommendation
+activate MoF
+MoF -> MoF : incorporateIntoAnnualBudget()
+MoF -> MoF : prepareFundingStatements()
+MoF -> Local : Notify of allocation amounts
+deactivate MoF
+
+Local -> PopStats : Verify population basis
+activate PopStats
+PopStats -> PopStats : generatePopulationCertification()
+PopStats -> PopStats : provideTrendComparison()
+Local <-- PopStats : Population verification
+deactivate PopStats
+
+Local -> Fiscal : Project future allocations
+activate Fiscal
+Fiscal -> PopStats : getProjectedPopulation()
+activate PopStats
+Fiscal <-- PopStats : Population projections
+deactivate PopStats
+Fiscal -> Fiscal : estimateFutureTransfers()
+Local <-- Fiscal : Multi-year projections
+deactivate Fiscal
+
+Local -> PopStats : Report demographic changes
+activate PopStats
+PopStats -> PopStats : recordLocalUpdates()
+PopStats -> PopStats : flagSignificantChanges()
+PopStats -> PopStats : scheduleVerification()
+Local <-- PopStats : Updates acknowledged
+deactivate PopStats
+
+NNRFC -> PopStats : Monitor population dynamics
+activate PopStats
+PopStats -> PopStats : trackPopulationMovements()
+PopStats -> PopStats : detectEmergingPatterns()
+PopStats -> PopStats : scheduleDataRefreshes()
+NNRFC <-- PopStats : Population monitoring report
+deactivate PopStats
+@enduml
+----
+
+*Real-World Context:*
+Nepal's transition to a federal government structure in 2015 created a critical role for population statistics in determining resource allocation to the newly formed provincial and local governments. The National Natural Resources and Fiscal Commission (NNRFC) uses population as the primary factor in determining fiscal equalization grants, making accurate population statistics essential for governance.
+
+The PopulationStatistics entity provides the demographic foundation for implementing Nepal's constitutional mandate for equitable resource distribution. The system delivers population data disaggregated by:
+- 7 provinces
+- 293 urban municipalities (Nagarpalikas)
+- 460 rural municipalities (Gaunpalikas)
+
+What makes this particularly relevant to Nepal's context is how population statistics are weighted with other factors to calculate fiscal transfers. The system supports the NNRFC's formula which uses:
+- Population size (typically 70% weight) - favoring populous areas
+- Geographical area (typically 15% weight) - supporting large but sparsely populated areas
+- Human Development Index (5% weight) - providing additional support to less developed areas
+- Infrastructure index (10% weight) - helping areas with infrastructure deficits
+
+The fiscal gap calculation is a sophisticated process that the system supports by combining:
+- Expenditure needs assessment based on service delivery costs in different geographical contexts (mountain, hill, and Terai regions have significantly different costs)
+- Revenue capacity measurement to determine local ability to generate own-source revenue
+- The resulting fiscal gap determines equalization needs in addition to population-based allocation
+
+These calculations result in annual fiscal transfers of approximately 400 billion Nepali rupees (about $3 billion USD), highlighting the enormous fiscal impact of population statistics in Nepal's governance. Even small variations in population numbers can shift millions of dollars in annual funding.
+
+The system's ability to provide population verification is crucial for transparency in the allocation process. Local governments can see exactly how their population figures were determined and compare with similar jurisdictions, reducing disputes over resource allocation.
+
+The forward-looking projection capability helps local governments anticipate future resource flows. This is particularly important for Nepal's multi-year planning processes, where local governments develop three-year plans that need to align with expected resource availability.
+
+The system also captures demographic dynamics that affect fiscal transfers over time:
+- Urban growth patterns that might reclassify rural municipalities to urban status
+- Migration patterns affecting dependency ratios
+- Demographic shocks from disasters that may temporarily affect population distribution
+- Gradual population shifts from hill regions to Terai (plains)
+
+By combining authoritative population statistics with fiscal formulas and projection capabilities, the system provides technical foundation for Nepal's fiscal federalism implementation, supporting the country's broader goals of more equitable development across its diverse geography.
+
+===== ExternalSystemSyncable Implementation
+
+PopulationStatistics implements the ExternalSystemSyncable interface to synchronize with external data sources:
+
+[plantuml]
+----
+@startuml
+participant "StatisticsService" as Service
+participant "PopulationStatistics\nimplements ExternalSystemSyncable" as PopStats
+participant "ExternalSystemManager" as External
+participant "CentralBureauStatistics" as CBS
+participant "SyncRepository" as SyncRepo
+
+Service -> PopStats : syncWithExternalSystem("CBS")
+activate PopStats
+
+PopStats -> External : getSyncConfiguration("CBS")
+activate External
+PopStats <-- External : syncConfig
+deactivate External
+
+PopStats -> PopStats : prepareForSync(syncConfig)
+activate PopStats
+PopStats -> PopStats : setLastSyncAttempt(now())
+PopStats <-- PopStats : readyForSync
+deactivate PopStats
+
+PopStats -> CBS : requestLatestData(syncConfig)
+activate CBS
+PopStats <-- CBS : populationDataSet
+deactivate CBS
+
+PopStats -> PopStats : validateExternalData(populationDataSet)
+activate PopStats
+PopStats -> PopStats : checkDataCompleteness()
+PopStats -> PopStats : verifyDataFormat()
+PopStats -> PopStats : compareWithExistingData()
+PopStats <-- PopStats : validationResult
+deactivate PopStats
+
+alt Valid External Data
+  PopStats -> PopStats : mergeExternalData(populationDataSet)
+  activate PopStats
+  PopStats -> PopStats : updatePopulationValues()
+  PopStats -> PopStats : recordDataSource("CBS")
+  PopStats -> PopStats : setLastSyncSuccess(now())
+  PopStats <-- PopStats : dataUpdated
+  deactivate PopStats
+  
+  PopStats -> SyncRepo : recordSuccessfulSync(syncDetails)
+  activate SyncRepo
+  PopStats <-- SyncRepo : syncRecorded
+  deactivate SyncRepo
+  
+  Service <-- PopStats : syncSuccessful
+else Invalid External Data
+  PopStats -> PopStats : logValidationFailures(validationResult)
+  PopStats -> PopStats : setLastSyncFailure(now())
+  
+  PopStats -> SyncRepo : recordFailedSync(syncDetails, errors)
+  activate SyncRepo
+  PopStats <-- SyncRepo : syncFailureRecorded
+  deactivate SyncRepo
+  
+  Service <-- PopStats : syncFailed(validationResult)
+end
+deactivate PopStats
+
+Service -> PopStats : getExternalSyncMetadata()
+activate PopStats
+Service <-- PopStats : {
+  "lastSuccessfulSync": "2023-05-15T10:30:00",
+  "externalSystem": "CBS",
+  "dataSource": "National Census 2021",
+  "syncFrequency": "ANNUAL",
+  "nextScheduledSync": "2024-05-15"
+}
+deactivate PopStats
+@enduml
+----
+
+===== BatchProcessable Implementation
+
+PopulationStatistics implements the BatchProcessable interface for processing large volumes of data:
+
+[plantuml]
+----
+@startuml
+participant "DataImportService" as Service
+participant "PopulationStatistics\nimplements BatchProcessable" as PopStats
+participant "BatchJobRepository" as BatchRepo
+participant "ValidationService" as Validator
+participant "NotificationService" as Notify
+
+Service -> PopStats : createBatchJob("CENSUS_IMPORT", parameters)
+activate PopStats
+
+PopStats -> BatchRepo : createBatchJob(parameters)
+activate BatchRepo
+PopStats <-- BatchRepo : batchJob
+deactivate BatchRepo
+
+PopStats -> PopStats : prepareBatch(batchJob)
+activate PopStats
+PopStats -> PopStats : validateBatchStructure(batchJob)
+PopStats -> PopStats : setJobStatus(PREPARING)
+PopStats <-- PopStats : batchPrepared
+deactivate PopStats
+
+Service <-- PopStats : batchJobCreated
+deactivate PopStats
+
+Service -> PopStats : processBatch(batchJobId)
+activate PopStats
+
+PopStats -> BatchRepo : getBatchJobById(batchJobId)
+activate BatchRepo
+PopStats <-- BatchRepo : batchJob
+deactivate BatchRepo
+
+PopStats -> PopStats : setJobStatus(PROCESSING)
+PopStats -> BatchRepo : updateJobStatus(batchJobId, PROCESSING)
+activate BatchRepo
+PopStats <-- BatchRepo : statusUpdated
+deactivate BatchRepo
+
+PopStats -> PopStats : processItems(batchJob.items)
+activate PopStats
+loop for each census district
+  PopStats -> Validator : validateDistrictData(item)
+  activate Validator
+  PopStats <-- Validator : validationResult
+  deactivate Validator
+  
+  alt Valid Item
+    PopStats -> PopStats : savePopulationStatistics(item)
+    PopStats -> PopStats : incrementSuccessCount()
+  else Invalid Item
+    PopStats -> PopStats : logValidationError(item, error)
+    PopStats -> PopStats : incrementFailureCount()
+  end
+end
+PopStats <-- PopStats : processingComplete
+deactivate PopStats
+
+PopStats -> PopStats : generateBatchSummary()
+PopStats -> BatchRepo : updateBatchJob(summary)
+activate BatchRepo
+PopStats <-- BatchRepo : batchUpdated
+deactivate BatchRepo
+
+PopStats -> Notify : sendBatchCompletionNotification()
+activate Notify
+PopStats <-- Notify : notificationSent
+deactivate Notify
+
+Service <-- PopStats : batchProcessingResult
+deactivate PopStats
+
+Service -> PopStats : getBatchStatus(batchJobId)
+activate PopStats
+PopStats -> BatchRepo : getBatchSummary(batchJobId)
+activate BatchRepo
+PopStats <-- BatchRepo : {
+  "totalItems": 77,
+  "successCount": 75,
+  "failureCount": 2,
+  "processingTime": "00:15:22",
+  "status": "COMPLETED_WITH_ERRORS",
+  "errorSummary": "2 districts had validation issues"
+}
+deactivate BatchRepo
+Service <-- PopStats : batchStatus
+deactivate PopStats
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+PopulationStatistics implements the HistoryViewable interface to track population changes:
+
+[plantuml]
+----
+@startuml
+participant "PopulationAnalytics" as Analytics
+participant "PopulationStatistics\nimplements HistoryViewable" as PopStats
+participant "VersionRepository" as Versions
+participant "PopulationChangeRepository" as Changes
+
+Analytics -> PopStats : getChangeHistory(municipalityId)
+activate PopStats
+
+PopStats -> Changes : findByEntityTypeAndEntityId("PopulationStatistics", municipalityId)
+activate Changes
+PopStats <-- Changes : changeRecords
+deactivate Changes
+
+Analytics <-- PopStats : populationChangeHistory
+deactivate PopStats
+
+Analytics -> PopStats : getHistorySnapshot(municipalityId, 2011)
+activate PopStats
+
+PopStats -> Versions : findByEntityId(municipalityId, 2011)
+activate Versions
+PopStats <-- Versions : populationData2011
+deactivate Versions
+
+Analytics <-- PopStats : populationSnapshot2011
+deactivate PopStats
+
+Analytics -> PopStats : comparePopulation(municipalityId, 2011, 2021)
+activate PopStats
+
+PopStats -> Versions : findByEntityId(municipalityId, 2011)
+activate Versions
+PopStats <-- Versions : populationData2011
+deactivate Versions
+
+PopStats -> Versions : findByEntityId(municipalityId, 2021) 
+activate Versions
+PopStats <-- Versions : populationData2021
+deactivate Versions
+
+PopStats -> PopStats : calculatePopulationChange(data2011, data2021)
+activate PopStats
+PopStats -> PopStats : computeGrowthRate()
+PopStats -> PopStats : analyzeAgeStructureChanges()
+PopStats -> PopStats : detectDemographicShifts()
+PopStats <-- PopStats : changeAnalysis
+deactivate PopStats
+
+Analytics <-- PopStats : populationComparison
+deactivate PopStats
+@enduml
+----
+
+===== Population Statistics Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface BatchProcessable
+
+' Supporting Classes
+class PopulationTimeSeries {
+  +UUID id
+  +UUID populationStatisticsId
+  +List<TimeSeriesEntry> timeSeriesData
+  +String timeSeriesType
+  +String periodicity
+  +LocalDate startDate
+  +LocalDate endDate
+  +Boolean interpolated
+  +Integer baselineYear
+  +String dataSource
+  +Map<String, Object> metadata
+  +Double annualGrowthRate
+  +Double cumulativeGrowthRate
+  +Double projectedGrowthRate
+  +LocalDateTime lastUpdated
+  +UUID lastUpdatedBy
+}
+
+class TimeSeriesEntry {
+  +UUID id
+  +UUID timeSeriesId
+  +LocalDate entryDate
+  +Integer totalPopulation
+  +Integer maleProportion
+  +Integer femaleProportion
+  +Integer otherProportion
+  +Double growthRate
+  +String notes
+  +Boolean isActual
+  +Boolean isRevised
+  +UUID dataSourceId
+  +Double confidenceInterval
+  +String dataQualityFlag
+}
+
+class AgeDistributionSnapshot {
+  +UUID id
+  +UUID populationStatisticsId
+  +LocalDate referenceDate
+  +Map<AgeGroup, Integer> populationByAge
+  +Map<AgeGroup, Integer> malePopulationByAge
+  +Map<AgeGroup, Integer> femalePopulationByAge
+  +Double medianAge
+  +Double childDependencyRatio
+  +Double oldAgeDependencyRatio
+  +Double totalDependencyRatio
+  +Double ageingIndex
+  +Double potentialSupportRatio
+  +String dataSource
+  +Boolean isProjected
+}
+
+enum AgeGroup {
+  UNDER_5
+  AGE_5_TO_9
+  AGE_10_TO_14
+  AGE_15_TO_19
+  AGE_20_TO_24
+  AGE_25_TO_29
+  AGE_30_TO_34
+  AGE_35_TO_39
+  AGE_40_TO_44
+  AGE_45_TO_49
+  AGE_50_TO_54
+  AGE_55_TO_59
+  AGE_60_TO_64
+  AGE_65_TO_69
+  AGE_70_TO_74
+  AGE_75_TO_79
+  AGE_80_TO_84
+  AGE_85_PLUS
+}
+
+enum StatisticsConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum StatisticsType {
+  CENSUS
+  ESTIMATE
+  PROJECTION
+  SURVEY
+  ADMINISTRATIVE_RECORD
+  DERIVED
+}
+
+enum StatisticsStatus {
+  PROVISIONAL
+  REVISED
+  FINAL
+  SUPERSEDED
+  DISPUTED
+  UNDER_REVIEW
+}
+
+enum CollectionMethod {
+  CENSUS
+  RANDOM_SAMPLING
+  STRATIFIED_SAMPLING
+  SYSTEMATIC_SAMPLING
+  REGISTRATION_DATA
+  ADMINISTRATIVE_RECORDS
+  DIGITAL_COLLECTION
+  PAPER_SURVEY
+  REMOTE_SENSING
+}
+
+' PopulationStatistics implementation
+class PopulationStatistics {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  +UUID parentAdminAreaId
+  
+  ' Core population data
+  +Integer totalPopulation
+  +Integer populationMale
+  +Integer populationFemale
+  +Integer populationOther
+  +Integer populationUnderAge18
+  +Integer populationAge18to60
+  +Integer populationOverAge60
+  +Double sexRatio
+  +Double populationChangePercent
+  +Integer populationChangeAbsolute
+  +Double annualGrowthRate
+  
+  ' Metadata
+  +String dataSource
+  +LocalDate referenceDate
+  +StatisticsConfidenceLevel confidenceLevel
+  +StatisticsType statisticsType
+  +StatisticsStatus status
+  +Integer sampleSize
+  +Double marginOfError
+  +String methodology
+  +UUID dataCollectorId
+  +LocalDate validationDate
+  +UUID validatedById
+  +String notes
+  +Map<String, Object> metadata
+  +Integer yearOfData
+  +Boolean isProjected
+  +CollectionMethod collectionMethod
+  
+  ' External synchronization
+  +String externalSystemId
+  +LocalDateTime lastSyncedAt
+  +String externalReference
+  +String syncSource
+  +SyncStatus syncStatus
+  
+  ' Batch processing
+  +UUID batchJobId
+  +Integer batchSequence
+  +BatchImportStatus batchStatus
+  +String batchNotes
+  
+  ' Methods
+  +PopulationTimeSeries getTimeSeries()
+  +AgeDistributionSnapshot getAgeDistribution(LocalDate date)
+  +PopulationStatistics getPreviousPeriod()
+  +PopulationStatistics getNextPeriod()
+  +Double calculatePopulationDensity()
+  +Double calculateGrowthRate(PopulationStatistics previous)
+  +LocalDate getForecastDate()
+  +Integer getForecastHorizon()
+  +Boolean isCurrentData()
+  +PopulationStatistics interpolate(LocalDate targetDate)
+  +AgeDistributionSnapshot projectAgeDistribution(Integer yearsForward)
+  +Double calculateLifeExpectancy()
+  +PopulationStatistics aggregate(List<UUID> childAreaIds)
+  +Map<AgeGroup, Double> getPopulationPyramid()
+  +Integer getWorkingAgePopulation()
+  +Map<String, Object> generateDemographicIndicators()
+  +PopulationStatistics compareTo(PopulationStatistics other)
+  +List<PopulationStatistics> getVersionHistory()
+  +Map<String, Double> getDemographicRatios()
+}
+
+' Inheritance relationships
+BaseEntity <|-- PopulationStatistics
+BaseEntity <|-- PopulationTimeSeries
+BaseEntity <|-- TimeSeriesEntry
+BaseEntity <|-- AgeDistributionSnapshot
+
+' Interface implementation
+PopulationStatistics ..|> HistoryViewable
+PopulationStatistics ..|> ExternalSystemSyncable
+PopulationStatistics ..|> BatchProcessable
+
+' Class relationships
+PopulationStatistics "1" -- "0..1" PopulationTimeSeries
+PopulationStatistics "1" -- "*" AgeDistributionSnapshot
+PopulationTimeSeries "1" o-- "many" TimeSeriesEntry
+AgeDistributionSnapshot -- AgeGroup
+PopulationStatistics -- StatisticsConfidenceLevel
+PopulationStatistics -- StatisticsType
+PopulationStatistics -- StatisticsStatus
+PopulationStatistics -- CollectionMethod
+@enduml
+----
+
+===== Population Statistics Events
+
+[plantuml]
+----
+@startuml
+class PopulationStatisticsCreatedEvent {
+  +UUID statisticsId
+  +UUID adminAreaId
+  +StatisticsType type
+  +Integer totalPopulation
+  +Integer yearOfData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PopulationStatisticsUpdatedEvent {
+  +UUID statisticsId
+  +UUID adminAreaId
+  +String updateType
+  +Map<String, Object> changedFields
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PopulationStatusChangedEvent {
+  +UUID statisticsId
+  +UUID adminAreaId
+  +StatisticsStatus oldStatus
+  +StatisticsStatus newStatus
+  +String statusChangeReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PopulationDataSyncedEvent {
+  +UUID statisticsId
+  +UUID adminAreaId
+  +String externalSystem
+  +Boolean syncSuccess
+  +String syncDetails
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PopulationBatchCompletedEvent {
+  +UUID batchJobId
+  +String batchType
+  +Integer totalRecords
+  +Integer successCount
+  +Integer failureCount
+  +String completionStatus
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AnomalousPopulationChangeDetectedEvent {
+  +UUID statisticsId
+  +UUID adminAreaId
+  +String anomalyType
+  +Double changePercentage
+  +String potentialCause
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- PopulationStatisticsCreatedEvent
+DomainEvent <|-- PopulationStatisticsUpdatedEvent
+DomainEvent <|-- PopulationStatusChangedEvent
+DomainEvent <|-- PopulationDataSyncedEvent
+DomainEvent <|-- PopulationBatchCompletedEvent
+DomainEvent <|-- AnomalousPopulationChangeDetectedEvent
+@enduml
+----
+
+===== Population Statistics Reporting
+
+[plantuml]
+----
+@startuml
+participant "ReportingService" as Service
+participant "PopulationStatistics" as PopStats
+participant "StatisticsRepository" as Repository
+participant "AnalyticsEngine" as Analytics
+participant "ChartGenerator" as Charts
+
+Service -> Repository : getPopulationTrends(parameters)
+activate Repository
+
+Repository -> Repository : aggregatePopulationData(parameters)
+Repository -> Analytics : calculateTrendIndicators(aggregatedData)
+activate Analytics
+Repository <-- Analytics : trendIndicators
+deactivate Analytics
+
+Service <-- Repository : populationTrendData
+deactivate Repository
+
+Service -> Charts : generatePopulationPyramid(trendData)
+activate Charts
+Service <-- Charts : populationPyramidChart
+deactivate Charts
+
+Service -> Charts : generateGrowthRateTimeline(trendData)
+activate Charts
+Service <-- Charts : growthRateChart
+deactivate Charts
+
+Service -> Charts : generateAgeingIndexTrend(trendData)
+activate Charts
+Service <-- Charts : ageingIndexChart
+deactivate Charts
+
+Service -> Charts : generateDependencyRatioAnalysis(trendData)
+activate Charts
+Service <-- Charts : dependencyChart
+deactivate Charts
+
+Service -> PopStats : getRegionalComparison(parameters)
+activate PopStats
+Service <-- PopStats : regionalData
+deactivate PopStats
+
+Service -> Charts : generateChoroplethMap(regionalData)
+activate Charts
+Service <-- Charts : choroplethMap
+deactivate Charts
+
+Service -> Repository : getProjectionComparison(parameters)
+activate Repository
+Service <-- Repository : projectionComparison
+deactivate Repository
+
+Service -> Charts : generateProjectionScenarios(projectionComparison)
+activate Charts
+Service <-- Charts : scenarioChart
+deactivate Charts
+@enduml
+----
