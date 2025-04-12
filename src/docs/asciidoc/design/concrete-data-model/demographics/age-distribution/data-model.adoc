@@ -1,0 +1,706 @@
+===== Data Model
+
+The AgeDistribution entity implements a comprehensive data model for tracking population by age groups across administrative areas.
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface FullTextSearchable
+interface CustomValidatable
+
+' Main class
+class AgeDistribution {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +String adminAreaName
+  +AdminAreaLevel adminAreaLevel
+  
+  ' Time context
+  +Integer year
+  +String periodType
+  +LocalDate referenceDate
+  +Boolean isCensusData
+  +String censusReference
+  +Boolean isProjected
+  +String projectionMethod
+  
+  ' Age distribution data
+  +Integer totalPopulation
+  +Map<AgeGroup, Integer> populationByAgeGroup
+  +Map<AgeGroup, Integer> malePopulationByAgeGroup
+  +Map<AgeGroup, Integer> femalePopulationByAgeGroup
+  +Map<AgeGroup, Integer> thirdGenderPopulationByAgeGroup
+  
+  ' Age parameters
+  +Double medianAge
+  +Integer populationUnder5
+  +Integer populationUnder18
+  +Integer population18To60
+  +Integer populationOver60
+  +Integer populationOver80
+  
+  ' Derived metrics
+  +Double childDependencyRatio
+  +Double oldAgeDependencyRatio
+  +Double totalDependencyRatio
+  +Double agingIndex
+  +Double childWomanRatio
+  +Double potentialSupportRatio
+  +Double parentSupportRatio
+  +Integer populationPyramidWidth
+  
+  ' Data quality
+  +ConfidenceLevel confidenceLevel
+  +String dataSource
+  +String methodologyDescription
+  +Double marginOfError
+  +String notes
+  
+  ' Previous reference
+  +UUID previousDistributionId
+  +Integer changeUnder5
+  +Integer changeOver60
+  +Double changeMedianAge
+  +Double changeDependencyRatio
+  
+  ' External references
+  +UUID sourceDatasetId
+  +UUID populationStatisticsId
+
+  ' Methods
+  +Map<AgeGroup, Double> calculateAgeGroupPercentages()
+  +AgeStructureType determineAgeStructureType()
+  +Map<AgeGroup, Integer> calculateGenderRatio()
+  +Double calculateLifeExpectancy()
+  +void recalculateDerivedMetrics()
+  +AgeDistribution projectForward(Integer years, ProjectionMethod method)
+  +Map<Integer, AgeDistribution> generateProjectionSeries(Integer endYear)
+  +Boolean validateAgeDistribution()
+  +AgeDistribution calculateDifference(AgeDistribution other)
+  +AgeDistribution generateStandardizedAgeGroups()
+  +AgeDistribution applySmoothing(SmoothingMethod method)
+  +Map<String, Object> generatePyramidData()
+}
+
+' Supporting Classes
+class AgeGroupDefinition {
+  +AgeGroup ageGroup
+  +Integer lowerBound
+  +Integer upperBound
+  +String description
+  +AgeGroupCategory category
+  +Integer widthInYears
+  +Boolean isOpenEnded
+}
+
+class CustomAgeGroup {
+  +UUID id
+  +String name
+  +Integer lowerAgeBound
+  +Integer upperAgeBound
+  +Boolean isStandard
+  +String description
+  +AgeGroupCategory category
+}
+
+class AgeDistributionChange {
+  +UUID id
+  +UUID ageDistributionId
+  +LocalDateTime timestamp
+  +ChangeType changeType
+  +String description
+  +Map<AgeGroup, Integer> previousValues
+  +Map<AgeGroup, Integer> newValues
+  +UUID changedBy
+  +String changeReason
+}
+
+class AgeDistributionQualityCheck {
+  +UUID id
+  +UUID ageDistributionId
+  +QualityCheckType checkType
+  +Boolean passed
+  +String description
+  +Double score
+  +String issuesIdentified
+  +LocalDateTime checkedAt
+  +UUID checkedBy
+}
+
+class AgeStructureAnalysis {
+  +UUID id
+  +UUID ageDistributionId
+  +AgeStructureType structureType
+  +Double youngDependentPercentage
+  +Double workingAgePercentage
+  +Double elderlyDependentPercentage
+  +Integer medianAgeGroupIndex
+  +Double dynamismIndex
+  +String analysisNotes
+  +LocalDateTime analyzedAt
+}
+
+' Enumerations
+enum AgeGroup {
+  UNDER_5
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum AgeGroupCategory {
+  CHILDHOOD
+  SCHOOL_AGE
+  WORKING_AGE
+  REPRODUCTIVE_AGE
+  ELDERLY
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum ChangeType {
+  INITIAL
+  REVISION
+  PROJECTION_UPDATE
+  DATA_CORRECTION
+  METHODOLOGY_CHANGE
+  ADMIN_BOUNDARY_CHANGE
+}
+
+enum QualityCheckType {
+  WHIPPLES_INDEX
+  MYERS_BLENDED_INDEX
+  AGE_SEX_ACCURACY_INDEX
+  DIGIT_PREFERENCE
+  AGE_HEAPING
+  MALE_FEMALE_BALANCE
+  STATISTICAL_OUTLIER
+  AGE_SPECIFIC_COMPARISON
+}
+
+enum AgeStructureType {
+  EXPANSIVE
+  CONSTRICTIVE
+  STATIONARY
+  TRANSITIONAL
+  REGRESSIVE
+  DISTORTED
+}
+
+enum ProjectionMethod {
+  COHORT_COMPONENT
+  LESLIE_MATRIX
+  EXPONENTIAL
+  CUBIC_SPLINE
+  RATIO
+  CUSTOM
+}
+
+enum SmoothingMethod {
+  MOVING_AVERAGE
+  SPRAGUE_MULTIPLIER
+  KERNEL_SMOOTHING
+  CARRIER_FARRAG
+}
+
+' Inheritance relationships
+BaseEntity <|-- AgeDistribution
+BaseEntity <|-- AgeGroupDefinition
+BaseEntity <|-- CustomAgeGroup
+BaseEntity <|-- AgeDistributionChange
+BaseEntity <|-- AgeDistributionQualityCheck
+BaseEntity <|-- AgeStructureAnalysis
+
+' Interface implementation
+AgeDistribution ..|> DataAggregatable
+AgeDistribution ..|> HistoryViewable
+AgeDistribution ..|> ExternalSystemSyncable
+AgeDistribution ..|> FullTextSearchable
+AgeDistribution ..|> CustomValidatable
+
+' Class relationships
+AgeDistribution -- AgeGroup
+AgeDistribution -- ConfidenceLevel
+AgeDistribution -- AdminAreaLevel
+AgeDistribution "1" o-- "many" AgeDistributionChange
+AgeDistribution "1" o-- "many" AgeDistributionQualityCheck
+AgeDistribution "1" o-- "1" AgeStructureAnalysis
+AgeGroupDefinition -- AgeGroup
+AgeGroupDefinition -- AgeGroupCategory
+CustomAgeGroup -- AgeGroupCategory
+AgeDistributionChange -- ChangeType
+AgeDistributionQualityCheck -- QualityCheckType
+AgeStructureAnalysis -- AgeStructureType
+@enduml
+----
+
+The data model captures the multifaceted nature of age distribution analysis, with special attention to Nepal's unique demographic context and data challenges.
+
+==== Core Entity: AgeDistribution
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier for the age distribution
+| demographicSummaryId | UUID | Reference to the demographic summary this distribution belongs to
+| adminAreaId | UUID | Reference to the administrative area
+| adminAreaCode | String | Code for the administrative area
+| adminAreaName | String | Name of the administrative area
+| adminAreaLevel | AdminAreaLevel | Level in the administrative hierarchy
+| year | Integer | Year of the age distribution data
+| periodType | String | Type of time period (CENSUS, ESTIMATE, PROJECTION)
+| referenceDate | LocalDate | Specific reference date for the data
+| isCensusData | Boolean | Whether this is official census data
+| censusReference | String | Reference to specific census
+| isProjected | Boolean | Whether this is projected rather than measured data
+| projectionMethod | String | Method used for projection if projected
+| totalPopulation | Integer | Total population count
+| populationByAgeGroup | Map | Population distributed across standard age groups
+| malePopulationByAgeGroup | Map | Male population by age group
+| femalePopulationByAgeGroup | Map | Female population by age group
+| thirdGenderPopulationByAgeGroup | Map | Third gender population by age group (Nepal officially recognizes)
+| medianAge | Double | Median age of the population
+| populationUnder5 | Integer | Population under 5 years old
+| populationUnder18 | Integer | Population under 18 years old
+| population18To60 | Integer | Working-age population (18-60)
+| populationOver60 | Integer | Elderly population (over 60)
+| populationOver80 | Integer | Very elderly population (over 80)
+| childDependencyRatio | Double | Ratio of children to working-age population
+| oldAgeDependencyRatio | Double | Ratio of elderly to working-age population
+| totalDependencyRatio | Double | Total dependency ratio
+| agingIndex | Double | Ratio of elderly to children
+| childWomanRatio | Double | Ratio of children to women of reproductive age
+| potentialSupportRatio | Double | Ratio of working-age to elderly population
+| parentSupportRatio | Double | Ratio of oldest elderly to potential caregivers
+| populationPyramidWidth | Integer | Maximum population in any age group
+| confidenceLevel | ConfidenceLevel | Confidence level of the data
+| dataSource | String | Source of the data
+| methodologyDescription | String | Description of methodology used
+| marginOfError | Double | Statistical margin of error
+| notes | String | Additional notes about the data
+| previousDistributionId | UUID | Reference to previous time point
+| changeUnder5 | Integer | Change in under-5 population from previous
+| changeOver60 | Integer | Change in over-60 population from previous
+| changeMedianAge | Double | Change in median age from previous
+| changeDependencyRatio | Double | Change in dependency ratio from previous
+| sourceDatasetId | UUID | Reference to source dataset
+| populationStatisticsId | UUID | Reference to related population statistics
+|===
+
+==== Supporting Entity: AgeGroupDefinition
+
+Defines the standard age groups used in the system.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| ageGroup | AgeGroup | Age group enum value
+| lowerBound | Integer | Lower age bound inclusive
+| upperBound | Integer | Upper age bound inclusive
+| description | String | Description of the age group
+| category | AgeGroupCategory | Functional category of the age group
+| widthInYears | Integer | Width of the age group in years
+| isOpenEnded | Boolean | Whether this is an open-ended age group
+|===
+
+==== Supporting Entity: CustomAgeGroup
+
+Allows creation of non-standard age groupings for specialized analysis.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| name | String | Name of the custom age group
+| lowerAgeBound | Integer | Lower age bound inclusive
+| upperAgeBound | Integer | Upper age bound inclusive
+| isStandard | Boolean | Whether this is a standard grouping
+| description | String | Description of the age group
+| category | AgeGroupCategory | Functional category of the age group
+|===
+
+==== Supporting Entity: AgeDistributionChange
+
+Tracks changes to age distribution data.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| ageDistributionId | UUID | Reference to the age distribution
+| timestamp | LocalDateTime | When the change occurred
+| changeType | ChangeType | Type of change
+| description | String | Description of the change
+| previousValues | Map | Previous values by age group
+| newValues | Map | New values by age group
+| changedBy | UUID | Who made the change
+| changeReason | String | Reason for the change
+|===
+
+==== Supporting Entity: AgeDistributionQualityCheck
+
+Records quality checks performed on age distribution data.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| ageDistributionId | UUID | Reference to the age distribution
+| checkType | QualityCheckType | Type of quality check
+| passed | Boolean | Whether the check passed
+| description | String | Description of the check
+| score | Double | Numerical score of the check
+| issuesIdentified | String | Issues identified in the check
+| checkedAt | LocalDateTime | When the check was performed
+| checkedBy | UUID | Who performed the check
+|===
+
+==== Supporting Entity: AgeStructureAnalysis
+
+Provides analytical insights into the age structure.
+
+[cols="1,1,3", options="header"]
+|===
+| Attribute | Type | Description
+| id | UUID | Unique identifier
+| ageDistributionId | UUID | Reference to the age distribution
+| structureType | AgeStructureType | Type of age structure
+| youngDependentPercentage | Double | Percentage of young dependents
+| workingAgePercentage | Double | Percentage of working-age population
+| elderlyDependentPercentage | Double | Percentage of elderly dependents
+| medianAgeGroupIndex | Integer | Index of the median age group
+| dynamismIndex | Double | Measure of population dynamism
+| analysisNotes | String | Notes from the analysis
+| analyzedAt | LocalDateTime | When the analysis was performed
+|===
+
+==== Enumerations
+
+===== AgeGroup
+Standard age group classifications.
+
+* `UNDER_5`: Ages 0-4
+* `AGE_5_9`: Ages 5-9
+* `AGE_10_14`: Ages 10-14
+* `AGE_15_19`: Ages 15-19
+* `AGE_20_24`: Ages 20-24
+* `AGE_25_29`: Ages 25-29
+* `AGE_30_34`: Ages 30-34
+* `AGE_35_39`: Ages 35-39
+* `AGE_40_44`: Ages 40-44
+* `AGE_45_49`: Ages 45-49
+* `AGE_50_54`: Ages 50-54
+* `AGE_55_59`: Ages 55-59
+* `AGE_60_64`: Ages 60-64
+* `AGE_65_69`: Ages 65-69
+* `AGE_70_74`: Ages 70-74
+* `AGE_75_79`: Ages 75-79
+* `AGE_80_84`: Ages 80-84
+* `AGE_85_PLUS`: Ages 85 and above
+
+===== AgeGroupCategory
+Functional categories for age groups.
+
+* `CHILDHOOD`: Early childhood ages
+* `SCHOOL_AGE`: School-age population
+* `WORKING_AGE`: Working-age population
+* `REPRODUCTIVE_AGE`: Reproductive-age population
+* `ELDERLY`: Elderly population
+
+===== ConfidenceLevel
+Indicates the level of confidence in the data.
+
+* `HIGH`: High confidence (typically census data)
+* `MEDIUM`: Medium confidence
+* `LOW`: Low confidence
+* `VERY_LOW`: Very low confidence
+* `UNKNOWN`: Confidence level cannot be determined
+
+===== AdminAreaLevel
+Administrative area levels in Nepal.
+
+* `WARD`: Ward level
+* `MUNICIPALITY`: Municipality level
+* `DISTRICT`: District level
+* `PROVINCE`: Province level
+* `COUNTRY`: National level
+
+===== ChangeType
+Types of changes to age distribution data.
+
+* `INITIAL`: Initial data entry
+* `REVISION`: Standard data revision
+* `PROJECTION_UPDATE`: Update to projection methodology
+* `DATA_CORRECTION`: Correction of errors
+* `METHODOLOGY_CHANGE`: Change in data collection methodology
+* `ADMIN_BOUNDARY_CHANGE`: Change due to administrative boundary updates
+
+===== QualityCheckType
+Types of quality checks for age distribution data.
+
+* `WHIPPLES_INDEX`: Check for age heaping on ages ending in 0 or 5
+* `MYERS_BLENDED_INDEX`: Check for digit preference
+* `AGE_SEX_ACCURACY_INDEX`: Check age-sex consistency
+* `DIGIT_PREFERENCE`: Check for preference of certain final digits
+* `AGE_HEAPING`: Check for concentration at certain ages
+* `MALE_FEMALE_BALANCE`: Check male-female ratio by age
+* `STATISTICAL_OUTLIER`: Check for statistical outliers
+* `AGE_SPECIFIC_COMPARISON`: Compare with expected age patterns
+
+===== AgeStructureType
+Types of population age structures.
+
+* `EXPANSIVE`: Broad-based pyramid with high fertility
+* `CONSTRICTIVE`: Narrow base with lower fertility
+* `STATIONARY`: Relatively even distribution with stable population
+* `TRANSITIONAL`: In transition between expansive and constrictive
+* `REGRESSIVE`: Inverted pyramid with aging population
+* `DISTORTED`: Irregular structure often due to migration or mortality events
+
+===== ProjectionMethod
+Methods for projecting population by age.
+
+* `COHORT_COMPONENT`: Component method tracking cohort progression
+* `LESLIE_MATRIX`: Matrix-based projection
+* `EXPONENTIAL`: Exponential growth model
+* `CUBIC_SPLINE`: Spline-based interpolation
+* `RATIO`: Ratio method based on another area
+* `CUSTOM`: Custom projection methodology
+
+===== SmoothingMethod
+Methods for smoothing age distribution data.
+
+* `MOVING_AVERAGE`: Simple moving average
+* `SPRAGUE_MULTIPLIER`: Sprague multiplier method
+* `KERNEL_SMOOTHING`: Kernel density smoothing
+* `CARRIER_FARRAG`: Carrier-Farrag smoothing method
+
+==== Database Schema Implementation
+
+The AgeDistribution entity and its related entities are mapped to the following database schema:
+
+```sql
+-- Main age distribution table
+CREATE TABLE age_distribution (
+  id UUID PRIMARY KEY,
+  demographic_summary_id UUID NOT NULL REFERENCES demographic_summary(id),
+  
+  -- Administrative context
+  admin_area_id UUID NOT NULL REFERENCES administrative_area(id),
+  admin_area_code VARCHAR(50) NOT NULL,
+  admin_area_name VARCHAR(100) NOT NULL,
+  admin_area_level VARCHAR(20) NOT NULL,
+  
+  -- Time context
+  year INT NOT NULL,
+  period_type VARCHAR(20),
+  reference_date DATE,
+  is_census_data BOOLEAN DEFAULT FALSE,
+  census_reference VARCHAR(50),
+  is_projected BOOLEAN DEFAULT FALSE,
+  projection_method VARCHAR(50),
+  
+  -- Population summary data
+  total_population INT NOT NULL,
+  
+  -- Age parameters
+  median_age NUMERIC(5,2),
+  population_under_5 INT,
+  population_under_18 INT,
+  population_18_to_60 INT,
+  population_over_60 INT,
+  population_over_80 INT,
+  
+  -- Derived metrics
+  child_dependency_ratio NUMERIC(7,4),
+  old_age_dependency_ratio NUMERIC(7,4),
+  total_dependency_ratio NUMERIC(7,4),
+  aging_index NUMERIC(7,4),
+  child_woman_ratio NUMERIC(7,4),
+  potential_support_ratio NUMERIC(7,4),
+  parent_support_ratio NUMERIC(7,4),
+  population_pyramid_width INT,
+  
+  -- Data quality
+  confidence_level VARCHAR(20) NOT NULL,
+  data_source VARCHAR(100),
+  methodology_description TEXT,
+  margin_of_error NUMERIC(5,2),
+  notes TEXT,
+  
+  -- Previous reference
+  previous_distribution_id UUID REFERENCES age_distribution(id),
+  change_under_5 INT,
+  change_over_60 INT,
+  change_median_age NUMERIC(5,2),
+  change_dependency_ratio NUMERIC(7,4),
+  
+  -- External references
+  source_dataset_id UUID,
+  population_statistics_id UUID,
+  
+  -- Audit fields
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL,
+  last_modified_at TIMESTAMP NOT NULL,
+  last_modified_by UUID NOT NULL,
+  
+  -- Constraints
+  CONSTRAINT uk_admin_area_year UNIQUE (admin_area_id, year)
+);
+
+-- Population by age group
+CREATE TABLE population_by_age_group (
+  age_distribution_id UUID NOT NULL REFERENCES age_distribution(id),
+  age_group VARCHAR(20) NOT NULL,
+  total_population INT NOT NULL,
+  male_population INT,
+  female_population INT,
+  third_gender_population INT,
+  PRIMARY KEY (age_distribution_id, age_group)
+);
+
+-- Standard age group definitions
+CREATE TABLE age_group_definition (
+  age_group VARCHAR(20) PRIMARY KEY,
+  lower_bound INT NOT NULL,
+  upper_bound INT NOT NULL,
+  description VARCHAR(100),
+  category VARCHAR(30),
+  width_in_years INT NOT NULL,
+  is_open_ended BOOLEAN DEFAULT FALSE
+);
+
+-- Custom age groups for specialized analysis
+CREATE TABLE custom_age_group (
+  id UUID PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  lower_age_bound INT NOT NULL,
+  upper_age_bound INT NOT NULL,
+  is_standard BOOLEAN DEFAULT FALSE,
+  description VARCHAR(200),
+  category VARCHAR(30),
+  created_at TIMESTAMP NOT NULL,
+  created_by UUID NOT NULL
+);
+
+-- Age distribution change history
+CREATE TABLE age_distribution_change (
+  id UUID PRIMARY KEY,
+  age_distribution_id UUID NOT NULL REFERENCES age_distribution(id),
+  timestamp TIMESTAMP NOT NULL,
+  change_type VARCHAR(30) NOT NULL,
+  description TEXT,
+  changed_by UUID NOT NULL,
+  change_reason VARCHAR(200),
+  created_at TIMESTAMP NOT NULL
+);
+
+-- Age distribution change details by age group
+CREATE TABLE age_distribution_change_detail (
+  change_id UUID NOT NULL REFERENCES age_distribution_change(id),
+  age_group VARCHAR(20) NOT NULL,
+  previous_value INT,
+  new_value INT,
+  PRIMARY KEY (change_id, age_group)
+);
+
+-- Quality checks for age distribution data
+CREATE TABLE age_distribution_quality_check (
+  id UUID PRIMARY KEY,
+  age_distribution_id UUID NOT NULL REFERENCES age_distribution(id),
+  check_type VARCHAR(30) NOT NULL,
+  passed BOOLEAN NOT NULL,
+  description VARCHAR(200),
+  score NUMERIC(7,4),
+  issues_identified TEXT,
+  checked_at TIMESTAMP NOT NULL,
+  checked_by UUID NOT NULL
+);
+
+-- Age structure analysis
+CREATE TABLE age_structure_analysis (
+  id UUID PRIMARY KEY,
+  age_distribution_id UUID NOT NULL UNIQUE REFERENCES age_distribution(id),
+  structure_type VARCHAR(20) NOT NULL,
+  young_dependent_percentage NUMERIC(5,2) NOT NULL,
+  working_age_percentage NUMERIC(5,2) NOT NULL,
+  elderly_dependent_percentage NUMERIC(5,2) NOT NULL,
+  median_age_group_index INT,
+  dynamism_index NUMERIC(7,4),
+  analysis_notes TEXT,
+  analyzed_at TIMESTAMP NOT NULL
+);
+
+-- Indexes for performance
+CREATE INDEX idx_age_dist_admin_area ON age_distribution(admin_area_id);
+CREATE INDEX idx_age_dist_admin_level ON age_distribution(admin_area_level);
+CREATE INDEX idx_age_dist_year ON age_distribution(year);
+CREATE INDEX idx_age_dist_census ON age_distribution(is_census_data);
+CREATE INDEX idx_age_dist_confidence ON age_distribution(confidence_level);
+CREATE INDEX idx_age_dist_previous ON age_distribution(previous_distribution_id);
+```
+
+This database schema efficiently organizes the complex data required for age distribution analysis while maintaining the relationships between entities. The use of proper foreign keys ensures referential integrity, while multiple indexes support the performance requirements of demographic queries across administrative levels and time periods.
+
+===== Nepal-Specific Implementation Details
+
+Several aspects of the schema are specifically designed for Nepal's demographic context:
+
+1. **Third Gender Recognition**: The schema includes third gender population data, reflecting Nepal's official recognition of third gender identity since 2007, one of the earliest countries to do so.
+
+2. **Administrative Levels**: The admin_area_level field accommodates Nepal's federal structure with its multiple administrative tiers (ward, municipality, district, province, country).
+
+3. **Age Heaping Detection**: Multiple quality check types address the prevalent issue of age heaping in Nepal's demographic data, where ages ending in 0 or 5 are overreported.
+
+4. **Dual-Calendar Support**: The reference_date field can store dates in both Gregorian and Bikram Sambat calendars, supporting Nepal's official use of the BS calendar.
+
+5. **Migration Impact Analysis**: The dynamism_index in age structure analysis helps identify migration-affected areas, crucial for Nepal where outmigration significantly impacts local age structures.
+
+6. **Ethnic Analysis Support**: Though not explicitly in the core schema, the CustomAgeGroup entity allows creating specialized ethnic analysis groups matching Nepal's diverse demographic patterns across ethnic communities.
+
+7. **Historical Tracking**: The change history tracking is designed to handle Nepal's administrative restructuring events, including the major 2017 federal restructuring that redefined administrative boundaries.
+
+These Nepal-specific features ensure the data model can accurately represent and analyze the country's unique demographic context and challenges.

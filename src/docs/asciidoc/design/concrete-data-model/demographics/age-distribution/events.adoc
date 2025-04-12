@@ -1,0 +1,556 @@
+===== Domain Events
+
+The AgeDistribution entity publishes and consumes domain events to facilitate integration with other system components and maintain data consistency across the demographic domain.
+
+[plantuml]
+----
+@startuml
+class AgeDistributionCreatedEvent {
+  +UUID ageDistributionId
+  +UUID adminAreaId
+  +String adminAreaLevel
+  +Integer year
+  +Integer totalPopulation
+  +Boolean isCensusData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionUpdatedEvent {
+  +UUID ageDistributionId
+  +UUID adminAreaId
+  +Integer year
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionImportedEvent {
+  +UUID ageDistributionId
+  +UUID adminAreaId
+  +String importSource
+  +String importFormat
+  +Integer recordCount
+  +Boolean hadErrors
+  +String errorSummary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionQualityCheckedEvent {
+  +UUID ageDistributionId
+  +UUID adminAreaId
+  +List<QualityCheckResult> checkResults
+  +Boolean passedAllChecks
+  +String suggestedActions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeStructureAnalyzedEvent {
+  +UUID ageDistributionId
+  +UUID adminAreaId
+  +AgeStructureType structureType
+  +String analysisFindings
+  +Map<String, Double> demographicIndices
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionProjectedEvent {
+  +UUID sourceDistributionId
+  +UUID projectedDistributionId
+  +UUID adminAreaId
+  +Integer targetYear
+  +ProjectionMethod method
+  +String methodologyDescription
+  +Double confidenceLevel
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionAggregatedEvent {
+  +UUID resultDistributionId
+  +List<UUID> sourceDistributionIds
+  +UUID targetAdminAreaId
+  +AdminAreaLevel resultLevel
+  +Integer year
+  +AggregationMethod method
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionComparedEvent {
+  +UUID baseDistributionId
+  +UUID comparisonDistributionId
+  +String comparisonType
+  +Map<String, Object> keyDifferences
+  +String analysisNotes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AnomalyDetectedEvent {
+  +UUID ageDistributionId
+  +UUID adminAreaId
+  +String anomalyType
+  +String anomalyDescription
+  +Double anomalyScore
+  +String suggestedResolution
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicIndicatorCalculatedEvent {
+  +UUID ageDistributionId
+  +UUID adminAreaId
+  +Map<String, Double> calculatedIndicators
+  +String indicatorNotes
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum AgeStructureType {
+  EXPANSIVE
+  CONSTRICTIVE
+  STATIONARY
+  TRANSITIONAL
+  REGRESSIVE
+  DISTORTED
+}
+
+enum ProjectionMethod {
+  COHORT_COMPONENT
+  LESLIE_MATRIX
+  EXPONENTIAL
+  CUBIC_SPLINE
+  RATIO
+  CUSTOM
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AggregationMethod {
+  SUM
+  WEIGHTED_AVERAGE
+  PROPORTIONAL
+  CUSTOM
+}
+
+class QualityCheckResult {
+  +String checkType
+  +Boolean passed
+  +Double score
+  +String description
+  +String recommendation
+}
+
+abstract class DomainEvent
+DomainEvent <|-- AgeDistributionCreatedEvent
+DomainEvent <|-- AgeDistributionUpdatedEvent
+DomainEvent <|-- AgeDistributionImportedEvent
+DomainEvent <|-- AgeDistributionQualityCheckedEvent
+DomainEvent <|-- AgeStructureAnalyzedEvent
+DomainEvent <|-- AgeDistributionProjectedEvent
+DomainEvent <|-- AgeDistributionAggregatedEvent
+DomainEvent <|-- AgeDistributionComparedEvent
+DomainEvent <|-- AnomalyDetectedEvent
+DomainEvent <|-- DemographicIndicatorCalculatedEvent
+
+AgeStructureAnalyzedEvent -- AgeStructureType
+AgeDistributionProjectedEvent -- ProjectionMethod
+AgeDistributionAggregatedEvent -- AdminAreaLevel
+AgeDistributionAggregatedEvent -- AggregationMethod
+AgeDistributionQualityCheckedEvent *-- "many" QualityCheckResult
+@enduml
+----
+
+==== Core Domain Events
+
+===== AgeDistributionCreatedEvent
+
+Triggered when a new age distribution dataset is created for an administrative area.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Unique identifier of the newly created age distribution
+| adminAreaId | Administrative area this distribution belongs to
+| adminAreaLevel | Level of the administrative area (WARD, MUNICIPALITY, etc.)
+| year | Year of the age distribution data
+| totalPopulation | Total population recorded
+| isCensusData | Whether this is official census data
+| timestamp | When the event occurred
+| actorId | User or system that created the distribution
+|===
+
+*Business Impact:* This event initiates various secondary processes including data quality checks, notification to analysts, and updating of administrative area population totals. In Nepal's context, new age distribution data is particularly significant as it influences resource allocation formulas used by ministries to distribute development funds to local governments.
+
+===== AgeDistributionUpdatedEvent
+
+Triggered when changes are made to existing age distribution data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Identifier of the updated distribution
+| adminAreaId | Administrative area identifier
+| year | Year of the distribution data
+| changedFields | Map of fields that were changed with their old and new values
+| updateType | Type of update (CORRECTION, REVISION, ENHANCEMENT)
+| isRevision | Whether this is an official revision
+| updateReason | Reason for the update
+| timestamp | When the event occurred
+| actorId | User who made the update
+|===
+
+*Business Impact:* This event may trigger recalculation of demographic indicators, re-aggregation of higher-level administrative areas, and notifications to stakeholders about changed data. For Nepal, the ability to track changes is especially important when reconciling data from multiple government agencies that may have different methodologies.
+
+===== AgeDistributionImportedEvent
+
+Triggered when age distribution data is imported from an external source.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Identifier of the imported distribution
+| adminAreaId | Administrative area identifier
+| importSource | Source of the imported data (CBS, UNFPA, etc.)
+| importFormat | Format of the imported data (CSV, Excel, etc.)
+| recordCount | Number of records imported
+| hadErrors | Whether there were errors during import
+| errorSummary | Summary of any errors encountered
+| timestamp | When the import occurred
+| actorId | User who performed the import
+|===
+
+*Business Impact:* Data import is a common operation in Nepal's decentralized statistical system, where data may originate from multiple sources including the Central Bureau of Statistics, ministry field offices, and international organizations. This event initiates data validation processes and ensures proper attribution of data sources.
+
+==== Specialized Domain Events
+
+===== AgeDistributionQualityCheckedEvent
+
+Triggered when quality checks are performed on age distribution data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Identifier of the checked distribution
+| adminAreaId | Administrative area identifier
+| checkResults | Results of individual quality checks
+| passedAllChecks | Whether all checks were passed
+| suggestedActions | Suggested actions for failed checks
+| timestamp | When checks were performed
+| actorId | User or system that performed the checks
+|===
+
+*Business Impact:* Data quality is a significant concern in Nepal's demographic data, particularly regarding age heaping and digit preference. This event allows systems to flag potentially problematic data patterns, especially important for remote regions where direct validation is challenging.
+
+===== AgeStructureAnalyzedEvent
+
+Triggered when a structural analysis of age distribution is completed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Identifier of the analyzed distribution
+| adminAreaId | Administrative area identifier
+| structureType | Type of age structure identified
+| analysisFindings | Textual description of analysis findings
+| demographicIndices | Map of calculated demographic indices
+| timestamp | When the analysis was completed
+| actorId | User or system that performed the analysis
+|===
+
+*Business Impact:* Age structure analysis provides critical insights for planning across multiple sectors. This event can trigger notifications to relevant ministries when specific demographic patterns are detected, such as rapidly aging populations that require expanded elder care services or youth bulges that signal future workforce expansion needs.
+
+===== AgeDistributionProjectedEvent
+
+Triggered when a new age distribution projection is created for a future year.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| sourceDistributionId | Identifier of the source distribution
+| projectedDistributionId | Identifier of the created projection
+| adminAreaId | Administrative area identifier
+| targetYear | Year being projected
+| method | Projection method used
+| methodologyDescription | Description of methodology
+| confidenceLevel | Confidence level of the projection
+| timestamp | When the projection was created
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Projections are essential for Nepal's planning processes, particularly for infrastructure development with long implementation timeframes. This event allows planning departments to be notified of new projections relevant to their sector and geography.
+
+===== AgeDistributionAggregatedEvent
+
+Triggered when ward-level data is aggregated to higher administrative levels.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| resultDistributionId | Identifier of the aggregated distribution
+| sourceDistributionIds | Identifiers of source distributions
+| targetAdminAreaId | Identifier of the target administrative area
+| resultLevel | Administrative level of the result
+| year | Year of the aggregated data
+| method | Method used for aggregation
+| timestamp | When the aggregation occurred
+| actorId | User or system that performed the aggregation
+|===
+
+*Business Impact:* Aggregation events are vital in Nepal's federal structure where planning happens at multiple administrative levels. Provincial and federal ministries rely on these aggregations for policy development, while ensuring the constituent units (often wards or municipalities) are properly represented in the aggregated data.
+
+===== AgeDistributionComparedEvent
+
+Triggered when two age distributions are formally compared.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| baseDistributionId | Identifier of the base distribution
+| comparisonDistributionId | Identifier of the comparison distribution
+| comparisonType | Type of comparison (TIME, GEOGRAPHY, SCENARIO)
+| keyDifferences | Map of key differences identified
+| analysisNotes | Notes from the comparison analysis
+| timestamp | When the comparison was performed
+| actorId | User who performed the comparison
+|===
+
+*Business Impact:* Comparative analysis is essential for understanding demographic transitions in Nepal's diverse regions, particularly contrasting urban and rural demographic patterns or before/after impacts of significant events like the 2015 earthquake.
+
+===== AnomalyDetectedEvent
+
+Triggered when unusual patterns are detected in age distribution data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Identifier of the distribution with anomaly
+| adminAreaId | Administrative area identifier
+| anomalyType | Type of anomaly detected
+| anomalyDescription | Description of the anomaly
+| anomalyScore | Quantified measure of the anomaly
+| suggestedResolution | Suggested resolution for the anomaly
+| timestamp | When the anomaly was detected
+| actorId | User or system that detected the anomaly
+|===
+
+*Business Impact:* Anomaly detection helps identify both data quality issues and genuine demographic phenomena requiring investigation. In Nepal, this has been particularly valuable for detecting migration impacts in specific age cohorts and identifying data collection issues in remote regions.
+
+===== DemographicIndicatorCalculatedEvent
+
+Triggered when demographic indicators are calculated from age distribution data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Identifier of the source distribution
+| adminAreaId | Administrative area identifier
+| calculatedIndicators | Map of calculated indicators and their values
+| indicatorNotes | Notes about the calculated indicators
+| timestamp | When calculation occurred
+| actorId | User or system that performed the calculation
+|===
+
+*Business Impact:* Demographic indicators provide actionable insights for planners and policymakers. This event allows various stakeholders to be notified when relevant indicators are updated, ensuring planning decisions are based on the most current demographic analysis.
+
+==== Event Handling Architecture
+
+[plantuml]
+----
+@startuml
+participant "DemographicService" as Service
+participant "AgeDistribution" as Entity
+participant "EventPublisher" as Publisher
+participant "QualityCheckService" as Quality
+participant "AggregationService" as Aggregation
+participant "NotificationService" as Notify
+participant "IndexingService" as Index
+participant "AuditService" as Audit
+
+Service -> Entity: createAgeDistribution(adminAreaId, year, data)
+activate Entity
+
+Entity -> Entity: constructDistribution()
+Entity -> Entity: calculateDerivedMetrics()
+Entity -> Publisher: publishEvent(AgeDistributionCreatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Quality: scheduleQualityChecks(ageDistributionId)
+activate Quality
+Quality -> Quality: performDataChecks()
+Quality -> Quality: evaluateCompletenessAndConsistency()
+Quality -> Publisher: publishEvent(AgeDistributionQualityCheckedEvent)
+Publisher <-- Quality: checksScheduled
+deactivate Quality
+
+Publisher -> Aggregation: triggerRollup(ageDistributionId)
+activate Aggregation
+Aggregation -> Aggregation: identifyParentAdminAreas()
+Aggregation -> Aggregation: aggregateToHigherLevels()
+Aggregation -> Publisher: publishEvent(AgeDistributionAggregatedEvent)
+Publisher <-- Aggregation: aggregationTriggered
+deactivate Aggregation
+
+Publisher -> Index: updateSearchIndex(ageDistributionId)
+activate Index
+Index -> Index: extractSearchableFields()
+Index -> Index: buildIndexEntries()
+Publisher <-- Index: indexUpdated
+deactivate Index
+
+Publisher -> Notify: sendAnalystNotification(ageDistributionId)
+activate Notify
+Notify -> Notify: identifyInterestedStakeholders()
+Notify -> Notify: prepareNotificationContent()
+Notify -> Notify: dispatchNotifications()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Entity <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Entity: distributionCreated
+deactivate Entity
+
+Service -> Entity: updateAgeDistribution(ageDistributionId, updatedData)
+activate Entity
+Entity -> Entity: validateUpdates()
+Entity -> Entity: applyChanges()
+Entity -> Entity: recalculateDerivedMetrics()
+Entity -> Publisher: publishEvent(AgeDistributionUpdatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Aggregation: invalidateCachedAggregations(adminAreaId)
+activate Aggregation
+Aggregation -> Aggregation: markAggregationsForRefresh()
+Publisher <-- Aggregation: cacheInvalidated
+deactivate Aggregation
+
+alt Major Update
+  Publisher -> Quality: scheduleQualityChecks(ageDistributionId)
+  activate Quality
+  Publisher <-- Quality: checksScheduled
+  deactivate Quality
+end
+
+Publisher -> Notify: sendUpdateNotification(ageDistributionId, changedFields)
+activate Notify
+Notify -> Notify: identifyImpactedStakeholders()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Entity <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Entity: distributionUpdated
+deactivate Entity
+@enduml
+----
+
+The diagram above illustrates how events flow through the system when age distribution data is created or updated. The process demonstrates several key patterns:
+
+1. **Event-Driven Quality Assurance**: Data quality checks are triggered automatically after creation events, ensuring all data is validated.
+
+2. **Hierarchical Propagation**: Events trigger aggregation to higher administrative levels, maintaining consistency throughout the hierarchy.
+
+3. **Stakeholder Notification**: Relevant stakeholders are notified of data changes that affect their domains.
+
+4. **Audit Trail**: All events are recorded for audit purposes, maintaining transparency and traceability.
+
+5. **Search Indexing**: New and updated data is automatically indexed for search capabilities.
+
+==== Event Application Use Cases
+
+===== Tracking Demographic Transition in a Local Area
+
+When age distribution data is updated for a municipality, the system needs to track demographic transition phases and notify relevant stakeholders:
+
+1. The `AgeStructureAnalyzedEvent` identifies a shift from an EXPANSIVE to a TRANSITIONAL age structure.
+2. This triggers notifications to the local government about changing service needs.
+3. Planning systems are updated with information about anticipated shifts in school enrollment, healthcare demand, and workforce dynamics.
+4. The local government dashboard highlights the transition with comparative pyramid visualizations showing the structural shift.
+
+This process ensures local governments in Nepal can adapt their development plans to emerging demographic realities, particularly important as the country undergoes rapid demographic transition with significant regional variations.
+
+===== Cross-Border Migration Analysis
+
+When anomalies are detected in age-specific populations for border municipalities:
+
+1. The `AnomalyDetectedEvent` flags unusual patterns in working-age male cohorts.
+2. Migration analysis systems compare the patterns with known migration corridors.
+3. The labor ministry receives notifications about potential changes in outmigration patterns.
+4. Local governments along the identified corridors receive alerts to prepare for potential service impacts.
+
+This process is especially relevant for Nepal given its open border with India and significant international labor migration, which creates distinctive demographic signatures in source communities.
+
+===== Population Projection for Infrastructure Planning
+
+When the national planning commission requires updated projections for a major infrastructure project:
+
+1. The `AgeDistributionProjectedEvent` generates projections for the project area through 2040.
+2. Sectoral planning systems receive notifications about the new projections.
+3. The infrastructure sizing algorithm incorporates the new population forecasts.
+4. Financial planning systems update long-term cost estimates based on the projected service population.
+
+This ensures that major infrastructure investments in Nepal, often with 25+ year lifespans, are properly sized for future population needs, avoiding both under-capacity and wasteful overbuilding.
+
+==== Nepal-Specific Event Considerations
+
+1. **Administrative Restructuring**: Events include mechanisms to handle Nepal's administrative boundary changes, particularly important since the 2017 federal restructuring that significantly altered the administrative geography.
+
+2. **Seasonal Migration Patterns**: Events related to anomaly detection are designed to differentiate between permanent demographic changes and Nepal's significant seasonal migration patterns, particularly in agricultural regions.
+
+3. **Census Cycle Alignment**: Events are designed to handle the transition between Nepal's 10-year census cycles, with different validation approaches for census years versus intercensal estimates.
+
+4. **Multi-Language Support**: Events include support for both Nepali and English content, reflecting Nepal's bilingual administrative environment.
+
+5. **Disaster Impact Analysis**: Special events track demographic shifts following disasters, essential in Nepal's context where earthquakes, floods, and landslides can cause significant population displacements.
+
+These Nepal-specific considerations ensure that the event architecture addresses the country's unique demographic context and administrative requirements, providing a foundation for evidence-based planning across all levels of governance.
+
+===== Integration with National Standards
+
+The event system integrates with Nepal's national data standards, including:
+
+1. **CBS Data Protocols**: Alignment with Central Bureau of Statistics data classification standards
+2. **National ID Integration**: Capability to link with Nepal's National ID program for population verification
+3. **Federal Structure Mapping**: Mapping to the official administrative codes from the Ministry of Federal Affairs
+4. **Electronic Government Procurement System**: Structured data formats compatible with Nepal's e-GP system
+5. **Digital Nepal Framework**: Conformance with interoperability standards from the Digital Nepal initiative
+
+This standards alignment ensures that demographic events can seamlessly integrate with other government systems, supporting Nepal's digital transformation goals.
+
+===== Security and Privacy Considerations
+
+Given the sensitivity of demographic data, the event system implements several safeguards:
+
+1. **Data Anonymization**: Population aggregations enforce minimum thresholds for small areas
+2. **Role-Based Access**: Different event subscriptions based on user roles
+3. **Geographic Restriction**: Event access limited by administrative jurisdiction
+4. **Audit Logging**: Comprehensive logs of all event access
+5. **Privacy by Design**: Events structured to minimize inclusion of potentially sensitive data
+
+These measures ensure compliance with Nepal's privacy regulations while enabling appropriate data sharing for planning purposes.
