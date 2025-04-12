@@ -1,0 +1,235 @@
+==== Base Entity Types
+
+===== `BaseEntity`
+Abstract base class providing common attributes for all entities in the system.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `id`         | Unique identifier (UUID) for the entity
+| `createdAt`  | Timestamp when the entity was created
+| `createdBy`  | Reference to the user who created the entity
+| `updatedAt`  | Timestamp when the entity was last updated
+| `updatedBy`  | Reference to the user who last updated the entity
+| `version`    | Optimistic locking version number for concurrency control
+| `entityHash` | Cryptographic hash of entity content for integrity validation
+| `origin`     | Source system or integration point where entity was created
+| `externalId` | Optional ID reference in external systems for integrations
+| `tenant`     | Optional reference to tenant in multi-tenant deployments
+|===
+
+===== `SoftDeletableEntity`
+Extends BaseEntity with soft deletion capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `isDeleted`      | Flag indicating whether the entity has been soft-deleted
+| `deletedAt`      | Timestamp when the entity was soft-deleted
+| `deletedBy`      | Reference to the user who soft-deleted the entity
+| `deletionReason` | Optional reason for deletion
+| `restoredAt`     | Timestamp if the entity was restored after deletion
+| `restoredBy`     | Reference to the user who restored the entity after deletion
+|===
+
+===== `ApprovableEntity`
+Extends SoftDeletableEntity with approval workflow capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `isApproved`           | Flag indicating whether the entity has been approved
+| `approvedAt`           | Timestamp when the entity was approved
+| `approvedBy`           | Reference to the user who approved the entity
+| `reviewState`          | Current state in the review workflow (reference to ReviewState)
+| `reviewNote`           | Optional note providing context about the review decision
+| `workflowInstanceId`   | Reference to a workflow instance if using external workflow engine
+| `currentAssignee`      | Reference to the user currently assigned in the workflow
+| `previousReviewers`    | Collection of users who previously reviewed this entity
+| `escalationLevel`      | Current escalation level for approval (0 = normal, 1+ = escalated)
+| `dueDate`              | Optional deadline for the current review state
+| `priorityLevel`        | Priority level for this approval (LOW, MEDIUM, HIGH, URGENT)
+| `resubmissionCount`    | Count of how many times entity was resubmitted after rejection
+|===
+
+===== `ReviewState`
+Enumeration for entity review workflow states.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `DRAFT`              | Entity is in draft state, not yet submitted for review
+| `PENDING`            | Entity is awaiting initial review
+| `IN_REVIEW`          | Entity is currently being reviewed
+| `ACTION_NEEDED`      | Entity needs modification before approval
+| `APPROVED`           | Entity has been reviewed and approved
+| `REJECTED`           | Entity has been reviewed and rejected
+| `ESCALATED`          | Entity has been escalated to higher authority for review
+| `RECALLED`           | Entity has been recalled by the submitter
+| `ON_HOLD`            | Review process temporarily paused
+| `EXPIRED`            | Review process has expired due to time constraints
+| `CANCELLED`          | Review process was cancelled
+|===
+
+===== `NamedEntity`
+Abstract base class for entities with name and description.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `name`               | Primary name of the entity
+| `nameTranslationKey` | Reference to name translation key for localization
+| `description`        | Textual description of the entity
+| `descTranslationKey` | Reference to description translation key for localization
+| `slug`               | URL-friendly unique identifier derived from name
+| `code`               | Optional system code for the entity (for integration purposes)
+| `displayName`        | Optional formatted display name different from primary name
+| `shortName`          | Optional abbreviated name for space-constrained displays
+| `searchableText`     | Denormalized text optimized for full-text search
+| `sortableName`       | Name form used for natural sorting (e.g., without articles)
+|===
+
+===== `MediaEntity`
+Abstract base class for entities with associated media.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `primaryPhotoKey`   | Storage key for primary photo/image
+| `photoKeys`         | Collection of storage keys for additional photos
+| `videoKeys`         | Collection of storage keys for videos
+| `documentKeys`      | Collection of storage keys for documents
+| `thumbnailKey`      | Storage key for thumbnail image
+| `coverImageKey`     | Storage key for cover image
+| `totalStorageUsed`  | Total storage space used by media in bytes
+| `mediaMetadata`     | JSON metadata about media files (dimensions, format, etc.)
+| `lastMediaUpdate`   | Timestamp when media was last updated
+| `mediaPermissions`  | Permission settings for associated media
+| `cdnUrls`           | Precomputed CDN URLs for frequently accessed media
+|===
+
+===== `PublishableEntity`
+Abstract base class for content that can be drafted, scheduled, published and unpublished.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `publishStatus`       | Current publishing status (DRAFT, SCHEDULED, PUBLISHED, UNPUBLISHED)
+| `publishedAt`         | Timestamp when the entity was published
+| `publishedBy`         | Reference to the user who published the entity
+| `unpublishedAt`       | Timestamp when the entity was unpublished
+| `unpublishedBy`       | Reference to the user who unpublished the entity
+| `scheduledPublishAt`  | Future timestamp when entity should be published
+| `scheduledUnpublishAt`| Future timestamp when entity should be unpublished
+| `autoPublish`         | Whether to automatically publish upon approval
+| `publicationVersion`  | Version number of the current publication
+| `publicationNotes`    | Notes related to publication decisions
+| `highlightUntil`      | Date until which this entity should be highlighted as recently published
+| `readyForReview`      | Flag indicating readiness for publication review
+|===
+
+===== `WorkflowEntity`
+Abstract base class for entities that follow a business process workflow.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `workflowDefinitionId`| Reference to the workflow definition this entity follows
+| `workflowInstanceId`  | Identifier for this specific workflow instance
+| `currentState`        | Current state in the workflow process
+| `previousStates`      | Collection of previous states this entity has been through
+| `nextPossibleStates`  | Collection of potential next states based on current state
+| `stateEnteredAt`      | Timestamp when the current state was entered
+| `stateDeadline`       | Optional deadline for completing the current state
+| `assignee`            | User currently assigned to handle this workflow state
+| `watchers`            | Collection of users monitoring this workflow
+| `workflowStartedAt`   | When this workflow instance was initiated
+| `workflowCompletedAt` | When this workflow instance was completed (if finished)
+| `workflowData`        | JSON data specific to this workflow instance
+| `stateTransitionHistory` | History of state transitions with timestamps and actors
+| `activeTaskIds`       | IDs of active tasks that must be completed in current state
+| `workflowPriority`    | Priority level for this workflow instance
+|===
+
+===== `LocalizedEntity`
+Extends BaseEntity with internationalization capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `defaultLocale`      | Default locale for this entity's content
+| `translationKeys`    | Collection of translation keys associated with this entity
+| `availableLanguages` | Languages for which translations exist
+| `translationLock`    | Optional lock to prevent concurrent translation updates
+| `lastTranslated`     | Timestamp when entity was last translated
+| `autoTranslate`      | Whether to automatically translate to new supported languages
+|===
+
+===== `SpatialEntity`
+Abstract base class for entities with geographic components.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `point`              | Geographic point location (longitude, latitude)
+| `polygon`            | Geographic boundary represented as a polygon
+| `centroid`           | Calculated center point of the entity
+| `area`               | Calculated area covered by the entity in square meters
+| `elevation`          | Elevation above sea level in meters
+| `spatialReference`   | Coordinate reference system identifier
+| `accuracy`           | Accuracy of spatial data in meters
+| `source`             | Source of spatial data (GPS, SURVEY, MAP, etc.)
+| `lastGeometryUpdate` | When the spatial data was last updated
+|===
+
+===== `ReferenceDataEntity`
+Abstract base class for lookup tables and reference data with effective dates.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `code`                | Unique code for this reference data item
+| `category`            | Category or group this reference data belongs to
+| `effectiveFrom`       | Date from which this reference data is effective
+| `effectiveTo`         | Date until which this reference data is effective
+| `isDefault`           | Whether this is the default value in its category
+| `sortOrder`           | Numeric value for controlling display ordering
+| `replacedBy`          | Reference to newer version that replaces this item
+| `sourceSystem`        | System of record for this reference data
+| `validationRules`     | JSON rules for validating usage of this reference data
+| `metadataSchema`      | JSON schema for additional metadata on this reference item
+| `isActive`            | Whether this reference data item is currently active
+| `deprecationNotes`    | Notes on why an item is deprecated or replaced
+|===
+
+===== `EncryptedEntity`
+Abstract base class for entities containing encrypted sensitive data.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `encryptionKeyId`    | Reference to the encryption key used for this entity
+| `encryptionAlgorithm`| Algorithm used for encryption
+| `encryptedFields`    | List of fields that are encrypted
+| `encryptionVersion`  | Version of encryption scheme used
+| `lastReencryptedAt`  | When the entity was last re-encrypted
+| `encryptionContext`  | Context information needed for decryption
+| `dataClassification` | Classification level of contained data (e.g., PUBLIC, CONFIDENTIAL, SECRET)
+| `decryptionAuditLog` | Log of when the entity was decrypted and by whom
+| `keyRotationDue`     | Date when encryption key rotation is due
+| `encryptionMetadata` | Additional metadata about encryption process
+| `hashOfOriginal`     | Hash of original unencrypted data for integrity checks
+|===
+
+===== `VersioningStrategy`
+Enumeration for different approaches to content versioning.
+
+[cols="1,3", options="header"]
+|===
+| Value                 | Description
+| `MAJOR_MINOR`         | Traditional major.minor versioning (e.g., 1.0, 1.1, 2.0)
+| `SEMANTIC`            | Semantic versioning with major.minor.patch (e.g., 1.0.0, 1.0.1)
+| `DATE_BASED`          | Versions based on dates (e.g., 2023.1, 2023.2)
+| `SEQUENTIAL`          | Simple sequential numbering (v1, v2, v3)
+| `CUSTOM`              | Custom versioning strategy defined by application logic
+|===

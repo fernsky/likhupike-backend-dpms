@@ -1,0 +1,240 @@
+==== Embedded Components
+
+===== `AddressComponent`
+Embeddable component for structured address information.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `provinceCode`        | Reference code to province/state
+| `districtCode`        | Reference code to district/county
+| `municipalityCode`    | Reference code to municipality/city
+| `wardNumber`          | Ward number within the municipality
+| `wardMunicipalityCode`| Combined ward and municipality reference
+| `streetAddress`       | Detailed street address
+| `postalCode`          | Postal/ZIP code
+| `formattedAddress`    | Complete formatted address string
+| `addressType`         | Type of address (e.g., PERMANENT, TEMPORARY, BUSINESS)
+| `validatedAt`         | When address was last validated
+| `validatedMethod`     | Method used for address validation
+| `geoCodedAt`          | When address was last geocoded
+| `geoAccuracy`         | Accuracy of geocoding in meters
+| `deliveryNotes`       | Special instructions for physical delivery
+| `isActive`            | Whether this address is currently active
+|===
+
+===== `ContactInformation`
+Embeddable component for contact details.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `email`              | Primary email address
+| `alternateEmail`     | Secondary email address
+| `phoneNumber`        | Primary phone number
+| `mobileNumber`       | Mobile phone number
+| `faxNumber`          | Fax number
+| `websiteUrl`         | Website URL
+| `socialMediaUrls`    | Collection of social media profile URLs
+| `preferredContactMethod` | Preferred way to contact (EMAIL, PHONE, SMS, etc.)
+| `contactAvailability`| JSON representation of availability windows
+| `emailVerified`      | Whether primary email has been verified
+| `phoneVerified`      | Whether primary phone has been verified
+| `lastVerificationAttempt` | Timestamp of last verification attempt
+| `verificationExpiry` | When current verification expires
+| `doNotContact`       | Whether entity has requested no contact
+|===
+
+===== `SEOAttributes`
+Embeddable component for search engine optimization data.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `metaTitle`         | Custom SEO title (falls back to entity name if not specified)
+| `metaDescription`   | SEO meta description
+| `metaKeywords`      | SEO meta keywords
+| `canonicalUrl`      | Canonical URL for this entity
+| `ogTitle`           | Open Graph title for social sharing
+| `ogDescription`     | Open Graph description for social sharing
+| `ogImageKey`        | Storage key for Open Graph image
+| `twitterCardType`   | Twitter card type (summary, summary_large_image, etc.)
+| `structuredData`    | JSON-LD structured data for rich search results
+| `indexingDirectives`| Search engine indexing directives (noindex, nofollow, etc.)
+| `lastIndexedAt`     | When search engines last indexed this entity
+| `searchRank`        | Custom search ranking boost factor
+| `sitemapPriority`   | Priority for inclusion in sitemap (0.0-1.0)
+| `sitemapChangeFreq` | Change frequency for sitemap (hourly, daily, weekly, etc.)
+|===
+
+===== `OperationalHours`
+Embeddable component for storing operational hours information.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `dayOfWeek`         | Day of the week (MONDAY, TUESDAY, etc.)
+| `openTime`          | Opening time
+| `closeTime`         | Closing time
+| `isClosed`          | Whether the entity is closed on this day
+| `breakStartTime`    | Start time for break/lunch period
+| `breakEndTime`      | End time for break/lunch period
+| `specialNotes`      | Any special notes about operations on this day
+| `isHoliday`         | Whether this day is a recurring holiday
+| `seasonalAdjustment`| Adjustment for seasonal hours changes
+| `timeZone`          | Time zone for these operational hours
+|===
+
+===== `GeospatialAttributes`
+Enhanced component for detailed geographic information.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `coordinateSystem`     | Coordinate reference system code
+| `primaryCoordinates`   | Primary lat/lng coordinates
+| `boundingBox`          | Minimum bounding rectangle
+| `altCoordinateSystems` | Alternative coordinate representations
+| `precision`            | Coordinate precision level
+| `confidenceLevel`      | Confidence in coordinate accuracy
+| `sourceData`           | Source of geographic information
+| `geohash`              | Geohash representation for quick proximity lookups
+| `elevation`            | Elevation above sea level in meters
+| `elevationAccuracy`    | Accuracy of elevation measurement
+| `lastSurveyDate`       | Date of last physical survey
+| `spatialRelationships` | Relations to other geographic entities
+|===
+
+===== `MonetaryComponent`
+Component for financial values with currency information.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `amount`               | Numeric amount
+| `currency`             | Currency code (e.g., NPR, USD)
+| `precision`            | Decimal precision to display
+| `exchangeRate`         | Optional exchange rate at time of recording
+| `exchangeRateDate`     | Date of exchange rate
+| `baseCurrencyAmount`   | Amount in system base currency
+| `taxIncluded`          | Whether amount includes tax
+| `taxRate`              | Tax rate applied
+| `taxAmount`            | Tax amount
+| `formattingPattern`    | Culture-specific formatting pattern
+| `originalAmount`       | Original amount before adjustments
+| `adjustmentReason`     | Reason for any adjustment from original
+|===
+
+===== `TimeRangeComponent`
+Component for date/time ranges with validation.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `startDate`            | Range start date
+| `endDate`              | Range end date
+| `startTime`            | Optional start time
+| `endTime`              | Optional end time
+| `timezone`             | Timezone for the time values
+| `recurrence`           | Recurrence pattern (if repeating)
+| `isAllDay`             | Whether this is an all-day range
+| `duration`             | Cached duration for quick access
+| `allowsOverlap`        | Whether overlapping is permitted
+| `rangeType`            | Type of range (APPOINTMENT, EVENT, AVAILABILITY)
+| `flexibility`          | Flexibility in minutes for scheduling
+| `workingDaysOnly`      | Whether range only counts working days
+| `excludedDates`        | Specific dates excluded from range
+|===
+
+===== `DocumentMetadata`
+Component for document and file metadata.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `documentType`         | Type of document
+| `fileName`             | Original file name
+| `fileSize`             | Size in bytes
+| `mimeType`             | MIME content type
+| `md5Hash`              | MD5 checksum
+| `storageKey`           | Key in document storage system
+| `uploadedAt`           | Upload timestamp
+| `uploadedBy`           | User who uploaded the document
+| `pageCount`            | Number of pages (for multi-page docs)
+| `language`             | Primary language of document content
+| `securityClassification` | Confidentiality classification
+| `retentionPeriod`      | How long document should be retained
+| `retentionExpiryDate`  | When document can be deleted
+| `isOriginal`           | Whether this is an original document
+| `certificateSerialNumber` | For certified documents
+| `processingStatus`     | Status of document processing
+|===
+
+===== `IdentityVerificationData`
+Component for tracking identity verification processes.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `verificationType`     | Type of verification performed
+| `verificationMethod`   | Method used for verification
+| `verificationStatus`   | Current verification status
+| `verificationDate`     | When verification was performed
+| `verifiedBy`           | Person or system that performed verification
+| `confidenceScore`      | Confidence level in verification (0-100)
+| `verificationNotes`    | Notes about verification process
+| `verificationExpiry`   | When verification expires
+| `documentReferences`   | References to supporting documents
+| `matchScore`           | Score of identity match
+| `failureReason`        | Reason for verification failure
+| `retryCount`           | Number of verification attempts
+| `verificationProvider` | Third party verification provider
+| `transactionId`        | Verification transaction identifier
+|===
+
+===== `DeviceInformation`
+Component for storing device-related context.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `deviceType`           | Type of device (MOBILE, TABLET, DESKTOP)
+| `deviceModel`          | Device model information
+| `operatingSystem`      | Operating system and version
+| `browserName`          | Browser name and version
+| `ipAddress`            | IP address of device
+| `macAddress`           | MAC address if available
+| `deviceIdentifier`     | Unique device identifier
+| `screenResolution`     | Screen resolution
+| `isMobileDevice`       | Whether device is mobile
+| `installationId`       | App installation identifier
+| `appVersion`           | Application version
+| `networkType`          | Type of network connection
+| `deviceLanguage`       | Device language setting
+| `deviceLocale`         | Device locale setting
+| `firstSeenAt`          | When device was first seen
+| `lastSeenAt`           | When device was last seen
+|===
+
+===== `AuditTrailEntry`
+Component for detailed action auditing.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `actionType`           | Type of action performed
+| `timestamp`            | When action occurred
+| `userId`               | User who performed action
+| `details`              | Details of the action
+| `before`               | State before action (for changes)
+| `after`                | State after action (for changes)
+| `remoteAddress`        | IP address action came from
+| `userAgent`            | User agent information
+| `sessionId`            | Session identifier
+| `success`              | Whether action was successful
+| `errorDetails`         | Error details if unsuccessful
+| `transactionId`        | Transaction identifier for grouped actions
+| `resourceType`         | Type of resource affected
+| `resourceId`           | Identifier of resource affected
+| `severityLevel`        | Severity/importance level of the action
+|===

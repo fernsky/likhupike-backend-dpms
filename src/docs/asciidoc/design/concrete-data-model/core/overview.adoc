@@ -1,0 +1,134 @@
+==== Domain Model Integration Overview
+
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+package "Core Entity Hierarchy" {
+  abstract class BaseEntity
+  abstract class SoftDeletableEntity
+  abstract class ApprovableEntity
+  abstract class NamedEntity
+  abstract class MediaEntity
+  abstract class PublishableEntity
+  abstract class EncryptedEntity
+  abstract class WorkflowEntity
+  abstract class ReferenceDataEntity
+  abstract class SpatialEntity
+  abstract class LocalizedEntity
+  abstract class AuditableEntity
+  abstract class VersionableEntity
+  
+  BaseEntity <|-- SoftDeletableEntity
+  SoftDeletableEntity <|-- ApprovableEntity
+  SoftDeletableEntity <|-- AuditableEntity
+  BaseEntity <|-- NamedEntity
+  BaseEntity <|-- MediaEntity
+  ApprovableEntity <|-- PublishableEntity
+  SoftDeletableEntity <|-- EncryptedEntity
+  ApprovableEntity <|-- WorkflowEntity
+  NamedEntity <|-- ReferenceDataEntity
+  BaseEntity <|-- SpatialEntity
+  BaseEntity <|-- LocalizedEntity
+  BaseEntity <|-- VersionableEntity
+}
+
+package "Core Capabilities" {
+  interface Taggable
+  interface AccessControlled
+  interface Subscribable
+  interface HistoryViewable
+  interface EventSourcingCapable
+  interface BiometricVerifiable
+  interface MobileAccessible
+  interface FullTextSearchable
+  interface ImportableEntity
+  interface ExportableEntity
+  interface BatchProcessable
+  interface CustomValidatable
+  interface FaultTolerant
+  interface AnalyticsTrackable
+  interface ComplianceAuditable
+  interface ExternalSystemSyncable
+  interface WebhookTriggerable
+  interface GeocodingCapable
+  interface MultiTenantAware
+  interface DigitallySignable
+  interface TransactionParticipant
+  interface DashboardRenderable
+  interface DocumentGeneratable
+  interface MultiLanguageSupport
+}
+
+package "Embedded Components" {
+  class AddressComponent
+  class ContactInformation
+  class SEOAttributes
+  class OperationalHours
+  class GeospatialAttributes
+  class MonetaryComponent
+  class TimeRangeComponent
+  class DocumentMetadata
+  class IdentityVerificationData
+  class DeviceInformation
+  class AuditTrailEntry
+}
+
+package "Cross-Cutting" {
+  class EntityVersion
+  class EntityAuditEvent
+  class AuditableAction
+  class DomainEvent
+  class Tag
+  class AccessControlEntry
+  class DataRetentionPolicy
+  class ValidationRule
+  class BusinessProcessDefinition
+  class SecurityContext
+  class SystemConfiguration
+  class DataPrivacyControl
+}
+
+ApprovableEntity -- ReviewState
+Taggable -- Tag
+AccessControlled -- AccessControlEntry
+AccessControlled -- Permission
+EventSourcingCapable -- DomainEvent
+Subscribable -- NotificationType
+BiometricVerifiable -- BiometricType
+MobileAccessible -- OfflineCapability
+PublishableEntity -- VersioningStrategy
+CustomValidatable -- ValidationRule
+TransactionParticipant -- BusinessProcessDefinition
+DigitallySignable -- SignatureMethod
+
+@enduml
+----
+
+==== Enhanced Core Models
+
+Based on experience with concrete implementations in Land and Location domains, several enhancements have been made to the core domain models:
+
+1. *New Base Classes*:
+   - `AuditableEntity` - Enhanced auditing beyond basic tracking
+   - `VersionableEntity` - Structured version control separate from approval workflows
+
+2. *New Capabilities*:
+   - `TransactionParticipant` - For entities that participate in business transactions
+   - `DigitallySignable` - For entities requiring digital signatures
+   - `MultiTenantAware` - Enhanced multi-tenancy support
+   - `DashboardRenderable` - For entities that appear in dashboards/reports
+   - `DocumentGeneratable` - For entities that can generate official documents
+
+3. *New Embedded Components*:
+   - `GeospatialAttributes` - Enhanced spatial components
+   - `MonetaryComponent` - For financial values and currency handling
+   - `IdentityVerificationData` - For verification processes
+   - `TimeRangeComponent` - For date/time ranges with validation
+
+4. *Enhanced Cross-Cutting Concerns*:
+   - `BusinessProcessDefinition` - Formalized workflow definitions
+   - `ValidationRule` - Rules engine support
+   - `DataPrivacyControl` - Enhanced privacy controls
+   - `SecurityContext` - Contextual security information
