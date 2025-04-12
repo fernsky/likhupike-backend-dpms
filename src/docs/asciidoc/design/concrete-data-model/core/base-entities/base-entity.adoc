@@ -1,0 +1,163 @@
+===== `BaseEntity`
+Abstract base class providing common attributes for all entities in the system.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `id`         | Unique identifier (UUID) for the entity
+| `createdAt`  | Timestamp when the entity was created
+| `createdBy`  | Reference to the user who created the entity
+| `updatedAt`  | Timestamp when the entity was last updated
+| `updatedBy`  | Reference to the user who last updated the entity
+| `version`    | Optimistic locking version number for concurrency control
+| `entityHash` | Cryptographic hash of entity content for integrity validation
+| `origin`     | Source system or integration point where entity was created
+| `externalId` | Optional ID reference in external systems for integrations
+| `tenant`     | Optional reference to tenant in multi-tenant deployments
+|===
+
+====== Contextual Use Cases for BaseEntity
+
+*Real-World Scenario:* Government Records Management System Using BaseEntity
+
+[plantuml]
+----
+@startuml
+actor "Records Manager\n(Prakash Sharma)" as Manager
+actor "System Auditor\n(Anu Thapa)" as Auditor
+participant "RecordService" as Service
+participant "CitizenRecord\nextends BaseEntity" as Record
+participant "HistoryService" as History
+participant "TenantService" as Tenant
+
+Manager -> Service : createRecord(citizenData)
+activate Service
+Service -> Record : new CitizenRecord()
+activate Record
+Record -> Record : setId(UUID.randomUUID())
+Record -> Record : setCreatedAt(now())
+Record -> Record : setCreatedBy(currentUser)
+Record -> Record : setEntityHash(calculateHash())
+Service <-- Record : newRecord
+deactivate Record
+
+Service -> Tenant : getTenantForUser(currentUser)
+activate Tenant
+Service <-- Tenant : userTenant
+deactivate Tenant
+
+Service -> Record : setTenant(userTenant)
+activate Record
+Service <-- Record : recordWithTenant
+deactivate Record
+
+Manager <-- Service : createdRecord
+deactivate Service
+
+' Later - record update
+Manager -> Service : updateRecord(recordId, updatedData)
+activate Service
+Service -> Record : findById(recordId)
+activate Record
+Service <-- Record : existingRecord
+deactivate Record
+
+Service -> Record : update(updatedData)
+activate Record
+Record -> Record : validateOptimisticLock(version)
+Record -> Record : incrementVersion()
+Record -> Record : setUpdatedAt(now())
+Record -> Record : setUpdatedBy(currentUser)
+Record -> Record : setEntityHash(calculateHash())
+Service <-- Record : updatedRecord
+deactivate Record
+
+Manager <-- Service : updatedRecord
+deactivate Service
+
+' Audit scenario
+Auditor -> History : auditRecord(recordId)
+activate History
+
+History -> Record : findById(recordId)
+activate Record
+History <-- Record : record
+deactivate Record
+
+History -> History : collectMetadata()
+activate History
+note right
+  Gets:
+  - creation info
+  - last update info
+  - version history
+  - entity hash for integrity
+  - origin system
+end note
+History <-- History : metadata
+deactivate History
+
+Auditor <-- History : auditReport
+deactivate History
+
+' System integration scenario
+Service -> Record : prepareForExternalSync()
+activate Record
+Record -> Record : getExternalId()
+Record -> Record : getEntityHash()
+Record -> Record : getVersion()
+Record -> Record : getOrigin()
+Service <-- Record : syncData
+deactivate Record
+@enduml
+----
+
+*Implementation Details:*
+The National Records Management System uses BaseEntity for all official citizen records. When Records Manager Prakash creates a new citizenship record, the system automatically generates a UUID, timestamps the creation, records Prakash as the creator, and calculates a SHA-256 hash of the record's content for integrity verification. The system also captures which government office created the record through the `origin` field.
+
+The optimistic locking mechanism prevents data corruption when multiple offices try to update the same record simultaneously. For example, when both the Passport Office and the Electoral Commission attempt to update Anita Gurung's address at the same time, the second update fails with a version conflict, requiring manual resolution.
+
+For cross-system integration, the externalId field stores references to legacy system identifiers. When integrating with the national ID card system, each citizen record maintains its original ID from that system (e.g., "NID-4295781"), enabling cross-reference between systems during the digital transition.
+
+In a multi-tenant deployment, the Department of Foreign Affairs, Department of Immigration, and Nepal Police each operate as separate tenants, with the tenant field ensuring that officials only access records relevant to their department, while maintaining a unified citizen identity across systems.
+
+*Technical Implementation Example:*
+```kotlin
+abstract class BaseEntity {
+    @Id
+    val id: UUID = UUID.randomUUID()
+    
+    @CreationTimestamp
+    val createdAt: Instant = Instant.now()
+    
+    @ManyToOne
+    val createdBy: User? = null
+    
+    @UpdateTimestamp
+    var updatedAt: Instant? = null
+    
+    @ManyToOne
+    var updatedBy: User? = null
+    
+    @Version
+    var version: Long = 0
+    
+    @Column(length = 64)
+    var entityHash: String? = null
+    
+    var origin: String? = null
+    
+    var externalId: String? = null
+    
+    @ManyToOne
+    var tenant: Tenant? = null
+    
+    fun calculateHash(): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashableFields = this.getHashableFields()
+        return digest.digest(hashableFields.toString().toByteArray()).encodeToBase64String()
+    }
+    
+    protected abstract fun getHashableFields(): List<Any?>
+}
+```

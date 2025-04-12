@@ -1,0 +1,227 @@
+===== `SpatialEntity`
+Abstract base class for entities with geographic components.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `point`              | Geographic point location (longitude, latitude)
+| `polygon`            | Geographic boundary represented as a polygon
+| `centroid`           | Calculated center point of the entity
+| `area`               | Calculated area covered by the entity in square meters
+| `elevation`          | Elevation above sea level in meters
+| `spatialReference`   | Coordinate reference system identifier
+| `accuracy`           | Accuracy of spatial data in meters
+| `source`             | Source of spatial data (GPS, SURVEY, MAP, etc.)
+| `lastGeometryUpdate` | When the spatial data was last updated
+|===
+
+====== Contextual Use Cases for SpatialEntity
+
+*Real-World Scenario:* Road Infrastructure Planning
+
+[plantuml]
+----
+@startuml
+actor "Municipal Engineer\n(Binod Gurung)" as Engineer
+actor "GIS Specialist\n(Anjali Shah)" as GIS
+participant "RoadProject\nextends SpatialEntity" as Road
+participant "LandParcel" as Parcel
+participant "SpatialAnalysis\nService" as Spatial
+participant "PropertyOwner\nRegistry" as Owners
+participant "Notification\nService" as Notify
+
+Engineer -> Road : create project
+activate Road
+Road -> Road : setName("Lakeside Eastern Access Road")
+Road -> Road : setProjectCode("PWD-PKR-2023-45")
+Road -> Road : setRoadType(URBAN_COLLECTOR)
+Road -> Road : setPlannedWidth(9.0) // meters
+Engineer <-- Road : road project created
+deactivate Road
+
+GIS -> Road : defineRoadAlignment
+activate Road
+Road -> Road : setLineString(coordinatesArray)
+Road -> Road : calculateLength() // 2.5 km
+Road -> Spatial : generateBufferPolygon(lineString, width)
+activate Spatial
+Road <-- Spatial : roadFootprintPolygon
+deactivate Spatial
+Road -> Road : setPolygon(roadFootprintPolygon)
+GIS <-- Road : alignment defined
+deactivate Road
+
+Engineer -> Spatial : analyzeImpactedProperties
+activate Spatial
+Spatial -> Parcel : findIntersectingParcels(roadFootprintPolygon)
+activate Parcel
+Spatial <-- Parcel : 37 affected parcels
+deactivate Parcel
+
+Spatial -> Spatial : calculateImpactStatistics()
+Spatial -> Spatial : generateImpactMap()
+Engineer <-- Spatial : impact analysis report
+deactivate Spatial
+
+Engineer -> Road : updateRoadMetadata
+activate Road
+Road -> Road : setAffectedParcelCount(37)
+Road -> Road : setEstimatedAcquisitionCost(NPR 125,000,000)
+Road -> Road : setExpectedConstructionStart(nextFiscalYear)
+Engineer <-- Road : metadata updated
+deactivate Road
+
+Engineer -> Spatial : optimizeAlignment
+activate Spatial
+Spatial -> Spatial : runConstraintSolver()
+Spatial -> Spatial : minimizePropertyImpact()
+Spatial -> Spatial : ensureDesignStandards()
+Spatial -> Road : proposeAlternateAlignment()
+activate Road
+Road -> Road : setAlternativeLineString(optimizedCoordinates)
+Road -> Road : setAlternativePolygon(optimizedFootprint)
+Spatial <-- Road : alternative recorded
+deactivate Road
+Engineer <-- Spatial : optimization results
+deactivate Spatial
+
+Engineer -> Road : selectFinalAlignment
+activate Road
+Road -> Road : setFinalizedAlignment(OPTIMIZED)
+Road -> Road : setFinalImpactedParcelIds(finalParcelList)
+Road -> Road : calculateFinalCostEstimate()
+Engineer <-- Road : alignment finalized
+deactivate Road
+
+Engineer -> Owners : getAffectedOwners
+activate Owners
+Owners -> Owners : lookupOwnersByParcelIds(affectedParcelIds)
+Engineer <-- Owners : affected owners list
+deactivate Owners
+
+Engineer -> Notify : notifyStakeholders
+activate Notify
+Notify -> Notify : scheduleCommunityMeeting()
+Notify -> Notify : sendPropertyAcquisitionNotices()
+Engineer <-- Notify : notifications sent
+deactivate Notify
+@enduml
+----
+
+*Implementation Details:*
+The Pokhara Municipality Infrastructure Department uses SpatialEntity to plan and manage a new urban road project. This implementation ensures accurate geographic representation, impact analysis, and stakeholder coordination.
+
+Municipal Engineer Binod creates a new road project entity, specifying its basic attributes. GIS Specialist Anjali then defines the actual geographic alignment of the proposed road, creating a LineString for the centerline. The system automatically calculates the road length as 2.5 kilometers. Using the road's planned width of 9 meters, the system generates a buffer polygon that represents the actual footprint of the road including shoulders and drainage.
+
+With the road alignment defined, the system leverages its spatial capabilities to identify affected properties by performing a spatial intersection analysis with the land parcel database. The analysis finds 37 parcels that will be impacted by the new road. Using this information, the engineer updates the project metadata with the affected parcel count and estimates the land acquisition cost at NPR 125,000,000.
+
+Seeking to minimize impact, the engineer runs an optimization process which uses constraint-based algorithms to suggest an alternative alignment that reduces property impacts while maintaining engineering standards. The system creates an alternative LineString and polygon for this optimized route, keeping both versions for comparison. After reviewing the alternatives, the engineer selects the optimized alignment as the final route.
+
+Using the finalized road alignment, the system retrieves contact information for all affected property owners, and the notification service schedules a community meeting and sends formal notices to these stakeholders.
+
+The SpatialEntity capabilities provide several critical functions in this context:
+1. Accurate geographic representation of linear infrastructure
+2. Buffer generation for impact footprint analysis
+3. Spatial intersection to identify affected properties
+4. Area calculation for cost estimation
+5. Alternative alignment comparison
+6. Spatial accuracy tracking to ensure engineering precision
+
+The system also maintains metadata about the spatial data, including the source (SURVEY), spatial reference system (WGS84), and accuracy (0.5 meters), ensuring that engineering decisions are based on reliable geographic information.
+
+*Technical Implementation Example:*
+```kotlin
+abstract class SpatialEntity : BaseEntity() {
+    @Type(type = "org.hibernate.spatial.GeometryType")
+    var point: Point? = null
+    
+    @Type(type = "org.hibernate.spatial.GeometryType")
+    var polygon: Polygon? = null
+    
+    @Type(type = "org.hibernate.spatial.GeometryType")
+    var centroid: Point? = null
+    
+    var area: Double? = null
+    
+    var elevation: Double? = null
+    
+    var spatialReference: String = "EPSG:4326" // WGS84
+    
+    var accuracy: Double? = null
+    
+    @Enumerated(EnumType.STRING)
+    var source: SpatialDataSource? = null
+    
+    var lastGeometryUpdate: Instant? = null
+    
+    @PrePersist
+    @PreUpdate
+    fun calculateDerivedSpatialAttributes() {
+        if (polygon != null && centroid == null) {
+            centroid = polygon?.centroid
+        }
+        
+        if (polygon != null && area == null) {
+            area = calculateAreaInSquareMeters(polygon!!)
+        }
+        
+        lastGeometryUpdate = Instant.now()
+    }
+    
+    fun setFromGeoJSON(geoJSON: String) {
+        val reader = GeoJSONReader()
+        val geometry = reader.read(geoJSON)
+        
+        when (geometry) {
+            is Point -> this.point = geometry
+            is Polygon -> {
+                this.polygon = geometry
+                this.centroid = geometry.centroid
+                this.area = calculateAreaInSquareMeters(geometry)
+            }
+            // Handle other geometry types as needed
+        }
+        
+        lastGeometryUpdate = Instant.now()
+    }
+    
+    fun toGeoJSON(): String {
+        val writer = GeoJSONWriter()
+        return when {
+            polygon != null -> writer.write(polygon)
+            point != null -> writer.write(point)
+            else -> "{}"
+        }
+    }
+    
+    private fun calculateAreaInSquareMeters(polygon: Polygon): Double {
+        // Calculation logic would depend on the specific geo library used
+        // This is a simplified representation
+        return GeometryUtils.area(polygon)
+    }
+    
+    fun containsPoint(longitude: Double, latitude: Double): Boolean {
+        if (polygon == null) return false
+        
+        val point = GeometryFactory().createPoint(Coordinate(longitude, latitude))
+        return polygon!!.contains(point)
+    }
+    
+    fun intersects(other: SpatialEntity): Boolean {
+        if (this.polygon == null || other.polygon == null) return false
+        
+        return this.polygon!!.intersects(other.polygon)
+    }
+}
+
+enum class SpatialDataSource {
+    GPS,
+    SURVEY,
+    SATELLITE,
+    DRONE,
+    DIGITIZED_MAP,
+    LIDAR,
+    CROWDSOURCED,
+    HISTORICAL_RECORD
+}
+```

@@ -1,0 +1,222 @@
+===== `LocalizedEntity`
+Extends BaseEntity with internationalization capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `defaultLocale`      | Default locale for this entity's content
+| `translationKeys`    | Collection of translation keys associated with this entity
+| `availableLanguages` | Languages for which translations exist
+| `translationLock`    | Optional lock to prevent concurrent translation updates
+| `lastTranslated`     | Timestamp when entity was last translated
+| `autoTranslate`      | Whether to automatically translate to new supported languages
+|===
+
+====== Contextual Use Cases for LocalizedEntity
+
+*Real-World Scenario:* Multilingual Public Services Portal
+
+[plantuml]
+----
+@startuml
+actor "Content Manager\n(Anisha Sharma)" as Manager
+actor "Nepali Translator\n(Gopal Shrestha)" as Translator
+actor "Citizen\n(Maya Tamang)" as Citizen
+participant "PublicService\nextends LocalizedEntity" as Service
+participant "TranslationService" as Translation
+participant "LanguageDetector" as Detector
+participant "ContentRepository" as Repo
+
+Manager -> Service : createServiceDescription
+activate Service
+Service -> Service : setName("Birth Certificate Application")
+Service -> Service : setDescription("Process to apply for a birth certificate...")
+Service -> Service : setEligibilityCriteria("Parents with newborn children...")
+Service -> Service : setRequiredDocuments(documentsList)
+Service -> Service : setDefaultLocale("en")
+Service -> Service : generateTranslationKeys()
+activate Service
+Service -> Service : nameKey = "service.birth-cert.name"
+Service -> Service : descriptionKey = "service.birth-cert.description"
+Service -> Service : eligibilityKey = "service.birth-cert.eligibility"
+Service -> Service : documentsKey = "service.birth-cert.documents"
+Service <-- Service : translationKeys
+deactivate Service
+Manager <-- Service : serviceCreated
+deactivate Service
+
+Manager -> Translation : addTranslation(translationKeys, "en", englishContent)
+activate Translation
+Translation -> Translation : storeTranslations(keys, "en", content)
+Translation -> Service : updateAvailableLanguages()
+activate Service
+Service -> Service : availableLanguages.add("en")
+Translation <-- Service : updated
+deactivate Service
+Manager <-- Translation : translationsAdded
+deactivate Translation
+
+Translator -> Service : getForTranslation(serviceId)
+activate Service
+Translator <-- Service : serviceWithTranslationKeys
+deactivate Service
+
+Translator -> Translation : translateToNepali(translationKeys, nepaliContent)
+activate Translation
+Translation -> Translation : validateTranslationCompleteness()
+Translation -> Translation : storeTranslations(keys, "ne", content)
+Translation -> Service : updateAvailableLanguages()
+activate Service
+Service -> Service : availableLanguages.add("ne")
+Service -> Service : setLastTranslated(now())
+Translation <-- Service : updated
+deactivate Service
+Translator <-- Translation : translationsAdded
+deactivate Translation
+
+Citizen -> Service : view(serviceId, "ne")
+activate Service
+Service -> Service : getAvailableLanguages()
+Service -> Service : isLanguageAvailable("ne")
+Service -> Translation : getTranslatedContent(translationKeys, "ne")
+activate Translation
+Service <-- Translation : nepaliContent
+deactivate Translation
+Service -> Service : applyTranslations(nepaliContent)
+Citizen <-- Service : localizedService
+deactivate Service
+
+Manager -> Service : updateServiceDescription
+activate Service
+Service -> Service : setDescription("Updated process to apply for a birth certificate...")
+Service -> Detector : hasContentChanged("service.birth-cert.description")
+activate Detector
+Service <-- Detector : true
+deactivate Detector
+Service -> Service : markTranslationsOutdated("service.birth-cert.description")
+Manager <-- Service : serviceUpdated
+deactivate Service
+
+Manager -> Translation : enableAutoTranslation(serviceId)
+activate Translation
+Translation -> Service : setAutoTranslate(true)
+activate Service
+Translation <-- Service : updated
+deactivate Service
+Translation -> Translation : scheduleAutomaticTranslation()
+Manager <-- Translation : autoTranslationEnabled
+deactivate Translation
+
+' New language addition scenario
+Manager -> Translation : addSupportedLanguage("mh", "Maithili")
+activate Translation
+Translation -> Translation : addLanguageToSystem("mh")
+Translation -> Service : getAutoTranslateEntities()
+activate Service
+Translation <-- Service : entities
+deactivate Service
+Translation -> Translation : queueForAutoTranslation(entities, "mh")
+Manager <-- Translation : languageAdded
+deactivate Translation
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Digital Services Portal uses LocalizedEntity to deliver a multilingual experience for citizens from diverse linguistic backgrounds. This implementation enables Nepal's government to provide services in multiple languages, respecting the country's linguistic diversity.
+
+Content Manager Anisha creates a new public service page for Birth Certificate Applications in English. The system automatically generates translation keys for each translatable field (name, description, eligibility criteria, document requirements) and sets English as the default locale.
+
+Nepali Translator Gopal retrieves the service's translation keys and provides professional translations for each field. The system stores these translations, updates the availableLanguages to include Nepali, and records the lastTranslated timestamp.
+
+When citizen Maya accesses the service page, the system detects her Nepali language preference, checks if translations are available, and retrieves the translated content by the translation keys. The system applies these translations to the service entity fields, delivering a fully localized experience to Maya in her preferred language.
+
+When content is updated, the system tracks which specific fields have changed and marks only those translations as outdated. This selective approach prevents unnecessary retranslation of unchanged content.
+
+For efficiency, the portal supports autoTranslate, which automatically schedules machine translation when new languages are added to the system. This ensures basic coverage across all supported languages while professional translators work on higher-quality versions.
+
+The system currently supports multiple languages:
+- Nepali (national language)
+- English (official language)
+- Maithili (regional language)
+- Bhojpuri (regional language)
+- Tamang (indigenous language)
+- Gurung (indigenous language)
+- Newari (indigenous language)
+
+The LocalizedEntity approach provides several benefits in this context:
+1. Centralized management of translations with clear versioning
+2. Ability to track translation status across multiple languages
+3. Efficient partial updates when content changes
+4. Support for both professional translation and machine translation workflows
+5. Clear separation between content creation and translation processes
+6. Consistent user experience across different languages
+
+*Technical Implementation Example:*
+```kotlin
+abstract class LocalizedEntity : BaseEntity() {
+    var defaultLocale: String = "en"
+    
+    @ElementCollection
+    var translationKeys: MutableMap<String, String> = mutableMapOf()
+    
+    @ElementCollection
+    var availableLanguages: MutableSet<String> = mutableSetOf()
+    
+    var translationLock: String? = null
+    
+    var lastTranslated: Instant? = null
+    
+    var autoTranslate: Boolean = false
+    
+    @ElementCollection
+    private var outdatedTranslations: MutableMap<String, MutableSet<String>> = mutableMapOf()
+    
+    fun updateTranslationKey(field: String, contentHash: String) {
+        val oldKey = translationKeys[field]
+        if (oldKey != null && oldKey != contentHash) {
+            // Mark translations as outdated when content changes
+            for (language in availableLanguages) {
+                if (language != defaultLocale) {
+                    markTranslationOutdated(field, language)
+                }
+            }
+        }
+        translationKeys[field] = contentHash
+    }
+    
+    fun markTranslationOutdated(field: String, language: String) {
+        if (!outdatedTranslations.containsKey(language)) {
+            outdatedTranslations[language] = mutableSetOf()
+        }
+        outdatedTranslations[language]?.add(field)
+    }
+    
+    fun getOutdatedTranslations(language: String): Set<String> {
+        return outdatedTranslations[language] ?: emptySet()
+    }
+    
+    fun markTranslationCurrent(field: String, language: String) {
+        outdatedTranslations[language]?.remove(field)
+    }
+    
+    fun acquireTranslationLock(userId: String): Boolean {
+        if (translationLock != null) {
+            return false
+        }
+        translationLock = userId
+        return true
+    }
+    
+    fun releaseTranslationLock(userId: String): Boolean {
+        if (translationLock != userId) {
+            return false
+        }
+        translationLock = null
+        return true
+    }
+    
+    fun needsTranslation(language: String): Boolean {
+        return language !in availableLanguages || getOutdatedTranslations(language).isNotEmpty()
+    }
+}
+```

@@ -1,0 +1,224 @@
+===== `MediaEntity`
+Abstract base class for entities with associated media.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `primaryPhotoKey`   | Storage key for primary photo/image
+| `photoKeys`         | Collection of storage keys for additional photos
+| `videoKeys`         | Collection of storage keys for videos
+| `documentKeys`      | Collection of storage keys for documents
+| `thumbnailKey`      | Storage key for thumbnail image
+| `coverImageKey`     | Storage key for cover image
+| `totalStorageUsed`  | Total storage space used by media in bytes
+| `mediaMetadata`     | JSON metadata about media files (dimensions, format, etc.)
+| `lastMediaUpdate`   | Timestamp when media was last updated
+| `mediaPermissions`  | Permission settings for associated media
+| `cdnUrls`           | Precomputed CDN URLs for frequently accessed media
+|===
+
+====== Contextual Use Cases for MediaEntity
+
+*Real-World Scenario:* Tourism Destination Management System
+
+[plantuml]
+----
+@startuml
+actor "Tourism Officer\n(Sarita Basnet)" as Officer
+actor "Tourist\n(John Smith)" as Tourist
+actor "Web Editor\n(Krishna Poudel)" as Editor
+participant "TouristDestination\nextends MediaEntity" as Destination
+participant "StorageService" as Storage
+participant "ImageProcessor" as ImgProcessor
+participant "TourismPortal" as Portal
+participant "MediaSyncService" as Sync
+
+Officer -> Destination : createDestination("Phewa Lake")
+activate Destination
+Destination -> Destination : setName("Phewa Lake")
+Destination -> Destination : setDescription("Beautiful lake in Pokhara...")
+Destination -> Destination : setLocation(latitude, longitude)
+Officer <-- Destination : destination created
+deactivate Destination
+
+Officer -> Storage : uploadPrimaryPhoto(phewaLakePhoto)
+activate Storage
+Storage -> Storage : storeImage(photo)
+Storage -> Storage : generateKey("destinations/phewa/primary.jpg")
+Officer <-- Storage : primaryPhotoKey
+deactivate Storage
+
+Officer -> Destination : setPrimaryPhoto(primaryPhotoKey)
+activate Destination
+Destination -> Destination : primaryPhotoKey = "destinations/phewa/primary.jpg"
+Destination -> ImgProcessor : generateThumbnail(primaryPhotoKey)
+activate ImgProcessor
+ImgProcessor -> ImgProcessor : createThumbnail(256x256)
+ImgProcessor -> Storage : storeImage(thumbnail)
+activate Storage
+ImgProcessor <-- Storage : thumbnailKey
+deactivate Storage
+Destination <-- ImgProcessor : "destinations/phewa/primary_thumb.jpg"
+deactivate ImgProcessor
+Destination -> Destination : thumbnailKey = "destinations/phewa/primary_thumb.jpg"
+Officer <-- Destination : primary photo set
+deactivate Destination
+
+Officer -> Destination : addAdditionalPhotos(photoList)
+activate Destination
+loop for each photo
+  Destination -> Storage : storeImage(photo)
+  activate Storage
+  Destination <-- Storage : photoKey
+  deactivate Storage
+  Destination -> Destination : photoKeys.add(photoKey)
+end
+Destination -> Destination : updateTotalStorageUsed()
+Officer <-- Destination : photos added
+deactivate Destination
+
+Officer -> Destination : addPromotionalVideo(videoFile)
+activate Destination
+Destination -> Storage : storeVideo(videoFile)
+activate Storage
+Storage -> Storage : generateKey("destinations/phewa/promo.mp4")
+Destination <-- Storage : videoKey
+deactivate Storage
+Destination -> Destination : videoKeys.add(videoKey)
+Destination -> Destination : updateMediaMetadata(videoKey, videoDuration, resolution)
+Officer <-- Destination : video added
+deactivate Destination
+
+Officer -> Destination : addBrochureDocument(pdfFile)
+activate Destination
+Destination -> Storage : storeDocument(pdfFile)
+activate Storage
+Destination <-- Storage : documentKey
+deactivate Storage
+Destination -> Destination : documentKeys.add(documentKey)
+Officer <-- Destination : document added
+deactivate Destination
+
+Editor -> Destination : selectCoverImage(photoKey)
+activate Destination
+Destination -> Destination : coverImageKey = photoKey
+Destination -> Destination : precomputeCdnUrls()
+Editor <-- Destination : cover image set
+deactivate Destination
+
+Tourist -> Portal : viewDestination("phewa-lake")
+activate Portal
+Portal -> Destination : getDestinationDetails()
+activate Destination
+Portal <-- Destination : destinationData
+deactivate Destination
+Portal -> Portal : renderDestinationPage(destinationData)
+Tourist <-- Portal : destination page with media
+deactivate Portal
+
+Tourist -> Portal : downloadBrochure()
+activate Portal
+Portal -> Destination : getBrochureUrl()
+activate Destination
+Destination -> Destination : getSignedUrl(documentKeys[0])
+Portal <-- Destination : downloadUrl
+deactivate Destination
+Tourist <-- Portal : brochure PDF
+deactivate Portal
+
+Sync -> Destination : syncToCdn()
+activate Destination
+Destination -> Sync : getMediaKeys()
+activate Sync
+loop for each media key
+  Sync -> Sync : uploadToCdn(mediaKey)
+  Sync -> Sync : generateCdnUrl(mediaKey)
+end
+Destination <-- Sync : cdnUrlMap
+deactivate Sync
+Destination -> Destination : cdnUrls = cdnUrlMap
+Sync <-- Destination : sync complete
+deactivate Destination
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Tourism Destination Management System uses MediaEntity to manage the rich multimedia content for tourist attractions. This implementation ensures optimal delivery of visual content across web and mobile platforms.
+
+Tourism Officer Sarita creates a new destination entry for Phewa Lake in Pokhara. After setting up basic information, she uploads a high-resolution primary photo (3840x2160 pixels, 5.2MB). The system stores this image and automatically generates a thumbnail (256x256 pixels) for listing pages and mobile applications.
+
+Sarita then uploads additional photos showcasing different views and activities at the lake, a promotional video (1080p, 2 minutes), and a PDF brochure with detailed visitor information. The system tracks all these media assets with unique storage keys and maintains metadata such as dimensions, duration, and file sizes.
+
+Web Editor Krishna later selects the most appealing image as the destination's cover photo, which will appear on featured destinations and social media shares. The system generates precomputed CDN URLs for these frequently accessed images to improve performance.
+
+When tourist John visits the tourism portal, he sees the optimized images loaded from CDN servers for faster page loads. He can watch the promotional video and download the brochure, both served with appropriate caching and delivery mechanisms.
+
+The system implements several optimization strategies:
+1. Automated thumbnail generation for listing pages
+2. Responsive image generation for different device sizes
+3. Video transcoding for multiple bandwidth profiles
+4. Lazy loading of additional photos
+5. CDN integration for global content delivery
+6. Bandwidth-aware media selection for mobile users
+
+The implementation also includes security features:
+1. Permission-based media access (some promotional materials only for registered tour operators)
+2. Signed URL generation for controlled document downloads
+3. Watermarking of high-resolution images
+4. Copyright and attribution metadata
+
+*Technical Implementation Example:*
+```kotlin
+abstract class MediaEntity : BaseEntity() {
+    var primaryPhotoKey: String? = null
+    
+    @ElementCollection
+    var photoKeys: MutableSet<String> = mutableSetOf()
+    
+    @ElementCollection
+    var videoKeys: MutableSet<String> = mutableSetOf()
+    
+    @ElementCollection
+    var documentKeys: MutableSet<String> = mutableSetOf()
+    
+    var thumbnailKey: String? = null
+    
+    var coverImageKey: String? = null
+    
+    var totalStorageUsed: Long = 0
+    
+    @Column(columnDefinition = "jsonb")
+    var mediaMetadata: String? = null
+    
+    var lastMediaUpdate: Instant? = null
+    
+    @Column(columnDefinition = "jsonb")
+    var mediaPermissions: String? = null
+    
+    @Column(columnDefinition = "jsonb")
+    var cdnUrls: String? = null
+    
+    fun addPhoto(photoKey: String, sizeBytes: Long, metadata: Map<String, Any>) {
+        this.photoKeys.add(photoKey)
+        this.totalStorageUsed += sizeBytes
+        this.lastMediaUpdate = Instant.now()
+        
+        // Update metadata
+        val currentMetadata = objectMapper.readValue<MutableMap<String, Any>>(
+            this.mediaMetadata ?: "{}"
+        )
+        currentMetadata[photoKey] = metadata
+        this.mediaMetadata = objectMapper.writeValueAsString(currentMetadata)
+    }
+    
+    fun getOptimizedImageUrl(width: Int, height: Int): String {
+        val key = primaryPhotoKey ?: coverImageKey ?: return ""
+        return "${cdnBaseUrl}/resize/${width}x${height}/${key}"
+    }
+    
+    fun getTotalMediaCount(): Int {
+        return photoKeys.size + videoKeys.size + documentKeys.size + 
+               (if (primaryPhotoKey != null) 1 else 0)
+    }
+}
+```

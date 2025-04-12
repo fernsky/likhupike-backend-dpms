@@ -1,0 +1,261 @@
+===== `WorkflowEntity`
+Abstract base class for entities that follow a business process workflow.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `workflowDefinitionId`| Reference to the workflow definition this entity follows
+| `workflowInstanceId`  | Identifier for this specific workflow instance
+| `currentState`        | Current state in the workflow process
+| `previousStates`      | Collection of previous states this entity has been through
+| `nextPossibleStates`  | Collection of potential next states based on current state
+| `stateEnteredAt`      | Timestamp when the current state was entered
+| `stateDeadline`       | Optional deadline for completing the current state
+| `assignee`            | User currently assigned to handle this workflow state
+| `watchers`            | Collection of users monitoring this workflow
+| `workflowStartedAt`   | When this workflow instance was initiated
+| `workflowCompletedAt` | When this workflow instance was completed (if finished)
+| `workflowData`        | JSON data specific to this workflow instance
+| `stateTransitionHistory` | History of state transitions with timestamps and actors
+| `activeTaskIds`       | IDs of active tasks that must be completed in current state
+| `workflowPriority`    | Priority level for this workflow instance
+|===
+
+====== Contextual Use Cases for WorkflowEntity
+
+*Real-World Scenario:* Citizen Grievance Management System
+
+[plantuml]
+----
+@startuml
+actor "Citizen\n(Deepak Lama)" as Citizen
+participant "Grievance\nextends WorkflowEntity" as Grievance
+participant "Municipality\nService Desk" as ServiceDesk
+participant "Water Department\nOfficer" as WaterDept
+participant "Engineering\nDepartment" as Engineer
+participant "Notification\nService" as Notify
+participant "Escalation\nService" as Escalate
+
+Citizen -> ServiceDesk : submit grievance
+ServiceDesk -> Grievance : create
+activate Grievance
+Grievance -> Grievance : setSubject("Frequent water outages in Baluwatar Area")
+Grievance -> Grievance : setDetails("No water supply for 3 days each week...")
+Grievance -> Grievance : setCategory(UTILITIES)
+Grievance -> Grievance : setSubcategory(WATER_SUPPLY)
+Grievance -> Grievance : setPriority(HIGH)
+Grievance -> Grievance : setWorkflowDefinitionId("citizen-grievance-standard")
+Grievance -> Grievance : setCurrentState("SUBMITTED")
+Grievance -> Grievance : generateTrackingNumber("GR-KTM-2023-4587")
+ServiceDesk <-- Grievance : grievance created
+deactivate Grievance
+
+ServiceDesk -> Grievance : assign to department
+activate Grievance
+Grievance -> Grievance : setCurrentState("UNDER_REVIEW")
+Grievance -> Grievance : addPreviousState("SUBMITTED")
+Grievance -> Grievance : setNextPossibleStates(["ASSIGNED", "REJECTED", "NEEDS_INFO"])
+Grievance -> Grievance : setAssignee(waterDepartmentId)
+Grievance -> Grievance : setStateEnteredAt(now())
+Grievance -> Grievance : setStateDeadline(now() + 2 days)
+ServiceDesk <-- Grievance : assigned to Water Department
+deactivate Grievance
+
+ServiceDesk -> Notify : inform citizen
+activate Notify
+Notify -> Notify : sendSMS("Your grievance GR-KTM-2023-4587 has been assigned to Water Department")
+Notify -> Notify : sendEmail(detailedAssignmentNotification)
+ServiceDesk <-- Notify : citizen notified
+deactivate Notify
+
+WaterDept -> Grievance : review grievance
+activate Grievance
+Grievance -> Grievance : getDetails()
+Grievance -> Grievance : getAttachments()
+Grievance -> Grievance : getAreaAffected()
+WaterDept <-- Grievance : grievance details
+deactivate Grievance
+
+WaterDept -> Grievance : request technical assessment
+activate Grievance
+Grievance -> Grievance : setCurrentState("ASSESSMENT_NEEDED")
+Grievance -> Grievance : addPreviousState("UNDER_REVIEW")
+Grievance -> Grievance : createTask("Conduct water pressure analysis")
+Grievance -> Grievance : assignTask(engineeringDepartmentId)
+Grievance -> Grievance : setTaskDeadline(now() + 3 days)
+Grievance -> Grievance : addActiveTaskId(taskId)
+WaterDept <-- Grievance : technical assessment requested
+deactivate Grievance
+
+Engineer -> Grievance : submit assessment findings
+activate Grievance
+Grievance -> Grievance : addAssessmentReport("Pressure analysis shows supply line damaged...")
+Grievance -> Grievance : markTaskComplete(taskId)
+Grievance -> Grievance : removeActiveTaskId(taskId)
+Engineer <-- Grievance : assessment recorded
+deactivate Grievance
+
+WaterDept -> Grievance : resolve issue
+activate Grievance
+Grievance -> Grievance : setCurrentState("RESOLVED")
+Grievance -> Grievance : addPreviousState("ASSESSMENT_NEEDED")
+Grievance -> Grievance : setResolutionDetails("Repaired damaged supply line at junction 47B...")
+Grievance -> Grievance : setResolutionDate(now())
+Grievance -> Grievance : setResolvedBy(officerId)
+WaterDept <-- Grievance : marked as resolved
+deactivate Grievance
+
+Notify -> Citizen : send resolution notification
+activate Citizen
+Citizen -> Grievance : verify resolution
+activate Grievance
+Grievance -> Grievance : getSatisfactionSurvey()
+Citizen <-- Grievance : satisfaction survey
+deactivate Grievance
+deactivate Citizen
+
+Citizen -> Grievance : dispute resolution
+activate Grievance
+Grievance -> Grievance : setCurrentState("RESOLUTION_DISPUTED")
+Grievance -> Grievance : addPreviousState("RESOLVED")
+Grievance -> Grievance : setDisputeReason("Water service still intermittent...")
+Citizen <-- Grievance : dispute recorded
+deactivate Grievance
+
+Grievance -> Escalate : trigger escalation
+activate Escalate
+Escalate -> Escalate : incrementEscalationLevel()
+Escalate -> Escalate : notifySupervisor()
+Escalate -> Grievance : setCurrentState("ESCALATED")
+Escalate -> Grievance : setAssignee(waterDepartmentHeadId)
+Escalate -> Grievance : updateStateDeadline(now() + 1 day)
+Escalation <-- Grievance : escalation recorded
+deactivate Escalate
+@enduml
+----
+
+*Implementation Details:*
+The Kathmandu Metropolitan City's Citizen Grievance Management System uses WorkflowEntity to track and resolve citizen complaints through a structured process. This implementation ensures accountability, timely responses, and proper service delivery.
+
+The process begins when citizen Deepak Lama submits a complaint about water supply issues in his neighborhood. The system creates a Grievance entity with an initial state of "SUBMITTED" and assigns it a tracking number that Deepak can use to monitor progress.
+
+A service desk officer assigns the grievance to the Water Department, changing its state to "UNDER_REVIEW" and setting a 2-day deadline for initial assessment. The system records this state transition in the previousStates collection and updates the assignee to the Water Department.
+
+After reviewing the grievance, the Water Department officer determines technical assessment is needed and creates a task within the workflow. The state changes to "ASSESSMENT_NEEDED" and the task is assigned to the Engineering Department with its own 3-day deadline. The task ID is stored in activeTaskIds to track its completion.
+
+Once the Engineering Department completes their assessment, they mark the task as complete, which updates the activeTaskIds collection. The Water Department resolves the issue, changing the state to "RESOLVED" and providing resolution details.
+
+When notified of the resolution, Deepak disputes it because the problem continues intermittently. This triggers a state change to "RESOLUTION_DISPUTED" and an automatic escalation to the Water Department Head with a 1-day deadline, demonstrating how the workflow handles exceptions and escalations.
+
+Throughout this process, WorkflowEntity provides:
+- Clear state tracking and history with previousStates
+- Deadline management with stateDeadline to ensure timely responses
+- Assignment tracking with assignee and state-specific responsibilities
+- Task management with activeTaskIds for complex workflows
+- Escalation support with escalationLevel for dispute resolution
+- Comprehensive state transition history for accountability
+
+The system supports many other citizen-government interactions, including business license applications, construction permit reviews, and voter registration processes, all leveraging the same WorkflowEntity capabilities with different workflow definitions.
+
+*Technical Implementation Example:*
+```kotlin
+abstract class WorkflowEntity : ApprovableEntity() {
+    var workflowDefinitionId: String? = null
+    
+    var workflowInstanceId: String? = null
+    
+    var currentState: String? = null
+    
+    @ElementCollection
+    var previousStates: MutableList<String> = mutableListOf()
+    
+    @ElementCollection
+    var nextPossibleStates: MutableList<String> = mutableListOf()
+    
+    var stateEnteredAt: Instant? = null
+    
+    var stateDeadline: LocalDateTime? = null
+    
+    @ManyToOne
+    var assignee: User? = null
+    
+    @ManyToMany
+    var watchers: MutableSet<User> = mutableSetOf()
+    
+    var workflowStartedAt: Instant? = null
+    
+    var workflowCompletedAt: Instant? = null
+    
+    @Column(columnDefinition = "jsonb")
+    var workflowData: String? = null
+    
+    @OneToMany(mappedBy = "entity", cascade = [CascadeType.ALL])
+    var stateTransitionHistory: MutableList<StateTransition> = mutableListOf()
+    
+    @ElementCollection
+    var activeTaskIds: MutableList<String> = mutableListOf()
+    
+    @Enumerated(EnumType.STRING)
+    var workflowPriority: WorkflowPriority = WorkflowPriority.NORMAL
+    
+    fun transitionTo(newState: String, user: User) {
+        validateStateTransition(newState)
+        previousStates.add(currentState ?: "")
+        
+        val transition = StateTransition(
+            fromState = currentState,
+            toState = newState,
+            transitionedBy = user,
+            transitionedAt = Instant.now(),
+            entityId = this.id.toString(),
+            entityType = this.javaClass.simpleName
+        )
+        
+        stateTransitionHistory.add(transition)
+        currentState = newState
+        stateEnteredAt = Instant.now()
+        
+        determineNextPossibleStates()
+        
+        if (isTerminalState(newState)) {
+            workflowCompletedAt = Instant.now()
+        }
+    }
+    
+    fun addActiveTask(taskId: String, deadline: LocalDateTime?) {
+        activeTaskIds.add(taskId)
+        // Additional task creation logic
+    }
+    
+    fun completeTask(taskId: String) {
+        activeTaskIds.remove(taskId)
+        // Additional task completion logic
+    }
+    
+    private fun validateStateTransition(newState: String) {
+        if (!nextPossibleStates.contains(newState)) {
+            throw IllegalStateTransitionException(
+                "Cannot transition from $currentState to $newState. " +
+                "Allowed transitions are: $nextPossibleStates"
+            )
+        }
+    }
+    
+    private fun determineNextPossibleStates() {
+        // Logic to determine next possible states based on workflow definition
+        // and current state
+    }
+    
+    private fun isTerminalState(state: String): Boolean {
+        // Logic to determine if a state is terminal
+        return false // Placeholder
+    }
+}
+
+enum class WorkflowPriority {
+    LOW, 
+    NORMAL, 
+    HIGH, 
+    URGENT
+}
+```

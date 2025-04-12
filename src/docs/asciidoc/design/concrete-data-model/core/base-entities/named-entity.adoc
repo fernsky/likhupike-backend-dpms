@@ -1,0 +1,193 @@
+===== `NamedEntity`
+Abstract base class for entities with name and description.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `name`               | Primary name of the entity
+| `nameTranslationKey` | Reference to name translation key for localization
+| `description`        | Textual description of the entity
+| `descTranslationKey` | Reference to description translation key for localization
+| `slug`               | URL-friendly unique identifier derived from name
+| `code`               | Optional system code for the entity (for integration purposes)
+| `displayName`        | Optional formatted display name different from primary name
+| `shortName`          | Optional abbreviated name for space-constrained displays
+| `searchableText`     | Denormalized text optimized for full-text search
+| `sortableName`       | Name form used for natural sorting (e.g., without articles)
+|===
+
+====== Contextual Use Cases for NamedEntity
+
+*Real-World Scenario:* Government Department Directory System
+
+[plantuml]
+----
+@startuml
+actor "Ministry Admin\n(Kabita Sharma)" as Admin
+actor "Citizen\n(Pradeep Koirala)" as Citizen
+actor "Content Editor\n(Binod Shrestha)" as Editor
+participant "GovDepartment\nextends NamedEntity" as Department
+participant "DirectoryService" as Directory
+participant "LocalizationService" as i18n
+participant "SearchService" as Search
+
+Admin -> Department : createDepartment(departmentData)
+activate Department
+Department -> Department : setName("Department of Land Management")
+Department -> Department : setDescription("Responsible for property registration...")
+Department -> Department : generateSlug("department-of-land-management")
+Department -> Department : setCode("DOLM")
+Department -> Department : setDisplayName("Department of Land Management (DOLM)")
+Department -> Department : setShortName("Land Dept.")
+Department -> Department : buildSearchableText()
+activate Department
+Department -> Department : concatSearchFields(name, description, code)
+Department <-- Department : searchText
+deactivate Department
+Admin <-- Department : createdDepartment
+deactivate Department
+
+Admin -> i18n : add translations
+activate i18n
+i18n -> i18n : addTranslation("DOLM_NAME", "ne", "भूमि व्यवस्थापन विभाग")
+i18n -> i18n : addTranslation("DOLM_DESC", "ne", "सम्पत्ति दर्ता र...")
+Admin <-- i18n : translations added
+deactivate i18n
+
+Admin -> Department : updateTranslationKeys
+activate Department
+Department -> Department : setNameTranslationKey("DOLM_NAME")
+Department -> Department : setDescTranslationKey("DOLM_DESC")
+Admin <-- Department : keys updated
+deactivate Department
+
+Citizen -> Directory : searchDepartments("land property")
+activate Directory
+Directory -> Search : fullTextSearch("land property")
+activate Search
+Search -> Search : searchByText(departments, "land property")
+Search -> Department : matchAgainstSearchableText("land property")
+activate Department
+Search <-- Department : matches
+deactivate Department
+Directory <-- Search : matchingDepartments
+deactivate Search
+Citizen <-- Directory : searchResults
+deactivate Directory
+
+Citizen -> Department : viewDepartmentInNepali
+activate Department
+Department -> i18n : getTranslation("DOLM_NAME", "ne")
+activate i18n
+Department <-- i18n : "भूमि व्यवस्थापन विभाग"
+deactivate i18n
+
+Department -> i18n : getTranslation("DOLM_DESC", "ne")
+activate i18n
+Department <-- i18n : "सम्पत्ति दर्ता र..."
+deactivate i18n
+Citizen <-- Department : nepaliDepartmentInfo
+deactivate Department
+
+Editor -> Directory : getAlphabeticalDirectoryListing()
+activate Directory
+Directory -> Directory : getDepartments()
+Directory -> Directory : sortBy(sortableName)
+Editor <-- Directory : alphabeticalListing
+deactivate Directory
+
+Admin -> Department : createSubdepartment
+activate Department
+Department -> Department : setName("Cadastral Survey Office")
+Department -> Department : setParentDepartment(landDepartment)
+Department -> Department : setCode("DOLM-CSO")
+Department -> Department : setDisplayName("Cadastral Survey Office, DOLM")
+Admin <-- Department : subdepartment created
+deactivate Department
+@enduml
+----
+
+*Implementation Details:*
+The Government Departments and Services Directory uses NamedEntity to manage official department information across multiple languages and for public-facing interfaces. This implementation enables a user-friendly government portal with robust multilingual support.
+
+Ministry Administrator Kabita creates a new department record for the Department of Land Management, providing both English and Nepali information. The system automatically generates a URL-friendly slug, concatenates relevant fields into searchableText, and creates a display variant of the name that includes the code.
+
+For multilingual support, translation keys are created for both the name and description, with translations stored in the localization service. When citizen Pradeep views the department in the Nepali interface, the system fetches the localized content through these translation keys.
+
+The search functionality leverages the searchableText field, which contains denormalized content for optimal search performance. This allows citizens to find departments using various keywords, even if they don't know the exact department name.
+
+For departmental directories and listings, the system uses sortableName, which removes articles like "The" and "Department of" for natural alphabetical sorting. This ensures "Land Management" and "Agriculture" appear under L and A respectively, rather than both under D for "Department of...".
+
+Special features implemented include:
+1. Integration codes for cross-system references (code field)
+2. Mobile-friendly abbreviated names (shortName field)
+3. Hierarchical department relationships (parent-child associations)
+4. Multilingual support through translation keys
+5. SEO-friendly URL slugs
+6. Full-text search optimization
+
+*Technical Implementation Example:*
+```kotlin
+abstract class NamedEntity : BaseEntity() {
+    @Column(nullable = false)
+    var name: String = ""
+    
+    var nameTranslationKey: String? = null
+    
+    @Column(length = 1000)
+    var description: String? = null
+    
+    var descTranslationKey: String? = null
+    
+    @Column(unique = true)
+    var slug: String = ""
+    
+    var code: String? = null
+    
+    var displayName: String? = null
+    
+    var shortName: String? = null
+    
+    @Column(length = 2000)
+    var searchableText: String? = null
+    
+    var sortableName: String? = null
+    
+    @PrePersist
+    @PreUpdate
+    fun prepareEntity() {
+        if (slug.isEmpty()) {
+            slug = generateSlug(name)
+        }
+        
+        if (sortableName == null) {
+            sortableName = generateSortableName(name)
+        }
+        
+        if (searchableText == null) {
+            searchableText = buildSearchableText()
+        }
+    }
+    
+    private fun generateSlug(input: String): String {
+        return input.toLowerCase()
+            .replace(Regex("[^a-z0-9\\s-]"), "")
+            .replace(Regex("\\s+"), "-")
+    }
+    
+    private fun generateSortableName(input: String): String {
+        return input.replace(Regex("^(The|A|An|Department of|Ministry of)\\s+"), "")
+            .trim()
+    }
+    
+    private fun buildSearchableText(): String {
+        val parts = mutableListOf<String>()
+        parts.add(name)
+        description?.let { parts.add(it) }
+        code?.let { parts.add(it) }
+        displayName?.let { parts.add(it) }
+        shortName?.let { parts.add(it) }
+        return parts.joinToString(" ")
+    }
+}
+```

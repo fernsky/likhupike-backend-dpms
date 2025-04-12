@@ -1,0 +1,308 @@
+===== `VersioningStrategy`
+Enumeration for different approaches to content versioning.
+
+[cols="1,3", options="header"]
+|===
+| Value                 | Description
+| `MAJOR_MINOR`         | Traditional major.minor versioning (e.g., 1.0, 1.1, 2.0)
+| `SEMANTIC`            | Semantic versioning with major.minor.patch (e.g., 1.0.0, 1.0.1)
+| `DATE_BASED`          | Versions based on dates (e.g., 2023.1, 2023.2)
+| `SEQUENTIAL`          | Simple sequential numbering (v1, v2, v3)
+| `CUSTOM`              | Custom versioning strategy defined by application logic
+|===
+
+====== Contextual Use Cases for VersioningStrategy
+
+*Real-World Scenario:* Government Policy Document Management System
+
+[plantuml]
+----
+@startuml
+actor "Policy Director\n(Rajesh Acharya)" as Director
+actor "Department Editor\n(Kamala Poudel)" as Editor
+actor "Legal Reviewer\n(Kiran Thapa)" as Legal
+actor "Systems Administrator\n(Anup Shah)" as SysAdmin
+participant "PolicyDocument\nwith VersionStrategy" as Policy
+participant "VersionManagement\nService" as Version
+participant "DraftManagement\nService" as Draft
+participant "ApprovalWorkflow\nService" as Approval
+
+Director -> Policy : createNewPolicy()
+activate Policy
+Policy -> Policy : setTitle("National Digital Transformation Strategy")
+Policy -> Policy : setVersioningStrategy(VersioningStrategy.SEMANTIC)
+Policy -> Policy : setInitialVersion("0.1.0")
+Policy -> Policy : setStatus(DRAFT)
+Director <-- Policy : policyCreated
+deactivate Policy
+
+Editor -> Policy : editContent()
+activate Policy
+Policy -> Draft : createNewDraft(policyId)
+activate Draft
+Draft -> Draft : cloneCurrentVersion()
+Draft -> Draft : setDraftVersion("0.1.1-draft")
+Policy <-- Draft : draftCreated
+deactivate Draft
+Editor <-- Policy : startedEditing
+deactivate Policy
+
+Editor -> Draft : updateDraft(content)
+activate Draft
+Draft -> Draft : saveChanges(content)
+Editor <-- Draft : draftSaved
+deactivate Draft
+
+Editor -> Draft : finalizeDraft()
+activate Draft
+Draft -> Legal : requestReview(draftId)
+Legal -> Draft : approveWithComments(comments)
+Draft -> Draft : markApproved(legalReviewer)
+Editor <-- Draft : draftApproved
+deactivate Draft
+
+Editor -> Policy : publishDraft(draftId)
+activate Policy
+Policy -> Draft : getDraft(draftId)
+activate Draft
+Policy <-- Draft : approvedDraft
+deactivate Draft
+Policy -> Policy : determinePatchVersion()
+activate Policy
+Policy -> Policy : incrementPatchVersion()
+Policy <-- Policy : newVersion="0.1.1"
+deactivate Policy
+Policy -> Policy : applyDraftContent()
+Policy -> Policy : setVersion("0.1.1")
+Policy -> Policy : setStatus(PUBLISHED)
+Policy -> Policy : archivePreviousVersion()
+Editor <-- Policy : draftPublished
+deactivate Policy
+
+Director -> Policy : planMajorRevision()
+activate Policy
+Policy -> Policy : createMajorRevisionPlan()
+Policy -> Policy : setTargetVersion("1.0.0")
+Director <-- Policy : majorRevisionInitiated
+deactivate Policy
+
+Director -> Draft : createSignificantRevision()
+activate Draft
+Draft -> Draft : cloneCurrentVersion()
+Draft -> Draft : setDraftVersion("1.0.0-draft")
+Director <-- Draft : majorRevisionDraftCreated
+deactivate Draft
+
+' Various editing steps happen...
+
+Director -> Policy : publishMajorVersion(draftId)
+activate Policy
+Policy -> Approval : getApprovalStatus(draftId)
+activate Approval
+Policy <-- Approval : fullyApproved
+deactivate Approval
+Policy -> Policy : setVersion("1.0.0")
+Policy -> Policy : setStatus(PUBLISHED)
+Policy -> Policy : setPublishedDate(now())
+Policy -> Policy : archivePreviousVersion()
+Director <-- Policy : majorVersionPublished
+deactivate Policy
+
+' Bug fix scenario
+Editor -> Policy : reportError("Typo in section 3.2")
+activate Policy
+Policy -> Draft : createBugfixDraft(policyId)
+activate Draft
+Draft -> Draft : cloneCurrentVersion()
+Draft -> Draft : setDraftVersion("1.0.1-draft")
+Policy <-- Draft : bugfixDraftCreated
+deactivate Draft
+Editor <-- Policy : bugfixDraftCreated
+deactivate Policy
+
+Editor -> Draft : fixError(correction)
+activate Draft
+Draft -> Draft : saveChanges(correction)
+Editor <-- Draft : correctionSaved
+deactivate Draft
+
+Editor -> Policy : publishBugfix(draftId)
+activate Policy
+Policy -> Policy : determinePatchVersion()
+Policy -> Policy : incrementPatchVersion()
+Policy -> Policy : setVersion("1.0.1")
+Policy -> Policy : setStatus(PUBLISHED)
+Policy -> Policy : archivePreviousVersion()
+Editor <-- Policy : bugfixPublished
+deactivate Policy
+
+SysAdmin -> Version : configureSystemWideVersioning()
+activate Version
+Version -> Version : setDefaultStrategy(VersioningStrategy.SEMANTIC)
+Version -> Version : setVersioningRules(rules)
+SysAdmin <-- Version : versioningConfigured
+deactivate Version
+
+SysAdmin -> Policy : switchVersioningStrategy()
+activate Policy
+Policy -> Policy : getLatestVersion() // "1.0.1"
+Policy -> Policy : convertToStrategyFormat("1.0.1", DATE_BASED)
+Policy -> Policy : setVersioningStrategy(VersioningStrategy.DATE_BASED)
+Policy -> Policy : setVersion("2023.1")
+SysAdmin <-- Policy : strategyUpdated
+deactivate Policy
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Ministry of Communications and Information Technology uses VersioningStrategy to manage the lifecycle of official government policies. This implementation ensures proper tracking of policy evolution while maintaining clarity for both internal teams and the public.
+
+Policy Director Rajesh initiates a new National Digital Transformation Strategy document, choosing Semantic Versioning (MAJOR.MINOR.PATCH) as the versioning strategy. This choice is deliberate: major versions (1.0.0) represent significant policy shifts requiring cabinet approval, minor versions (x.1.0) represent substantive changes requiring ministerial approval, and patch versions (x.x.1) represent corrections or clarifications requiring department-level approval.
+
+The initial document is created with version 0.1.0, indicating a pre-release draft. Department Editor Kamala begins working on it, creating a draft version 0.1.1-draft. The "-draft" suffix clearly identifies non-published working versions. After content development, Kamala submits the draft to Legal Reviewer Kiran, who approves it with minor comments.
+
+When published, the system automatically determines the appropriate version increment (patch level for minor edits) and sets the version to 0.1.1. The system archives the previous version (0.1.0) for historical record-keeping but marks 0.1.1 as the current active version.
+
+Later, when the policy requires substantial additions to address emerging technologies, Director Rajesh plans a major revision, targeting version 1.0.0. This indicates the policy will no longer be in draft status (0.x.x) but will become an official released version. This major version requires full cabinet approval, which is tracked through the ApprovalWorkflow service.
+
+After approval, the system publishes version 1.0.0, marking it as the official policy. When Editor Kamala later discovers a typo, the system handles this as a "bugfix" by creating version 1.0.1, which requires only departmental approval since it doesn't change the substantive content.
+
+Eventually, System Administrator Anup decides to switch to a DATE_BASED strategy to align with new ministry guidelines for policy publication. The system converts the current version (1.0.1) to the new format (2023.1), where 2023 represents the year and .1 indicates the first version of that year. All future updates will follow this new pattern (e.g., 2023.2, 2023.3, etc.), while maintaining conversion mappings to the previous semantic versioning for historical continuity.
+
+The system implements several version-specific features:
+1. Different approval workflows based on version significance
+2. Automated version calculation based on change magnitude
+3. Draft versions with special suffixes
+4. Version conversion between strategies
+5. Complete version history with archived documents
+6. Version-specific access controls
+
+*Technical Implementation Example:*
+```kotlin
+enum class VersioningStrategy {
+    MAJOR_MINOR,
+    SEMANTIC,
+    DATE_BASED,
+    SEQUENTIAL,
+    CUSTOM;
+    
+    fun incrementVersion(currentVersion: String, changeType: ChangeType): String {
+        return when (this) {
+            MAJOR_MINOR -> incrementMajorMinor(currentVersion, changeType)
+            SEMANTIC -> incrementSemantic(currentVersion, changeType)
+            DATE_BASED -> incrementDateBased(currentVersion, changeType)
+            SEQUENTIAL -> incrementSequential(currentVersion)
+            CUSTOM -> throw UnsupportedOperationException("Custom versioning requires application logic")
+        }
+    }
+    
+    fun formatDraftVersion(version: String): String {
+        return when (this) {
+            MAJOR_MINOR, SEMANTIC -> "$version-draft"
+            DATE_BASED -> "${version}d"
+            SEQUENTIAL -> "v${version}-draft"
+            CUSTOM -> throw UnsupportedOperationException("Custom versioning requires application logic")
+        }
+    }
+    
+    fun convertVersion(version: String, targetStrategy: VersioningStrategy): String {
+        // Conversion logic between versioning strategies
+        if (this == targetStrategy) return version
+        
+        return when {
+            this == SEMANTIC && targetStrategy == DATE_BASED -> {
+                val year = LocalDate.now().year
+                val parts = version.split(".")
+                val major = parts[0].toInt()
+                val minor = if (parts.size > 1) parts[1].toInt() else 0
+                
+                if (major == 0) {
+                    // Pre-release versions
+                    "$year.${minor}d"
+                } else {
+                    // Released versions
+                    "$year.$major"
+                }
+            }
+            this == DATE_BASED && targetStrategy == SEMANTIC -> {
+                val parts = version.split(".")
+                val subversion = parts[1].replace("d", "")
+                
+                if (version.endsWith("d")) {
+                    // Draft version
+                    "0.$subversion.0"
+                } else {
+                    // Released version
+                    "1.$subversion.0"
+                }
+            }
+            // Other conversion combinations...
+            else -> throw UnsupportedOperationException("Conversion from $this to $targetStrategy not implemented")
+        }
+    }
+    
+    private fun incrementMajorMinor(currentVersion: String, changeType: ChangeType): String {
+        val parts = currentVersion.split(".")
+        val major = parts[0].toInt()
+        val minor = if (parts.size > 1) parts[1].toInt() else 0
+        
+        return when (changeType) {
+            ChangeType.MAJOR -> "${major + 1}.0"
+            ChangeType.MINOR, ChangeType.PATCH -> "$major.${minor + 1}"
+        }
+    }
+    
+    private fun incrementSemantic(currentVersion: String, changeType: ChangeType): String {
+        val parts = currentVersion.split(".")
+        val major = parts[0].toInt()
+        val minor = if (parts.size > 1) parts[1].toInt() else 0
+        val patch = if (parts.size > 2) parts[2].toInt() else 0
+        
+        return when (changeType) {
+            ChangeType.MAJOR -> "${major + 1}.0.0"
+            ChangeType.MINOR -> "$major.${minor + 1}.0"
+            ChangeType.PATCH -> "$major.$minor.${patch + 1}"
+        }
+    }
+    
+    private fun incrementDateBased(currentVersion: String, changeType: ChangeType): String {
+        val parts = currentVersion.split(".")
+        val year = parts[0]
+        val sequenceNumber = parts[1].toInt()
+        
+        // For date-based, we simply increment the sequence number regardless of change type
+        // or use the current year if it has changed
+        val currentYear = LocalDate.now().year.toString()
+        
+        return if (year == currentYear) {
+            "$year.${sequenceNumber + 1}"
+        } else {
+            "$currentYear.1"
+        }
+    }
+    
+    private fun incrementSequential(currentVersion: String): String {
+        // For sequential, we just increment the number regardless of change type
+        val number = currentVersion.replace("v", "").toInt()
+        return "v${number + 1}"
+    }
+}
+
+enum class ChangeType {
+    MAJOR,   // Breaking changes, significant new features
+    MINOR,   // Non-breaking additions/changes
+    PATCH    // Bug fixes, typos, clarifications
+}
+```
+
+*Real-World Application Features:*
+1. **Automated Classification**: The system can analyze changes to suggest appropriate version increments.
+2. **Version-Based Workflows**: Different approval processes based on version significance.
+3. **Version Conversion**: When policies need to change versioning schemes for regulatory compliance.
+4. **Notification Rules**: Stakeholders receive notifications based on version significance.
+5. **Audit Trails**: All version changes are tracked with complete history.
+6. **Timeline View**: Visual representation of policy evolution across versions.
+7. **Comparison Tool**: Side-by-side comparison between any two versions.
+8. **Version Rollback**: Ability to revert to previous versions if needed.
+9. **Branch Management**: Support for experimental policy branches with special version markers.
+10. **Version-Based Access Control**: Different access permissions based on version status.

@@ -1,0 +1,119 @@
+===== `ReviewState`
+Enumeration for entity review workflow states.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `DRAFT`              | Entity is in draft state, not yet submitted for review
+| `PENDING`            | Entity is awaiting initial review
+| `IN_REVIEW`          | Entity is currently being reviewed
+| `ACTION_NEEDED`      | Entity needs modification before approval
+| `APPROVED`           | Entity has been reviewed and approved
+| `REJECTED`           | Entity has been reviewed and rejected
+| `ESCALATED`          | Entity has been escalated to higher authority for review
+| `RECALLED`           | Entity has been recalled by the submitter
+| `ON_HOLD`            | Review process temporarily paused
+| `EXPIRED`            | Review process has expired due to time constraints
+| `CANCELLED`          | Review process was cancelled
+|===
+
+====== Contextual Use Cases for ReviewState
+
+*Real-World Scenario:* Land Registration Approval Process
+
+[plantuml]
+----
+@startuml
+hide empty description
+
+state DRAFT : "Initial creation by land owner or representative"
+state PENDING : "Submitted and waiting for officer assignment"
+state IN_REVIEW : "Land officer actively reviewing documents"
+state ACTION_NEEDED : "Missing documents or information"
+state APPROVED : "Land registration approved"
+state REJECTED : "Land claim denied"
+state ESCALATED : "Complex case referred to senior registrar"
+state RECALLED : "Applicant requested return of application"
+state ON_HOLD : "Awaiting external verification"
+state EXPIRED : "Passed deadline without action"
+state CANCELLED : "Applicant withdrew application"
+
+[*] --> DRAFT : Create application
+DRAFT --> PENDING : Submit
+PENDING --> IN_REVIEW : Assign to officer
+IN_REVIEW --> ACTION_NEEDED : Request corrections
+ACTION_NEEDED --> IN_REVIEW : Resubmit
+IN_REVIEW --> APPROVED : Approve
+IN_REVIEW --> REJECTED : Reject
+IN_REVIEW --> ESCALATED : Escalate
+ESCALATED --> APPROVED : Senior approval
+ESCALATED --> REJECTED : Senior rejection
+ESCALATED --> ACTION_NEEDED : Senior requests changes
+DRAFT --> CANCELLED : Withdraw before submission
+PENDING --> RECALLED : Recall
+IN_REVIEW --> ON_HOLD : Place on hold
+ON_HOLD --> IN_REVIEW : Resume review
+PENDING --> EXPIRED : Deadline passed
+ACTION_NEEDED --> EXPIRED : Correction deadline passed
+EXPIRED --> IN_REVIEW : Extension granted
+
+APPROVED --> [*]
+REJECTED --> [*]
+CANCELLED --> [*]
+@enduml
+----
+
+*Implementation Details:*
+The Land Registry Office in Kaski District uses the ReviewState enumeration to track the lifecycle of land registration applications. This implementation ensures transparency in the review process and compliance with land management regulations.
+
+A typical land registration case begins when farmer Bishnu Sharma starts registering his ancestral land. He initially saves the application in DRAFT state while gathering necessary documents (land survey map, ancestral property transfer document, and citizenship certificate). After uploading all documents, he submits the application, which transitions to PENDING state.
+
+The application enters IN_REVIEW when Land Officer Maya Gurung is assigned to the case. During review, she discovers the land survey map is outdated and sets the application to ACTION_NEEDED with specific instructions. Once Bishnu uploads the current survey map, the application returns to IN_REVIEW.
+
+For straightforward cases, Maya approves the application, setting it to APPROVED, which completes the process. However, for complex cases like disputed boundaries, she might set the state to ESCALATED, routing it to Senior Registrar Hari Acharya for review.
+
+Special scenarios demonstrate the versatility of the ReviewState model:
+- When Bishnu needs to travel unexpectedly, he RECALLS his application before assignment
+- When a neighboring landowner raises a boundary dispute, Maya places the review ON_HOLD pending resolution
+- When Bishnu fails to provide requested documents within 30 days, the system automatically marks the application as EXPIRED
+- When Bishnu decides to sell the land before registration, he CANCELS the application
+
+Each state transition triggers appropriate notifications to both officials and applicants, ensuring all parties remain informed throughout the process. The ReviewState also determines which actions are available to each user in the UI, enforcing proper procedural compliance.
+
+*Technical Implementation Example:*
+```kotlin
+enum class ReviewState {
+    DRAFT,
+    PENDING,
+    IN_REVIEW,
+    ACTION_NEEDED,
+    APPROVED,
+    REJECTED,
+    ESCALATED,
+    RECALLED,
+    ON_HOLD,
+    EXPIRED,
+    CANCELLED;
+    
+    fun getAvailableTransitions(): Set<ReviewState> {
+        return when (this) {
+            DRAFT -> setOf(PENDING, CANCELLED)
+            PENDING -> setOf(IN_REVIEW, RECALLED, EXPIRED)
+            IN_REVIEW -> setOf(ACTION_NEEDED, APPROVED, REJECTED, ESCALATED, ON_HOLD)
+            ACTION_NEEDED -> setOf(IN_REVIEW, EXPIRED)
+            ESCALATED -> setOf(APPROVED, REJECTED, ACTION_NEEDED)
+            ON_HOLD -> setOf(IN_REVIEW)
+            EXPIRED -> setOf(IN_REVIEW)
+            else -> emptySet() // Terminal states
+        }
+    }
+    
+    fun isTerminalState(): Boolean {
+        return this in setOf(APPROVED, REJECTED, CANCELLED)
+    }
+    
+    fun requiresAssignee(): Boolean {
+        return this in setOf(IN_REVIEW, ESCALATED)
+    }
+}
+```

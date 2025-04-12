@@ -1,0 +1,273 @@
+===== `ReferenceDataEntity`
+Abstract base class for lookup tables and reference data with effective dates.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `code`                | Unique code for this reference data item
+| `category`            | Category or group this reference data belongs to
+| `effectiveFrom`       | Date from which this reference data is effective
+| `effectiveTo`         | Date until which this reference data is effective
+| `isDefault`           | Whether this is the default value in its category
+| `sortOrder`           | Numeric value for controlling display ordering
+| `replacedBy`          | Reference to newer version that replaces this item
+| `sourceSystem`        | System of record for this reference data
+| `validationRules`     | JSON rules for validating usage of this reference data
+| `metadataSchema`      | JSON schema for additional metadata on this reference item
+| `isActive`            | Whether this reference data item is currently active
+| `deprecationNotes`    | Notes on why an item is deprecated or replaced
+|===
+
+====== Contextual Use Cases for ReferenceDataEntity
+
+*Real-World Scenario:* Government Administrative Classification System
+
+[plantuml]
+----
+@startuml
+actor "Federal Administrator\n(Pradeep Sharma)" as Admin
+actor "Department Manager\n(Sarita Acharya)" as Manager
+actor "System Integrator\n(Raj Mishra)" as Integrator
+participant "MunicipalityType\nextends ReferenceDataEntity" as MuniType
+participant "ReferenceDataService" as Service
+participant "MunicipalityService" as MuniService
+participant "ValidationService" as Validation
+participant "VersioningService" as Versioning
+
+Admin -> MuniType : createMunicipalityType
+activate MuniType
+MuniType -> MuniType : setName("Metropolitan City")
+MuniType -> MuniType : setCode("METRO")
+MuniType -> MuniType : setCategory("MUNICIPALITY_TYPE")
+MuniType -> MuniType : setDescription("Highest administrative status for urban local body")
+MuniType -> MuniType : setEffectiveFrom(fiscalYearStart)
+MuniType -> MuniType : setValidationRules(populationThresholdRule)
+Admin <-- MuniType : municipalityTypeCreated
+deactivate MuniType
+
+Admin -> MuniType : createMunicipalityType
+activate MuniType
+MuniType -> MuniType : setName("Sub-Metropolitan City")
+MuniType -> MuniType : setCode("SUBMETRO")
+MuniType -> MuniType : setCategory("MUNICIPALITY_TYPE")
+MuniType -> MuniType : setSortOrder(2)
+MuniType -> MuniType : setDescription("Secondary level urban local body")
+MuniType -> MuniType : setEffectiveFrom(fiscalYearStart)
+MuniType -> MuniType : setValidationRules(populationThresholdRule)
+Admin <-- MuniType : municipalityTypeCreated
+deactivate MuniType
+
+Admin -> MuniType : createMunicipalityType
+activate MuniType
+MuniType -> MuniType : setName("Municipality")
+MuniType -> MuniType : setCode("MUNI")
+MuniType -> MuniType : setCategory("MUNICIPALITY_TYPE")
+MuniType -> MuniType : setSortOrder(3)
+MuniType -> MuniType : setDescription("Standard urban local body")
+MuniType -> MuniType : setEffectiveFrom(fiscalYearStart)
+MuniType -> MuniType : setIsDefault(true)
+MuniType -> MuniType : setValidationRules(populationThresholdRule)
+Admin <-- MuniType : municipalityTypeCreated
+deactivate MuniType
+
+Admin -> MuniType : createMunicipalityType
+activate MuniType
+MuniType -> MuniType : setName("Rural Municipality")
+MuniType -> MuniType : setCode("RURAL")
+MuniType -> MuniType : setCategory("MUNICIPALITY_TYPE")
+MuniType -> MuniType : setSortOrder(4)
+MuniType -> MuniType : setDescription("Rural local administrative division")
+MuniType -> MuniType : setEffectiveFrom(fiscalYearStart)
+MuniType -> MuniType : setValidationRules(populationThresholdRule)
+Admin <-- MuniType : municipalityTypeCreated
+deactivate MuniType
+
+Manager -> Service : getMunicipalityTypes()
+activate Service
+Service -> MuniType : findAllActiveByCategory("MUNICIPALITY_TYPE")
+activate MuniType
+Service <-- MuniType : activeTypes
+deactivate MuniType
+Manager <-- Service : municipalityTypes
+deactivate Service
+
+Manager -> MuniService : upgradeLocalBodyStatus(municipalityId, "SUBMETRO")
+activate MuniService
+MuniService -> MuniService : getMunicipality(municipalityId)
+MuniService -> Validation : validateUpgrade(municipality, "SUBMETRO")
+activate Validation
+Validation -> MuniType : getValidationRules("SUBMETRO")
+activate MuniType
+Validation <-- MuniType : validationRules
+deactivate MuniType
+Validation -> Validation : checkPopulationThreshold(municipality, 150000)
+Validation -> Validation : checkInfrastructureRequirements(municipality)
+Validation -> Validation : checkRevenueRequirements(municipality)
+MuniService <-- Validation : validationResult
+deactivate Validation
+
+alt Validation Passed
+  MuniService -> MuniService : updateMunicipalityType(municipalityId, "SUBMETRO")
+  MuniService -> MuniService : logStatusChange(OLD_TYPE, NEW_TYPE)
+  Manager <-- MuniService : upgradeSuccessful
+else Validation Failed
+  Manager <-- MuniService : upgradeRejected(validationErrors)
+end
+deactivate MuniService
+
+' Federal restructuring scenario
+Admin -> Admin : planFederalRestructuring
+Admin -> MuniType : createMunicipalityType
+activate MuniType
+MuniType -> MuniType : setName("Urban Municipality")
+MuniType -> MuniType : setCode("URBAN")
+MuniType -> MuniType : setCategory("MUNICIPALITY_TYPE")
+MuniType -> MuniType : setDescription("New consolidated urban category")
+MuniType -> MuniType : setEffectiveFrom(nextFiscalYearStart)
+MuniType -> MuniType : setValidationRules(newUrbanClassificationRules)
+Admin <-- MuniType : newTypeCreated
+deactivate MuniType
+
+Admin -> MuniType : deprecateType("MUNI")
+activate MuniType
+MuniType -> MuniType : findByCode("MUNI")
+MuniType -> MuniType : setEffectiveTo(fiscalYearEnd)
+MuniType -> MuniType : setIsActive(false)
+MuniType -> MuniType : setReplacedBy("URBAN")
+MuniType -> MuniType : setDeprecationNotes("Replaced by new Urban Municipality type")
+Admin <-- MuniType : typeDeprecated
+deactivate MuniType
+
+Admin -> Versioning : publishReferenceDataVersion("2024-RESTRUCTURING")
+activate Versioning
+Versioning -> Versioning : snapshotCurrentReferenceData()
+Versioning -> Versioning : tagVersion("2024-RESTRUCTURING")
+Admin <-- Versioning : versionPublished
+deactivate Versioning
+
+Integrator -> MuniType : getAllVersions("MUNICIPALITY_TYPE")
+activate MuniType
+MuniType -> MuniType : getCurrentVersion()
+MuniType -> MuniType : getPreviousVersions()
+MuniType -> MuniType : getFutureVersions()
+Integrator <-- MuniType : allVersionsWithTimelines
+deactivate MuniType
+
+Integrator -> Service : validateDateSpecificCode(date, "MUNI")
+activate Service
+Service -> MuniType : findByCodeAndEffectiveDate("MUNI", date)
+activate MuniType
+Service <-- MuniType : typeForDate
+deactivate MuniType
+Integrator <-- Service : validationResult
+deactivate Service
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Federal Administration System uses ReferenceDataEntity to manage classification hierarchies for local government bodies. This implementation ensures consistency, traceability, and proper versioning as administrative structures evolve.
+
+Federal Administrator Pradeep sets up the basic municipality types following Nepal's federal structure: Metropolitan Cities (largest urban centers like Kathmandu), Sub-Metropolitan Cities (secondary urban centers like Pokhara), Municipalities (small urban areas), and Rural Municipalities (previously Village Development Committees). Each type is assigned a unique code, display order, and set of validation rules defining the criteria for that classification.
+
+Department Manager Sarita uses these reference data entities when processing a municipality's application to be upgraded from Municipality to Sub-Metropolitan City status. The system automatically retrieves the appropriate validation rules (minimum population of 150,000, infrastructure requirements, revenue thresholds) and validates the municipality against these criteria before allowing the status change.
+
+The system particularly demonstrates the time-bound nature of ReferenceDataEntity when the government plans a restructuring for the next fiscal year. A new "Urban Municipality" type is created with a future effectiveFrom date, while the existing "Municipality" type is marked for deprecation with an effectiveTo date coinciding with the fiscal year end. The system maintains both versions simultaneously, using the appropriate one based on the reference date.
+
+System Integrator Raj uses the version history capabilities to ensure systems correctly handle both current and historical data. He can validate whether a specific classification code was valid at a given point in time, supporting accurate historical reporting.
+
+Key benefits of the ReferenceDataEntity approach include:
+1. Clear timeline of when classifications are valid
+2. Structured transition when reference data changes
+3. Ability to plan future changes while maintaining current operations
+4. Consistent validation rules tied directly to reference data
+5. Proper ordering for display purposes
+6. Complete audit trail of reference data evolution
+
+The system also uses similar reference data entities for:
+- District types
+- Document categories
+- Citizen identification types
+- Land use classifications
+- Official position designations
+- Property types
+- Service categories
+
+Each follows the same pattern of time-bound validity, hierarchical organization, and structured validation rules.
+
+*Technical Implementation Example:*
+```kotlin
+abstract class ReferenceDataEntity : NamedEntity() {
+    @Column(unique = true)
+    var code: String = ""
+    
+    var category: String = ""
+    
+    var effectiveFrom: LocalDate = LocalDate.now()
+    
+    var effectiveTo: LocalDate? = null
+    
+    var isDefault: Boolean = false
+    
+    var sortOrder: Int = 100
+    
+    @ManyToOne
+    var replacedBy: ReferenceDataEntity? = null
+    
+    var sourceSystem: String? = null
+    
+    @Column(columnDefinition = "jsonb")
+    var validationRules: String? = null
+    
+    @Column(columnDefinition = "jsonb")
+    var metadataSchema: String? = null
+    
+    var isActive: Boolean = true
+    
+    var deprecationNotes: String? = null
+    
+    fun isEffectiveAt(date: LocalDate): Boolean {
+        return !date.isBefore(effectiveFrom) && 
+               (effectiveTo == null || !date.isAfter(effectiveTo))
+    }
+    
+    fun deprecate(replacementCode: String?, deprecationNotes: String?, effectiveToDate: LocalDate) {
+        this.effectiveTo = effectiveToDate
+        this.isActive = false
+        this.deprecationNotes = deprecationNotes
+        
+        if (replacementCode != null) {
+            // Logic to find and link replacement by code
+        }
+    }
+    
+    fun getValidationRulesAsObject(): Map<String, Any> {
+        if (validationRules.isNullOrEmpty()) {
+            return emptyMap()
+        }
+        
+        return objectMapper.readValue(validationRules!!)
+    }
+    
+    fun setValidationRulesFromObject(rules: Map<String, Any>) {
+        this.validationRules = objectMapper.writeValueAsString(rules)
+    }
+    
+    fun copy(): ReferenceDataEntity {
+        val copy = this.javaClass.newInstance()
+        copy.name = this.name
+        copy.description = this.description
+        copy.code = this.code
+        copy.category = this.category
+        copy.effectiveFrom = this.effectiveFrom
+        copy.effectiveTo = this.effectiveTo
+        copy.isDefault = this.isDefault
+        copy.sortOrder = this.sortOrder
+        copy.sourceSystem = this.sourceSystem
+        copy.validationRules = this.validationRules
+        copy.metadataSchema = this.metadataSchema
+        copy.isActive = this.isActive
+        
+        return copy
+    }
+}
+```

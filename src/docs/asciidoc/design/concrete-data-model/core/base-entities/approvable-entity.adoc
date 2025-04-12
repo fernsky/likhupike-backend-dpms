@@ -1,0 +1,210 @@
+===== `ApprovableEntity`
+Extends SoftDeletableEntity with approval workflow capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `isApproved`           | Flag indicating whether the entity has been approved
+| `approvedAt`           | Timestamp when the entity was approved
+| `approvedBy`           | Reference to the user who approved the entity
+| `reviewState`          | Current state in the review workflow (reference to ReviewState)
+| `reviewNote`           | Optional note providing context about the review decision
+| `workflowInstanceId`   | Reference to a workflow instance if using external workflow engine
+| `currentAssignee`      | Reference to the user currently assigned in the workflow
+| `previousReviewers`    | Collection of users who previously reviewed this entity
+| `escalationLevel`      | Current escalation level for approval (0 = normal, 1+ = escalated)
+| `dueDate`              | Optional deadline for the current review state
+| `priorityLevel`        | Priority level for this approval (LOW, MEDIUM, HIGH, URGENT)
+| `resubmissionCount`    | Count of how many times entity was resubmitted after rejection
+|===
+
+====== Contextual Use Cases for ApprovableEntity
+
+*Real-World Scenario:* Business License Application Process
+
+[plantuml]
+----
+@startuml
+actor "Restaurant Owner\n(Ram Sharma)" as Applicant
+actor "Municipal Officer\n(Sita Thapa)" as Officer
+actor "Senior Inspector\n(Hari Prasad)" as Inspector
+participant "BusinessLicense\nextends ApprovableEntity" as License
+participant "Document\nRepository" as Docs
+participant "Notification\nService" as Notify
+participant "Payment\nGateway" as Payment
+
+Applicant -> License : submit application
+activate License
+License -> License : setReviewState(DRAFT)
+License -> License : validateRequiredFields()
+Applicant <-- License : return validated application
+deactivate License
+
+Applicant -> Docs : upload required documents
+activate Docs
+Docs -> Docs : store restaurantFloorPlan.pdf
+Docs -> Docs : store fireInspectionReport.pdf
+Docs -> Docs : store foodSafetyTrainingCert.pdf
+Applicant <-- Docs : documents uploaded
+deactivate Docs
+
+Applicant -> License : complete application
+activate License
+License -> License : setReviewState(PENDING)
+License -> License : setSubmissionDate(now())
+License -> Notify : sendConfirmation(applicant)
+Applicant <-- License : application submitted
+deactivate License
+
+Officer -> License : review application
+activate License
+License -> Docs : retrieveDocuments()
+activate Docs
+License <-- Docs : applicationDocuments
+deactivate Docs
+
+License -> License : validateZoningCompliance()
+License -> License : verifyDocumentCompleteness()
+License -> License : requestInspection()
+Officer <-- License : application valid
+deactivate License
+
+Inspector -> License : record inspection
+activate License
+License -> License : addInspectionReport("Passed with minor corrections needed")
+License -> License : setInspectionDate(today)
+License -> License : setReviewState(ACTION_NEEDED)
+License -> License : setReviewNote("Need updated fire safety certificate")
+Inspector <-- License : inspection recorded
+deactivate License
+
+Applicant -> Docs : upload revised documents
+activate Docs
+Docs -> Docs : store updatedFireSafetyCert.pdf
+Applicant <-- Docs : document uploaded
+deactivate Docs
+
+Applicant -> License : resubmit with corrections
+activate License
+License -> License : setReviewState(IN_REVIEW)
+License -> License : incrementResubmissionCount()
+Applicant <-- License : resubmission confirmed
+deactivate License
+
+Officer -> License : final review
+activate License
+License -> Docs : getUpdatedDocuments()
+activate Docs
+License <-- Docs : updatedDocuments
+deactivate Docs
+
+License -> License : verifyAllRequirementsMet()
+License -> Payment : generateInvoice(licenseType)
+activate Payment
+License <-- Payment : paymentInvoice
+deactivate Payment
+Officer <-- License : review completed
+deactivate License
+
+Applicant -> Payment : payLicenseFee
+activate Payment
+Payment -> Payment : processTransaction(NPR 15,000)
+Applicant <-- Payment : receiptNumber
+deactivate Payment
+
+Officer -> License : approve license
+activate License
+License -> License : setIsApproved(true)
+License -> License : setReviewState(APPROVED)
+License -> License : setApprovedBy(officerId)
+License -> License : setApprovedAt(now())
+License -> License : generateLicenseNumber("BIZ-KTM-2023-4576")
+License -> License : setExpiryDate(oneYearFromNow)
+License -> Notify : sendApprovalNotification(applicant)
+Officer <-- License : license approved
+deactivate License
+
+Applicant -> License : download license certificate
+activate License
+License -> License : generateCertificatePDF(licenseData)
+Applicant <-- License : businessLicenseCertificate.pdf
+deactivate License
+@enduml
+----
+
+*Implementation Details:*
+The Kathmandu Municipal Business License System leverages ApprovableEntity to manage the complex workflow for restaurant permit applications. Restaurant owner Ram Sharma begins by creating an application which starts in DRAFT state. After completing the required fields, he uploads supporting documents and submits the application, changing its state to PENDING.
+
+Municipal Officer Sita Thapa receives the application, validates basic requirements, and assigns it to Inspector Hari Prasad. After site inspection, Hari identifies a minor fire safety issue and sets the application to ACTION_NEEDED state with a detailed explanation in reviewNote. The system automatically notifies Ram, who uploads the updated fire safety certificate and resubmits.
+
+When the application returns to IN_REVIEW, the system increments the resubmissionCount (now 1). When all requirements are verified, Sita approves the application, setting isApproved to true, recording herself as approvedBy, and updating the reviewState to APPROVED. The system then generates a formal license certificate with a one-year validity period.
+
+This implementation leverages several ApprovableEntity features:
+- The reviewState field tracks the application through its lifecycle
+- The currentAssignee changes as the application moves between departments
+- The priorityLevel is escalated for applications pending more than 30 days
+- The dueDate helps officers prioritize urgent applications
+- The previousReviewers list maintains a record of all officers involved in the process
+
+The system includes specialized features for complex applications:
+- Escalation triggers after applications exceed their dueDate
+- Applications with higher resubmissionCount get additional scrutiny
+- Applications with notes from senior officials get higher priorityLevel
+
+*Technical Implementation Example:*
+```kotlin
+abstract class ApprovableEntity : SoftDeletableEntity() {
+    var isApproved: Boolean = false
+    
+    var approvedAt: Instant? = null
+    
+    @ManyToOne
+    var approvedBy: User? = null
+    
+    @Enumerated(EnumType.STRING)
+    var reviewState: ReviewState = ReviewState.DRAFT
+    
+    var reviewNote: String? = null
+    
+    var workflowInstanceId: String? = null
+    
+    @ManyToOne
+    var currentAssignee: User? = null
+    
+    @ManyToMany
+    var previousReviewers: MutableSet<User> = mutableSetOf()
+    
+    var escalationLevel: Int = 0
+    
+    var dueDate: LocalDate? = null
+    
+    @Enumerated(EnumType.STRING)
+    var priorityLevel: PriorityLevel = PriorityLevel.MEDIUM
+    
+    var resubmissionCount: Int = 0
+    
+    fun submit() {
+        validateSubmissionRequirements()
+        this.reviewState = ReviewState.PENDING
+    }
+    
+    fun approve(approver: User) {
+        validateApprovalRequirements()
+        this.isApproved = true
+        this.approvedAt = Instant.now()
+        this.approvedBy = approver
+        this.reviewState = ReviewState.APPROVED
+    }
+    
+    fun requestChanges(reviewer: User, note: String) {
+        this.reviewState = ReviewState.ACTION_NEEDED
+        this.reviewNote = note
+        this.previousReviewers.add(reviewer)
+    }
+    
+    fun resubmit() {
+        this.reviewState = ReviewState.IN_REVIEW
+        this.resubmissionCount++
+    }
+}
+```

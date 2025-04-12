@@ -1,0 +1,201 @@
+===== `SoftDeletableEntity`
+Extends BaseEntity with soft deletion capabilities.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `isDeleted`      | Flag indicating whether the entity has been soft-deleted
+| `deletedAt`      | Timestamp when the entity was soft-deleted
+| `deletedBy`      | Reference to the user who soft-deleted the entity
+| `deletionReason` | Optional reason for deletion
+| `restoredAt`     | Timestamp if the entity was restored after deletion
+| `restoredBy`     | Reference to the user who restored the entity after deletion
+|===
+
+====== Contextual Use Cases for SoftDeletableEntity
+
+*Real-World Scenario:* Document Management System with Soft Deletion
+
+[plantuml]
+----
+@startuml
+actor "Records Officer\n(Manju Gurung)" as Officer
+actor "Department Head\n(Rajesh Pradhan)" as Head
+actor "IT Administrator\n(Kamal Thapa)" as Admin
+participant "OfficialDocument\nextends SoftDeletableEntity" as Document
+participant "RecycleBin\nService" as Recycle
+participant "AuditService" as Audit
+participant "Archive\nService" as Archive
+
+Officer -> Document : createDocument
+activate Document
+Document -> Document : setDocumentTitle("Annual Budget Report 2023")
+Document -> Document : setDocumentType(FINANCIAL)
+Document -> Document : setDepartment("Finance")
+Document -> Document : setSecurityClassification(CONFIDENTIAL)
+Document -> Document : uploadContent(pdfFile)
+Document -> Document : setStatus(DRAFT)
+Document -> Document : setCreatedBy(officerId)
+Document -> Document : setCreatedAt(now())
+Officer <-- Document : document created
+deactivate Document
+
+Officer -> Document : finalize document
+activate Document
+Document -> Document : setStatus(FINAL)
+Document -> Document : setFinalizedBy(officerId)
+Document -> Document : setFinalizedAt(now())
+Document -> Document : lockForEditing()
+Officer <-- Document : document finalized
+deactivate Document
+
+' Later...
+Officer -> Document : mark obsolete
+activate Document
+Document -> Document : isDeleted = true
+Document -> Document : setDeletedBy(officerId)
+Document -> Document : setDeletedAt(now())
+Document -> Document : setDeletionReason("Superseded by updated version")
+Document -> Recycle : moveToRecycleBin(documentId)
+activate Recycle
+Document <-- Recycle : moved
+deactivate Recycle
+Officer <-- Document : marked as deleted
+deactivate Document
+
+Officer -> Recycle : viewRecycleBin
+activate Recycle
+Recycle -> Recycle : getDeletedDocuments(officerDepartment)
+Recycle -> Document : findByIsDeletedAndDepartment(true, "Finance")
+activate Document
+Recycle <-- Document : deletedDocuments
+deactivate Document
+Officer <-- Recycle : recyclebin contents
+deactivate Recycle
+
+Officer -> Document : search for budget document
+activate Document
+Document -> Document : searchByTitle("Budget 2023")
+Document -> Document : filterDeletedDocuments(false)
+Officer <-- Document : no results (document is soft-deleted)
+deactivate Document
+
+Head -> Recycle : attempt to restore document
+activate Recycle
+Recycle -> Document : restore(documentId)
+activate Document
+Document -> Document : validateRestorePermissions(userId)
+Document -> Document : checkForNameConflicts()
+Document -> Document : isDeleted = false
+Document -> Document : setRestoredBy(headId)
+Document -> Document : setRestoredAt(now())
+Document -> Document : setRestoreReason("Document still needed for audit")
+Recycle <-- Document : document restored
+deactivate Document
+Head <-- Recycle : restoration complete
+deactivate Recycle
+
+Audit -> Document : logRestoreEvent
+activate Document
+Document -> Document : logAuditEvent(DOCUMENT_RESTORED, metadata)
+Audit <-- Document : event logged
+deactivate Document
+
+Officer -> Document : search again
+activate Document
+Document -> Document : searchByTitle("Budget 2023")
+Document -> Document : filterDeletedDocuments(false)
+Officer <-- Document : found restored document
+deactivate Document
+
+' Permanent deletion scenario
+Head -> Document : request permanent deletion
+activate Document
+Document -> Document : requestPermanentDeletion(reason)
+Document -> Document : setPermanentDeletionRequested(true)
+Document -> Document : setPermanentDeletionReason("Contains outdated financial projections")
+Document -> Document : setDeletionRequestedBy(headId)
+Document -> Document : setDeletionRequestedAt(now())
+Head <-- Document : permanent deletion requested
+deactivate Document
+
+Admin -> Document : processTerminalDeletionRequests
+activate Document
+Document -> Document : validateRetentionPolicy()
+Document -> Document : validateApprovalRequirements()
+Document -> Document : prepareForArchival()
+Document -> Archive : archiveBeforeDeletion(documentId)
+activate Archive
+Document <-- Archive : archived
+deactivate Archive
+Admin <-- Document : ready for permanent deletion
+deactivate Document
+
+Admin -> Document : executeTerminalDeletion
+activate Document
+Document -> Document : sanitizeMetadata()
+Document -> Document : logFinalDeletionEvent()
+Document -> Document : permanentlyDelete()
+Admin <-- Document : document permanently removed
+deactivate Document
+@enduml
+----
+
+*Implementation Details:*
+The Ministry of Finance document management system uses SoftDeletableEntity to implement a document lifecycle that includes careful handling of deletion and potential restoration. This implementation addresses government requirements for records management, including retention policies and deletion governance.
+
+Records Officer Manju Gurung marks an outdated budget report as deleted when it's superseded by a new version. The document appears in the recycling bin but remains in the database with `isDeleted = true`. When searched through normal channels, the document won't appear in search results due to the automatic filter on the `isDeleted` flag.
+
+During an audit, Department Head Rajesh discovers this document is still needed for reference. He restores it from the recycling bin, which clears the `isDeleted` flag, sets `restoredAt` to the current time, and records himself as `restoredBy`. The system logs this restoration event for compliance purposes.
+
+Later, when the document is truly no longer needed, a permanent deletion request is submitted. This follows a formal governance process, including verification against the document retention policy (minimum 7 years for financial documents), archival for historical records, and final secure deletion from the system.
+
+The system implements specialized governance controls for deletion:
+- Different authorization levels based on document classification (confidential documents require department head approval)
+- Mandatory waiting periods before permanent deletion (30 days in recycle bin)
+- Automatic restoration triggers (e.g., if referenced in a new document)
+- Batch deletion approval workflows for routine document purges
+- Special handling for legally significant documents
+
+*Technical Implementation Example:*
+```kotlin
+abstract class SoftDeletableEntity : BaseEntity() {
+    var isDeleted: Boolean = false
+    
+    var deletedAt: Instant? = null
+    
+    @ManyToOne
+    var deletedBy: User? = null
+    
+    var deletionReason: String? = null
+    
+    var restoredAt: Instant? = null
+    
+    @ManyToOne
+    var restoredBy: User? = null
+    
+    // Extended fields for government records management
+    var permanentDeletionRequested: Boolean = false
+    var permanentDeletionRequestedAt: Instant? = null
+    
+    @ManyToOne
+    var permanentDeletionRequestedBy: User? = null
+    
+    var permanentDeletionReason: String? = null
+    var retentionExpiryDate: LocalDate? = null
+    
+    fun softDelete(user: User, reason: String) {
+        this.isDeleted = true
+        this.deletedAt = Instant.now()
+        this.deletedBy = user
+        this.deletionReason = reason
+    }
+    
+    fun restore(user: User, reason: String) {
+        this.isDeleted = false
+        this.restoredAt = Instant.now()
+        this.restoredBy = user
+        this.restoreReason = reason
+    }
+}
+```

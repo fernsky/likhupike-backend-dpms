@@ -1,0 +1,344 @@
+===== `EncryptedEntity`
+Abstract base class for entities containing encrypted sensitive data.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `encryptionKeyId`    | Reference to the encryption key used for this entity
+| `encryptionAlgorithm`| Algorithm used for encryption
+| `encryptedFields`    | List of fields that are encrypted
+| `encryptionVersion`  | Version of encryption scheme used
+| `lastReencryptedAt`  | When the entity was last re-encrypted
+| `encryptionContext`  | Context information needed for decryption
+| `dataClassification` | Classification level of contained data (e.g., PUBLIC, CONFIDENTIAL, SECRET)
+| `decryptionAuditLog` | Log of when the entity was decrypted and by whom
+| `keyRotationDue`     | Date when encryption key rotation is due
+| `encryptionMetadata` | Additional metadata about encryption process
+| `hashOfOriginal`     | Hash of original unencrypted data for integrity checks
+|===
+
+====== Contextual Use Cases for EncryptedEntity
+
+*Real-World Scenario:* Citizen Private Data Management 
+
+[plantuml]
+----
+@startuml
+actor "Citizen\n(Laxmi Tamang)" as Citizen
+actor "Civil Registration\nOfficer" as Officer
+actor "Health Department\nOfficer" as Health
+actor "Security\nAdministrator" as Security
+participant "CitizenProfile\nextends EncryptedEntity" as Profile
+participant "EncryptionService" as Encrypt
+participant "KeyManagement\nService" as Keys
+participant "AuditService" as Audit
+
+Citizen -> Officer : register and provide documents
+Officer -> Profile : create new profile
+activate Profile
+Profile -> Profile : setCitizenName("Laxmi Tamang")
+Profile -> Profile : setDateOfBirth("1985-04-12")
+Profile -> Profile : setGender(FEMALE)
+Profile -> Profile : setAddress(residentialAddress)
+Profile -> Profile : setPublicContactInfo(publicContact)
+Profile -> Profile : setNationalIdNumber("NID-475896321")
+Officer <-- Profile : basic profile created
+deactivate Profile
+
+Officer -> Profile : add sensitive information
+activate Profile
+Profile -> Profile : setSocialSecurityNumber("SSN-756483921")
+Profile -> Profile : setBiometricData(fingerprintData)
+Profile -> Profile : setIncomeInformation(taxRecords)
+Profile -> Profile : setMedicalHistory(medicalData)
+Profile -> Profile : setFamilyRelationships(familyData)
+Profile -> Profile : setEncryptedFields(["socialSecurityNumber", "biometricData", "incomeInformation", "medicalHistory"])
+Officer <-- Profile : sensitive data added
+deactivate Profile
+
+Profile -> Encrypt : encryptFields(sensitive fields)
+activate Encrypt
+Encrypt -> Keys : getEncryptionKey(CURRENT)
+activate Keys
+Encrypt <-- Keys : currentEncryptionKey
+deactivate Keys
+Encrypt -> Encrypt : encryptField(socialSecurityNumber, key)
+Encrypt -> Encrypt : encryptField(biometricData, key)
+Encrypt -> Encrypt : encryptField(incomeInformation, key)
+Encrypt -> Encrypt : encryptField(medicalHistory, key)
+Profile <-- Encrypt : encrypted values
+deactivate Encrypt
+
+Officer -> Profile : view basic information
+activate Profile
+Profile -> Profile : getBasicProfile()
+Officer <-- Profile : non-sensitive information
+deactivate Profile
+
+Health -> Profile : request medical data access
+activate Profile
+Profile -> Profile : validateAccessAuthorization(healthOfficerId, "medicalHistory")
+Profile -> Audit : logAccessAttempt(healthOfficerId, "medicalHistory", "APPROVED")
+activate Audit
+Profile <-- Audit : logged
+deactivate Audit
+Profile -> Encrypt : decryptField(medicalHistory)
+activate Encrypt
+Encrypt -> Keys : getKeyForField(profileId, "medicalHistory")
+activate Keys
+Encrypt <-- Keys : fieldEncryptionKey
+deactivate Keys
+Encrypt -> Encrypt : decrypt(encryptedMedicalHistory, key)
+Profile <-- Encrypt : decrypted medical history
+deactivate Encrypt
+Health <-- Profile : medical history data
+deactivate Profile
+
+Security -> Keys : initiate key rotation
+activate Keys
+Keys -> Keys : generateNewEncryptionKey()
+Keys -> Keys : setCurrentVersion(newVersion)
+Security <-- Keys : key rotation initiated
+deactivate Keys
+
+Security -> Profile : schedule re-encryption
+activate Profile
+Profile -> Profile : markForReencryption()
+Profile -> Profile : setEncryptionKeyVersion(currentVersion)
+Security <-- Profile : scheduled for re-encryption
+deactivate Profile
+
+Keys -> Profile : perform re-encryption
+activate Profile
+Profile -> Encrypt : reencryptFields(encryptedFields)
+activate Encrypt
+Encrypt -> Keys : getOldKey(profile.keyVersion)
+activate Keys
+Encrypt <-- Keys : oldKey
+deactivate Keys
+Encrypt -> Keys : getNewKey(currentVersion)
+activate Keys
+Encrypt <-- Keys : newKey
+deactivate Keys
+Encrypt -> Encrypt : decryptWithOldKeyEncryptWithNew(fields)
+Profile <-- Encrypt : reencrypted fields
+deactivate Encrypt
+Profile -> Profile : updateEncryptedFields(newEncryptedValues)
+Profile -> Profile : setLastReencryptedAt(now())
+Profile -> Profile : setEncryptionKeyVersion(currentVersion)
+Keys <-- Profile : re-encryption complete
+deactivate Profile
+
+Officer -> Profile : attempt to export sensitive data
+activate Profile
+Profile -> Profile : validateExportAuthorization(officerId)
+Profile -> Profile : returnExportDeniedError("Export of encrypted fields not permitted")
+Officer <-- Profile : export denied
+deactivate Profile
+
+Citizen -> Officer : request data access report
+Officer -> Profile : generateAccessReport
+activate Profile
+Profile -> Audit : getDecryptionEvents(profileId)
+activate Audit
+Profile <-- Audit : decryptionHistory
+deactivate Audit
+Officer <-- Profile : access history report
+deactivate Profile
+@enduml
+----
+
+*Implementation Details:*
+The Nepal National Identity Management System uses EncryptedEntity to protect sensitive citizen information while enabling authorized, audited access for legitimate government functions. This implementation balances privacy protection with the practical needs of government service delivery.
+
+Civil Registration Officer processes Laxmi Tamang's profile registration. The system creates a CitizenProfile entity with basic identification information stored in plaintext for easy retrieval. However, sensitive data like her social security number, biometric information (fingerprints), income details from tax records, medical history, and family relationships are designated as encrypted fields.
+
+When these sensitive fields are saved, the system works with the EncryptionService to encrypt each field using the current encryption key. The encrypted values are stored in the database, while the original plaintext values are never persisted. The system maintains metadata about which fields are encrypted, which encryption algorithm and key version was used, and when the encryption occurred.
+
+A Health Department officer later needs to access Laxmi's medical history for healthcare service provision. The system verifies the officer has proper authorization to access this specific data field. After validation, the access attempt is logged to the audit system regardless of outcome. The system then retrieves the encrypted medical history, decrypts it using the appropriate key, and provides it to the health officer. Importantly, only the specific field needed is decrypted, not the entire profile.
+
+For security maintenance, the Security Administrator initiates an encryption key rotation. A new key is generated, and profiles are marked for re-encryption. The system then processes these profiles, decrypting data with the old key and re-encrypting with the new key. This process is tracked with lastReencryptedAt to ensure all sensitive data is protected with current cryptographic standards.
+
+When the Civil Registration Officer attempts to export sensitive data, the system blocks this operation based on data classification policies, demonstrating how the EncryptedEntity controls not just storage but also data movement.
+
+Finally, when Laxmi requests information about who has accessed her data, the system can generate a complete access report from the audit logs, showing transparency about data usage while still maintaining security.
+
+The EncryptedEntity implementation provides several key security features:
+1. Field-level encryption rather than entire entity encryption
+2. Role-based access control to encrypted fields
+3. Comprehensive audit logging of all decryption events
+4. Support for encryption key rotation without data loss
+5. Data classification to guide security policies
+6. Original data integrity verification through hashing
+
+The system supports multiple encryption algorithms (AES-256-GCM is the current standard) and maintains contextual information needed for proper decryption, such as initialization vectors and authentication tags.
+
+*Technical Implementation Example:*
+```kotlin
+abstract class EncryptedEntity : SoftDeletableEntity() {
+    var encryptionKeyId: String? = null
+    
+    var encryptionAlgorithm: String = "AES-256-GCM"
+    
+    @ElementCollection
+    var encryptedFields: MutableSet<String> = mutableSetOf()
+    
+    var encryptionVersion: Int = 1
+    
+    var lastReencryptedAt: Instant? = null
+    
+    @Column(columnDefinition = "jsonb")
+    var encryptionContext: String? = null
+    
+    @Enumerated(EnumType.STRING)
+    var dataClassification: DataClassification = DataClassification.CONFIDENTIAL
+    
+    @OneToMany(mappedBy = "entity", cascade = [CascadeType.ALL])
+    var decryptionAuditLog: MutableList<DecryptionEvent> = mutableListOf()
+    
+    var keyRotationDue: LocalDate? = null
+    
+    @Column(columnDefinition = "jsonb")
+    var encryptionMetadata: String? = null
+    
+    var hashOfOriginal: String? = null
+    
+    @Transient
+    private var decryptedValues: MutableMap<String, Any?> = mutableMapOf()
+    
+    fun isFieldEncrypted(fieldName: String): Boolean {
+        return encryptedFields.contains(fieldName)
+    }
+    
+    fun getDecryptedValue(fieldName: String, user: User): Any? {
+        if (!isFieldEncrypted(fieldName)) {
+            // Return the regular field value using reflection
+            val field = this.javaClass.getDeclaredField(fieldName)
+            field.isAccessible = true
+            return field.get(this)
+        }
+        
+        // Check if we already decrypted this field in this session
+        if (decryptedValues.containsKey(fieldName)) {
+            return decryptedValues[fieldName]
+        }
+        
+        // Check authorization
+        if (!isAuthorizedToDecrypt(user, fieldName)) {
+            throw UnauthorizedFieldAccessException(
+                "User ${user.username} is not authorized to access $fieldName"
+            )
+        }
+        
+        // Get the encrypted value using reflection
+        val field = this.javaClass.getDeclaredField("${fieldName}Encrypted")
+        field.isAccessible = true
+        val encryptedValue = field.get(this) as String?
+        
+        if (encryptedValue == null) {
+            return null
+        }
+        
+        // Decrypt the value
+        val decryptedValue = encryptionService.decrypt(
+            encryptedValue,
+            encryptionKeyId!!,
+            getEncryptionContextForField(fieldName)
+        )
+        
+        // Log the decryption event
+        logDecryptionEvent(fieldName, user)
+        
+        // Cache the decrypted value for this session
+        decryptedValues[fieldName] = decryptedValue
+        
+        return decryptedValue
+    }
+    
+    fun setEncryptedValue(fieldName: String, value: Any?) {
+        if (!isFieldEncrypted(fieldName)) {
+            throw IllegalArgumentException("Field $fieldName is not marked as encrypted")
+        }
+        
+        // Cache the decrypted value for this session
+        decryptedValues[fieldName] = value
+        
+        if (value == null) {
+            // Clear the encrypted field
+            val field = this.javaClass.getDeclaredField("${fieldName}Encrypted")
+            field.isAccessible = true
+            field.set(this, null)
+            return
+        }
+        
+        // Encrypt the value
+        val encryptedValue = encryptionService.encrypt(
+            value,
+            encryptionKeyId ?: encryptionService.getCurrentKeyId(),
+            getEncryptionContextForField(fieldName)
+        )
+        
+        // Store the encrypted value using reflection
+        val field = this.javaClass.getDeclaredField("${fieldName}Encrypted")
+        field.isAccessible = true
+        field.set(this, encryptedValue)
+    }
+    
+    private fun getEncryptionContextForField(fieldName: String): Map<String, String> {
+        val baseContext = if (encryptionContext != null) {
+            objectMapper.readValue(encryptionContext!!)
+        } else {
+            mutableMapOf()
+        }
+        
+        baseContext["field"] = fieldName
+        baseContext["entityType"] = this.javaClass.simpleName
+        baseContext["entityId"] = this.id.toString()
+        
+        return baseContext
+    }
+    
+    private fun logDecryptionEvent(fieldName: String, user: User) {
+        val event = DecryptionEvent(
+            entity = this,
+            entityType = this.javaClass.simpleName,
+            entityId = this.id.toString(),
+            fieldName = fieldName,
+            decryptedBy = user,
+            decryptedAt = Instant.now(),
+            purpose = user.currentAccessPurpose,
+            remoteAddress = user.currentRemoteAddress
+        )
+        
+        decryptionAuditLog.add(event)
+        auditService.logDecryptionEvent(event)
+    }
+    
+    private fun isAuthorizedToDecrypt(user: User, fieldName: String): Boolean {
+        // Authorization logic depends on application requirements
+        return accessControlService.hasFieldAccess(user, this, fieldName)
+    }
+    
+    @PreUpdate
+    fun encryptPendingValues() {
+        // Encrypt any values that were set during this session
+        for (fieldName in decryptedValues.keys) {
+            if (isFieldEncrypted(fieldName)) {
+                setEncryptedValue(fieldName, decryptedValues[fieldName])
+            }
+        }
+        
+        // Clear the cache
+        decryptedValues.clear()
+    }
+}
+
+enum class DataClassification {
+    PUBLIC,
+    INTERNAL,
+    CONFIDENTIAL,
+    SENSITIVE,
+    SECRET,
+    TOP_SECRET
+}
+```

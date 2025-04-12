@@ -1,0 +1,252 @@
+===== `PublishableEntity`
+Abstract base class for content that can be drafted, scheduled, published and unpublished.
+
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `publishStatus`       | Current publishing status (DRAFT, SCHEDULED, PUBLISHED, UNPUBLISHED)
+| `publishedAt`         | Timestamp when the entity was published
+| `publishedBy`         | Reference to the user who published the entity
+| `unpublishedAt`       | Timestamp when the entity was unpublished
+| `unpublishedBy`       | Reference to the user who unpublished the entity
+| `scheduledPublishAt`  | Future timestamp when entity should be published
+| `scheduledUnpublishAt`| Future timestamp when entity should be unpublished
+| `autoPublish`         | Whether to automatically publish upon approval
+| `publicationVersion`  | Version number of the current publication
+| `publicationNotes`    | Notes related to publication decisions
+| `highlightUntil`      | Date until which this entity should be highlighted as recently published
+| `readyForReview`      | Flag indicating readiness for publication review
+|===
+
+====== Contextual Use Cases for PublishableEntity
+
+*Real-World Scenario:* Government Policy Publication System
+
+[plantuml]
+----
+@startuml
+actor "Policy Officer\n(Nirmala Thapa)" as Officer
+actor "Department Head\n(Rajesh Aryal)" as Head
+actor "Minister\n(Bharat Singh)" as Minister
+actor "Public Affairs\n(Sushma KC)" as PublicAffairs
+participant "Policy\nextends PublishableEntity" as Policy
+participant "VersionRepository" as Versions
+participant "ReviewService" as Review
+participant "ScheduleService" as Schedule
+participant "GovPortal" as Portal
+
+Officer -> Policy : createPolicy()
+activate Policy
+Policy -> Policy : setTitle("National Digital Literacy Framework")
+Policy -> Policy : setContent(initialDraft)
+Policy -> Policy : setPublishStatus(DRAFT)
+Policy -> Policy : setAutoPublish(false)
+Officer <-- Policy : draft created
+deactivate Policy
+
+Officer -> Policy : updateDraft(revisedContent)
+activate Policy
+Policy -> Policy : setContent(revisedContent)
+Policy -> Policy : incrementVersion()
+Officer <-- Policy : draft updated
+deactivate Policy
+
+Officer -> Policy : markReadyForReview()
+activate Policy
+Policy -> Policy : setReadyForReview(true)
+Officer <-- Policy : marked ready
+deactivate Policy
+
+Head -> Review : reviewDraftPolicies()
+activate Review
+Review -> Policy : getPoliciesReadyForReview()
+activate Policy
+Review <-- Policy : readyPolicies
+deactivate Policy
+Head <-- Review : policies to review
+deactivate Review
+
+Head -> Policy : reviewAndApprove()
+activate Policy
+Policy -> Policy : setReviewNote("Approved with minor edits")
+Policy -> Policy : setApproved(true)
+Head <-- Policy : approved
+deactivate Policy
+
+Minister -> Policy : schedulePublication()
+activate Policy
+Policy -> Policy : setPublishStatus(SCHEDULED)
+Policy -> Policy : setScheduledPublishAt(nextMonday9AM)
+Policy -> Policy : setPublicationNotes("To coincide with Digital Nepal launch")
+Policy -> Schedule : schedulePublication(policyId, nextMonday9AM)
+activate Schedule
+Policy <-- Schedule : scheduled
+deactivate Schedule
+Minister <-- Policy : publication scheduled
+deactivate Policy
+
+Schedule -> Policy : triggerScheduledPublish()
+activate Policy
+Policy -> Policy : setPublishStatus(PUBLISHED)
+Policy -> Policy : setPublishedAt(now())
+Policy -> Policy : setPublishedBy(systemUser)
+Policy -> Policy : setHighlightUntil(twoWeeksFromNow)
+Policy -> Policy : setPublicationVersion(1.0)
+Policy -> Versions : createPublishedVersion()
+activate Versions
+Policy <-- Versions : versionCreated
+deactivate Versions
+Schedule <-- Policy : published
+deactivate Policy
+
+PublicAffairs -> Policy : viewPublishedPolicy()
+activate Policy
+PublicAffairs <-- Policy : publishedPolicy
+deactivate Policy
+
+PublicAffairs -> Policy : scheduleUnpublish()
+activate Policy
+Policy -> Policy : setScheduledUnpublishAt(sixMonthsFromNow)
+Policy -> Schedule : scheduleUnpublication(policyId, sixMonthsFromNow)
+activate Schedule
+Policy <-- Schedule : scheduled
+deactivate Schedule
+PublicAffairs <-- Policy : unpublication scheduled
+deactivate Policy
+
+' Six months later
+Schedule -> Policy : triggerScheduledUnpublish()
+activate Policy
+Policy -> Policy : setPublishStatus(UNPUBLISHED)
+Policy -> Policy : setUnpublishedAt(now())
+Policy -> Policy : setUnpublishedBy(systemUser)
+Schedule <-- Policy : unpublished
+deactivate Policy
+
+' Policy revision scenario
+Officer -> Policy : createRevision()
+activate Policy
+Policy -> Policy : copyFromPublished()
+Policy -> Policy : setPublishStatus(DRAFT)
+Policy -> Policy : clearPublicationDates()
+Officer <-- Policy : revision created
+deactivate Policy
+
+Officer -> Policy : prepareNewVersion(updatedContent)
+activate Policy
+Policy -> Policy : setContent(updatedContent)
+Policy -> Policy : setReadyForReview(true)
+Officer <-- Policy : ready for review
+deactivate Policy
+
+' Approval workflow repeats...
+
+Minister -> Policy : publishNewVersion()
+activate Policy
+Policy -> Policy : setPublishStatus(PUBLISHED)
+Policy -> Policy : setPublishedAt(now())
+Policy -> Policy : setPublishedBy(ministerId)
+Policy -> Policy : incrementPublicationVersion(2.0)
+Policy -> Versions : createNewVersionArchiving(previousVersion)
+activate Versions
+Policy <-- Versions : versionCreated
+deactivate Versions
+Minister <-- Policy : new version published
+deactivate Policy
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Ministry of Communications and Information Technology uses PublishableEntity to manage the lifecycle of official government policies. This implementation ensures proper review, versioning, and scheduled publication of critically important public-facing content.
+
+Policy Officer Nirmala creates a new Digital Literacy Framework document, which begins in DRAFT status. She works on the initial content over several days, updating it as needed. When the draft is complete, she marks it as readyForReview, which notifies Department Head Rajesh.
+
+After Rajesh reviews and approves the policy, Minister Bharat schedules it for publication the following Monday at 9 AM to coincide with a major announcement. The publishStatus changes to SCHEDULED, and a scheduledPublishAt date is set. When that date arrives, the system automatically changes the status to PUBLISHED, records the current timestamp as publishedAt, and sets highlightUntil to ensure the new policy appears in the "Recently Published" section for two weeks.
+
+The policy document receives a publicationVersion of 1.0, and the system creates a permanent snapshot of this version. Six months later, when the revised framework is ready, the policy automatically unpublishes on the scheduled date, making way for the newer version.
+
+For the policy revision, Officer Nirmala creates a new draft based on the original, updates it with new content, and sends it through the approval workflow again. When published, it receives an incremented publicationVersion of 2.0, and the previous version is archived for historical reference.
+
+The system implements several publication-specific features:
+1. Automatic scheduling of both publication and unpublication
+2. Version tracking for multiple publication cycles
+3. Historical archiving of previous policy versions
+4. "Recently published" highlighting for important new content
+5. Publication notes for internal context about timing decisions
+6. Conditional publication based on approval status (autoPublish)
+
+*Technical Implementation Example:*
+```kotlin
+abstract class PublishableEntity : ApprovableEntity() {
+    @Enumerated(EnumType.STRING)
+    var publishStatus: PublishStatus = PublishStatus.DRAFT
+    
+    var publishedAt: Instant? = null
+    
+    @ManyToOne
+    var publishedBy: User? = null
+    
+    var unpublishedAt: Instant? = null
+    
+    @ManyToOne
+    var unpublishedBy: User? = null
+    
+    var scheduledPublishAt: Instant? = null
+    
+    var scheduledUnpublishAt: Instant? = null
+    
+    var autoPublish: Boolean = false
+    
+    var publicationVersion: String? = null
+    
+    var publicationNotes: String? = null
+    
+    var highlightUntil: LocalDate? = null
+    
+    var readyForReview: Boolean = false
+    
+    fun publish(publisher: User) {
+        validateCanPublish()
+        this.publishStatus = PublishStatus.PUBLISHED
+        this.publishedAt = Instant.now()
+        this.publishedBy = publisher
+        if (this.publicationVersion == null) {
+            this.publicationVersion = "1.0"
+        }
+    }
+    
+    fun unpublish(unpublisher: User) {
+        validateCanUnpublish()
+        this.publishStatus = PublishStatus.UNPUBLISHED
+        this.unpublishedAt = Instant.now()
+        this.unpublishedBy = unpublisher
+    }
+    
+    fun schedulePublication(scheduledDate: Instant) {
+        validateCanSchedule()
+        this.publishStatus = PublishStatus.SCHEDULED
+        this.scheduledPublishAt = scheduledDate
+    }
+    
+    fun isHighlighted(): Boolean {
+        val current = LocalDate.now()
+        return this.publishStatus == PublishStatus.PUBLISHED && 
+               this.highlightUntil != null && 
+               !current.isAfter(this.highlightUntil)
+    }
+    
+    override fun approve(approver: User) {
+        super.approve(approver)
+        if (this.autoPublish) {
+            this.publish(approver)
+        }
+    }
+}
+
+enum class PublishStatus {
+    DRAFT,
+    SCHEDULED,
+    PUBLISHED,
+    UNPUBLISHED
+}
+```
