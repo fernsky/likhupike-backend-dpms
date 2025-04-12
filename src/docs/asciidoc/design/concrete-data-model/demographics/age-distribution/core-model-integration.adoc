@@ -1,0 +1,192 @@
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface FullTextSearchable
+interface CustomValidatable
+
+' AgeDistribution implementation
+class AgeDistribution {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +String adminAreaName
+  +AdminAreaLevel adminAreaLevel
+  
+  ' Time context
+  +Integer year
+  +String periodType
+  +LocalDate referenceDate
+  +Boolean isCensusData
+  +String censusReference
+  +Boolean isProjected
+  +String projectionMethod
+  
+  ' Age distribution data
+  +Integer totalPopulation
+  +Map<AgeGroup, Integer> populationByAgeGroup
+  +Map<AgeGroup, Integer> malePopulationByAgeGroup
+  +Map<AgeGroup, Integer> femalePopulationByAgeGroup
+  +Map<AgeGroup, Integer> thirdGenderPopulationByAgeGroup
+  
+  ' Age parameters
+  +Double medianAge
+  +Integer populationUnder5
+  +Integer populationUnder18
+  +Integer population18To60
+  +Integer populationOver60
+  +Integer populationOver80
+  
+  ' Derived metrics
+  +Double childDependencyRatio
+  +Double oldAgeDependencyRatio
+  +Double totalDependencyRatio
+  +Double agingIndex
+  +Double childWomanRatio
+  +Double potentialSupportRatio
+  +Double parentSupportRatio
+  +Integer populationPyramidWidth
+  
+  ' Data quality
+  +ConfidenceLevel confidenceLevel
+  +String dataSource
+  +String methodologyDescription
+  +Double marginOfError
+  +String notes
+  
+  ' Previous reference
+  +UUID previousDistributionId
+  +Integer changeUnder5
+  +Integer changeOver60
+  +Double changeMedianAge
+  +Double changeDependencyRatio
+  
+  ' External references
+  +UUID sourceDatasetId
+  +UUID populationStatisticsId
+}
+
+' Supporting classes
+class AgeGroupDefinition {
+  +AgeGroup ageGroup
+  +Integer lowerBound
+  +Integer upperBound
+  +String description
+  +AgeGroupCategory category
+  +Integer widthInYears
+  +Boolean isOpenEnded
+}
+
+class AgeDistributionChange {
+  +UUID id
+  +UUID ageDistributionId
+  +LocalDateTime timestamp
+  +ChangeType changeType
+  +String description
+  +Map<AgeGroup, Integer> previousValues
+  +Map<AgeGroup, Integer> newValues
+  +UUID changedBy
+  +String changeReason
+}
+
+' Enumerations
+enum AgeGroup {
+  UNDER_5
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum AgeGroupCategory {
+  CHILDHOOD
+  SCHOOL_AGE
+  WORKING_AGE
+  REPRODUCTIVE_AGE
+  ELDERLY
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum ChangeType {
+  INITIAL
+  REVISION
+  PROJECTION_UPDATE
+  DATA_CORRECTION
+  METHODOLOGY_CHANGE
+  ADMIN_BOUNDARY_CHANGE
+}
+
+' Inheritance relationships
+BaseEntity <|-- AgeDistribution
+BaseEntity <|-- AgeGroupDefinition
+BaseEntity <|-- AgeDistributionChange
+
+' Interface implementation
+AgeDistribution ..|> DataAggregatable
+AgeDistribution ..|> HistoryViewable
+AgeDistribution ..|> ExternalSystemSyncable
+AgeDistribution ..|> FullTextSearchable
+AgeDistribution ..|> CustomValidatable
+
+' Class relationships
+AgeDistribution -- AgeGroup
+AgeDistribution -- ConfidenceLevel
+AgeDistribution -- AdminAreaLevel
+AgeDistribution "1" o-- "many" AgeDistributionChange
+AgeGroupDefinition -- AgeGroup
+AgeGroupDefinition -- AgeGroupCategory
+AgeDistributionChange -- ChangeType
+@enduml
+----
+
+The AgeDistribution entity extends the BaseEntity core model and implements several capability interfaces to provide robust analysis of population age structures across administrative boundaries. This integration enables complex demographic analysis while maintaining consistency with the core domain model architecture.
+
+The entity is designed to work with both census data and intercensal estimates, tracking the distribution of population across standardized age groups. It maintains connections to the administrative hierarchy (ward, municipality, district, province, country) and explicitly identifies data source and confidence level to ensure appropriate use of the data in analysis and planning.
+
+As a DataAggregatable entity, AgeDistribution supports hierarchical roll-ups from smaller to larger administrative units, allowing analysis at any administrative level. The HistoryViewable interface enables tracking of changes to age distribution data over time, while ExternalSystemSyncable allows integration with external demographic systems like the Central Bureau of Statistics.
+
+The entity captures not just the raw age distribution data but also calculates key demographic indices like dependency ratios, aging index, and potential support ratio. These derived metrics provide valuable insights into the demographic structure and its implications for social and economic planning.
+
+The flexibility of the AgeGroup enumeration and AgeGroupDefinition entity allows the system to support different age grouping schemes for different analytical purposes, from standard 5-year cohorts to specialized groupings for educational planning, workforce analysis, or healthcare needs assessment.
+
+The model handles both historical census data and projected future age distributions, with clear identification of projection methods and confidence levels. This transparency about data sources and quality is crucial for appropriate interpretation and use of demographic data in policy and planning decisions.

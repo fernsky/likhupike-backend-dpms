@@ -1,0 +1,219 @@
+[plantuml]
+----
+@startuml
+participant "DemographicAnalyst" as Analyst
+participant "WardTimeSeriesPopulation" as TimeSeries
+participant "TimeSeriesAnalyticsEngine" as Analytics
+participant "VisualizationService" as Viz
+participant "ProjectionService" as Projection
+participant "BoundaryService" as Boundary
+
+Analyst -> TimeSeries: getTimeSeries(wardId, 2001, 2021)
+activate TimeSeries
+TimeSeries -> TimeSeries: retrieveDataPoints()
+TimeSeries -> TimeSeries: validateDataContinuity()
+TimeSeries -> Boundary: checkBoundaryChanges(wardId, 2001, 2021)
+activate Boundary
+TimeSeries <-- Boundary: boundaryChangeData
+deactivate Boundary
+TimeSeries -> TimeSeries: reconcileAcrossBoundaryChanges()
+Analyst <-- TimeSeries: completeTimeSeries
+deactivate TimeSeries
+
+Analyst -> Analytics: calculateGrowthTrends(timeSeries)
+activate Analytics
+Analytics -> Analytics: computeCompoundAnnualGrowthRate()
+Analytics -> Analytics: identifyTrendBreakpoints()
+Analytics -> Analytics: performSeasonalDecomposition()
+Analytics -> Analytics: detectAnomalies()
+Analyst <-- Analytics: growthTrendAnalysis
+deactivate Analytics
+
+Analyst -> Viz: createTimeSeriesVisualization(timeSeries)
+activate Viz
+Viz -> Viz: generateLineChart()
+Viz -> Viz: addBoundaryChangeMarkers()
+Viz -> Viz: indicateCensusYears()
+Viz -> Viz: differentiateActualVsEstimated()
+Analyst <-- Viz: timeSeriesVisualization
+deactivate Viz
+
+Analyst -> TimeSeries: compareWithParentTimeSeries(municipalityId)
+activate TimeSeries
+TimeSeries -> TimeSeries: retrieveMunicipalityTimeSeries()
+TimeSeries -> TimeSeries: calculateLocalShareOfTotal()
+TimeSeries -> TimeSeries: analyzeRelativeGrowthRates()
+Analyst <-- TimeSeries: relativeGrowthComparison
+deactivate TimeSeries
+
+Analyst -> Projection: generateFutureProjections(timeSeries, 2031)
+activate Projection
+Projection -> Projection: evaluateHistoricalPatterns()
+Projection -> Projection: selectOptimalProjectionMethod()
+Projection -> Projection: applyDemographicComponents()
+Projection -> Projection: calculateConfidenceIntervals()
+Analyst <-- Projection: populationProjections
+deactivate Projection
+
+Analyst -> Analytics: performComparativeAnalysis(wardId, similarWardIds)
+activate Analytics
+Analytics -> Analytics: normalizePopulationSeries()
+Analytics -> Analytics: calculateCorrelations()
+Analytics -> Analytics: identifyDivergencePoints()
+Analytics -> Analytics: rankSimilarityScores()
+Analyst <-- Analytics: comparativeAnalysis
+deactivate Analytics
+
+Analyst -> Analytics: decomposeTrends(timeSeries)
+activate Analytics
+Analytics -> Analytics: extractLongTermTrend()
+Analytics -> Analytics: isolateCyclicalPatterns()
+Analytics -> Analytics: identifySeasonalComponents()
+Analytics -> Analytics: calculateResiduals()
+Analyst <-- Analytics: trendDecompositionResults
+deactivate Analytics
+
+Analyst -> Viz: createCompositeAnalysisVisualization()
+activate Viz
+Viz -> Viz: combineTemporalCharts()
+Viz -> Viz: addProjectionsWithIntervals()
+Viz -> Viz: incorporateGrowthRateIndicators()
+Viz -> Viz: visualizeRelativePerformance()
+Analyst <-- Viz: comprehensiveVisualization
+deactivate Viz
+@enduml
+----
+
+The WardTimeSeriesPopulation entity provides robust time series analysis capabilities designed specifically for demographic data. These capabilities enable users to perform sophisticated temporal analysis of population trends at the ward level, while accounting for the unique challenges of Nepal's demographic data collection and administrative structure.
+
+===== Core Time Series Capabilities
+
+*Continuous Time Series Construction*
+
+The system constructs continuous time series despite the challenges of:
+- Decennial census data with long periods between authoritative measurements
+- Administrative boundary changes that affect geographic comparability
+- Varying methodologies between census periods
+- Data gaps in remote areas or conflict-affected regions
+
+By combining census data, civil registration statistics, sample surveys, and mathematical estimation techniques, the system provides a continuous population time series for each ward from 2001 to present, with projections available to 2031.
+
+*Growth Rate Calculation Methods*
+
+Multiple growth rate calculation methodologies are supported:
+
+1. **Annual Growth Rate (AGR)**: Simple year-over-year percentage change
+2. **Compound Annual Growth Rate (CAGR)**: Smoothed growth rate between any two points
+3. **Continuous Growth Rate**: Exponential growth rate modeling
+4. **Weighted Growth**: Adjusts for seasonality or known migration patterns
+
+These various methods allow analysts to understand population dynamics through different lenses, particularly important in Nepal where seasonal migration significantly affects population counts at different times of year.
+
+*Change Point Detection*
+
+The analytics engine can automatically identify significant changes in population trends:
+- Sudden increases due to rural-urban migration
+- Declines following natural disasters
+- Anomalous changes requiring verification
+- Impact of major infrastructure projects
+- Effects of municipal restructuring
+
+This capability helps planners identify critical moments in a ward's demographic history and connect these changes to policy interventions or external events.
+
+===== Advanced Analytical Features
+
+*Comparative Ward Analysis*
+
+The system enables comparative analysis between similar wards across Nepal, helping identify:
+- Wards with similar growth trajectories
+- Unusual outliers in growth patterns
+- Best practices from similarly situated wards
+- Regional trends and variations
+
+This comparative capability supports evidence-based policy making by identifying successful development patterns that may be replicable elsewhere.
+
+*Administrative Hierarchy Integration*
+
+Time series data is automatically integrated with the administrative hierarchy, allowing:
+- Roll-up analysis from ward to municipality to district to province
+- Drill-down from higher administrative levels
+- Comparative analysis across administrative levels
+- Measuring ward's share of higher-level population
+
+This hierarchical integration is particularly important in Nepal's federal structure, where planning occurs at multiple administrative levels simultaneously.
+
+*Demographic Component Analysis*
+
+The time series engine can decompose population changes into components:
+- Natural increase (births minus deaths)
+- Net migration (in-migration minus out-migration)
+- Administrative changes (boundary modifications)
+
+This decomposition helps planners understand the drivers behind population changes, distinguishing between natural growth and migration-driven growth, which require different policy responses.
+
+===== Projection Capabilities
+
+*Multi-method Projection Models*
+
+The system implements multiple projection methodologies:
+
+1. **Mathematical Methods**:
+   - Linear extrapolation
+   - Exponential growth
+   - Logistic curves with carrying capacity constraints
+   - Polynomial fitting
+
+2. **Ratio Methods**:
+   - Constant-share projections
+   - Shift-share analysis
+   - Ratio to parent geography
+
+3. **Component Methods**:
+   - Cohort-component projections (where age-sex data available)
+   - Housing unit projections
+   - Employment-driven projections
+
+Each projection includes confidence intervals that widen with distance from the last census year, honestly communicating the increasing uncertainty of long-range projections.
+
+*Scenario-Based Projections*
+
+For planning purposes, the system can generate multiple scenarios:
+- High, medium, and low growth scenarios
+- Policy-intervention scenarios (e.g., new infrastructure impact)
+- Disaster recovery scenarios
+- Economic change scenarios (e.g., industry closure, new development)
+
+These scenarios help planners prepare for a range of possible futures rather than relying on a single projection path.
+
+===== Implementation Considerations
+
+*Data Reliability Indicators*
+
+All time points include reliability indicators that:
+- Clearly distinguish census data from estimates
+- Provide confidence level ratings
+- Document methodology used
+- Note boundary change impacts
+
+These indicators are crucial for proper interpretation of the time series data, ensuring users understand the limitations of different data points.
+
+*Missing Data Handling*
+
+The system implements sophisticated missing data handling for Nepal's context:
+- Gap filling for conflict-affected periods (1996-2006 Maoist insurgency)
+- Estimation for areas with limited access
+- Confidence flagging for highly uncertain estimates
+- Alternative methodology options when primary approaches fail
+
+This ensures continuous time series even in challenging data environments while maintaining transparency about data limitations.
+
+*Edge Cases*
+
+The time series handling accounts for several edge cases common in Nepal:
+- Newly created administrative units with no historical data
+- Wards that have undergone multiple boundary changes
+- Areas with extreme seasonal migration patterns
+- Disaster-affected areas with population discontinuities
+- Remote areas with limited data collection coverage
+
+The strategy for these edge cases emphasizes methodological transparency and appropriate confidence level assignment rather than forcing potentially misleading continuous estimates.

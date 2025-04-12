@@ -1,0 +1,507 @@
+===== Domain Events
+
+The WardTimeSeriesPopulation entity publishes and consumes domain events to facilitate integration with other parts of the system and maintain data consistency across the demographic domain.
+
+[plantuml]
+----
+@startuml
+class WardTimeSeriesPopulationCreatedEvent {
+  +UUID timeSeriesId
+  +UUID wardId
+  +Integer year
+  +Integer totalPopulation
+  +Boolean isCensusYear
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class WardTimeSeriesPopulationUpdatedEvent {
+  +UUID timeSeriesId
+  +UUID wardId
+  +Integer year
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class IntercensalEstimateCalculatedEvent {
+  +UUID timeSeriesId
+  +UUID wardId
+  +Integer year
+  +EstimationTechnique technique
+  +String methodologyDescription
+  +Boolean replacesExisting
+  +UUID previousEstimateId
+  +Double confidenceMeasure
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PopulationProjectionCreatedEvent {
+  +UUID projectionId
+  +UUID timeSeriesId
+  +UUID wardId
+  +Integer projectionYear
+  +ProjectionScenario scenario
+  +Integer projectedPopulation
+  +String methodologyDescription
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class BoundaryChangeAdjustmentCreatedEvent {
+  +UUID adjustmentId
+  +UUID timeSeriesId
+  +UUID oldBoundaryId
+  +UUID newBoundaryId
+  +BoundaryChangeType changeType
+  +LocalDate changeDate
+  +Map<String, Double> allocationFactors
+  +String changeDescription
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class CensusDataImportedEvent {
+  +UUID timeSeriesId
+  +UUID wardId
+  +Integer censusYear
+  +String censusReference
+  +Integer totalPopulation
+  +UUID dataSourceId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PopulationAnomalyDetectedEvent {
+  +UUID timeSeriesId
+  +UUID wardId
+  +Integer year
+  +String anomalyType
+  +Double anomalyMeasure
+  +String detectionMethod
+  +Boolean requiresVerification
+  +String potentialCauses
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class TimeSeriesAggregatedEvent {
+  +UUID resultTimeSeriesId
+  +UUID targetAdminAreaId
+  +AdminAreaLevel adminLevel
+  +List<UUID> sourceTimeSeriesIds
+  +Integer year
+  +Integer aggregatedPopulation
+  +String aggregationMethod
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class PopulationTrendCalculatedEvent {
+  +UUID wardId
+  +Integer startYear
+  +Integer endYear
+  +Double annualGrowthRate
+  +Double compoundGrowthRate
+  +String trendDescription
+  +UUID trendAnalysisId
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionUpdatedEvent {
+  +UUID distributionId
+  +UUID timeSeriesId
+  +UUID wardId
+  +Integer year
+  +Double medianAge
+  +Double dependencyRatio
+  +String updateSource
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+abstract class DomainEvent
+DomainEvent <|-- WardTimeSeriesPopulationCreatedEvent
+DomainEvent <|-- WardTimeSeriesPopulationUpdatedEvent
+DomainEvent <|-- IntercensalEstimateCalculatedEvent
+DomainEvent <|-- PopulationProjectionCreatedEvent
+DomainEvent <|-- BoundaryChangeAdjustmentCreatedEvent
+DomainEvent <|-- CensusDataImportedEvent
+DomainEvent <|-- PopulationAnomalyDetectedEvent
+DomainEvent <|-- TimeSeriesAggregatedEvent
+DomainEvent <|-- PopulationTrendCalculatedEvent
+DomainEvent <|-- AgeDistributionUpdatedEvent
+
+TimeSeriesAggregatedEvent -- AdminAreaLevel
+@enduml
+----
+
+==== Core Domain Events
+
+===== WardTimeSeriesPopulationCreatedEvent
+
+Triggered when a new time series data point is created for a ward.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| timeSeriesId | Unique identifier of the newly created time series
+| wardId | Ward identifier this time series belongs to
+| year | Year of the time series data
+| totalPopulation | Total population recorded
+| isCensusYear | Whether this is an official census year
+| timestamp | When the event occurred
+| actorId | User or system that created the time series
+|===
+
+*Business Impact:* Triggers aggregation to higher administrative levels, notification to data analysts, and updating of derived statistics. For Nepal's context, creating a new ward population data point is significant because it influences resource allocation formulas for everything from health center staffing to road construction budgets.
+
+===== WardTimeSeriesPopulationUpdatedEvent
+
+Triggered when changes are made to existing ward time series data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| timeSeriesId | Identifier of the updated time series
+| wardId | Ward identifier
+| year | Year of the time series data
+| changedFields | Map of fields that were changed with their old and new values
+| updateType | Type of update (CORRECTION, REVISION, ENHANCEMENT)
+| isRevision | Whether this is an official revision
+| updateReason | Reason for the update
+| timestamp | When the event occurred
+| actorId | User who made the update
+|===
+
+*Business Impact:* This event may trigger re-aggregation of municipal, district, and provincial population totals, re-calculation of rates that use population as a denominator (like service coverage rates), and notifications to downstream systems. For Nepal, population updates often necessitate revision of voter distribution and parliamentary seat allocations, which can have political implications.
+
+===== IntercensalEstimateCalculatedEvent
+
+Triggered when a new intercensal estimate is calculated for a ward.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| timeSeriesId | Identifier of the new estimate time series
+| wardId | Ward identifier
+| year | Year of the estimate
+| technique | Estimation technique used
+| methodologyDescription | Description of methodology
+| replacesExisting | Whether this replaces a previous estimate
+| previousEstimateId | Identifier of the previous estimate if replacing
+| confidenceMeasure | Measure of confidence in the estimate
+| timestamp | When the event occurred
+| actorId | User or system that calculated the estimate
+|===
+
+*Business Impact:* Intercensal estimates are crucial in Nepal's planning context since censuses occur only every 10 years but planning cycles are typically 5 years. These events trigger updates to development plans, service delivery targets, and budget allocations based on more current population figures than the last census.
+
+===== PopulationProjectionCreatedEvent
+
+Triggered when a new population projection is created for future years.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| projectionId | Unique identifier of the projection
+| timeSeriesId | Related time series identifier
+| wardId | Ward identifier
+| projectionYear | Year being projected
+| scenario | Projection scenario (high/medium/low growth)
+| projectedPopulation | Projected population
+| methodologyDescription | Description of projection methodology
+| timestamp | When the event occurred
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Population projections influence long-term infrastructure planning in Nepal, particularly for durable assets like roads, water systems, and school buildings. This event may trigger infrastructure capacity analyses and long-term budget forecasting.
+
+==== Specialized Domain Events
+
+===== BoundaryChangeAdjustmentCreatedEvent
+
+Triggered when a boundary change affecting population data is recorded, critical for Nepal's evolving administrative structure.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| adjustmentId | Unique identifier of the adjustment record
+| timeSeriesId | Time series affected by the boundary change
+| oldBoundaryId | Previous boundary identifier
+| newBoundaryId | New boundary identifier
+| changeType | Type of boundary change
+| changeDate | When the boundary change occurred
+| allocationFactors | Factors for redistributing population
+| changeDescription | Description of the boundary change
+| timestamp | When the event occurred
+| actorId | User who recorded the adjustment
+|===
+
+*Business Impact:* Following Nepal's 2017 federal restructuring, boundary changes became an essential component of population management. This event triggers recalculation of historical time series under new boundaries, ensuring data continuity despite administrative changes. It affects everything from voter list management to infrastructure planning across changed boundaries.
+
+===== CensusDataImportedEvent
+
+Triggered when official census data is imported into the system.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| timeSeriesId | Identifier of the created time series
+| wardId | Ward identifier
+| censusYear | Census year
+| censusReference | Reference to specific census
+| totalPopulation | Total population recorded
+| dataSourceId | Reference to data source
+| timestamp | When the event occurred
+| actorId | User who imported the data
+|===
+
+*Business Impact:* Census data imports in Nepal establish authoritative population baselines that influence hundreds of downstream systems and processes. This event triggers comprehensive updates to planning frameworks, resource allocation formulas, and representative governance structures based on the new official population figures.
+
+===== PopulationAnomalyDetectedEvent
+
+Triggered when unusual patterns are detected in population data that may indicate errors or significant demographic shifts.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| timeSeriesId | Identifier of the time series with anomaly
+| wardId | Ward identifier
+| year | Year of the anomalous data
+| anomalyType | Type of anomaly detected (SUDDEN_INCREASE, SUDDEN_DECREASE, etc.)
+| anomalyMeasure | Quantified measure of the anomaly
+| detectionMethod | Method used to detect the anomaly
+| requiresVerification | Whether verification is required
+| potentialCauses | Potential explanations for the anomaly
+| timestamp | When the anomaly was detected
+| actorId | User or system that detected the anomaly
+|===
+
+*Business Impact:* In Nepal's complex geographic and demographic context, anomaly detection helps identify both data errors and genuine demographic shifts (like disaster-induced migration). This event triggers investigation workflows to distinguish between data issues and real demographic changes requiring policy responses.
+
+===== TimeSeriesAggregatedEvent
+
+Triggered when ward-level data is aggregated to higher administrative levels.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| resultTimeSeriesId | Identifier of the aggregated time series
+| targetAdminAreaId | Identifier of the target administrative area
+| adminLevel | Administrative level of aggregation
+| sourceTimeSeriesIds | List of source time series that were aggregated
+| year | Year of the aggregated data
+| aggregatedPopulation | Aggregated population total
+| aggregationMethod | Method used for aggregation
+| timestamp | When the aggregation occurred
+| actorId | User or system that performed the aggregation
+|===
+
+*Business Impact:* Aggregation events are essential in Nepal's federated structure, where planning happens at multiple administrative levels. Municipal, district, provincial, and national agencies rely on these aggregated figures for their respective planning processes. This event triggers updates to geographic information systems, planning dashboards, and resource allocation systems at each administrative level.
+
+===== PopulationTrendCalculatedEvent
+
+Triggered when a population trend analysis is completed for a ward.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| wardId | Ward identifier
+| startYear | Start year of the trend analysis
+| endYear | End year of the trend analysis
+| annualGrowthRate | Calculated annual growth rate
+| compoundGrowthRate | Calculated compound growth rate
+| trendDescription | Textual description of the trend
+| trendAnalysisId | Reference to detailed trend analysis
+| timestamp | When the analysis was completed
+| actorId | User or system that performed the analysis
+|===
+
+*Business Impact:* Trend analysis is critical for understanding Nepal's demographic transition, which varies dramatically by region (from negative growth in some hill districts to rapid growth in urban areas). This event may trigger infrastructure planning reviews, service delivery adjustments, and updates to urban development plans based on growth trajectories.
+
+===== AgeDistributionUpdatedEvent
+
+Triggered when age distribution data is updated for a population time series.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| distributionId | Identifier of the age distribution
+| timeSeriesId | Related time series identifier
+| wardId | Ward identifier
+| year | Year of the distribution
+| medianAge | Median age of the population
+| dependencyRatio | Overall dependency ratio
+| updateSource | Source of the update
+| timestamp | When the update occurred
+| actorId | User who updated the distribution
+|===
+
+*Business Impact:* Age distribution updates influence service planning across Nepal's development sectors, from education to elderly care. This event may trigger adjustments to school capacity planning, healthcare facility requirements, and social security projections based on the changing age structure of specific wards.
+
+==== Event Handling Architecture
+
+[plantuml]
+----
+@startuml
+participant "WardTimeSeriesService" as Service
+participant "WardTimeSeriesPopulation" as Entity
+participant "EventPublisher" as Publisher
+participant "AdminHierarchyService" as Hierarchy
+participant "MunicipalityAggregator" as MuniAgg
+participant "DistrictAggregator" as DistAgg
+participant "ProvinceAggregator" as ProvAgg
+participant "NationalAggregator" as NatAgg
+participant "AnomalyDetectionService" as Anomaly
+participant "NotificationService" as Notify
+participant "ValidationService" as Validation
+participant "AuditService" as Audit
+
+Service -> Entity: createNewTimeSeries(wardId, year, data)
+activate Entity
+
+Entity -> Validation: validateTimeSeriesData(data)
+activate Validation
+Entity <-- Validation: validationResult
+deactivate Validation
+
+Entity -> Entity: constructTimeSeries()
+Entity -> Entity: calculateDerivedMetrics()
+
+Entity -> Publisher: publishEvent(WardTimeSeriesPopulationCreatedEvent)
+activate Publisher
+
+Publisher -> Audit: recordEvent(event)
+activate Audit
+Publisher <-- Audit: recorded
+deactivate Audit
+
+Publisher -> Hierarchy: getAdminHierarchy(wardId)
+activate Hierarchy
+Publisher <-- Hierarchy: adminHierarchy
+deactivate Hierarchy
+
+Publisher -> MuniAgg: handleEvent(event, adminHierarchy)
+activate MuniAgg
+MuniAgg -> MuniAgg: aggregateToMunicipality()
+MuniAgg -> Publisher: publishEvent(TimeSeriesAggregatedEvent)
+Publisher <-- MuniAgg: handled
+deactivate MuniAgg
+
+Publisher -> DistAgg: handleEvent(municipalityEvent)
+activate DistAgg
+DistAgg -> DistAgg: aggregateToDistrict()
+DistAgg -> Publisher: publishEvent(TimeSeriesAggregatedEvent)
+Publisher <-- DistAgg: handled
+deactivate DistAgg
+
+Publisher -> ProvAgg: handleEvent(districtEvent)
+activate ProvAgg
+ProvAgg -> ProvAgg: aggregateToProvince()
+ProvAgg -> Publisher: publishEvent(TimeSeriesAggregatedEvent)
+Publisher <-- ProvAgg: handled
+deactivate ProvAgg
+
+Publisher -> NatAgg: handleEvent(provinceEvent)
+activate NatAgg
+NatAgg -> NatAgg: aggregateToNational()
+NatAgg -> Publisher: publishEvent(TimeSeriesAggregatedEvent)
+Publisher <-- NatAgg: handled
+deactivate NatAgg
+
+Publisher -> Anomaly: checkForAnomalies(event)
+activate Anomaly
+Anomaly -> Anomaly: analyzeTimeSeries()
+alt Anomaly Detected
+  Anomaly -> Publisher: publishEvent(PopulationAnomalyDetectedEvent)
+  Publisher -> Notify: sendAnomalyAlert(anomalyEvent)
+  activate Notify
+  Publisher <-- Notify: alertSent
+  deactivate Notify
+end
+Publisher <-- Anomaly: anomalyCheckComplete
+deactivate Anomaly
+
+Entity <-- Publisher: eventsPublished
+deactivate Publisher
+
+Service <-- Entity: timeSeriesCreated
+deactivate Entity
+@enduml
+----
+
+The diagram above illustrates how events flow through the system when a new ward time series is created. The process demonstrates several key patterns:
+
+1. **Hierarchical Event Propagation**: Events trigger aggregation up the administrative hierarchy, with each level publishing its own events.
+
+2. **Validation Before Publication**: Data is validated before events are published, ensuring data quality.
+
+3. **Anomaly Detection**: Automated checks for unusual patterns trigger separate anomaly events when detected.
+
+4. **Audit Trail**: All events are recorded for audit purposes, maintaining transparency and traceability.
+
+5. **Notification Integration**: Critical events trigger notifications to relevant stakeholders.
+
+==== Event Application Use Cases
+
+===== Updating Resource Allocation After Population Revision
+
+When ward population estimates are revised, the system needs to update resource allocation formulas at multiple levels. The WardTimeSeriesPopulationUpdatedEvent triggers a cascade of recalculations:
+
+1. Municipal fiscal transfer calculations for the affected ward are recalculated
+2. District-level service coverage metrics (health, education) are updated
+3. Provincial development indices incorporating population are refreshed
+4. National statistical publications are flagged for update
+
+This ensures that resource allocation remains aligned with the most current population figures, a critical concern in Nepal's formula-based fiscal federalism system.
+
+===== Boundary Change Reconciliation
+
+When administrative boundaries change (as occurred extensively during Nepal's federal restructuring), historical population data must be recalculated for the new boundaries to maintain consistent time series. The BoundaryChangeAdjustmentCreatedEvent triggers:
+
+1. Recalculation of historical populations under new boundaries
+2. Adjustment of growth rates to account for boundary changes
+3. Updating of GIS systems with new boundary definitions
+4. Notification to planning agencies about changed population bases
+
+This process ensures planning continuity despite administrative reorganization, allowing for consistent trend analysis across boundary changes.
+
+===== Anomaly Investigation Workflow
+
+When the PopulationAnomalyDetectedEvent is triggered, it initiates an investigation workflow:
+
+1. Data verification tasks are created for statistical officers
+2. Comparison with adjacent wards is automatically performed
+3. Historical patterns are analyzed for context
+4. External factors (disasters, development projects) are checked
+5. Resolution options are presented (confirm, correct, or explain)
+
+This workflow helps distinguish between data errors and genuine demographic shifts requiring policy responses, ensuring data integrity while capturing real demographic changes.
+
+==== Nepal-Specific Event Considerations
+
+1. **Multi-Calendar Support**: Events include conversion between Bikram Sambat (Nepal's official calendar) and Gregorian dates for international compatibility.
+
+2. **Geographical Context Tags**: Events include metadata about ecological zone (Mountain, Hill, Terai) and remoteness category, essential context for Nepal's diverse geography.
+
+3. **Disaster Correlation**: Events can be tagged with related disaster events, allowing population changes to be analyzed in the context of Nepal's frequent natural disasters.
+
+4. **Political Transition Markers**: Events occurring during significant political transitions (constitution promulgation, local elections) are flagged, as these often correlate with administrative or policy changes affecting demographics.
+
+5. **Development Project Linkage**: Events can be associated with major infrastructure projects that influence population distribution, such as new highways or hydropower projects.
+
+These Nepal-specific considerations ensure that population data events capture the complex geographical, political, and development contexts that shape Nepal's demographic patterns.

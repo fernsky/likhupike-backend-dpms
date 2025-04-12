@@ -1,0 +1,142 @@
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Plan census/survey data collection;
+:Develop age-specific questionnaires;
+:Train field enumerators;
+
+|Field Data Collection|
+:Conduct field enumeration;
+:Collect household member ages;
+:Record individual birth years;
+:Handle missing/unknown ages;
+note right
+  Nepal-specific challenges:
+  - Many elderly without birth documentation
+  - Cultural age reporting biases
+  - Numeric age vs. calendar year confusion
+end note
+
+|Data Processing Team|
+:Clean raw age data;
+:Resolve inconsistencies;
+:Verify unusual age outliers;
+:Handle age heaping;
+note right
+  Age heaping correction:
+  Adjust for preference of
+  ages ending in 0 or 5
+end note
+
+|System|
+:Import cleaned age data;
+:Categorize into standard age groups;
+:Calculate total population by age group;
+:Split by gender within age groups;
+:Flag census-year data;
+
+|Statistical Team|
+:Verify age distribution pattern;
+:Compare with expected pyramid shape;
+:Check age-sex ratios for plausibility;
+:Document data anomalies;
+
+|System|
+:Calculate derived age metrics;
+:Compute dependency ratios;
+:Calculate median age;
+:Generate age pyramid visualization;
+:Create age-specific indices;
+
+|Quality Assurance|
+:Validate against historical trends;
+:Compare with regional patterns;
+:Check for mathematical consistency;
+:Document confidence levels;
+
+|Data Users|
+:Access age distribution data;
+:View age pyramid visualization;
+:Extract age-specific metrics;
+:Utilize for planning purposes;
+
+stop
+@enduml
+----
+
+The AgeDistribution entity implements a comprehensive data collection and processing workflow designed to address Nepal's unique context and challenges in age data collection.
+
+===== Census Data Integration
+
+The primary authoritative source for age distribution data is Nepal's national population census conducted by the Central Bureau of Statistics (CBS) approximately every 10 years (most recently in 2011 and 2021). When official census data becomes available, it is integrated as the foundation for age distribution analysis with `isCensusData=true`.
+
+Census collection in Nepal faces unique challenges:
+- Many elderly citizens, particularly in rural areas, lack birth documentation
+- Cultural practices of age rounding (stating age in completed years rather than exact age)
+- Preference for ages ending in 0 or 5, resulting in "age heaping" in raw data
+- Lunar calendar confusion when converting birth dates to official Gregorian dates
+
+The system applies systematic corrections for these known biases, including:
+- Whipple's Index calculation to detect and adjust for age heaping
+- Smoothing algorithms for age distributions in older cohorts
+- Gender-specific adjustments where cultural factors affect reported ages
+
+===== Intercensal Estimation Process
+
+Between census years, the system employs estimation techniques to update age distributions:
+
+1. **Component Method**: Applies birth rates, death rates, and migration data to "age" the population forward
+2. **Cohort Progression**: Moves specific birth cohorts through time, accounting for mortality and migration
+3. **Age-Specific Growth Rates**: Applies different growth rates to different age cohorts based on historical patterns
+4. **Survey Integration**: Incorporates age data from periodic surveys like the Nepal Demographic Health Survey
+
+Each estimation method is explicitly documented in the data through the `projectionMethod` field, ensuring users understand the methodology behind intercensal estimates.
+
+===== Administrative Boundary Change Handling
+
+A unique challenge in Nepal's demographic time series is frequent changes to administrative boundaries, especially following the 2017 federal restructuring. The AgeDistribution entity handles these changes by:
+
+1. **Historical Recalculation**: When boundaries change, historical age distributions are recalculated for the new boundaries
+2. **Confidence Level Adjustment**: Boundary-adjusted historical data receives appropriate confidence level downgrades
+3. **Change Documentation**: The `ChangeType.ADMIN_BOUNDARY_CHANGE` value explicitly identifies changes resulting from boundary modifications
+4. **Dual Representation**: The system can maintain both original and boundary-adjusted distributions for analytical purposes
+
+===== Data Quality Management
+
+Each AgeDistribution record includes explicit quality indicators:
+
+1. **Confidence Level**: Rated from HIGH (census data) to VERY_LOW (rough projections)
+2. **Data Source**: Specifies the origin of the data (census, survey, projection, etc.)
+3. **Methodology Description**: Documents the specific methodology used
+4. **Margin of Error**: Quantifies the statistical uncertainty where applicable
+
+These quality indicators ensure users can appropriately interpret and apply the data, particularly important for age data where quality can vary significantly by region and source.
+
+===== Age Group Standardization
+
+To ensure consistency while accommodating various analytical needs, the system implements:
+
+1. **Standard 5-Year Cohorts**: The default grouping for most analysis
+2. **Special Age Groupings**: Pre-calculated aggregations for specific policy purposes:
+   - School-age groups (primary, secondary, tertiary education)
+   - Workforce groups (working age, retirement age)
+   - Dependency groups (youth, elderly)
+   - Health service planning groups (maternal health, child health, geriatric)
+
+3. **Custom Group Generation**: On-demand capability to create custom age groupings for specialized analysis
+
+This flexibility enables the system to serve multiple stakeholder needs while maintaining a standardized underlying data structure.
+
+===== Nepal-Specific Context
+
+The data collection and processing workflow acknowledges several factors specific to Nepal's demographic context:
+
+1. **Uneven Data Quality**: Urban areas typically have higher quality age data than remote rural areas
+2. **Migration Effects**: Significant working-age outmigration creates distinctive "missing cohorts" in many communities
+3. **Ethnic Variation**: Different age structures across Nepal's diverse ethnic communities
+4. **Post-Disaster Adjustments**: Special methodologies for areas affected by the 2015 earthquake and other disasters
+5. **Federal Restructuring**: Adjustments to handle the 2017 transition from the old to new administrative structure
+
+By incorporating these contextual factors, the AgeDistribution entity provides not just raw demographic data, but Nepal-appropriate interpretable information for planning and policy needs.

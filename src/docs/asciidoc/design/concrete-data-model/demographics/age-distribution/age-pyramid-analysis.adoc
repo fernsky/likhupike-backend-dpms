@@ -1,0 +1,195 @@
+[plantuml]
+----
+@startuml
+participant "DemographicAnalyst" as Analyst
+participant "AgeDistribution" as AgeDistribution
+participant "PyramidAnalysisEngine" as PyramidEngine
+participant "PopulationDynamicsService" as Dynamics
+participant "VisualizationService" as Viz
+participant "AnomalyDetectionService" as Anomaly
+
+Analyst -> AgeDistribution: requestPyramidAnalysis(areaId, year)
+activate AgeDistribution
+
+AgeDistribution -> AgeDistribution: retrieveAgeDistributionData()
+AgeDistribution -> PyramidEngine: analyzePyramidShape(ageDistributionData)
+activate PyramidEngine
+
+PyramidEngine -> PyramidEngine: calculateBaseToTopRatio()
+PyramidEngine -> PyramidEngine: measurePyramidSymmetry()
+PyramidEngine -> PyramidEngine: identifyBulges()
+PyramidEngine -> PyramidEngine: detectCohortsTracker()
+PyramidEngine -> PyramidEngine: calculateTaperingRate()
+PyramidEngine -> PyramidEngine: determinePyramidType()
+note right: Expansive, Constrictive, Stationary, etc.
+
+AgeDistribution <-- PyramidEngine: pyramidShapeAnalysis
+deactivate PyramidEngine
+
+AgeDistribution -> Dynamics: analyzePopulationDynamics(ageDistributionData)
+activate Dynamics
+
+Dynamics -> Dynamics: calculateAgeSpecificFertility()
+Dynamics -> Dynamics: assessMortalityPatterns()
+Dynamics -> Dynamics: evaluateMigrationSignatures()
+Dynamics -> Dynamics: projectCohortProgression()
+
+AgeDistribution <-- Dynamics: populationDynamicsAnalysis
+deactivate Dynamics
+
+AgeDistribution -> Anomaly: detectDistributionAnomalies(ageDistributionData)
+activate Anomaly
+
+Anomaly -> Anomaly: checkForDataCollectionBiases()
+Anomaly -> Anomaly: identifyOutlierAgeGroups()
+Anomaly -> Anomaly: detectAgeHeaping()
+Anomaly -> Anomaly: findMissingCohorts()
+
+AgeDistribution <-- Anomaly: anomalyReport
+deactivate Anomaly
+
+AgeDistribution -> Viz: renderPopulationPyramid(ageDistributionData)
+activate Viz
+
+Viz -> Viz: setupPyramidLayout()
+Viz -> Viz: drawMaleBars()
+Viz -> Viz: drawFemaleBars()
+Viz -> Viz: addThirdGenderRepresentation()
+Viz -> Viz: overlayReferenceLines()
+Viz -> Viz: addCohortLabels()
+Viz -> Viz: highlightAnomalies()
+
+AgeDistribution <-- Viz: pyramidVisualization
+deactivate Viz
+
+AgeDistribution -> AgeDistribution: compilePyramidInsights()
+activate AgeDistribution
+AgeDistribution -> AgeDistribution: summarizeDemographicStructure()
+AgeDistribution -> AgeDistribution: identifyKeyImplications()
+AgeDistribution -> AgeDistribution: generateRecommendations()
+deactivate AgeDistribution
+
+Analyst <-- AgeDistribution: completePyramidAnalysis
+deactivate AgeDistribution
+
+Analyst -> AgeDistribution: comparePyramids(areaId, year1, year2)
+activate AgeDistribution
+
+AgeDistribution -> AgeDistribution: retrieveMultipleDistributions()
+AgeDistribution -> PyramidEngine: analyzePyramidEvolution(distributions)
+activate PyramidEngine
+
+PyramidEngine -> PyramidEngine: trackCohortProgression()
+PyramidEngine -> PyramidEngine: measureStructuralShifts()
+PyramidEngine -> PyramidEngine: calculateTransitionRate()
+PyramidEngine -> PyramidEngine: modelDemographicTransition()
+
+AgeDistribution <-- PyramidEngine: evolutionAnalysis
+deactivate PyramidEngine
+
+AgeDistribution -> Viz: renderComparativePyramids(distributions)
+activate Viz
+
+Viz -> Viz: setupMultiPyramidLayout()
+Viz -> Viz: drawOverlappingPyramids()
+Viz -> Viz: highlightMajorChanges()
+Viz -> Viz: addTransitionArrows()
+Viz -> Viz: createAnimatedTransition()
+
+AgeDistribution <-- Viz: comparativePyramidVisualization
+deactivate Viz
+
+Analyst <-- AgeDistribution: pyramidComparisonAnalysis
+deactivate AgeDistribution
+@enduml
+----
+
+The AgeDistribution entity provides sophisticated age pyramid analysis capabilities specifically designed for Nepal's demographic context. Population pyramids (age-sex pyramids) are the primary visual and analytical tool for understanding population structure and dynamics.
+
+===== Pyramid Shape Analysis
+
+The system analyzes the shape of population pyramids to identify key demographic characteristics:
+
+1. **Pyramid Type Classification**
+   * **Expansive Pyramids**: Broad base with rapid tapering, indicating high fertility and mortality (common in rural Nepal)
+   * **Constrictive Pyramids**: Narrower base than middle, indicating declining fertility (seen in urban Nepal)
+   * **Stationary Pyramids**: Nearly uniform distribution with slight tapering, indicating stable population (rare in Nepal)
+   * **Asymmetrical Pyramids**: Gender imbalances or migration effects (common in high-migration districts)
+
+2. **Base-to-Top Ratio**: Quantifies the relationship between younger and older populations, critical for dependency analysis and service planning.
+
+3. **Symmetry Analysis**: Measures gender imbalances across age groups, identifying potential gender-selective migration or mortality patterns.
+
+4. **Bulge Detection**: Identifies unusually large cohorts that move through the population structure over time.
+
+5. **Cohort Tracking**: Follows specific birth cohorts through time to analyze their progression through the age structure.
+
+===== Dynamic Population Patterns
+
+The system identifies key demographic processes by analyzing age structure:
+
+1. **Fertility Signatures**: Age structure reflects historical fertility patterns, with wider bases indicating higher fertility and narrower bases showing fertility decline. Nepal's fertility transition is clearly visible in its evolving age pyramids, with the total fertility rate declining from about 6.0 in the 1980s to 2.3 in 2019.
+
+2. **Mortality Patterns**: Abrupt narrowing in specific cohorts can indicate historical mortality crises. In Nepal, the civil conflict period (1996-2006) left mortality signatures in certain cohorts.
+
+3. **Migration Signatures**: The "missing" young adult cohorts in many district pyramids indicate Nepal's significant labor outmigration, particularly obvious in male cohorts aged 20-34 in rural districts.
+
+4. **Urbanization Effects**: Comparing rural and urban pyramids reveals the selective nature of rural-urban migration, with urban areas gaining working-age population and rural areas losing these cohorts.
+
+===== Nepal-Specific Features
+
+The pyramid analysis includes features specific to Nepal's demographic context:
+
+1. **Third Gender Representation**: Nepal officially recognizes a third gender category. The pyramid visualization incorporates this data where available, typically as a third overlay on the traditional male-female pyramid.
+
+2. **Age Heaping Detection**: Identifies and adjusts for the common Nepal phenomenon of age heaping (preference for ages ending in 0 or 5), particularly pronounced in older cohorts and less-educated populations.
+
+3. **Earthquake Impact Analysis**: Specialized analysis for districts affected by the 2015 earthquake, identifying displacement effects and recovery patterns in the age structure.
+
+4. **High-Migration District Analysis**: Enhanced features for districts with extreme outmigration, where working-age male populations may be reduced by 30% or more.
+
+5. **Ethnic Variation Analysis**: Tools to compare age structures across Nepal's diverse ethnic communities, from the older age structures of high-hill Buddhist communities to the younger structures of Terai populations.
+
+===== Comparative Analysis
+
+The system supports sophisticated comparative analysis:
+
+1. **Temporal Comparison**: Comparing the same area across different time points to visualize demographic transitions.
+
+2. **Geographic Comparison**: Contrasting different areas at the same time point to identify regional variations.
+
+3. **Rural-Urban Comparison**: Specialized comparison of rural and urban age structures to highlight urbanization effects.
+
+4. **Projection Comparison**: Comparing current structure with projected future structures under various scenarios.
+
+5. **Cohort Flow Visualization**: Animated transitions showing how cohorts progress through the age structure over time.
+
+===== Analytical Outputs
+
+The pyramid analysis generates several key outputs:
+
+1. **Dependency Ratios**: Child, elderly, and total dependency ratios calculated from the age structure.
+
+2. **Median Age**: The age that divides the population into equal halves, a key indicator of population aging.
+
+3. **Support Ratios**: Potential support ratio and parent support ratio, indicating the relationship between working-age and dependent populations.
+
+4. **Aging Index**: The ratio of elderly to youth population, measuring the degree of population aging.
+
+5. **Child-Woman Ratio**: A fertility proxy calculated from the age structure.
+
+6. **Demographic Dividend Status**: Assessment of whether the population structure is favorable for economic growth through a high proportion of working-age population.
+
+===== Edge Cases and Special Considerations
+
+1. **Small Population Areas**: For wards with very small populations, age pyramids require special handling to prevent individual identification. The system employs confidentiality algorithms that slightly blur age data for small areas while maintaining overall structure.
+
+2. **Post-Conflict Areas**: Districts heavily affected by Nepal's civil conflict show distinctive age patterns. The system includes specialized analysis to identify conflict-related demographic impacts.
+
+3. **Border Areas**: Communities near the Indian border often show distinctive cyclical migration patterns that create unusual pyramid shapes. The system includes border-region analysis tools to interpret these patterns.
+
+4. **High-Mountain Areas**: Remote mountain districts often have data quality challenges and distinctive demographic patterns. The system applies specialized validation and interpretation algorithms for these regions.
+
+5. **Disaster-Affected Areas**: Areas impacted by major disasters show displacement signatures in their age structure. The system can tag disaster events and analyze pre/post disaster demographic changes.
+
+By providing these specialized pyramid analysis capabilities, the AgeDistribution entity transforms raw age data into actionable demographic insights for policy, planning, and service delivery across Nepal's diverse contexts.

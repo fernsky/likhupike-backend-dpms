@@ -1,0 +1,159 @@
+===== Population-Based Service Planning
+
+*Scenario:* Using time series population data to plan education infrastructure needs
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nEducation" as MoE
+actor "Education Planning\nSpecialist" as Planner
+participant "WardTimeSeriesPopulation" as TimeSeries
+participant "AgeDistribution\nService" as Age
+participant "SchoolMapping\nSystem" as Schools
+participant "EnrollmentProjection\nEngine" as Enrollment
+participant "ServiceGap\nAnalysis" as Gap
+
+MoE -> Planner: Task with 5-year school capacity planning
+Planner -> TimeSeries: retrieveWardTimeSeries(allWards, 2016-2021)
+activate TimeSeries
+TimeSeries -> TimeSeries: fetchCurrentPopulationData()
+TimeSeries -> TimeSeries: retrieveHistoricalTrends()
+Planner <-- TimeSeries: wardPopulationTimeSeries
+deactivate TimeSeries
+
+Planner -> Age: deriveSchoolAgePopulation()
+activate Age
+Age -> Age: applyAgeCohortDistribution()
+Age -> Age: calculatePrimaryAgeChildren(5-10)
+Age -> Age: calculateSecondaryAgeChildren(11-16)
+Age -> Age: trackHistoricalRatios()
+Planner <-- Age: schoolAgePopulation
+deactivate Age
+
+Planner -> TimeSeries: generatePopulationProjections(2022-2026)
+activate TimeSeries
+TimeSeries -> TimeSeries: applyGrowthTrendModels()
+TimeSeries -> TimeSeries: incorporateUrbanizationPatterns()
+TimeSeries -> TimeSeries: adjustForMigrationFactors()
+TimeSeries -> TimeSeries: calculateConfidenceIntervals()
+Planner <-- TimeSeries: fiveYearProjections
+deactivate TimeSeries
+
+Planner -> Age: projectSchoolAgePopulation(2022-2026)
+activate Age
+Age -> Age: applyAgeTransitionMatrix()
+Age -> Age: incorporateBirthTrends()
+Age -> Age: modelAgeCohortProgression()
+Age -> Age: adjustForMigrationBias()
+Planner <-- Age: projectedSchoolAgePopulation
+deactivate Age
+
+Planner -> Schools: mapExistingSchoolInfrastructure()
+activate Schools
+Schools -> Schools: inventorySchoolFacilities()
+Schools -> Schools: recordCurrentCapacity()
+Schools -> Schools: documentConditionAssessments()
+Schools -> Schools: geolocateAllSchools()
+Planner <-- Schools: schoolInfrastructureData
+deactivate Schools
+
+Planner -> Enrollment: calculateEnrollmentRatios()
+activate Enrollment
+Enrollment -> Enrollment: analyzeHistoricalEnrollment()
+Enrollment -> Enrollment: calculateCurrentRates()
+Enrollment -> Enrollment: modelPrivate/PublicDistribution()
+Enrollment -> Enrollment: factorPolicyTargets()
+Planner <-- Enrollment: enrollmentProjections
+deactivate Enrollment
+
+Planner -> Gap: performCapacityGapAnalysis()
+activate Gap
+Gap -> Gap: calculateWardLevelDeficits()
+Gap -> Gap: identifyOvercapacityAreas()
+Gap -> Gap: mapAccessibilityIssues()
+Gap -> Gap: prioritizeInterventionAreas()
+Planner <-- Gap: capacityGapAnalysis
+deactivate Gap
+
+Planner -> Gap: developInterventionScenarios()
+activate Gap
+Gap -> Gap: modelNewConstruction()
+Gap -> Gap: simulateCapacityExpansion()
+Gap -> Gap: evaluateConsolidationOptions()
+Gap -> Gap: estimateResourceRequirements()
+Planner <-- Gap: interventionScenarios
+deactivate Gap
+
+Planner -> MoE: presentInfrastructurePlan()
+activate MoE
+MoE -> MoE: reviewPriorityAreas()
+MoE -> MoE: evaluateResourceAlignment()
+MoE -> MoE: approveFiveYearPlan()
+Planner <-- MoE: planApproved
+deactivate MoE
+
+Planner -> Schools: scheduleImplementation()
+activate Schools
+Schools -> Schools: createConstructionTimeline()
+Schools -> Schools: assignImplementationPriorities()
+Schools -> Schools: alignWithFiscalYears()
+Schools -> Schools: establishMonitoringFramework()
+Planner <-- Schools: implementationSchedule
+deactivate Schools
+@enduml
+----
+
+*Real-World Context:*
+Nepal's Ministry of Education is responsible for planning school infrastructure to serve the country's 7 million school-age children across 753 local governments. The planning process requires detailed ward-level population projections to ensure adequate educational capacity, particularly in rapidly growing urban areas and areas with declining rural populations. This scenario demonstrates how the WardTimeSeriesPopulation entity supports evidence-based service planning.
+
+The process begins with retrieving detailed population time series for all wards, establishing historical trends that form the foundation for projections. This offers insights into wards with sustained growth, stability, or decline - each requiring different planning approaches.
+
+A key step is deriving school-age population from total population figures. In Nepal's context, this analysis must account for:
+- The decreasing proportion of children in the population (fertility has declined from 4.1 in 2001 to 2.3 in 2021)
+- Regional variations in fertility rates (higher in western mountain districts, lower in urban areas)
+- Age-selective migration patterns (youth outmigration from rural areas)
+- Educational migration (children moving for better schools)
+
+The system integrates these factors to produce age-specific population estimates for each ward, focusing on the primary (5-10 years) and secondary (11-16 years) school-age cohorts. Historical data shows that while total population may be growing in many wards, the school-age population is declining in over 60% of rural wards due to declining fertility and youth out-migration.
+
+The population projections for 2022-2026 incorporate multiple factors specific to Nepal's demographic transition:
+- Accelerating urbanization trends
+- Declining national fertility rates
+- Outmigration effects on rural demographics
+- Post-earthquake population redistributions
+- Return migration during global economic downturns
+
+These projections generate not just point estimates but confidence intervals that grow wider for more distant years, helping planners understand uncertainty in their infrastructure decisions.
+
+School-age population projections are then created by applying age transition matrices, which model how children move through age cohorts over time. This addresses a common planning error in Nepal's past educational planning: building primary schools based on current birth rates, only to find insufficient children when the schools open due to accelerating fertility decline.
+
+The system maps existing school infrastructure against projected need, identifying three common patterns in Nepal:
+1. **Urban Capacity Deficits**: Rapidly growing urban wards with insufficient school capacity
+2. **Rural Oversupply**: Declining rural wards with underutilized schools
+3. **Accessibility Gaps**: Areas with sufficient total capacity but geographic distribution problems
+
+Enrollment projections factor in Nepal's mixed educational ecosystem, including public schools, private schools, religious schools, and emerging community schools. The model accounts for socioeconomic factors influencing school choice in different wards, projecting not just how many children will need education but which types of schools they are likely to attend.
+
+The capacity gap analysis identifies priority intervention areas based on:
+- Current capacity utilization rates
+- Projected capacity shortfalls
+- Access challenges (distance to school)
+- Quality indicators (building condition, facilities)
+- Equity considerations (historically underserved communities)
+
+This results in ward-level prioritization for educational infrastructure investment, highlighting wards with the most critical needs.
+
+Intervention scenarios model different approaches:
+- New school construction in high-growth areas
+- Capacity expansion of existing schools in moderate-growth areas
+- School consolidation in declining population areas
+- Transportation solutions for areas with access challenges
+- Shifts in public-private provision balance
+
+Each scenario is evaluated for cost-effectiveness, implementation feasibility, and alignment with national education policy goals.
+
+A distinctive feature for Nepal's context is the system's ability to model landslide and flood risks in school site planning. By integrating hazard maps with population projections, the system identifies safer locations for new school construction - a critical consideration in Nepal's mountainous terrain where natural hazards significantly impact infrastructure sustainability.
+
+The final implementation planning incorporates Nepal's fiscal year cycle (mid-July to mid-July) and the seasonal construction calendar, which is limited by the monsoon season in much of the country. This ensures that construction projects are timed to maximize the dry-season building window.
+
+This comprehensive approach to education planning demonstrates how detailed ward-level population time series enables evidence-based infrastructure planning that is responsive to Nepal's complex demographic transitions and geographic challenges, ultimately improving educational access for children across the country's diverse regions.

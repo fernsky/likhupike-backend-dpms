@@ -1,0 +1,110 @@
+===== Education System Planning Based on Age Cohort Analysis
+
+*Scenario:* Using age distribution data to project student population and plan education infrastructure
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nEducation" as MoE
+actor "Education Planning\nSpecialist" as Planner
+participant "AgeDistribution" as AgeDistr
+participant "EducationCohort\nService" as EduCohort
+participant "SchoolMappingSystem" as SchoolMap
+participant "EnrollmentModel" as Enrollment
+participant "InfrastructureGap\nAnalysis" as Gap
+
+MoE -> Planner: Develop 5-year education plan
+Planner -> AgeDistr: retrieveAgeDistribution(provinceId, currentYear)
+activate AgeDistr
+AgeDistr -> AgeDistr: fetchSchoolAgeCohorts()
+Planner <-- AgeDistr: currentSchoolAgeCohorts
+deactivate AgeDistr
+
+Planner -> EduCohort: projectSchoolEnrollment(5)
+activate EduCohort
+EduCohort -> EduCohort: calculateBasicEducationCohort(5-9)
+EduCohort -> EduCohort: calculatePrimaryEducationCohort(10-12)
+EduCohort -> EduCohort: calculateSecondaryEducationCohort(13-16)
+EduCohort -> EduCohort: calculateHigherEducationCohort(17-23)
+EduCohort -> EduCohort: adjustForMortalityAndMigration()
+EduCohort -> EduCohort: adjustForDropoutRates()
+EduCohort -> EduCohort: calculateYearByYearProjection()
+Planner <-- EduCohort: 5YearProjectedEnrollment
+deactivate EduCohort
+
+Planner -> SchoolMap: getCurrentSchoolCapacity()
+activate SchoolMap
+SchoolMap -> SchoolMap: retrieveSchoolsByDistrict()
+SchoolMap -> SchoolMap: calculateAvailableCapacityByLevel()
+SchoolMap -> SchoolMap: mapGeographicDistribution()
+SchoolMap -> SchoolMap: evaluateInfrastructureCondition()
+Planner <-- SchoolMap: schoolCapacitySummary
+deactivate SchoolMap
+
+Planner -> Enrollment: calculateNetEnrollmentRates()
+activate Enrollment
+Enrollment -> Enrollment: computeCurrentRates()
+Enrollment -> Enrollment: projectRateImprovements()
+Enrollment -> Enrollment: adjustForRetentionGoals()
+Enrollment -> Enrollment: factorDemographicTrends()
+Planner <-- Enrollment: projectedEnrollmentRates
+deactivate Enrollment
+
+Planner -> Gap: analyzeInfrastructureGaps()
+activate Gap
+Gap -> Gap: compareCapacityWithProjectedDemand()
+Gap -> Gap: identifyGeographicGaps()
+Gap -> Gap: prioritizeByAccessibility()
+Gap -> Gap: calculateBudgetRequirements()
+Gap -> Gap: recommendExpansionStrategy()
+Planner <-- Gap: infrastructureGapAnalysis
+deactivate Gap
+
+Planner -> Gap: analyzeFacultyRequirements()
+activate Gap
+Gap -> Gap: calculateTeacherDemand()
+Gap -> Gap: assessCurrentStaffing()
+Gap -> Gap: projectRetirements()
+Gap -> Gap: estimateRecruitmentNeeds()
+Gap -> Gap: recommendTeacherDistribution()
+Planner <-- Gap: teacherRequirementsAnalysis
+deactivate Gap
+
+Planner -> MoE: submitEducationInfrastructurePlan()
+@enduml
+----
+
+*Real-World Context:*
+Nepal's Ministry of Education, Science and Technology must plan education infrastructure to serve approximately 7 million school-age children across the country's diverse geographic regions, from dense urban areas to remote mountain villages. Age distribution data is fundamental to this planning process, as it reveals the size of current and future student cohorts.
+
+The AgeDistribution entity provides the essential foundation for education planning through detailed analysis of school-age cohorts across different administrative levels. This is particularly important in Nepal where demographic transitions are occurring at different rates across regions, creating significant variation in school-age populations.
+
+The analysis begins with retrieving current age distribution data, focusing on the standard education cohorts in Nepal's structure:
+- Basic Education: Ages 5-9 (grades 1-5)
+- Primary Education: Ages 10-12 (grades 6-8)
+- Secondary Education: Ages 13-16 (grades 9-12)
+- Higher Education: Ages 17-23 (tertiary education)
+
+A critical finding from this analysis is the impact of Nepal's declining fertility rate, which has fallen from approximately 6.0 children per woman in the 1980s to 2.3 today. This creates a "demographic bulge" moving through the education system - many districts have seen primary school enrollment fall by 15-20% as the smaller cohorts of children born in the low-fertility era reach school age. The AgeDistribution entity helps identify these trends at the ward and municipality level, allowing highly targeted planning.
+
+The EducationCohortService uses these current cohorts as a baseline, then projects how they will progress through the education system over the next five years. These projections incorporate district-specific mortality rates and migration patterns. For instance, in districts with high outmigration, a significant percentage of secondary students may leave for education in urban areas or abroad, affecting local infrastructure needs.
+
+The system also factors in Nepal's education policy goals, including increased retention rates and expanded early childhood education. By modeling these policy interventions against the demographic baseline, the system can project enrollment more accurately.
+
+The SchoolMappingSystem overlays the existing education infrastructure against these demographic projections. This reveals substantial mismatches in Nepal's context:
+- Urban areas with rapidly growing child populations but insufficient school capacity
+- Rural areas with declining child populations but excess infrastructure
+- Geographic accessibility challenges in mountain regions where sparse populations need distributed facilities
+- Quality disparities between regions requiring targeted investments
+
+A distinctive feature for Nepal's context is the analysis of student-to-teacher ratios based on demographic projections. By modeling future student numbers, the system can project teacher recruitment needs by subject and region, addressing Nepal's persistent challenge of teacher shortages in remote areas and in specialized subjects.
+
+The InfrastructureGapAnalysis integrates these inputs to identify priority areas for construction, consolidation, or repurposing of education facilities. For example, in rapidly urbanizing areas around Kathmandu Valley, where child populations are growing at 5-7% annually due to internal migration, new school construction is urgently needed. Conversely, in some hill districts where child populations have declined by over 20%, the analysis may recommend consolidation of underutilized facilities.
+
+The final plan addresses edge cases within Nepal's unique context:
+- Schools in disaster-prone areas that need earthquake-resistant construction
+- Remote areas where small student populations still require facilities due to accessibility
+- Areas with high seasonal migration where flexible capacity is needed
+- Regions with distinctive ethnic/linguistic compositions requiring specialized faculty
+
+By providing granular age distribution data at multiple administrative levels, the system enables evidence-based education planning that is responsive to Nepal's diverse regional demographic patterns, ultimately improving resource allocation and educational access.

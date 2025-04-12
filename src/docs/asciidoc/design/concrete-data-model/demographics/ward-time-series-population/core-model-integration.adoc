@@ -1,0 +1,201 @@
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+interface ExternalSystemSyncable
+
+' WardTimeSeriesPopulation implementation
+class WardTimeSeriesPopulation {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID wardId
+  +String wardCode
+  +String wardName
+  +UUID municipalityId
+  +String municipalityCode
+  +String municipalityName
+  +UUID districtId
+  +String districtCode
+  +String districtName
+  +UUID provinceId
+  +String provinceCode
+  +String provinceName
+  
+  ' Time series data
+  +Integer year
+  +LocalDate pointInTime
+  +String timePeriod
+  +Boolean isProjected
+  +Boolean isRevised
+  +TimePeriodType periodType
+  +Integer totalPopulation
+  +Integer malePopulation
+  +Integer femalePopulation
+  +Integer thirdGenderPopulation
+  +Double sexRatio
+  +Integer households
+  +Double averageHouseholdSize
+  +Double populationDensity
+  +Double annualGrowthRate
+  +Double populationGrowthPercent
+  
+  ' Census-specific data
+  +Boolean isCensusYear
+  +String censusReference
+  +UUID censusDataSourceId
+  
+  ' Methodology data
+  +ProjectionMethod projectionMethod
+  +EstimationTechnique estimationTechnique
+  +String methodologyDescription
+  +String methodologyFormula
+  +UUID methodologyDocumentId
+  +ConfidenceLevel confidenceLevel
+  +Double marginOfError
+  +String notes
+  
+  ' Previous reference
+  +UUID previousTimeSeriesId
+  +Double changeFromPrevious
+  +Double changePercentFromPrevious
+  
+  ' Administrative context tracking
+  +Boolean reflectsAdminBoundaryChange
+  +UUID previousAdminBoundaryId
+  +String boundaryChangeDescription
+  +LocalDate boundaryChangeDate
+  
+  ' Methods
+  +Double calculateGrowthRate(Integer baseYear, Integer targetYear)
+  +Integer interpolatePopulation(Integer targetYear)
+  +Integer extrapolatePopulation(Integer futureYear, ExtrapolationMethod method)
+  +Map<Integer, Integer> generatePopulationTrend(Integer startYear, Integer endYear)
+  +Double calculatePopulationShare(UUID largerAreaId)
+  +Long getPopulationChange(UUID compareToSeriesId)
+  +Double getCompoundAnnualGrowthRate(UUID compareToSeriesId)
+  +List<WardTimeSeriesPopulation> getTimeSeries(Integer startYear, Integer endYear)
+  +WardTimeSeriesPopulation getTimeSeriesForYear(Integer year)
+  +WardTimeSeriesPopulation recalculateWithNewBoundaries(UUID newBoundaryId)
+  +Double calculateDemographicIndex(IndexType indexType)
+}
+
+' Supporting classes
+class TimeSeriesPoint {
+  +UUID id
+  +Integer year
+  +LocalDate pointInTime
+  +Integer totalPopulation
+  +Integer malePopulation
+  +Integer femalePopulation
+  +Double growthRate
+  +Boolean isActual
+  +String dataSource
+}
+
+class BoundaryChangeMapping {
+  +UUID id
+  +UUID oldBoundaryId
+  +UUID newBoundaryId
+  +LocalDate changeDate
+  +BoundaryChangeType changeType
+  +Double areaChangePercent
+  +Double populationAffectedPercent
+  +String changeDescription
+  +UUID changeDecreeId
+}
+
+' Enumerations
+enum TimePeriodType {
+  ANNUAL
+  CENSUS
+  QUARTER
+  MONTH
+  SPECIFIC_DATE
+}
+
+enum ProjectionMethod {
+  ARITHMETIC
+  GEOMETRIC
+  EXPONENTIAL
+  COHORT_COMPONENT
+  RATIO
+  REGRESSION
+  CUSTOM
+}
+
+enum EstimationTechnique {
+  INTERPOLATION
+  HOUSING_UNIT
+  COMPONENT_CHANGE
+  SAMPLE_SURVEY
+  REMOTE_SENSING
+  REGISTRATION_DATA
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum ExtrapolationMethod {
+  LINEAR
+  EXPONENTIAL
+  LOGARITHMIC
+  POLYNOMIAL
+  GEOMETRIC
+}
+
+enum IndexType {
+  DEPENDENCY_RATIO
+  AGING_INDEX
+  POTENTIAL_SUPPORT_RATIO
+  URBANIZATION_RATE
+}
+
+enum BoundaryChangeType {
+  SPLIT
+  MERGE
+  ANNEXATION
+  DETACHMENT
+  REDESIGNATION
+  NEW_CREATION
+}
+
+' Inheritance relationships
+BaseEntity <|-- WardTimeSeriesPopulation
+BaseEntity <|-- TimeSeriesPoint
+BaseEntity <|-- BoundaryChangeMapping
+
+' Interface implementation
+WardTimeSeriesPopulation ..|> DataAggregatable
+WardTimeSeriesPopulation ..|> HistoryViewable
+WardTimeSeriesPopulation ..|> ExternalSystemSyncable
+
+' Class relationships
+WardTimeSeriesPopulation "1" o-- "many" TimeSeriesPoint
+WardTimeSeriesPopulation -- TimePeriodType
+WardTimeSeriesPopulation -- ProjectionMethod
+WardTimeSeriesPopulation -- EstimationTechnique
+WardTimeSeriesPopulation -- ConfidenceLevel
+BoundaryChangeMapping -- BoundaryChangeType
+@enduml
+----
+
+The WardTimeSeriesPopulation entity extends the BaseEntity core model and implements several capability interfaces to provide robust time series analysis for population data at the ward level. This integration enables consistent tracking of population changes over time while accommodating Nepal's complex administrative boundary changes.
+
+The entity is designed to work with Nepal's census cycles (typically every 10 years) while providing methodologically sound intercensal estimates and projections. It maintains links to the administrative hierarchy (ward → municipality → district → province) and explicitly tracks boundary changes that impact population statistics.
+
+As a DataAggregatable entity, WardTimeSeriesPopulation supports hierarchical roll-ups from ward to municipal, district, and provincial levels. The HistoryViewable interface enables tracking of data corrections and revisions over time, while ExternalSystemSyncable allows integration with the Central Bureau of Statistics and other demographic data sources.

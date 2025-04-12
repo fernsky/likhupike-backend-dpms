@@ -1,0 +1,121 @@
+===== Intercensal Population Estimation
+
+*Scenario:* Development of robust ward-level population estimates between census years
+
+[plantuml]
+----
+@startuml
+actor "Provincial Planning\nCommission" as PPC
+actor "CBS Data\nScientist" as CBS
+participant "WardTimeSeriesPopulation" as TimeSeries
+participant "EstimationEngine" as Engine
+participant "AdministrativeRegisters" as Registers
+participant "SampleSurveyData" as Surveys
+participant "ModelValidation" as Validation
+
+PPC -> CBS: Request intercensal population estimates for all wards
+CBS -> TimeSeries: retrieveCensusDataPoints(2011, 2021)
+activate TimeSeries
+CBS <-- TimeSeries: censusYearData
+deactivate TimeSeries
+
+CBS -> Engine: initializeEstimationProcess()
+activate Engine
+Engine -> Engine: selectEstimationMethods()
+Engine -> Engine: determineDataRequirements()
+CBS <-- Engine: dataRequirementsList
+deactivate Engine
+
+CBS -> Registers: requestVitalStatistics(wards, 2011-2021)
+activate Registers
+Registers -> Registers: compileBirthRegistrations()
+Registers -> Registers: compileDeathRegistrations()
+Registers -> Registers: calculateNaturalIncrease()
+CBS <-- Registers: vitalStatisticsData
+deactivate Registers
+
+CBS -> Registers: requestMigrationData(wards, 2011-2021)
+activate Registers
+Registers -> Registers: compileInternalMigrationRecords()
+Registers -> Registers: compileIntlMigrationEstimates()
+Registers -> Registers: calculateNetMigration()
+CBS <-- Registers: migrationEstimates
+deactivate Registers
+
+CBS -> Surveys: fetchAnnualSurveyData(wards, 2011-2021)
+activate Surveys
+Surveys -> Surveys: compileLabourForceSurveys()
+Surveys -> Surveys: compileDemographicHealthSurveys()
+Surveys -> Surveys: compileLivingStandardsSurveys()
+CBS <-- Surveys: sampleSurveyDatapoints
+deactivate Surveys
+
+CBS -> Engine: performComponentEstimation()
+activate Engine
+Engine -> Engine: calculateNaturalChangeComponent()
+Engine -> Engine: calculateMigrationComponent()
+Engine -> Engine: applyComponentMethodology()
+CBS <-- Engine: componentBasedEstimates
+deactivate Engine
+
+CBS -> Engine: performHousingUnitEstimation()
+activate Engine
+Engine -> Engine: retrieveHousingData()
+Engine -> Engine: calculateOccupancyRates()
+Engine -> Engine: multiplyHousingUnitsByOccupancy()
+CBS <-- Engine: housingBasedEstimates
+deactivate Engine
+
+CBS -> Engine: performRatioCorrelationEstimation()
+activate Engine
+Engine -> Engine: identifySymptomaticIndicators()
+Engine -> Engine: calculateCorrelationCoefficients()
+Engine -> Engine: developRegressionModels()
+CBS <-- Engine: ratioCorrelationEstimates
+deactivate Engine
+
+CBS -> Validation: validateEstimationResults()
+activate Validation
+Validation -> Validation: crossValidateMethodologies()
+Validation -> Validation: performResidualAnalysis()
+Validation -> Validation: checkDemographicPlausibility()
+Validation -> Validation: compareWithSurveyBenchmarks()
+CBS <-- Validation: validationResults
+deactivate Validation
+
+CBS -> Engine: selectOptimalEstimates()
+activate Engine
+Engine -> Engine: calculateWeightedAverages()
+Engine -> Engine: applyRuralUrbanAdjustments()
+Engine -> Engine: applySeasonalAdjustments()
+Engine -> Engine: finalizeConfidenceLevels()
+CBS <-- Engine: finalIntercensalEstimates
+deactivate Engine
+
+CBS -> TimeSeries: createIntercensalTimeSeriesPoints()
+activate TimeSeries
+loop for each year 2012-2020
+  TimeSeries -> TimeSeries: createTimeSeriesPoint(year)
+  TimeSeries -> TimeSeries: setPopulationValues(estimates)
+  TimeSeries -> TimeSeries: setIsProjected(true)
+  TimeSeries -> TimeSeries: setEstimationTechnique(method)
+  TimeSeries -> TimeSeries: setConfidenceLevel(confidence)
+  TimeSeries -> TimeSeries: linkToMethodologyDocument()
+end
+CBS <-- TimeSeries: intercensalPointsCreated
+deactivate TimeSeries
+
+PPC <- CBS: Deliver ward-level intercensal estimates
+@enduml
+----
+
+*Real-World Context:*
+Nepal conducts its population census every ten years, with the most recent being in 2011 and 2021. This leaves significant gaps in ward-level population data between census years. The Provincial Planning Commission of Gandaki Province needs intercensal population estimates for all 759 wards in the province to allocate resources, plan infrastructure, and evaluate service needs for each year between censuses.
+
+The WardTimeSeriesPopulation entity addresses this critical need through a comprehensive intercensal estimation process that combines multiple methodologies adapted to Nepal's data environment.
+
+The process begins with the retrieval of the anchoring census data points (2011 and 2021). These serve as the start and end reference points for all intercensal estimates, providing both a baseline and a validation endpoint for the estimates.
+
+A critical challenge in Nepal's context is the varying quality of administrative registers. In urban areas like Pokhara Metropolitan City, birth and death registrations may reach 95% completeness, allowing for reliable component method estimation. However, in remote mountain districts like Manang, registration might be under 60% complete, requiring alternative approaches. The system adapts its methodologies based on data quality indicators for each ward.
+
+For wards with strong administrative data, the component method calculates population change as:

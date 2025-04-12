@@ -1,0 +1,130 @@
+===== Social Security Analysis and Planning
+
+*Scenario:* Analyzing aging population trends for social security system planning
+
+[plantuml]
+----
+@startuml
+actor "Social Security\nBoard" as SSBoard
+actor "Policy Analyst" as Analyst
+participant "AgeDistribution" as AgeDistr
+participant "ElderlyPopulation\nService" as Elderly
+participant "SocialSecurityModel" as SSModel
+participant "FiscalImpact\nAnalysis" as Fiscal
+participant "Benefit\nDistribution" as Benefits
+
+SSBoard -> Analyst: Assess social security sustainability
+Analyst -> AgeDistr: retrieveAgeDistribution(country, 2011-2021)
+activate AgeDistr
+AgeDistr -> AgeDistr: fetchHistoricalAgeDistribution()
+AgeDistr -> AgeDistr: calculateAgingTrends()
+AgeDistr -> AgeDistr: computeDependencyRatios()
+Analyst <-- AgeDistr: historicalAgingAnalysis
+deactivate AgeDistr
+
+Analyst -> Elderly: analyzeElderlyPopulationTrends()
+activate Elderly
+Elderly -> Elderly: calculateElderlyGrowthRate()
+Elderly -> Elderly: analyzeRegionalVariation()
+Elderly -> Elderly: assessGenderImbalance()
+Elderly -> Elderly: projectLifeExpectancy()
+Elderly -> Elderly: analyzeSupportRatios()
+Analyst <-- Elderly: elderlyPopulationAnalysis
+deactivate Elderly
+
+Analyst -> AgeDistr: projectAgeDistribution(2050)
+activate AgeDistr
+AgeDistr -> AgeDistr: applyProjectionModel()
+AgeDistr -> AgeDistr: calculateFutureAgeStructure()
+AgeDistr -> AgeDistr: projectDependencyRatios()
+AgeDistr -> AgeDistr: computeAgingIndex()
+AgeDistr -> AgeDistr: estimateElderlySupportNeeds()
+Analyst <-- AgeDistr: ageStructureProjections
+deactivate AgeDistr
+
+Analyst -> SSModel: evaluateCurrentSystem()
+activate SSModel
+SSModel -> SSModel: assessCoverageRates()
+SSModel -> SSModel: analyzeContributionBase()
+SSModel -> SSModel: evaluateBenefitAdequacy()
+SSModel -> SSModel: calculateSystemDependency()
+Analyst <-- SSModel: currentSystemAssessment
+deactivate SSModel
+
+Analyst -> Fiscal: projectFiscalSustainability()
+activate Fiscal
+Fiscal -> Fiscal: forecastContributions()
+Fiscal -> Fiscal: projectBenefitExpenditure()
+Fiscal -> Fiscal: calculateSystemBalance()
+Fiscal -> Fiscal: assessLongTermViability()
+Fiscal -> Fiscal: modelFundingSources()
+Analyst <-- Fiscal: fiscalSustainabilityAnalysis
+deactivate Fiscal
+
+Analyst -> SSModel: developPolicyOptions()
+activate SSModel
+SSModel -> SSModel: modelParametricReforms()
+SSModel -> SSModel: evaluateCoverageExpansion()
+SSModel -> SSModel: assessContributionChanges()
+SSModel -> SSModel: modelBenefitAdjustments()
+Analyst <-- SSModel: policyReformOptions
+deactivate SSModel
+
+Analyst -> Benefits: analyzeEquityConsiderations()
+activate Benefits
+Benefits -> Benefits: assessRuralUrbanDisparities()
+Benefits -> Benefits: evaluateGenderDimensions()
+Benefits -> Benefits: analyzeSocialInclusion()
+Benefits -> Benefits: modelInformalSectorCoverage()
+Analyst <-- Benefits: equityAnalysis
+deactivate Benefits
+
+Analyst -> SSBoard: presentSocialSecurityAssessment()
+@enduml
+----
+
+*Real-World Context:*
+Nepal is experiencing a gradual aging of its population due to declining fertility rates and increasing life expectancy. The Social Security Fund, established in 2011 and expanded in recent years, must plan for this demographic transition while building a sustainable system that considers Nepal's unique economic and social context. The AgeDistribution entity provides crucial data for this planning process.
+
+The analysis begins with historical age distribution data, comparing the 2001, 2011, and 2021 census results to establish demographic trends. This reveals Nepal's slow but steady aging process - the population over 60 years increased from 6.5% in 2001 to 8.7% in 2021, while the aging index (ratio of elderly to children) rose from 15 to 25 over the same period.
+
+The AgeDistribution entity's ability to disaggregate data by administrative level reveals significant regional variations in aging patterns:
+- Urban areas in Kathmandu Valley showing more advanced aging with over 10% elderly population
+- Mountain districts with high outmigration showing "hollowing out" with both young and working-age populations diminished
+- Terai districts maintaining younger age structures with slower aging rates
+
+A critical aspect of Nepal's context is the gender dimension of aging. Women significantly outnumber men in older age groups due to male outmigration and higher male mortality. The AgeDistribution entity enables gender-specific analysis that reveals this feminization of aging - in some districts, women constitute over 60% of the elderly population, creating specific policy implications for social security design.
+
+The ElderlyPopulationService uses the age distribution data to analyze elderly-specific trends. The system projects future life expectancy, which has risen from 62.5 years in 2000 to 71.5 years in 2022, and is expected to approach 78 years by 2050. This increasing longevity extends the benefit period and significantly impacts social security sustainability.
+
+A key metric calculated from the age distribution data is the potential support ratio (number of working-age adults per elderly person). This ratio has fallen from 12:1 in 2000 to about 8:1 currently, and is projected to decline to 4:1 by 2050. This declining support ratio creates mounting pressure on both formal and informal support systems for the elderly.
+
+The age distribution projections through 2050 provide the foundation for long-term social security planning. These projections reveal that Nepal is in the early stages of population aging, with the process accelerating after 2030 when the large birth cohorts from the high-fertility era begin reaching retirement age. By 2050, the elderly population is projected to exceed 18% of the total population, approximately 7 million people.
+
+The SocialSecurityModel uses these projections to assess the sustainability of Nepal's current system. A key challenge is low coverage - currently, less than 20% of Nepal's workforce is covered by formal social security, predominantly public sector employees. The model projects coverage expansion scenarios and their fiscal implications.
+
+Nepal faces unique challenges related to its large informal economy, significant international labor migration, and limited administrative capacity. The AgeDistribution data helps the system model Nepal-specific solutions:
+- Hybrid systems that combine contributory and non-contributory components
+- Targeted interventions for sectors with high elderly vulnerability
+- Gradual formalization pathways for informal sector workers
+- Integration of remittance flows into social security planning
+
+The BenefitDistribution service analyzes equity considerations based on age distribution patterns. This reveals urgent urban-rural disparities - urban areas have better access to social services despite rural areas having higher proportions of vulnerable elderly. The service also identifies excluded populations, particularly elderly women from disadvantaged groups who have limited access to social protection systems.
+
+The analysis enables evidence-based policy development for Nepal's evolving social security system, balancing the need for expanded coverage with long-term fiscal sustainability in the context of a gradually aging population.
+
+===== Special Considerations for Nepal's Context
+
+Several unique factors in Nepal's situation shape social security planning:
+
+1. **Limited Formal Labor Market**: With over 70% of workers in the informal economy, standard contribution-based models face implementation challenges.
+
+2. **Strong Family Support Systems**: Traditional family care for the elderly remains strong but is weakening due to urbanization and migration.
+
+3. **Remittance Economy**: Large-scale international labor migration affects both contribution potential and elderly care arrangements.
+
+4. **Post-Conflict Recovery**: The 10-year civil conflict disrupted normal labor market development and social security programs.
+
+5. **Disaster Vulnerability**: Frequent natural disasters create additional risks for elderly populations.
+
+The age distribution analysis enables a nuanced understanding of these factors across different regions, supporting contextualized social security planning that addresses Nepal's unique demographic and economic reality.

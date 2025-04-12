@@ -1,0 +1,147 @@
+===== Administrative Boundary Change Reconciliation
+
+*Scenario:* Maintaining population time series continuity through Nepal's federal restructuring
+
+[plantuml]
+----
+@startuml
+actor "Ministry of\nFederal Affairs" as MoFA
+actor "CBS Methodology\nExpert" as CBS
+participant "WardTimeSeriesPopulation" as TimeSeries
+participant "BoundaryChangeService" as Boundary
+participant "PopulationAllocation\nEngine" as Allocation
+participant "SpatialAnalysis\nService" as Spatial
+participant "ValidationService" as Validation
+
+MoFA -> Boundary: registerFederalRestructuring(2017)
+activate Boundary
+Boundary -> Boundary: createBoundaryChangeEvent()
+Boundary -> Boundary: setEffectiveDate(2017-03-10)
+Boundary -> Boundary: setLegalReference("Local Level Restructuring Commission")
+MoFA <-- Boundary: restructuringRegistered
+deactivate Boundary
+
+MoFA -> Boundary: documentVDCToWardTransitions()
+activate Boundary
+Boundary -> Boundary: mapOldVDCsToNewWards()
+Boundary -> Boundary: createVDCToWardMappings()
+Boundary -> Boundary: registerSplitVDCs()
+Boundary -> Boundary: registerMergedVDCs()
+MoFA <-- Boundary: transitionsMapped
+deactivate Boundary
+
+CBS -> TimeSeries: assessImpactOnTimeSeries()
+activate TimeSeries
+TimeSeries -> TimeSeries: identifyAffectedTimeSeries()
+TimeSeries -> TimeSeries: categorizeChangeTypes()
+TimeSeries -> TimeSeries: quantifyDisruption()
+CBS <-- TimeSeries: impactAssessment
+deactivate TimeSeries
+
+CBS -> Spatial: performSpatialAnalysis()
+activate Spatial
+Spatial -> Spatial: calculateAreaIntersections()
+Spatial -> Spatial: computePopulationDistribution()
+Spatial -> Spatial: determinePopulationDensity()
+Spatial -> Spatial: generateAllocationFactors()
+CBS <-- Spatial: spatialAnalysisResults
+deactivate Spatial
+
+CBS -> Allocation: createPopulationAllocationRules()
+activate Allocation
+Allocation -> Allocation: defineSplitRules()
+Allocation -> Allocation: defineMergeRules()
+Allocation -> Allocation: definePartialTransferRules()
+Allocation -> Allocation: documentAllocationMethodology()
+CBS <-- Allocation: allocationRulesCreated
+deactivate Allocation
+
+CBS -> TimeSeries: updatePreRestructuringTimeSeries()
+activate TimeSeries
+TimeSeries -> TimeSeries: flagAffectedSeries(reflectsAdminBoundaryChange=true)
+TimeSeries -> TimeSeries: documentBoundaryChangeLinks()
+TimeSeries -> TimeSeries: preserveOriginalValues()
+CBS <-- TimeSeries: preRestructuringSeriesUpdated
+deactivate TimeSeries
+
+CBS -> TimeSeries: generateEquivalentTimeSeries()
+activate TimeSeries
+loop for each new ward
+  TimeSeries -> Allocation: allocateHistoricalPopulation(wardId)
+  activate Allocation
+  Allocation -> Allocation: applyAllocationRules()
+  Allocation -> Allocation: redistributePopulation()
+  TimeSeries <-- Allocation: populationAllocation
+  deactivate Allocation
+  
+  TimeSeries -> TimeSeries: createRebasedTimeSeries()
+  TimeSeries -> TimeSeries: linkToOriginalSeries()
+  TimeSeries -> TimeSeries: setRestructuringMetadata()
+  TimeSeries -> TimeSeries: calculateConfidenceAdjustment()
+end
+CBS <-- TimeSeries: equivalentTimeSeriesGenerated
+deactivate TimeSeries
+
+CBS -> Validation: validateRebasedTimeSeries()
+activate Validation
+Validation -> Validation: performPopulationBalanceChecks()
+Validation -> Validation: validateGrowthRateContinuity()
+Validation -> Validation: reviewDemographicPatterns()
+Validation -> Validation: flagAnomalies()
+CBS <-- Validation: validationResults
+deactivate Validation
+
+CBS -> TimeSeries: finalizeRebasedTimeSeries()
+activate TimeSeries
+TimeSeries -> TimeSeries: applyValidationAdjustments()
+TimeSeries -> TimeSeries: calculateDerivedMetrics()
+TimeSeries -> TimeSeries: finalizeConfidenceLevels()
+TimeSeries -> TimeSeries: publishMethodologyDocument()
+CBS <-- TimeSeries: rebasedTimeSeriesFinalized
+deactivate TimeSeries
+
+MoFA -> TimeSeries: switchToNewAdministrativeStructure()
+activate TimeSeries
+TimeSeries -> TimeSeries: activateNewWardTimeSeries()
+TimeSeries -> TimeSeries: archiveOldVDCTimeSeries()
+TimeSeries -> TimeSeries: updateReferenceDocumentation()
+MoFA <-- TimeSeries: transitionCompleted
+deactivate TimeSeries
+@enduml
+----
+
+*Real-World Context:*
+In 2017, Nepal underwent a fundamental restructuring of its local administrative units as part of implementing the new constitution. This restructuring transformed approximately 3,900 Village Development Committees (VDCs) and 58 municipalities into 753 new local units (rural municipalities and municipalities). This massive transformation posed a significant challenge for maintaining continuous population time series data.
+
+The WardTimeSeriesPopulation entity provides specialized capabilities to handle this restructuring while preserving the analytical value of historical data through sophisticated boundary change reconciliation.
+
+The process begins with comprehensive documentation of the restructuring, recording the effective date (March 10, 2017) and the legal basis (Local Level Restructuring Commission reports). This documentation is critical as it establishes the timing for data transitions and provides the foundation for reconciliation methods.
+
+A key challenge is the complexity of the transitions, which included several types of changes:
+1. **Simple Rename**: Some VDCs became wards with identical boundaries
+2. **Merger**: Multiple VDCs combined into a single ward
+3. **Split**: One VDC divided into multiple wards
+4. **Partial Transfer**: Portions of VDCs redistributed across multiple wards
+5. **Complex Reorganization**: Combinations of the above
+
+The system creates detailed mapping tables documenting which old units contributed to which new units and in what proportion. For simple renames and complete mergers, this mapping is straightforward. For splits and partial transfers, the system leverages spatial analysis to determine the proportion of population likely transferred.
+
+The spatial analysis uses GIS data to calculate area intersections between old and new boundaries, then refines these with population density models to account for uneven population distribution. For example, if 30% of a VDC's area was transferred to a new ward, but that area contained 60% of the population due to higher density, the population allocation would reflect this reality.
+
+For years prior to the restructuring (2001-2017), the system generates equivalent time series for the new wards by applying allocation rules to the historical VDC data. This creates backward-compatible time series aligned with the new administrative structure. Each rebaselined time series point is clearly flagged as derived from administrative restructuring and includes appropriate confidence level adjustments to reflect the added uncertainty.
+
+A particular challenge in Nepal's context is the lack of comprehensive GIS data for historical boundaries, especially in remote areas. The system employs a combination of available spatial data, census enumeration area boundaries, and expert knowledge from local officials to create the most accurate allocation possible. Where significant uncertainty exists, the confidence levels are adjusted accordingly.
+
+The original VDC time series data is preserved rather than replaced, allowing users to toggle between old and new administrative views for historical analysis. This is important for researchers and officials who may need to reference data in its original administrative context.
+
+The boundary change reconciliation process significantly reduces the analytical disruption caused by Nepal's administrative restructuring, enabling consistent trend analysis across the boundary change event. This supports policy makers' needs for continuous data despite the administrative transformation.
+
+A key challenge is the varying quality of boundary data across different regions of Nepal. In urban areas with precise cadastral mapping, boundary transitions can be determined with high accuracy. In remote mountain areas with limited surveying, boundary interpretations may be more approximate. The confidence levels assigned to rebased time series reflect these regional data quality variations.
+
+The system also accounts for edge cases such as:
+- Wards created from parts of multiple districts (crossing former district boundaries)
+- Settlements that successfully petitioned for reassignment after initial restructuring
+- Areas with boundary disputes requiring special handling
+- Conservation areas and national parks with special administrative status
+
+This comprehensive approach to boundary change reconciliation enables Nepal's planning agencies to maintain continuous population time series despite the fundamental administrative reorganization, supporting evidence-based policy making through consistent longitudinal analysis.

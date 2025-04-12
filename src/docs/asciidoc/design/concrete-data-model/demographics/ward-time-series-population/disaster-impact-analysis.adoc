@@ -1,0 +1,152 @@
+===== Disaster Impact and Recovery Analysis
+
+*Scenario:* Tracking population displacement and recovery after a major earthquake
+
+[plantuml]
+----
+@startuml
+actor "National Disaster\nRecovery Authority" as NDRA
+actor "Demographic\nAnalyst" as Analyst
+participant "WardTimeSeriesPopulation" as TimeSeries
+participant "DisasterImpact\nAssessment" as Impact
+participant "PopulationMobility\nAnalysis" as Mobility
+participant "RecoveryTracking\nService" as Recovery
+participant "PolicySimulation\nEngine" as Policy
+
+NDRA -> Impact: registerDisasterEvent("2015 Earthquake")
+activate Impact
+Impact -> Impact: documentDisasterParameters()
+Impact -> Impact: setOccurrenceDate(2015-04-25)
+Impact -> Impact: defineAffectedRegions()
+Impact -> Impact: recordImpactSeverity()
+NDRA <-- Impact: disasterRegistered
+deactivate Impact
+
+NDRA -> TimeSeries: flagDisasterAffectedSeries()
+activate TimeSeries
+TimeSeries -> TimeSeries: markImpactedWards()
+TimeSeries -> TimeSeries: createDisasterEventMarker()
+TimeSeries -> TimeSeries: documentPreDisasterBaseline()
+NDRA <-- TimeSeries: timeSeriesMarked
+deactivate TimeSeries
+
+Analyst -> TimeSeries: analyzeBefore-AfterPopulation()
+activate TimeSeries
+TimeSeries -> TimeSeries: extractPreDisasterTrend()
+TimeSeries -> TimeSeries: calculateInitialDisplacement()
+TimeSeries -> TimeSeries: measurePostEventAnomalies()
+Analyst <-- TimeSeries: impactAnalysis
+deactivate TimeSeries
+
+Analyst -> Mobility: trackPopulationMovements()
+activate Mobility
+Mobility -> Mobility: analyzeOutflowPatterns()
+Mobility -> Mobility: identifyDestinationWards()
+Mobility -> Mobility: quantifyDisplacementVolumes()
+Mobility -> Mobility: mapDisplacementNetworks()
+Analyst <-- Mobility: populationMovementData
+deactivate Mobility
+
+Analyst -> Recovery: monitorRecoveryTrajectory()
+activate Recovery
+Recovery -> Recovery: defineRecoveryIndicators()
+Recovery -> Recovery: establishBaselineRecoveryModel()
+Recovery -> Recovery: trackRepopulationRate()
+Recovery -> Recovery: compareDistrict-WardRecovery()
+Analyst <-- Recovery: recoveryAnalysis
+deactivate Recovery
+
+NDRA -> TimeSeries: updatePostDisasterEstimates()
+activate TimeSeries
+TimeSeries -> TimeSeries: incorporateFieldSurveys()
+TimeSeries -> TimeSeries: adjustProjectionModels()
+TimeSeries -> TimeSeries: includeDisasterEffectModifiers()
+TimeSeries -> TimeSeries: modifyConfidenceLevels()
+NDRA <-- TimeSeries: postDisasterEstimatesUpdated
+deactivate TimeSeries
+
+NDRA -> Recovery: identifyLaggingRecoveryAreas()
+activate Recovery
+Recovery -> Recovery: calculateRecoveryGap()
+Recovery -> Recovery: analyzeRecoveryBarriers()
+Recovery -> Recovery: identifyVulnerableGroups()
+Recovery -> Recovery: prioritizeInterventionAreas()
+NDRA <-- Recovery: recoveryPriorityMatrix
+deactivate Recovery
+
+NDRA -> Policy: simulateRecoveryInterventions()
+activate Policy
+Policy -> Policy: modelHousingReconstruction()
+Policy -> Policy: simulateInfrastructureRestoration()
+Policy -> Policy: projectEmploymentRecovery()
+Policy -> Policy: forecastFullRepopulation()
+NDRA <-- Policy: interventionImpactProjections
+deactivate Policy
+
+NDRA -> TimeSeries: projectLongTermRecoveryPattern()
+activate TimeSeries
+TimeSeries -> TimeSeries: applyRecoveryCoefficients()
+TimeSeries -> TimeSeries: modelPopulationReturnRate()
+TimeSeries -> TimeSeries: estimateNewEquilibrium()
+TimeSeries -> TimeSeries: createRecoveryMilestones()
+NDRA <-- TimeSeries: recoveryProjections
+deactivate TimeSeries
+
+Analyst -> TimeSeries: compareAcrossDisasterEvents()
+activate TimeSeries
+TimeSeries -> TimeSeries: buildMulti-DisasterComparison()
+TimeSeries -> TimeSeries: identifyRecoveryFactors()
+TimeSeries -> TimeSeries: quantifyResilienceDifferences()
+TimeSeries -> TimeSeries: documentLessonsLearned()
+Analyst <-- TimeSeries: comparativeAnalysis
+deactivate TimeSeries
+@enduml
+----
+
+*Real-World Context:*
+Nepal's 2015 earthquake was a catastrophic event that killed nearly 9,000 people, injured over 22,000, and caused massive population displacement across 14 severely affected districts. The National Disaster Recovery Authority requires detailed ward-level population time series data to track displacement, monitor recovery, and plan interventions. This scenario demonstrates how the WardTimeSeriesPopulation entity handles disaster-induced demographic discontinuities.
+
+The process begins with formal registration of the disaster event, documenting the earthquake's timing (April 25, 2015) and defining the affected regions, which included 32 districts with varying impact severity. This creates the necessary context for interpreting subsequent population anomalies.
+
+A critical first step is establishing pre-disaster population baselines and trends. The system extracts population trajectories for each affected ward prior to the earthquake to establish the counterfactual "no-disaster" scenario. This baseline becomes the reference for measuring displacement and recovery.
+
+Initial displacement analysis reveals several patterns specific to Nepal's 2015 earthquake:
+- Severe depopulation in remote hill wards with near-complete housing destruction
+- Migration to district headquarters and Kathmandu Valley
+- Movement along kinship and ethnic network lines
+- Distinctive urban-rural flows compared to typical rural-urban migration
+
+The mobility analysis tracks not just population loss in affected areas but also corresponding gains in destination wards. This bidirectional analysis reveals that population flows followed established migration corridors but at accelerated rates. For example, traditional labor migration routes from Sindhupalchok to Kathmandu became emergency displacement routes, with receiving wards in Kathmandu showing 15-30% population spikes in the months following the earthquake.
+
+A key challenge in post-disaster population estimation is the high level of uncertainty. To address this, the system adjusts confidence levels for post-disaster estimates and employs multiple estimation techniques:
+- Satellite imagery analysis of settlement patterns
+- Utility connection data (where available)
+- School enrollment shifts
+- Health service utilization
+- Food distribution recipient counts
+
+These diverse data sources are integrated to produce more robust population estimates during the highly dynamic post-disaster period.
+
+The recovery trajectory analysis reveals Nepal's distinctive post-earthquake recovery pattern, which showed significant variations by ward type:
+1. **Urban Wards**: Quick initial population return followed by stalled recovery due to reconstruction delays
+2. **Accessible Rural Wards**: Gradual, steady recovery tracking with housing reconstruction
+3. **Remote Wards**: Permanent population loss in some areas with limited recovery potential
+4. **Strategic Wards**: Growth beyond pre-disaster levels due to reconstruction activities
+
+The system tracks recovery rates against reconstruction indicators, revealing the strong correlation between housing reconstruction completion and population return - a key insight for policy interventions.
+
+For recovery planning, the identification of lagging recovery areas combines population return rates with vulnerability indicators. This helps identify wards where population return is hindered by factors beyond physical reconstruction, such as livelihood loss, service disruption, or social fragmentation. These areas become priorities for integrated recovery interventions.
+
+Policy simulations model the population impacts of different recovery strategies, such as:
+- Accelerated housing grants for specific geographic areas
+- Infrastructure prioritization (roads, water, schools)
+- Livelihood restoration programs
+- Social service restoration
+
+The time series projections show that while many wards are expected to fully recover their population within 5-7 years post-disaster, some remote wards may experience permanent demographic change, with population levels stabilizing at 70-80% of pre-disaster levels. This "new normal" informs long-term planning for these areas.
+
+The comparative analysis capability allows comparison with other disaster events, such as the 1988 earthquake or severe floods, to identify factors that contribute to faster or more complete recovery. This knowledge improves future disaster response planning.
+
+A distinctive feature for Nepal's context is the system's ability to distinguish disaster-induced population changes from other demographic transitions occurring simultaneously, particularly the ongoing rural-urban migration and effects of foreign labor migration. This nuanced analysis ensures recovery planning addresses disaster impacts rather than conflating them with broader demographic trends.
+
+The comprehensive disaster impact analysis supports Nepal's "Build Back Better" approach by providing the detailed ward-level population data needed to right-size recovery interventions and track their effectiveness in restoring not just population numbers but community viability and resilience.

@@ -1,0 +1,141 @@
+===== Workforce Development Planning
+
+*Scenario:* Analyzing current and future working-age population for labor market planning
+
+[plantuml]
+----
+@startuml
+actor "Labor Ministry" as Ministry
+actor "Workforce Planner" as Planner
+participant "AgeDistribution" as AgeDistr
+participant "WorkforceAnalysis\nService" as Workforce
+participant "LaborMarketData\nService" as LaborMarket
+participant "SkillsMapping\nService" as Skills
+participant "MigrationAnalysis\nService" as Migration
+
+Ministry -> Planner: Develop workforce plan
+Planner -> AgeDistr: retrieveWorkingAgeData(currentYear)
+activate AgeDistr
+AgeDistr -> AgeDistr: extractAgeGroups(15-64)
+AgeDistr -> AgeDistr: calculateWorkingAgePopulation()
+AgeDistr -> AgeDistr: analyzeRegionalDistribution()
+AgeDistr -> AgeDistr: assessGenderBalance()
+Planner <-- AgeDistr: workingAgeDemographics
+deactivate AgeDistr
+
+Planner -> Workforce: analyzeCurrentWorkforce()
+activate Workforce
+Workforce -> Workforce: calculateLaborForceParticipation()
+Workforce -> Workforce: assessEmploymentStatus()
+Workforce -> Workforce: analyzeUnemploymentByAgeGroup()
+Workforce -> Workforce: evaluateUnderemployment()
+Workforce -> Workforce: mapInformalEmployment()
+Planner <-- Workforce: workforceAnalysis
+deactivate Workforce
+
+Planner -> AgeDistr: projectWorkforceGrowth(10)
+activate AgeDistr
+AgeDistr -> AgeDistr: projectAgeStructureChanges()
+AgeDistr -> AgeDistr: calculateEntryExitRates()
+AgeDistr -> AgeDistr: modelNetWorkforceGrowth()
+AgeDistr -> AgeDistr: analyzeGeographicShifts()
+Planner <-- AgeDistr: workforceGrowthProjections
+deactivate AgeDistr
+
+Planner -> Migration: assessMigrationImpact()
+activate Migration
+Migration -> Migration: analyzeCurrentOutflows()
+Migration -> Migration: evaluateRemittanceEffects()
+Migration -> Migration: modelSkillDrainImpact()
+Migration -> Migration: projectMigrationTrends()
+Migration -> Migration: assessReturnMigration()
+Planner <-- Migration: migrationAnalysis
+deactivate Migration
+
+Planner -> LaborMarket: analyzeSectoralDemand()
+activate LaborMarket
+LaborMarket -> LaborMarket: mapCurrentEmploymentBySector()
+LaborMarket -> LaborMarket: forecastSectoralGrowth()
+LaborMarket -> LaborMarket: projectJobCreation()
+LaborMarket -> LaborMarket: identifyEmergingSectors()
+Planner <-- LaborMarket: sectoralDemandForecast
+deactivate LaborMarket
+
+Planner -> Skills: mapSkillsGap()
+activate Skills
+Skills -> Skills: assessCurrentWorkforceSkills()
+Skills -> Skills: analyzeFutureSkillRequirements()
+Skills -> Skills: quantifySkillsMismatch()
+Skills -> Skills: identifyTrainingNeeds()
+Skills -> Skills: mapGeographicSkillsDistribution()
+Planner <-- Skills: skillsGapAnalysis
+deactivate Skills
+
+Planner -> Workforce: developInterventionStrategy()
+activate Workforce
+Workforce -> Workforce: designTrainingPrograms()
+Workforce -> Workforce: modelIncentiveEffects()
+Workforce -> Workforce: projectRetentionStrategies()
+Workforce -> Workforce: evaluateReintegrationPrograms()
+Planner <-- Workforce: interventionStrategies
+deactivate Workforce
+
+Planner -> Ministry: submitWorkforceDevelopmentPlan()
+@enduml
+----
+
+*Real-World Context:*
+Nepal faces significant labor market challenges, including high outmigration for foreign employment (with over 3 million Nepalis working abroad), skills mismatches, low productivity, and a predominantly informal economy. The Ministry of Labor, Employment and Social Security must develop evidence-based workforce development strategies in this complex environment. The AgeDistribution entity provides essential data for understanding the current and future working-age population, the foundation of labor market planning.
+
+The analysis begins with extracting working-age population data (ages 15-64) from the overall age distribution, revealing that Nepal currently has approximately 19 million people of working age, representing about 64% of the total population. This creates what demographers call a "demographic dividend" - a period when the working-age population is proportionally large compared to dependent age groups.
+
+However, the AgeDistribution entity's regional disaggregation reveals significant geographical disparities:
+- Urban areas have higher proportions of working-age population (up to 70%)
+- Remote mountain districts show depleted working-age populations due to outmigration (as low as 50%)
+- The Terai (southern plains) has more balanced distributions
+- Kathmandu Valley shows high concentration of young working-age population (20-35)
+
+The gender distribution within working age groups also shows important patterns: lower proportions of working-age males in many districts due to international labor migration, creating "female-headed households" and affecting local labor markets.
+
+The WorkforceAnalysisService integrates this demographic data with labor force surveys to calculate key workforce indicators. This reveals that despite the large working-age population, actual workforce participation has unique characteristics in Nepal:
+- Approximately 74% overall labor force participation rate
+- Significant gender gap (88% male vs. 65% female participation)
+- High underemployment (estimated at 35-40%)
+- Predominance of informal employment (estimated at 80-85% of all employment)
+- Low employment in formal manufacturing and service sectors
+
+The AgeDistribution projections for the next decade show that Nepal's working-age population will continue to grow, adding approximately 2.7 million potential workers through 2031. However, these projections also reveal the beginning of working-age population growth deceleration due to past fertility decline, with significant implications for long-term labor market planning.
+
+A critical factor in Nepal's workforce context is international migration. The MigrationAnalysis service uses age distribution data to assess migration's demographic impact. This reveals that migration is highly selective by age and gender, with males aged 20-35 most likely to migrate. In some districts, up to 40% of young men in this age group are working abroad, creating local labor shortages despite overall unemployment.
+
+The LaborMarketData service analyzes current employment by sector and projects future labor demand. This analysis highlights structural challenges in Nepal's economy:
+- Agriculture still employs approximately 60% of workers but produces only 25% of GDP
+- Manufacturing employs just 7% of workers, lower than two decades ago
+- Service sector employment is growing but concentrated in low-productivity subsectors
+- Emerging sectors (technology, tourism, commercial agriculture) face skill constraints
+
+The integration of age distribution data with skills information reveals critical mismatches between the educational preparation of the growing youth cohorts and labor market requirements. Approximately 500,000 young Nepalis enter the working age each year, but the formal economy creates fewer than 100,000 jobs annually, pushing many toward international migration or informal employment.
+
+Based on this comprehensive analysis, the workforce development plan addresses several strategic priorities:
+- Targeted skills development aligned with emerging economic sectors
+- Entrepreneurship promotion for youth
+- Programs to capitalize on the knowledge and capital of returning migrants
+- Formalization strategies for informal enterprises
+- Place-based strategies addressing regional workforce disparities
+- Gender-focused initiatives to increase female employment in higher-productivity sectors
+
+===== Special Considerations for Nepal's Context
+
+Several factors make Nepal's workforce planning unique:
+
+1. **Remittance Economy**: Remittances constitute approximately 25% of GDP, making international labor migration a core economic strategy rather than just a labor market failure.
+
+2. **Geographic Diversity**: Extreme geographical variations create very different local labor markets across the country.
+
+3. **Informal Economy Dominance**: The predominance of informal employment requires strategies beyond formal sector job creation.
+
+4. **Social Stratification**: Persistent differences in labor market access by gender, caste, and ethnicity require targeted interventions.
+
+5. **Indian Border Effects**: The open border with India creates unique labor market dynamics, including seasonal migration and informal cross-border employment.
+
+The age distribution analysis enables workforce planners to develop nuanced strategies that address these Nepal-specific factors, supporting policies that can harness the country's demographic dividend for sustainable economic development.

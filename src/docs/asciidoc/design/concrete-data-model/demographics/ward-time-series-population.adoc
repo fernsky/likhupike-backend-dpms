@@ -1,0 +1,39 @@
+==== Ward Time Series Population
+
+Ward Time Series Population represents longitudinal population data at the ward level, enabling trend analysis and historical comparisons, extending core domain models while providing specialized functionality for temporal demographic analysis.
+
+===== Core Model Integration
+
+include::ward-time-series-population/core-model-integration.adoc[leveloffset=+1]
+
+===== Data Collection and Integration Process
+
+include::ward-time-series-population/data-collection-process.adoc[leveloffset=+1]
+
+===== Time Series Analysis Capabilities
+
+include::ward-time-series-population/time-series-analysis.adoc[leveloffset=+1]
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Ward Time Series Population is used in the system:
+
+include::ward-time-series-population/intercensal-estimation.adoc[leveloffset=+1]
+
+include::ward-time-series-population/administrative-changes.adoc[leveloffset=+1]
+
+include::ward-time-series-population/urban-growth-tracking.adoc[leveloffset=+1]
+
+include::ward-time-series-population/disaster-impact-analysis.adoc[leveloffset=+1]
+
+include::ward-time-series-population/service-planning.adoc[leveloffset=+1]
+
+===== Implementation Details
+
+include::ward-time-series-population/data-aggregatable-implementation.adoc[leveloffset=+1]
+
+include::ward-time-series-population/time-series-visualization.adoc[leveloffset=+1]
+
+include::ward-time-series-population/data-model.adoc[leveloffset=+1]
+
+include::ward-time-series-population/events.adoc[leveloffset=+1]

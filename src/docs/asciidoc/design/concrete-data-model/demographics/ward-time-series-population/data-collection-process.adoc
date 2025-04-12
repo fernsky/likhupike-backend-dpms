@@ -1,0 +1,111 @@
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Plan decennial census;
+:Develop enumeration methodology;
+:Train field enumerators;
+
+|Field Enumerators|
+:Conduct household census;
+:Collect population data by ward;
+:Document demographic attributes;
+:Submit field data;
+
+|Data Processing Team|
+:Process census data;
+:Aggregate to ward level;
+:Validate population counts;
+:Calculate key indicators;
+:Generate preliminary tables;
+
+|Quality Control Team|
+:Review population distributions;
+:Compare with previous census;
+:Check for anomalies;
+:Validate sex ratios;
+:Document methodology;
+
+|System|
+:Import census ward data;
+:Create time series points;
+:Flag as census year (isCensusYear=true);
+:Link to census methodology;
+:Generate derived metrics;
+
+|Time Series Analysts|
+:Develop intercensal estimates;
+:Calculate growth rates;
+:Determine projection methods;
+:Document estimation techniques;
+
+|System|
+:Generate intercensal estimates;
+:Create time series for non-census years;
+:Flag as estimated (isProjected=true);
+:Calculate confidence levels;
+:Link intercensal points to methodology;
+
+|Boundary Management Team|
+:Track administrative changes;
+:Map old boundaries to new;
+:Calculate population redistribution;
+:Document boundary changes;
+
+|System|
+:Adjust historical time series;
+:Reconcile population across boundary changes;
+:Flag boundary-affected series;
+:Maintain historical continuity;
+
+|Data Consumers|
+:Access time series data;
+:Analyze population trends;
+:Perform temporal comparisons;
+:Visualize demographic changes;
+
+stop
+@enduml
+----
+
+The WardTimeSeriesPopulation entity implements a comprehensive data collection and integration process that addresses Nepal's unique challenges in maintaining consistent population data over time. This process encompasses several critical workflows:
+
+===== Census Data Integration
+
+The primary data source for time series points is Nepal's decennial census, conducted by the Central Bureau of Statistics. When census data becomes available (approximately every 10 years), it is integrated as authoritative points in the time series with `isCensusYear=true`. This census data provides the anchor points for all estimates and projections.
+
+Census years are marked with detailed methodology references, including enumeration techniques, sampling approaches (if any), and data quality indicators. This methodological documentation is crucial for interpreting intercensal estimates and understanding data limitations.
+
+===== Intercensal Estimation Process
+
+Between census years, the system employs several estimation techniques to provide reasonable population approximations at the ward level:
+
+1. **Component Method**: Incorporates birth, death, and migration data from civil registration systems where available
+2. **Housing Unit Method**: Utilizes changes in housing stock and household size to estimate population changes
+3. **Ratio Correlation**: Uses correlations with other indicators (electricity connections, school enrollments, etc.)
+4. **Mathematical Models**: Applies geometric or exponential growth models based on past growth patterns
+
+Each intercensal estimate is flagged with `isProjected=true` and includes documentation of the specific estimation technique used, enabling data consumers to understand the methodology and limitations.
+
+===== Administrative Boundary Change Handling
+
+A unique challenge in Nepal's demographic time series is the frequent changes to administrative boundaries, especially following the 2017 federal restructuring. The WardTimeSeriesPopulation entity explicitly tracks these changes with:
+
+1. **Boundary Change Documentation**: Records when ward boundaries change, including the official date and reference decree
+2. **Area Allocation Factors**: Calculates what percentage of population should be redistributed when boundaries change
+3. **Population Reconciliation**: Adjusts historical time series to maintain comparability across boundary changes
+4. **Dual Representation**: Maintains both original and boundary-adjusted population figures for analysis
+
+This boundary change tracking is essential for meaningful time series analysis in Nepal's evolving administrative context, allowing for consistent trend analysis despite changing geographic definitions.
+
+===== Data Quality Assurance
+
+The process includes multiple validation steps to ensure data quality:
+
+1. **Comparisons with Previous Census**: Validating that growth rates fall within plausible ranges
+2. **Sex Ratio Validation**: Ensuring gender distributions align with expected demographic patterns
+3. **Density Checks**: Validating that population density figures are reasonable for geographic contexts
+4. **Cross-verification**: Comparing with other administrative data sources like voter rolls and school enrollments
+
+Each time series point receives a confidence level rating (HIGH, MEDIUM, LOW, VERY_LOW) to indicate data reliability, with census years typically receiving HIGH confidence and intercensal estimates receiving varying ratings based on methodology and data sources.

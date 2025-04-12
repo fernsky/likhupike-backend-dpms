@@ -1,0 +1,272 @@
+===== Time Series Visualization
+
+The WardTimeSeriesPopulation entity provides specialized visualization capabilities to help users understand population trends and patterns over time.
+
+[plantuml]
+----
+@startuml
+participant "PlanningDashboard" as Dashboard
+participant "WardTimeSeriesPopulation" as TimeSeries
+participant "VisualizationEngine" as Viz
+participant "ChartConfigurationService" as Config
+participant "DataTransformationService" as Transform
+participant "RenderingService" as Render
+participant "ExportService" as Export
+
+Dashboard -> TimeSeries: getVisualizationData(wardId, 2001, 2021)
+activate TimeSeries
+TimeSeries -> TimeSeries: fetchCompleteTimeSeries()
+TimeSeries -> TimeSeries: validateDataPoints()
+TimeSeries -> TimeSeries: preprocessForVisualization()
+Dashboard <-- TimeSeries: timeSeriesData
+deactivate TimeSeries
+
+Dashboard -> Viz: createPopulationTrendVisualization(timeSeriesData)
+activate Viz
+Viz -> Config: getDefaultConfiguration("populationTrend")
+activate Config
+Viz <-- Config: chartConfig
+deactivate Config
+
+Viz -> Transform: prepareDataSeries(timeSeriesData)
+activate Transform
+Transform -> Transform: mapTimePoints()
+Transform -> Transform: calculateYearOnYearChange()
+Transform -> Transform: addProjectionFlag()
+Viz <-- Transform: transformedData
+deactivate Transform
+
+Viz -> Render: renderLineChart(transformedData, chartConfig)
+activate Render
+Render -> Render: createSVGCanvas()
+Render -> Render: drawAxes()
+Render -> Render: plotDataPoints()
+Render -> Render: addCensusYearMarkers()
+Render -> Render: differentiateActualVsProjected()
+Render -> Render: addHoverInteractivity()
+Viz <-- Render: renderedChart
+deactivate Render
+Dashboard <-- Viz: populationTrendChart
+deactivate Viz
+
+Dashboard -> Viz: createDemographicPyramid(timeSeriesData, 2021)
+activate Viz
+Viz -> Transform: preparePyramidData(timeSeriesData, 2021)
+activate Transform
+Transform -> Transform: calculateAgeDistribution()
+Transform -> Transform: organizeByGenderAndAge()
+Viz <-- Transform: pyramidData
+deactivate Transform
+
+Viz -> Render: renderPopulationPyramid(pyramidData)
+activate Render
+Render -> Render: createDualAxisChart()
+Render -> Render: plotMaleBars()
+Render -> Render: plotFemaleBars()
+Render -> Render: addAgeGroupLabels()
+Render -> Render: addValueTooltips()
+Viz <-- Render: pyramidChart
+deactivate Render
+Dashboard <-- Viz: demographicPyramid
+deactivate Viz
+
+Dashboard -> Viz: createAdminAreaComparison(wardIds, 2021)
+activate Viz
+Viz -> TimeSeries: getMultiWardData(wardIds, 2021)
+activate TimeSeries
+Viz <-- TimeSeries: multiWardData
+deactivate TimeSeries
+
+Viz -> Transform: prepareComparisonData(multiWardData)
+activate Transform
+Transform -> Transform: normalizeByPopulation()
+Transform -> Transform: calculateRankings()
+Transform -> Transform: addBenchmarks()
+Viz <-- Transform: comparisonData
+deactivate Transform
+
+Viz -> Render: renderComparisonChart(comparisonData)
+activate Render
+Render -> Render: createBarChart()
+Render -> Render: sortByMetric()
+Render -> Render: addReferenceLines()
+Render -> Render: colorCodeByCategory()
+Viz <-- Render: comparisonChart
+deactivate Render
+Dashboard <-- Viz: adminAreaComparison
+deactivate Viz
+
+Dashboard -> Viz: createDensityMap(municipalityId, 2021)
+activate Viz
+Viz -> TimeSeries: getWardDataByMunicipality(municipalityId, 2021)
+activate TimeSeries
+Viz <-- TimeSeries: municipalityWardData
+deactivate TimeSeries
+
+Viz -> Transform: prepareGeoData(municipalityWardData)
+activate Transform
+Transform -> Transform: calculateDensityValues()
+Transform -> Transform: prepareGeoJSONLayers()
+Transform -> Transform: defineDensityBreaks()
+Viz <-- Transform: geoData
+deactivate Transform
+
+Viz -> Render: renderChoroplethMap(geoData)
+activate Render
+Render -> Render: createMapCanvas()
+Render -> Render: applyGeoJSONLayers()
+Render -> Render: applyColorScale()
+Render -> Render: addBoundaryLines()
+Render -> Render: addLegend()
+Render -> Render: enableZoomPan()
+Viz <-- Render: densityMap
+deactivate Render
+Dashboard <-- Viz: populationDensityMap
+deactivate Viz
+
+Dashboard -> Viz: exportVisualizationSet()
+activate Viz
+Viz -> Export: createExportPackage(charts)
+activate Export
+Export -> Export: prepareHighResVersions()
+Export -> Export: addDataTables()
+Export -> Export: createMetadataSheet()
+Export -> Export: packageAsReport()
+Viz <-- Export: exportedReport
+deactivate Export
+Dashboard <-- Viz: downloadableReportPackage
+deactivate Viz
+@enduml
+----
+
+The WardTimeSeriesPopulation entity provides rich visualization capabilities designed specifically for demographic time series analysis. These visualizations address the unique challenges of Nepal's demographic context while making complex population trends accessible to users at all levels of technical expertise.
+
+===== Core Visualization Types
+
+*Population Trend Line*
+
+The trend line visualization is the foundation of time series population analysis, showing population changes over time. Key features include:
+
+1. **Census Year Indicators**: Vertical lines or markers showing census years, distinguishing between actual measured data and intercensal estimates
+2. **Projection Visualization**: Different styling (typically dashed lines) for projected years with optional confidence intervals
+3. **Growth Rate Overlay**: Optional display of year-on-year or period growth rates
+4. **Administrative Change Markers**: Visual indicators showing when ward boundaries changed, with tooltips explaining the changes
+5. **Comparative Baselines**: Optional overlay of municipal, district, or national growth trends for context
+
+This visualization helps users quickly understand population trajectories and identify significant changes or anomalies requiring further investigation.
+
+*Demographic Pyramid*
+
+The age-sex pyramid visualization shows population distribution by age group and gender for a selected time point:
+
+1. **Configurable Age Bands**: Users can select standard 5-year age bands or custom groupings
+2. **Multi-Period Overlay**: Optional display of multiple years (e.g., 2001, 2011, 2021) to show demographic transitions
+3. **Fertility and Mortality Indicators**: Calculated indicators showing dependency ratio, aging index, and other demographic measures
+4. **Cohort Tracking**: Visual tracking of specific birth cohorts as they age through successive time points
+5. **Migration Impact Visualization**: Optional highlighting of age bands most affected by migration patterns
+
+This visualization is particularly valuable for planning age-specific services like education, healthcare, and elder care, allowing anticipation of future service demands.
+
+*Administrative Area Comparison*
+
+The comparative visualization shows selected population metrics across multiple administrative areas:
+
+1. **Ranked Bar Charts**: Wards ranked by selected metrics (total population, density, growth rate)
+2. **Multi-Metric Comparison**: Side-by-side comparison of different indicators
+3. **Benchmark Indicators**: Reference lines showing district, provincial, or national averages
+4. **Statistical Distribution**: Box plots or violin plots showing statistical distribution of values
+5. **Categorized Coloring**: Color-coding by region, rural/urban classification, or custom categories
+
+This visualization supports comparative analysis and helps identify areas with exceptional characteristics requiring special attention in planning.
+
+*Population Density Map*
+
+The choropleth map visualization shows population distribution across space:
+
+1. **Multi-Level Detail**: Progressive detail as users zoom from province to district to municipality to ward
+2. **Customizable Metrics**: Selectable display of total population, density, growth rate, or other metrics
+3. **Time Animation**: Option to animate changes over time to visualize spatial demographic shifts
+4. **Custom Classification**: User-selectable data breaks and color schemes
+5. **Boundary Overlay Options**: Toggles for administrative, physical, and infrastructure boundaries
+
+This spatial visualization is essential for understanding the geographic distribution of population and identifying clusters, corridors, and isolated settlements.
+
+===== Advanced Visualization Features
+
+*Comparative Time Series*
+
+This visualization shows multiple time series simultaneously for comparative analysis:
+
+1. **Ward Grouping**: Similar wards can be grouped and averaged to identify patterns
+2. **Trend Similarity Analysis**: Wards with similar growth or decline patterns are automatically identified
+3. **Pre/Post Event Comparison**: Analysis of population trends before and after significant events (e.g., disasters, infrastructure development)
+4. **Variable Transformation**: Options for log scale, indexing to a base year, or per capita normalization
+5. **Seasonal Adjustment**: For areas with significant seasonal population fluctuations (e.g., tourist destinations)
+
+*Component Change Visualization*
+
+This specialized visualization decomposes population change into components:
+
+1. **Natural Increase**: Births minus deaths
+2. **Net Migration**: In-migration minus out-migration
+3. **Administrative Change**: Population changes due to boundary modifications
+4. **Stacked Bar View**: Visual breakdown of how much each component contributes to total change
+5. **Proportional View**: Relative contribution of each factor as a percentage
+
+This helps planners understand the drivers of population change in different areas, distinguishing between natural growth, migration effects, and administrative adjustments.
+
+*Scenario Projection Visualization*
+
+This forward-looking visualization shows different population projection scenarios:
+
+1. **Multi-Scenario Display**: High, medium, and low growth scenarios shown simultaneously
+2. **Assumption Adjustment**: Interactive controls to modify key assumptions and see impacts
+3. **Policy Impact Modeling**: Visual representation of how policy interventions might alter trajectories
+4. **Uncertainty Visualization**: Confidence intervals that widen with projection distance
+5. **Historical Benchmark**: Comparison of projected growth against historical patterns
+
+This visualization supports long-term planning by illustrating potential future states and their sensitivity to different assumptions.
+
+===== Implementation Details
+
+*Responsive Design*
+
+All visualizations implement responsive design to function across devices:
+
+1. **Screen Size Adaptation**: Charts automatically resize based on display size
+2. **Progressive Complexity**: Mobile views show simplified versions with core insights
+3. **Touch Optimization**: Controls and interactions optimized for both mouse and touch
+4. **Offline Capability**: Visualizations can be cached for offline reference in areas with limited connectivity
+5. **Low-Bandwidth Options**: Data-efficient versions for users in remote areas with poor connectivity
+
+*Accessibility Features*
+
+Visualizations implement accessibility best practices:
+
+1. **Screen Reader Support**: All charts include ARIA attributes and text equivalents
+2. **Keyboard Navigation**: Full functionality without requiring mouse interaction
+3. **Color-Blind Safe Palettes**: Default color schemes tested for color vision deficiencies
+4. **High Contrast Mode**: Alternative rendering for visually impaired users
+5. **Data Table Alternative**: All visual data available in tabular format
+
+*Multi-Language Support*
+
+Visualizations support Nepal's linguistic diversity:
+
+1. **Dual-Script Display**: Simultaneous or toggled display of Nepali and English
+2. **Localizable Elements**: All labels, tooltips, and legends can be displayed in multiple languages
+3. **Right-to-Left Support**: Compatible with scripts requiring right-to-left rendering
+4. **Flexible Date Formats**: Support for both Bikram Sambat and Gregorian calendar systems
+5. **Unit Localization**: Population figures displayed in local conventions (lakhs, crores)
+
+*Export and Sharing Options*
+
+Visualizations can be exported in multiple formats:
+
+1. **Image Export**: High-resolution PNG or SVG for reports and presentations
+2. **Interactive HTML**: Self-contained interactive versions for sharing and embedding
+3. **PDF Reports**: Compiled multi-visualization reports with explanatory text
+4. **Data Export**: Underlying data in CSV, Excel, or JSON formats
+5. **API Access**: Direct integration with other systems via API endpoints
+
+These visualization capabilities make Nepal's complex demographic data accessible and actionable for a wide range of stakeholders, from government planners and policymakers to researchers, businesses, and citizens.

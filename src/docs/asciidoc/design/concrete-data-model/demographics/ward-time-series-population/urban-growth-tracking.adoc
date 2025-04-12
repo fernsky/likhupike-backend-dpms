@@ -1,0 +1,140 @@
+===== Urban Growth Pattern Analysis
+
+*Scenario:* Tracking urbanization trends across rapidly growing urban centers
+
+[plantuml]
+----
+@startuml
+actor "Urban Planning\nDepartment" as UPD
+actor "Municipal\nStatistician" as Stat
+participant "WardTimeSeriesPopulation" as TimeSeries
+participant "UrbanizationAnalysis\nEngine" as Urban
+participant "SpatialVisualization\nService" as Spatial
+participant "GrowthProjection\nService" as Projection
+participant "InfrastructureGap\nAnalysis" as Infra
+
+UPD -> TimeSeries: retrieveUrbanWardTimeSeries(2001-2021)
+activate TimeSeries
+TimeSeries -> TimeSeries: identifyUrbanWards()
+TimeSeries -> TimeSeries: fetchCompleteTimeSeries()
+TimeSeries -> TimeSeries: applyUrbanClassificationChanges()
+UPD <-- TimeSeries: urbanWardTimeSeriesData
+deactivate TimeSeries
+
+UPD -> Urban: analyzeUrbanizationPatterns()
+activate Urban
+Urban -> Urban: calculateUrbanGrowthRates()
+Urban -> Urban: identifyHighGrowthWards()
+Urban -> Urban: categorizePeriurbanTransitions()
+Urban -> Urban: analyzeInformalSettlementGrowth()
+UPD <-- Urban: urbanizationAnalysis
+deactivate Urban
+
+UPD -> Stat: investigateGrowthHotspots()
+activate Stat
+Stat -> TimeSeries: getGrowthRateDistribution()
+activate TimeSeries
+Stat <-- TimeSeries: growthDistribution
+deactivate TimeSeries
+
+Stat -> TimeSeries: identifyOutlierWards()
+activate TimeSeries
+TimeSeries -> TimeSeries: calculateZScores()
+TimeSeries -> TimeSeries: flagStatisticalOutliers()
+TimeSeries -> TimeSeries: analyzeTemporalConsistency()
+Stat <-- TimeSeries: outlierWards
+deactivate TimeSeries
+
+UPD <-- Stat: growthHotspotAnalysis
+deactivate Stat
+
+UPD -> Spatial: mapUrbanGrowthPatterns()
+activate Spatial
+Spatial -> Spatial: generateChoroplethMap()
+Spatial -> Spatial: createGrowthHeatmap()
+Spatial -> Spatial: mapSprawlDirections()
+Spatial -> Spatial: visualizeGrowthContinuity()
+UPD <-- Spatial: urbanGrowthMaps
+deactivate Spatial
+
+UPD -> Projection: projectFutureUrbanExpansion()
+activate Projection
+Projection -> Projection: identifyGrowthVectors()
+Projection -> Projection: incorporateLandUseConstraints()
+Projection -> Projection: applyGrowthRateModels()
+Projection -> Projection: generateExpansionScenarios()
+UPD <-- Projection: urbanExpansionProjections
+deactivate Projection
+
+UPD -> Urban: analyzeUrbanConsolidation()
+activate Urban
+Urban -> Urban: calculateDensificationRates()
+Urban -> Urban: analyzeInfillDevelopment()
+Urban -> Urban: assessRedevelopmentPatterns()
+Urban -> Urban: evaluateUrbanBoundaryChanges()
+UPD <-- Urban: urbanConsolidationAnalysis
+deactivate Urban
+
+UPD -> Infra: assessInfrastructureNeeds()
+activate Infra
+Infra -> Infra: calculateServiceGaps()
+Infra -> Infra: projectFutureDemand()
+Infra -> Infra: prioritizeInfrastructureInvestments()
+Infra -> Infra: estimateInvestmentTimelines()
+UPD <-- Infra: infrastructureAssessment
+deactivate Infra
+
+UPD -> TimeSeries: createUrbanizationScorecard()
+activate TimeSeries
+TimeSeries -> TimeSeries: buildWardComparisonMatrix()
+TimeSeries -> TimeSeries: calculateUrbanizationRankings()
+TimeSeries -> TimeSeries: identifySuccessPatterns()
+TimeSeries -> TimeSeries: flagSustainabilityIssues()
+UPD <-- TimeSeries: urbanizationScorecard
+deactivate TimeSeries
+@enduml
+----
+
+*Real-World Context:*
+Nepal is experiencing one of the world's highest urbanization rates, with urban growth averaging over 6% annually compared to the national population growth of 1.35%. The Urban Planning Department of Kathmandu Valley Development Authority needs to track this rapid urbanization at the ward level to guide infrastructure investments, manage urban sprawl, and support sustainable growth planning.
+
+The WardTimeSeriesPopulation entity's time series capabilities provide essential tools for analyzing Nepal's complex urban transformation patterns at the detailed ward level.
+
+The process begins with the retrieval of time series data for urban wards, which in Nepal's context requires special handling due to changing urban classifications. Prior to 2017, urban status was limited to designated municipalities. After the 2017 restructuring, all areas within municipal boundaries (including previously rural areas incorporated into new municipalities) were classified as urban. The system maintains both original and reclassified time series to enable meaningful analysis of truly urban areas versus newly designated urban areas.
+
+A key challenge in Nepal's urbanization analysis is identifying genuine growth patterns versus administrative changes. For example, when Kirtipur Municipality was expanded in 2014 to incorporate surrounding village areas, the "urban" population jumped significantly. The WardTimeSeriesPopulation entity flags such administrative changes to distinguish them from organic growth.
+
+The system identifies growth hotspots by calculating standardized growth rates and flagging statistical outliers. In the Kathmandu Valley context, this has highlighted several patterns:
+- Rapid growth in outer ring wards (10-15km from city center) with transportation access
+- Explosive growth along new ring road corridors
+- Densification in areas with improving water supply infrastructure
+- Emergence of satellite urban centers in previously rural areas
+
+The time series data reveals distinct phases in Nepal's urban growth pattern:
+1. **2001-2006**: Conflict-driven migration during the Maoist insurgency
+2. **2006-2015**: Economic migration and remittance-fueled housing expansion
+3. **2015-2017**: Post-earthquake displacement and reconstruction
+4. **2017-present**: Infrastructure-led development and metropolitan consolidation
+
+Each phase shows distinctive ward-level growth patterns that can be mapped both temporally and spatially.
+
+A critical application is the analysis of urban informality. By comparing official population growth with infrastructure expansion, the system can identify likely informal settlement growth. For example, wards showing 15%+ population growth but less than 3% expansion in water supply connections likely indicate growing informality - a critical planning concern in rapidly urbanizing areas of Nepal.
+
+The spatial visualization capabilities map growth patterns to reveal directional trends and sprawl vectors. In Kathmandu Valley, this has highlighted strong growth corridors along major highways (particularly the Kathmandu-Bhaktapur and Kathmandu-Thankot corridors) and identified areas where urban growth is colliding with agricultural land preservation zones.
+
+For future planning, the growth projection models enable scenario-based modeling that incorporates:
+- Transportation infrastructure plans
+- Land use constraints (agricultural preservation, hazard zones)
+- Water supply limitations
+- Employment centers
+- Affordable housing development
+
+These projections support the Valley's 20-year development plan by identifying which wards are likely to accommodate the Valley's projected population growth of 3.5 million additional residents by 2040.
+
+The infrastructure gap analysis examines population trends against infrastructure capacity to identify critical investment needs. This has highlighted significant disparities, with some rapidly growing wards having infrastructure designed for 1/3 of their current population, creating public health and service delivery challenges.
+
+The consolidated urbanization scorecard compares wards on multiple growth management metrics, identifying both success stories and cautionary examples. This supports peer learning between municipalities facing similar urbanization challenges and helps prioritize planning interventions in emerging hotspots before infrastructure and service deficits become entrenched.
+
+A particular feature relevant to Nepal's context is the analysis of absentee population growth in urban areas. The system tracks not just resident population but also the growing phenomenon of "investment properties" in urban areas owned by overseas workers. This distinctive pattern shows in unusual disconnects between population counts and housing unit growth in certain urban wards.
+
+This comprehensive urban growth tracking through ward-level time series enables evidence-based urban planning in one of the world's most rapidly urbanizing regions, helping Nepal's cities manage their transformation sustainably.

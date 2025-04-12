@@ -1,0 +1,182 @@
+===== DataAggregatable Implementation
+
+WardTimeSeriesPopulation implements the DataAggregatable interface to enable population aggregation across administrative hierarchies and time periods.
+
+[plantuml]
+----
+@startuml
+participant "MunicipalityService" as Municipality
+participant "WardTimeSeriesPopulation\nimplements DataAggregatable" as WardTS
+participant "AggregationEngine" as Engine
+participant "ValidationService" as Validation
+participant "AdminHierarchyService" as Hierarchy
+
+Municipality -> WardTS: aggregateData(municipalityId, year)
+activate WardTS
+
+WardTS -> Hierarchy: getWardsForMunicipality(municipalityId)
+activate Hierarchy
+WardTS <-- Hierarchy: wardIds
+deactivate Hierarchy
+
+WardTS -> WardTS: getEntitiesForAggregation(wardIds, year)
+activate WardTS
+WardTS -> WardTS: fetchWardTimeSeriesForYear(wardIds, year)
+WardTS -> WardTS: validateTimeAlignmentConsistency(timeSeriesData)
+WardTS <-- WardTS: wardDataPoints
+deactivate WardTS
+
+WardTS -> Engine: aggregatePopulationData(wardDataPoints)
+activate Engine
+Engine -> Engine: sumTotalPopulation()
+Engine -> Engine: sumMalePopulation()
+Engine -> Engine: sumFemalePopulation()
+Engine -> Engine: sumThirdGenderPopulation()
+Engine -> Engine: sumHouseholds()
+Engine -> Engine: calculateWeightedAverages()
+Engine -> Engine: propagateMetadata()
+WardTS <-- Engine: aggregatedData
+deactivate Engine
+
+WardTS -> Validation: validateAggregatedData(aggregatedData)
+activate Validation
+Validation -> Validation: checkTotalConsistency()
+Validation -> Validation: verifyGenderBalance()
+Validation -> Validation: validateDemographicRatios()
+WardTS <-- Validation: validationResults
+deactivate Validation
+
+WardTS -> WardTS: buildMunicipalityTimeSeries(aggregatedData)
+activate WardTS
+WardTS -> WardTS: createTimeSeriesEntity()
+WardTS -> WardTS: setAdminMetadata(municipalityId)
+WardTS -> WardTS: calculateDerivedMetrics()
+WardTS -> WardTS: propagateMetadataFlags()
+WardTS -> WardTS: adjustConfidenceLevel()
+WardTS <-- WardTS: municipalityTimeSeries
+deactivate WardTS
+
+Municipality <-- WardTS: municipalityTimeSeriesPopulation
+deactivate WardTS
+
+Municipality -> WardTS: aggregateTimePeriod(wardId, startYear, endYear)
+activate WardTS
+
+WardTS -> WardTS: getEntitiesForTimeAggregation(wardId, startYear, endYear)
+activate WardTS
+WardTS -> WardTS: fetchTimeSeriesForPeriod(wardId, startYear, endYear)
+WardTS -> WardTS: validateDataContinuity()
+WardTS <-- WardTS: timeSeriesPoints
+deactivate WardTS
+
+WardTS -> Engine: aggregateTimeSeriesData(timeSeriesPoints, aggregationType)
+activate Engine
+Engine -> Engine: applyAggregationMethod()
+Engine -> Engine: calculateTrends()
+Engine -> Engine: computeGrowthRates()
+Engine -> Engine: deriveAverageMeasures()
+WardTS <-- Engine: temporalAggregation
+deactivate Engine
+
+WardTS -> WardTS: buildTimeAggregatedSeries(temporalAggregation)
+activate WardTS
+WardTS -> WardTS: createAggregatedEntity()
+WardTS -> WardTS: setTimeAggregationMetadata()
+WardTS -> WardTS: flagAggregatedData()
+WardTS <-- WardTS: aggregatedTimeSeries
+deactivate WardTS
+
+Municipality <-- WardTS: timeAggregatedPopulation
+deactivate WardTS
+@enduml
+----
+
+The WardTimeSeriesPopulation entity implements the DataAggregatable interface to support two critical aggregation capabilities:
+
+1. **Spatial Aggregation**: Rolling up ward-level population data to higher administrative levels (municipality, district, province)
+2. **Temporal Aggregation**: Combining multiple time points to generate period averages, trends, and growth rates
+
+===== Spatial Aggregation Implementation
+
+Spatial aggregation is essential in Nepal's federal structure, where planning happens at multiple administrative levels. The `aggregateData()` method allows higher-level administrative units to derive their population figures from constituent wards.
+
+This implementation addresses several challenges specific to Nepal's administrative context:
+
+*Administrative Hierarchy Navigation*
+
+The system uses the AdminHierarchyService to determine which wards belong to a given municipality, district, or province, handling the complex nested relationships in Nepal's federal structure. This is particularly important since Nepal's administrative restructuring in 2017, where the relationship between new and old administrative units isn't always straightforward.
+
+*Consistent Time Alignment*
+
+When aggregating across wards, the system ensures all data points represent the same time period. This is not trivial in Nepal's context, where data collection may happen at different times in different areas due to accessibility challenges, especially in remote mountain districts. The alignment verification prevents inappropriate aggregation of data from different years.
+
+*Weighted Averaging for Derived Metrics*
+
+While some metrics like total population are simply summed, others like population density and sex ratio require weighted averaging to maintain statistical validity. The aggregation engine applies appropriate mathematical operations for each demographic indicator to ensure accurate higher-level statistics.
+
+*Metadata Propagation*
+
+Critical metadata like data source, collection method, and confidence level are propagated to the aggregated entity. When constituent wards have different values (e.g., some census data, some projected), the system applies rules to determine the appropriate values for the aggregated entity, typically defaulting to the most conservative confidence level.
+
+*Validation of Aggregated Results*
+
+The ValidationService performs consistency checks on aggregated data, ensuring total population equals the sum of gender categories, demographic ratios fall within expected ranges, and growth rates are plausible. This catches potential errors in the aggregation process.
+
+===== Temporal Aggregation Implementation
+
+Temporal aggregation supports analysis of population trends over time, allowing calculation of period averages, growth rates, and trend indicators.
+
+*Time Period Selection*
+
+The system allows flexible selection of time periods for aggregation, supporting both standard intervals (5-year, 10-year periods) and custom ranges. This is valuable for aligning with Nepal's planning periods, which often follow 5-year development plan cycles.
+
+*Data Continuity Validation*
+
+Before temporal aggregation, the system validates data continuity to ensure there are no significant gaps that would compromise the analysis. In Nepal's context, where data collection may be interrupted by factors like political unrest or natural disasters, this validation is essential for data quality.
+
+*Multiple Aggregation Methods*
+
+The system supports different temporal aggregation methods:
+- **Averaging**: Calculating mean values across the time period
+- **Trend Analysis**: Deriving linear or exponential trends
+- **Growth Rate Calculation**: Computing compound annual growth rates (CAGR)
+- **Change Analysis**: Quantifying net and percentage changes between endpoints
+
+*Handling Missing Data Points*
+
+For time periods with missing data points (common in Nepal's data environment), the system can either interpolate values or compute aggregations using available points with appropriate flagging. This accommodates the reality of incomplete time series while maintaining analytical validity.
+
+*Confidence Level Adjustment*
+
+Temporally aggregated data receives adjusted confidence levels based on the input data quality, completeness, and aggregation method. Longer time periods with inconsistent data collection methods result in lower confidence ratings.
+
+===== Implementation Considerations
+
+*Edge Cases*
+
+The implementation handles several edge cases common in Nepal's demographic data environment:
+
+1. **Zero Population Wards**: Some wards may be uninhabited (e.g., conservation areas) and are handled appropriately in aggregations
+2. **Administrative Changes**: When boundaries change, historical data is adjusted for consistent aggregation
+3. **Extreme Outliers**: Sudden population changes (e.g., from refugee movements) are validated rather than automatically rejected
+4. **Low-Population Areas**: Statistical protections for areas with very small populations to prevent individual identification
+
+*Performance Optimization*
+
+Given the need to frequently aggregate across Nepal's 6,743 wards for planning purposes, the implementation includes:
+
+1. **Caching Strategy**: Commonly requested aggregations are cached
+2. **Incremental Updates**: When new ward data becomes available, aggregations are incrementally updated
+3. **Parallel Processing**: Large-scale aggregations leverage parallel processing
+4. **Pre-computed Aggregations**: Regularly used aggregations (e.g., district totals) are pre-computed daily
+
+*Data Quality Transparency*
+
+All aggregated results include:
+
+1. **Source Data Listing**: References to all constituent entities used
+2. **Aggregation Method**: Documentation of how each metric was aggregated
+3. **Quality Indicators**: Confidence level and data completeness measures
+4. **Known Limitations**: Any caveats about the aggregated data
+
+This transparency is essential in Nepal's planning context, where understanding the limitations of demographic data is crucial for appropriate use in policy decisions.
