@@ -1,0 +1,468 @@
+===== `BatchProcessable`
+Interface for entities that can be processed in bulk operations.
+
+[source,kotlin]
+----
+interface BatchProcessable {
+    fun validateBatchOperation(operation: BatchOperation): ValidationResult
+    fun processBatch(items: List<BatchItem>, operation: BatchOperation): BatchResult
+    fun getAvailableBatchOperations(): List<BatchOperation>
+    fun getBatchProcessingHistory(): List<BatchProcessRecord>
+    fun estimateBatchProcessingTime(itemCount: Int, operation: BatchOperation): Duration
+    fun supportsConcurrentBatchProcessing(): Boolean
+}
+----
+
+====== Contextual Use Cases for BatchProcessable
+
+*Real-World Scenario:* Land Tax Assessment System
+
+[plantuml]
+----
+@startuml
+actor "Revenue Officer\n(Bikram Thapa)" as Officer
+actor "District Revenue\nChief (Anita Poudel)" as Chief
+participant "LandParcel\nimplements BatchProcessable" as LandParcel
+participant "BatchProcessingService" as BatchService
+participant "TaxCalculationEngine" as TaxEngine
+participant "DistrictBoundaryService" as Boundary
+participant "NotificationService" as Notify
+
+Officer -> BatchService : initiateBatchTaxAssessment(wardId)
+activate BatchService
+
+BatchService -> Boundary : getWardBoundary(wardId)
+activate Boundary
+BatchService <-- Boundary : wardBoundary
+deactivate Boundary
+
+BatchService -> LandParcel : findAllInBoundary(wardBoundary)
+activate LandParcel
+BatchService <-- LandParcel : parcelsInWard
+deactivate LandParcel
+
+BatchService -> LandParcel : validateBatchOperation(TAX_ASSESSMENT)
+activate LandParcel
+LandParcel -> LandParcel : checkOperationPermissions()
+LandParcel -> LandParcel : validatePreconditions()
+LandParcel -> LandParcel : checkTemporalValidity()
+BatchService <-- LandParcel : validationResult
+deactivate LandParcel
+
+alt Valid Operation
+  BatchService -> BatchService : createBatchItems(parcelsInWard)
+  BatchService -> BatchService : createBatchOperation(TAX_ASSESSMENT)
+  BatchService -> LandParcel : estimateBatchProcessingTime(parcelsCount, operation)
+  activate LandParcel
+  BatchService <-- LandParcel : estimatedTime
+  deactivate LandParcel
+  
+  Officer <-- BatchService : batchInitiated
+  
+  BatchService -> LandParcel : processBatch(batchItems, operation)
+  activate LandParcel
+  
+  loop for each parcel group
+    LandParcel -> LandParcel : createTaxAssessmentBatch(parcels)
+    LandParcel -> TaxEngine : calculateTaxes(parcels)
+    activate TaxEngine
+    
+    loop for each parcel
+      TaxEngine -> TaxEngine : determineLandUseCategory(parcel)
+      TaxEngine -> TaxEngine : calculateBaseValue(parcel)
+      TaxEngine -> TaxEngine : applyZoneRateMultiplier(parcel)
+      TaxEngine -> TaxEngine : applyExemptions(parcel)
+      TaxEngine -> TaxEngine : calculateFinalTax(parcel)
+    end
+    
+    LandParcel <-- TaxEngine : taxCalculations
+    deactivate TaxEngine
+    
+    LandParcel -> LandParcel : updateParcelsWithTaxes(parcels, calculations)
+    LandParcel -> LandParcel : recordBatchProgress(completedCount)
+  end
+  
+  LandParcel -> LandParcel : recordBatchCompletion(result)
+  
+  BatchService <-- LandParcel : batchResult
+  deactivate LandParcel
+else Invalid Operation
+  Officer <-- BatchService : validationErrors
+  deactivate BatchService
+end
+
+Officer -> BatchService : getBatchExecutionStatus(batchId)
+activate BatchService
+BatchService -> LandParcel : getBatchProcessingHistory()
+activate LandParcel
+BatchService <-- LandParcel : batchHistory
+deactivate LandParcel
+Officer <-- BatchService : executionStatus
+deactivate BatchService
+
+Chief -> BatchService : viewBatchProcessingSummary(wardId)
+activate BatchService
+BatchService -> LandParcel : getBatchProcessingHistory()
+activate LandParcel
+BatchService <-- LandParcel : processingHistory
+deactivate LandParcel
+BatchService -> BatchService : generateSummaryReport(processingHistory)
+Chief <-- BatchService : batchSummaryReport
+deactivate BatchService
+
+Officer -> BatchService : sendTaxNotifications(batchId)
+activate BatchService
+BatchService -> LandParcel : getResultsForBatch(batchId)
+activate LandParcel
+BatchService <-- LandParcel : batchResults
+deactivate LandParcel
+BatchService -> Notify : bulkSendNotifications(batchResults)
+activate Notify
+BatchService <-- Notify : notificationResults
+deactivate Notify
+Officer <-- BatchService : notificationsSent
+deactivate BatchService
+@enduml
+----
+
+*Implementation Details:*
+The Lalitpur Metropolitan City Revenue Department uses the BatchProcessable interface to efficiently process annual land tax assessments for thousands of land parcels. This implementation enables systematic, fault-tolerant bulk operations while maintaining comprehensive audit trails.
+
+Revenue Officer Bikram Thapa needs to generate tax assessments for all 2,500 land parcels in Ward 14 before the new fiscal year begins. Instead of processing each parcel individually, he initiates a batch tax assessment operation through the system. The BatchProcessingService retrieves all parcels within the ward boundary and validates the operation, checking if it's the appropriate time of year for tax assessment and if Bikram has sufficient permissions.
+
+The system estimates the processing time (approximately 20 minutes for 2,500 parcels) and begins the batch operation. The LandParcel entity's processBatch implementation divides the 2,500 parcels into manageable groups of 100 parcels each to optimize processing and enable fault tolerance. For each group, the TaxEngine calculates the appropriate land tax based on multiple factors: the parcel's land use category (residential, commercial, agricultural), its base value, applicable zone rate multipliers specific to Lalitpur Metropolitan City, and any exemptions the landowner might qualify for (such as senior citizen or disability exemptions).
+
+As each group completes, the system updates the batch execution status, allowing Bikram to monitor progress. If any errors occur with specific parcels, they're flagged for review while the rest of the batch continues processing. The system also maintains detailed logs of which officer initiated the batch, when it started and completed, how many parcels were successfully processed, and any parcels that encountered errors.
+
+District Revenue Chief Anita Poudel can view a comprehensive summary report showing distribution of tax assessments by category, total revenue expected, comparison with previous years, and processing efficiency metrics. Once the batch is complete, Bikram can trigger automated notifications to landowners informing them of their annual tax assessment amounts and payment deadlines, delivered through SMS and email based on landowner contact preferences.
+
+The BatchProcessable implementation provides several key benefits in this tax assessment context:
+1. Efficient bulk processing of thousands of parcels
+2. Systematic error handling and fault tolerance
+3. Progress tracking and monitoring
+4. Comprehensive audit trails for accountability
+5. Performance optimization through grouping
+6. Parallel processing capabilities where appropriate
+
+*Technical Implementation Example:*
+```kotlin
+class LandParcel : BaseEntity(), BatchProcessable {
+    var parcelId: String = ""
+    var area: Double = 0.0
+    var landUseCategory: LandUseCategory = LandUseCategory.RESIDENTIAL
+    var zone: Zone? = null
+    var assessedValue: BigDecimal = BigDecimal.ZERO
+    var taxAmount: BigDecimal = BigDecimal.ZERO
+    var lastAssessmentDate: LocalDate? = null
+    
+    @OneToMany(mappedBy = "landParcel", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val batchProcessRecords: MutableList<BatchProcessRecord> = mutableListOf()
+    
+    // Implementation of BatchProcessable interface
+    override fun validateBatchOperation(operation: BatchOperation): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // Check operation type is supported
+        if (!getAvailableBatchOperations().contains(operation)) {
+            errors.add("Operation ${operation.name} is not supported for LandParcel entities")
+            return ValidationResult(false, errors)
+        }
+        
+        // Verify user permissions
+        val currentUser = SecurityContext.getCurrentUser()
+        if (!securityService.hasPermission(currentUser, operation.requiredPermission)) {
+            errors.add("User ${currentUser.username} does not have required permission ${operation.requiredPermission}")
+        }
+        
+        // Check temporal validity
+        when (operation.operationType) {
+            "TAX_ASSESSMENT" -> {
+                // Tax assessments should be done in specific fiscal periods
+                val currentDate = LocalDate.now()
+                val fiscalYearStart = configService.getFiscalYearStartDate()
+                val taxAssessmentWindow = configService.getTaxAssessmentWindow()
+                
+                if (currentDate.isBefore(fiscalYearStart) || 
+                    currentDate.isAfter(fiscalYearStart.plusDays(taxAssessmentWindow))) {
+                    errors.add("Tax assessment can only be performed within $taxAssessmentWindow days of fiscal year start on $fiscalYearStart")
+                }
+            }
+            "OWNERSHIP_VERIFICATION" -> {
+                // Ownership verification has no temporal restrictions
+            }
+            "VALUE_REASSESSMENT" -> {
+                // Value reassessment has specific timing requirements
+                val lastReassessmentDate = configService.getLastDistrictReassessmentDate()
+                val reassessmentFrequency = configService.getReassessmentFrequencyMonths()
+                val nextReassessmentDate = lastReassessmentDate.plusMonths(reassessmentFrequency.toLong())
+                
+                if (LocalDate.now().isBefore(nextReassessmentDate)) {
+                    errors.add("Value reassessment can only be performed after $nextReassessmentDate")
+                }
+            }
+        }
+        
+        return ValidationResult(errors.isEmpty(), errors)
+    }
+    
+    override fun processBatch(items: List<BatchItem>, operation: BatchOperation): BatchResult {
+        val batchRecord = BatchProcessRecord(
+            entityType = "LandParcel",
+            operationType = operation.operationType,
+            initiatedBy = SecurityContext.getCurrentUser().username,
+            startTime = Instant.now(),
+            totalItems = items.size,
+            batchId = UUID.randomUUID()
+        )
+        
+        var successCount = 0
+        var errorCount = 0
+        val errorItems = mutableListOf<BatchItemError>()
+        
+        // Process in appropriate chunks for performance and fault tolerance
+        val chunkSize = operation.recommendedChunkSize ?: 100
+        val chunkedItems = items.chunked(chunkSize)
+        
+        for ((chunkIndex, chunk) in chunkedItems.withIndex()) {
+            try {
+                when (operation.operationType) {
+                    "TAX_ASSESSMENT" -> processTaxAssessmentChunk(chunk, batchRecord.batchId)
+                    "OWNERSHIP_VERIFICATION" -> processOwnershipVerificationChunk(chunk, batchRecord.batchId)
+                    "VALUE_REASSESSMENT" -> processValueReassessmentChunk(chunk, batchRecord.batchId)
+                    else -> throw IllegalArgumentException("Unsupported operation type: ${operation.operationType}")
+                }
+                
+                successCount += chunk.size
+                
+                // Update progress
+                batchRecord.processedItems = successCount + errorCount
+                batchRecord.successItems = successCount
+                batchRecord.lastUpdated = Instant.now()
+                batchProcessRepository.save(batchRecord)
+                
+                // Publish progress event
+                eventPublisher.publishBatchProgressEvent(
+                    batchId = batchRecord.batchId,
+                    completedChunks = chunkIndex + 1,
+                    totalChunks = chunkedItems.size,
+                    successCount = successCount,
+                    errorCount = errorCount
+                )
+            } catch (e: Exception) {
+                // Log the error but continue with next chunk
+                logger.error("Error processing chunk $chunkIndex in batch ${batchRecord.batchId}", e)
+                
+                // Record errors for each item in the failed chunk
+                chunk.forEach { item ->
+                    errorItems.add(
+                        BatchItemError(
+                            batchId = batchRecord.batchId,
+                            itemId = item.itemId,
+                            errorMessage = "Chunk processing error: ${e.message}",
+                            errorStack = e.stackTraceToString()
+                        )
+                    )
+                }
+                
+                errorCount += chunk.size
+            }
+        }
+        
+        // Record batch completion
+        batchRecord.endTime = Instant.now()
+        batchRecord.status = if (errorCount == 0) BatchStatus.COMPLETED else BatchStatus.COMPLETED_WITH_ERRORS
+        batchRecord.processedItems = successCount + errorCount
+        batchRecord.successItems = successCount
+        batchRecord.errorItems = errorCount
+        batchProcessRepository.save(batchRecord)
+        
+        // Save error details if any
+        if (errorItems.isNotEmpty()) {
+            batchErrorRepository.saveAll(errorItems)
+        }
+        
+        // Publish batch completion event
+        eventPublisher.publishBatchCompletedEvent(
+            batchId = batchRecord.batchId,
+            operationType = operation.operationType,
+            totalItems = items.size,
+            successCount = successCount,
+            errorCount = errorCount,
+            durationSeconds = Duration.between(batchRecord.startTime, batchRecord.endTime).seconds
+        )
+        
+        batchProcessRecords.add(batchRecord)
+        
+        return BatchResult(
+            batchId = batchRecord.batchId,
+            successCount = successCount,
+            errorCount = errorCount,
+            status = batchRecord.status,
+            duration = Duration.between(batchRecord.startTime, batchRecord.endTime)
+        )
+    }
+    
+    override fun getAvailableBatchOperations(): List<BatchOperation> {
+        return listOf(
+            BatchOperation(
+                operationType = "TAX_ASSESSMENT",
+                description = "Calculate annual land taxes",
+                requiredPermission = "LAND_TAX_ASSESSMENT",
+                recommendedChunkSize = 100,
+                estimatedItemProcessingTimeMillis = 500
+            ),
+            BatchOperation(
+                operationType = "OWNERSHIP_VERIFICATION",
+                description = "Verify current ownership details",
+                requiredPermission = "LAND_OWNERSHIP_VERIFY",
+                recommendedChunkSize = 200,
+                estimatedItemProcessingTimeMillis = 300
+            ),
+            BatchOperation(
+                operationType = "VALUE_REASSESSMENT",
+                description = "Reassess land values based on current market rates",
+                requiredPermission = "LAND_VALUE_ASSESSMENT",
+                recommendedChunkSize = 50,
+                estimatedItemProcessingTimeMillis = 1000
+            )
+        )
+    }
+    
+    override fun getBatchProcessingHistory(): List<BatchProcessRecord> {
+        return batchProcessRecords.sortedByDescending { it.startTime }
+    }
+    
+    override fun estimateBatchProcessingTime(itemCount: Int, operation: BatchOperation): Duration {
+        // Basic estimation based on operation type and item count
+        val baseTimePerItem = operation.estimatedItemProcessingTimeMillis ?: 500
+        val totalTimeMillis = baseTimePerItem * itemCount
+        
+        // Add overhead for chunking and batch management
+        val chunkSize = operation.recommendedChunkSize ?: 100
+        val chunks = (itemCount / chunkSize) + if (itemCount % chunkSize > 0) 1 else 0
+        val chunkOverheadMillis = 200 * chunks
+        
+        // Factor in concurrent processing if supported
+        val adjustedTimeMillis = if (supportsConcurrentBatchProcessing()) {
+            val concurrencyLevel = Runtime.getRuntime().availableProcessors() - 1
+            (totalTimeMillis / concurrencyLevel) + chunkOverheadMillis
+        } else {
+            totalTimeMillis + chunkOverheadMillis
+        }
+        
+        return Duration.ofMillis(adjustedTimeMillis.toLong())
+    }
+    
+    override fun supportsConcurrentBatchProcessing(): Boolean {
+        // Land parcel operations can generally be parallelized
+        return true
+    }
+    
+    // Private helper methods
+    private fun processTaxAssessmentChunk(chunk: List<BatchItem>, batchId: UUID) {
+        // Get all parcel IDs in this chunk
+        val parcelIds = chunk.map { it.itemId }
+        
+        // Load full parcel data with a single query
+        val parcels = landParcelRepository.findAllById(parcelIds)
+        
+        // Calculate taxes for all parcels in chunk
+        val taxCalculations = taxCalculationService.calculateBatchTaxes(parcels)
+        
+        // Update all parcels with calculated taxes
+        parcels.forEach { parcel ->
+            val taxInfo = taxCalculations[parcel.id]
+            if (taxInfo != null) {
+                parcel.taxAmount = taxInfo.taxAmount
+                parcel.assessedValue = taxInfo.assessedValue
+                parcel.lastAssessmentDate = LocalDate.now()
+            }
+        }
+        
+        // Bulk save updated parcels
+        landParcelRepository.saveAll(parcels)
+        
+        // Record detailed processing for audit
+        val taxAssessmentRecords = parcels.map { parcel ->
+            TaxAssessmentRecord(
+                parcelId = parcel.id,
+                batchId = batchId,
+                previousAssessedValue = parcel.assessedValue,
+                newAssessedValue = taxCalculations[parcel.id]?.assessedValue ?: parcel.assessedValue,
+                previousTaxAmount = parcel.taxAmount,
+                newTaxAmount = taxCalculations[parcel.id]?.taxAmount ?: parcel.taxAmount,
+                assessmentDate = LocalDate.now(),
+                assessedBy = SecurityContext.getCurrentUser().username
+            )
+        }
+        
+        taxAssessmentRepository.saveAll(taxAssessmentRecords)
+    }
+    
+    private fun processOwnershipVerificationChunk(chunk: List<BatchItem>, batchId: UUID) {
+        // Implementation of ownership verification chunk processing
+        // Similar pattern to tax assessment but with different business logic
+    }
+    
+    private fun processValueReassessmentChunk(chunk: List<BatchItem>, batchId: UUID) {
+        // Implementation of value reassessment chunk processing
+        // Similar pattern to tax assessment but with different business logic
+    }
+}
+
+data class BatchOperation(
+    val operationType: String,
+    val description: String,
+    val requiredPermission: String,
+    val recommendedChunkSize: Int? = null,
+    val estimatedItemProcessingTimeMillis: Long? = null
+)
+
+data class BatchItem(
+    val itemId: UUID,
+    val itemType: String,
+    val metadata: Map<String, Any> = emptyMap()
+)
+
+data class BatchResult(
+    val batchId: UUID,
+    val successCount: Int,
+    val errorCount: Int,
+    val status: BatchStatus,
+    val duration: Duration
+)
+
+enum class BatchStatus {
+    PENDING,
+    IN_PROGRESS,
+    COMPLETED,
+    COMPLETED_WITH_ERRORS,
+    FAILED,
+    CANCELLED
+}
+
+class BatchProcessRecord(
+    val id: UUID = UUID.randomUUID(),
+    val batchId: UUID,
+    val entityType: String,
+    val operationType: String,
+    val initiatedBy: String,
+    val startTime: Instant,
+    var endTime: Instant? = null,
+    var status: BatchStatus = BatchStatus.IN_PROGRESS,
+    val totalItems: Int,
+    var processedItems: Int = 0,
+    var successItems: Int = 0,
+    var errorItems: Int = 0,
+    var lastUpdated: Instant = Instant.now()
+)
+
+class BatchItemError(
+    val id: UUID = UUID.randomUUID(),
+    val batchId: UUID,
+    val itemId: UUID,
+    val errorMessage: String,
+    val errorStack: String,
+    val timestamp: Instant = Instant.now()
+)
+```

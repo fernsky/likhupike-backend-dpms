@@ -1,0 +1,1120 @@
+===== `ComplianceAuditable`
+Interface for entities that must maintain detailed audit trails for regulatory compliance.
+
+[source,kotlin]
+----
+interface ComplianceAuditable {
+    fun getComplianceConfig(): ComplianceConfig
+    fun getAuditTrail(filter: AuditFilter): List<AuditEvent>
+    fun recordAuditEvent(event: AuditEvent)
+    fun getPrivacyImpactLevel(): PrivacyImpactLevel
+    fun getRetentionPolicy(): RetentionPolicy
+    fun getComplianceStatus(): ComplianceStatus
+    fun validateCompliance(): ComplianceValidationResult
+    fun getSignedAuditTrail(timeRange: TimeRange): SignedAuditTrail
+    fun getDataBreachRisks(): List<DataBreachRisk>
+}
+----
+
+[cols="1,3", options="header"]
+|===
+| PrivacyImpactLevel    | Description
+| `MINIMAL`             | Contains no personally identifiable information
+| `LOW`                 | Contains basic identifiers but no sensitive personal data
+| `MEDIUM`              | Contains personal data but not special categories
+| `HIGH`                | Contains sensitive personal data (health, biometric, etc.)
+| `CRITICAL`            | Contains highly sensitive data with significant impact risks
+|===
+
+====== Contextual Use Cases for ComplianceAuditable
+
+*Real-World Scenario:* Pharmaceutical Distribution Management System
+
+[plantuml]
+----
+@startuml
+actor "Pharmacist\n(Arjun Poudel)" as Pharmacist
+actor "FDA Inspector\n(Sandhya Thapa)" as Inspector
+actor "District Drug\nController (Rajendra)" as Controller
+actor "IT Administrator\n(Mahesh Sharma)" as Admin
+participant "ControlledMedication\nimplements ComplianceAuditable" as Medication
+participant "AuditSystem" as Audit
+participant "ComplianceService" as Compliance
+participant "PrivacyService" as Privacy
+participant "ReportService" as Report
+participant "BlockchainService" as Blockchain
+
+Pharmacist -> Medication : dispenseToPatient(prescription)
+activate Medication
+Medication -> Medication : validatePrescription(prescription)
+Medication -> Medication : verifyStock(medicationId)
+Medication -> Medication : recordDispensing(patientId, dosage)
+Medication -> Medication : recordAuditEvent(DISPENSING_EVENT)
+activate Medication
+Medication -> Audit : logEvent(dispensingDetails)
+activate Audit
+Audit -> Audit : validateEventData()
+Audit -> Audit : timestampEvent()
+Audit -> Audit : hashEvent()
+Audit -> Audit : appendToAuditChain()
+Medication <-- Audit : confirmationId
+deactivate Audit
+Pharmacist <-- Medication : dispensingConfirmed
+deactivate Medication
+deactivate Medication
+
+Controller -> Medication : requestAuditTrail(dateRange)
+activate Medication
+Medication -> Medication : checkAuthorization(requestor)
+Medication -> Medication : getPrivacyImpactLevel()
+note right: HIGH - Contains patient details
+Medication -> Audit : retrieveEvents(medicationId, dateRange)
+activate Audit
+Medication <-- Audit : auditEvents
+deactivate Audit
+Medication -> Privacy : applyRedactionRules(events)
+activate Privacy
+Medication <-- Privacy : redactedEvents
+deactivate Privacy
+Controller <-- Medication : redactedAuditTrail
+deactivate Medication
+
+Inspector -> Medication : conductFormalAudit()
+activate Medication
+Medication -> Compliance : getComplianceConfig()
+activate Compliance
+Medication <-- Compliance : narcoticsComplianceRules
+deactivate Compliance
+Medication -> Medication : validateCompliance()
+activate Medication
+Medication -> Medication : verifyDocumentation()
+Medication -> Medication : checkDispensationLimits()
+Medication -> Medication : validateAuthorizations()
+Medication -> Medication : verifyStockReconciliation()
+Medication <-- Medication : complianceStatus
+deactivate Medication
+Inspector <-- Medication : complianceValidationResult
+deactivate Medication
+
+Inspector -> Medication : getSignedAuditTrail(year)
+activate Medication
+Medication -> Medication : verifyAuthorization(inspector)
+Medication -> Blockchain : retrieveImmutableAudit(medicationId, year)
+activate Blockchain
+Medication <-- Blockchain : signedAuditData
+deactivate Blockchain
+Medication -> Report : generateAuditReport(signedAuditData)
+activate Report
+Medication <-- Report : formalizedReport
+deactivate Report
+Inspector <-- Medication : signedAuditReport
+deactivate Medication
+
+Admin -> Medication : getDataBreachRisks()
+activate Medication
+Medication -> Medication : analyzeDataStorage()
+Medication -> Medication : evaluateAccessPatterns()
+Medication -> Medication : identifyVulnerabilities()
+Admin <-- Medication : dataBreachRiskReport
+deactivate Medication
+
+Controller -> Medication : getComplianceStatus()
+activate Medication
+Medication -> Medication : checkComplianceIssues()
+Controller <-- Medication : currentComplianceStatus
+deactivate Medication
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Department of Drug Administration (DDA) utilizes the ComplianceAuditable interface for its Controlled Substance Management System, ensuring strict regulatory compliance with both national laws and international drug control conventions. This implementation provides comprehensive audit trails, data privacy protections, and tamper-proof records.
+
+Pharmacist Arjun Poudel at Bir Hospital in Kathmandu must carefully track every dispensation of controlled medications such as morphine, diazepam, and codeine. When he dispenses morphine to a cancer patient, the ControlledMedication entity automatically records a detailed audit event through the recordAuditEvent() method. This captures essential data: patient identifier, prescribing doctor, dispensed quantity, date/time, pharmacy identifier, and reason code. The system cryptographically hashes this information and appends it to an immutable audit chain, creating a verifiable record that cannot be altered afterward.
+
+During a quarterly inspection, District Drug Controller Rajendra needs to review all narcotic dispensations from the previous quarter. He requests an audit trail using the getAuditTrail() method with an appropriate date range filter. Since controlled medication records contain sensitive patient information (privacy impact level HIGH), the system automatically applies privacy rules based on the controller's authorization level. Patient identifiers are partially masked, and diagnosis information is completely redacted, showing only that the prescription was "medically necessary" rather than revealing the specific condition.
+
+When FDA Inspector Sandhya Thapa conducts an annual compliance audit, she uses the validateCompliance() method to verify that the pharmacy strictly adheres to narcotic dispensing regulations. The system checks multiple compliance factors: prescription validations, dispensation quantity limits (ensuring no patient received more than the 30-day maximum supply), proper authorizations (confirming only licensed personnel dispensed controlled substances), and accurate stock reconciliation (verifying that physical inventory matches digital records). The ComplianceValidationResult provides a detailed breakdown of compliance status across multiple regulatory categories.
+
+For formal government reporting, Sandhya requests a signed audit trail using getSignedAuditTrail(). The system retrieves cryptographically secured records stored on a private blockchain backend, which guarantees that the dispensation records have not been tampered with since they were recorded. This signed audit trail includes cryptographic proofs and timestamps, meeting the strict non-repudiation requirements for controlled substance monitoring.
+
+IT Administrator Mahesh Sharma periodically assesses security risks using the getDataBreachRisks() method. The system analyzes data storage patterns, access logs, and potential vulnerabilities, identifying that the tablet device used in the emergency room presents a moderate risk due to its shared-use nature. This prompts implementation of enhanced authentication for controlled substance functions on that device.
+
+The ComplianceAuditable implementation provides several critical benefits in this heavily regulated context:
+1. Non-repudiable audit trails for all controlled substance transactions
+2. Automatic privacy controls that protect patient information while enabling regulatory oversight
+3. Comprehensive compliance validation against specific regulatory frameworks
+4. Evidence-grade tamper-proof records for government reporting
+5. Risk assessment tools to prevent potential data breaches
+6. Retention management to satisfy the 7-year record keeping requirement
+
+*Technical Implementation Example:*
+```kotlin
+class ControlledMedication : BaseEntity(), ComplianceAuditable {
+    var medicationName: String = ""
+    var activeIngredient: String = ""
+    var controlSchedule: ControlSchedule = ControlSchedule.UNCONTROLLED
+    var dosageForm: DosageForm = DosageForm.TABLET
+    var strength: String = ""
+    var routeOfAdministration: String = ""
+    var manufacturer: String = ""
+    var batchNumber: String = ""
+    var expirationDate: LocalDate? = null
+    
+    var stockQuantity: Int = 0
+    var reorderLevel: Int = 0
+    var maximumDailyDose: Double = 0.0
+    var restrictedToSpecialties: Set<MedicalSpecialty> = setOf()
+    
+    var importAuthorizations: MutableList<ImportAuthorization> = mutableListOf()
+    var stockAdjustments: MutableList<StockAdjustment> = mutableListOf()
+    var dispensationRecords: MutableList<DispensationRecord> = mutableListOf()
+    
+    @OneToMany(mappedBy = "controlledMedication", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val auditEvents: MutableList<MedicationAuditEvent> = mutableListOf()
+    
+    // Implementation of ComplianceAuditable interface
+    override fun getComplianceConfig(): ComplianceConfig {
+        return when (controlSchedule) {
+            ControlSchedule.SCHEDULE_I -> getNarcoticsComplianceConfig()
+            ControlSchedule.SCHEDULE_II -> getPsychotropicsComplianceConfig()
+            ControlSchedule.SCHEDULE_III -> getRestrictedMedicationConfig()
+            ControlSchedule.SCHEDULE_IV -> getMonitoredMedicationConfig()
+            else -> getStandardMedicationConfig()
+        }
+    }
+    
+    override fun getAuditTrail(filter: AuditFilter): List<AuditEvent> {
+        // Apply filters to audit events
+        var filteredEvents = auditEvents.asSequence()
+        
+        // Filter by date range if specified
+        if (filter.startDate != null) {
+            filteredEvents = filteredEvents.filter { it.timestamp.isAfter(filter.startDate) }
+        }
+        
+        if (filter.endDate != null) {
+            filteredEvents = filteredEvents.filter { it.timestamp.isBefore(filter.endDate) }
+        }
+        
+        // Filter by event type if specified
+        if (filter.eventTypes.isNotEmpty()) {
+            filteredEvents = filteredEvents.filter { it.eventType in filter.eventTypes }
+        }
+        
+        // Filter by user if specified
+        if (filter.userId != null) {
+            filteredEvents = filteredEvents.filter { it.performedBy == filter.userId }
+        }
+        
+        // Apply access control based on the requestor's permissions
+        val accessLevel = securityService.getAccessLevel(filter.requestorId)
+        val redactedEvents = filteredEvents.map { event ->
+            if (accessLevel.canViewFullAuditDetails()) {
+                event
+            } else {
+                redactEvent(event, accessLevel)
+            }
+        }
+        
+        return redactedEvents.sortedBy { it.timestamp }.toList()
+    }
+    
+    override fun recordAuditEvent(event: AuditEvent) {
+        if (event !is MedicationAuditEvent) {
+            throw IllegalArgumentException("Event must be a MedicationAuditEvent")
+        }
+        
+        // Set medication reference
+        event.controlledMedication = this
+        
+        // Set audit metadata
+        event.timestamp = LocalDateTime.now()
+        event.performedBy = SecurityContext.getCurrentUser()?.id
+            ?: throw IllegalStateException("No authenticated user found")
+        event.ipAddress = SecurityContext.getCurrentRequest()?.remoteAddress
+        event.location = SecurityContext.getCurrentLocation()
+        
+        // Generate hash for the event (used for verification)
+        event.eventHash = generateEventHash(event)
+        
+        // If previous event exists, link them for chain verification
+        auditEvents.maxByOrNull { it.timestamp }?.let { lastEvent ->
+            event.previousEventHash = lastEvent.eventHash
+        }
+        
+        // Persist the event
+        auditEvents.add(event)
+        auditRepository.save(event)
+        
+        // For high-security medications, also send to the blockchain service
+        if (controlSchedule in setOf(ControlSchedule.SCHEDULE_I, ControlSchedule.SCHEDULE_II)) {
+            blockchainAuditService.recordEvent(event)
+        }
+        
+        // Notify compliance monitoring if this is a significant event
+        if (event.eventType in SIGNIFICANT_EVENTS) {
+            complianceMonitoringService.notifySignificantEvent(event)
+        }
+    }
+    
+    override fun getPrivacyImpactLevel(): PrivacyImpactLevel {
+        return when (controlSchedule) {
+            ControlSchedule.SCHEDULE_I, ControlSchedule.SCHEDULE_II -> PrivacyImpactLevel.HIGH
+            ControlSchedule.SCHEDULE_III -> PrivacyImpactLevel.MEDIUM
+            ControlSchedule.SCHEDULE_IV -> PrivacyImpactLevel.MEDIUM
+            else -> PrivacyImpactLevel.LOW
+        }
+    }
+    
+    override fun getRetentionPolicy(): RetentionPolicy {
+        return when (controlSchedule) {
+            ControlSchedule.SCHEDULE_I, ControlSchedule.SCHEDULE_II -> {
+                RetentionPolicy(
+                    retentionPeriod = Period.ofYears(10),
+                    legalBasis = "Narcotic Drugs (Control) Act, 2033 (1976), Section 15",
+                    archiveAfterExpiry = true,
+                    deleteAfterArchive = false,
+                    specialInstructions = "Physical records must be preserved for 5 years, and digital records for 10 years"
+                )
+            }
+            ControlSchedule.SCHEDULE_III, ControlSchedule.SCHEDULE_IV -> {
+                RetentionPolicy(
+                    retentionPeriod = Period.ofYears(7),
+                    legalBasis = "Narcotic Drugs (Control) Act Implementing Rules, Section 12.3",
+                    archiveAfterExpiry = true,
+                    deleteAfterArchive = true,
+                    specialInstructions = "After 7 years, patient identifiers must be anonymized before archiving"
+                )
+            }
+            else -> {
+                RetentionPolicy(
+                    retentionPeriod = Period.ofYears(3),
+                    legalBasis = "Department of Drug Administration Guidelines",
+                    archiveAfterExpiry = true,
+                    deleteAfterArchive = true,
+                    specialInstructions = null
+                )
+            }
+        }
+    }
+    
+    override fun getComplianceStatus(): ComplianceStatus {
+        val rules = getComplianceConfig().rules
+        val issues = mutableListOf<ComplianceIssue>()
+        
+        // Check documentation completeness
+        if (importAuthorizations.isEmpty() && controlSchedule in setOf(
+                ControlSchedule.SCHEDULE_I, 
+                ControlSchedule.SCHEDULE_II
+            )) {
+            issues.add(
+                ComplianceIssue(
+                    ruleId = "IMPORT_AUTH_REQUIRED",
+                    severity = IssueSeverity.CRITICAL,
+                    description = "Missing import authorization for controlled substance",
+                    remediation = "Upload valid import authorization document"
+                )
+            )
+        }
+        
+        // Check stock reconciliation
+        val calculatedStock = calculateExpectedStock()
+        if (calculatedStock != stockQuantity) {
+            issues.add(
+                ComplianceIssue(
+                    ruleId = "STOCK_RECONCILIATION",
+                    severity = IssueSeverity.HIGH,
+                    description = "Stock discrepancy: system shows $stockQuantity, calculated amount is $calculatedStock",
+                    remediation = "Perform physical inventory and reconcile stock"
+                )
+            )
+        }
+        
+        // Check for expired medication
+        if (expirationDate != null && expirationDate!!.isBefore(LocalDate.now())) {
+            issues.add(
+                ComplianceIssue(
+                    ruleId = "EXPIRED_MEDICATION",
+                    severity = IssueSeverity.HIGH,
+                    description = "Medication expired on $expirationDate",
+                    remediation = "Dispose according to controlled substance protocols"
+                )
+            )
+        }
+        
+        // Check dispensation limits
+        val dispensationIssues = checkDispensationCompliance()
+        issues.addAll(dispensationIssues)
+        
+        // Check audit trail integrity
+        if (!verifyAuditTrailIntegrity()) {
+            issues.add(
+                ComplianceIssue(
+                    ruleId = "AUDIT_INTEGRITY",
+                    severity = IssueSeverity.CRITICAL,
+                    description = "Audit trail integrity check failed",
+                    remediation = "Contact IT security department immediately"
+                )
+            )
+        }
+        
+        // Determine overall status
+        val status = when {
+            issues.any { it.severity == IssueSeverity.CRITICAL } -> ComplianceStatus.CRITICAL_VIOLATION
+            issues.any { it.severity == IssueSeverity.HIGH } -> ComplianceStatus.MAJOR_VIOLATION
+            issues.any { it.severity == IssueSeverity.MEDIUM } -> ComplianceStatus.MINOR_VIOLATION
+            issues.any { it.severity == IssueSeverity.LOW } -> ComplianceStatus.COMPLIANT_WITH_WARNINGS
+            else -> ComplianceStatus.FULLY_COMPLIANT
+        }
+        
+        return status.copy(issues = issues)
+    }
+    
+    override fun validateCompliance(): ComplianceValidationResult {
+        val config = getComplianceConfig()
+        val results = mutableMapOf<String, RuleValidationResult>()
+        
+        // Validate each compliance rule
+        for (rule in config.rules) {
+            val result = when (rule.ruleType) {
+                RuleType.STOCK_RECONCILIATION -> validateStockReconciliation()
+                RuleType.IMPORT_DOCUMENTATION -> validateImportDocumentation()
+                RuleType.DISPENSATION_LIMITS -> validateDispensationLimits()
+                RuleType.PRESCRIBER_AUTHORIZATION -> validatePrescriberAuthorizations()
+                RuleType.STORAGE_REQUIREMENTS -> validateStorageRequirements()
+                RuleType.AUDIT_COMPLETENESS -> validateAuditCompleteness()
+                RuleType.PATIENT_VERIFICATION -> validatePatientVerification()
+                else -> RuleValidationResult(
+                    passed = false,
+                    message = "Unsupported rule type: ${rule.ruleType}"
+                )
+            }
+            
+            results[rule.id] = result
+        }
+        
+        // Calculate compliance score
+        val totalRules = results.size
+        val passedRules = results.count { it.value.passed }
+        val complianceScore = if (totalRules > 0) {
+            (passedRules.toDouble() / totalRules) * 100
+        } else {
+            0.0
+        }
+        
+        // Critical rules must pass for overall compliance
+        val criticalRules = config.rules.filter { it.criticalRule }
+        val criticalRuleIds = criticalRules.map { it.id }.toSet()
+        val allCriticalRulesPassed = results
+            .filter { it.key in criticalRuleIds }
+            .all { it.value.passed }
+        
+        return ComplianceValidationResult(
+            passedAllRules = results.all { it.value.passed },
+            passedCriticalRules = allCriticalRulesPassed,
+            complianceScore = complianceScore,
+            ruleResults = results,
+            validatedAt = LocalDateTime.now(),
+            validatedBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM"
+        )
+    }
+    
+    override fun getSignedAuditTrail(timeRange: TimeRange): SignedAuditTrail {
+        // Check authorization
+        val currentUser = SecurityContext.getCurrentUser() 
+            ?: throw SecurityException("Authentication required")
+        
+        if (!securityService.canAccessSignedAudit(currentUser, this)) {
+            throw SecurityException("User ${currentUser.username} is not authorized to access signed audit trail")
+        }
+        
+        // Retrieve events in the specified time range
+        val events = getAuditTrail(AuditFilter(
+            startDate = timeRange.start,
+            endDate = timeRange.end,
+            requestorId = currentUser.id,
+            // For signed audit trails, we bypass normal redaction
+            // but will apply regulatory redaction later
+            noRedaction = true
+        ))
+        
+        // For Schedule I & II medications, retrieve blockchain verification data
+        val verificationData = if (controlSchedule in setOf(
+                ControlSchedule.SCHEDULE_I, 
+                ControlSchedule.SCHEDULE_II
+            )) {
+            blockchainAuditService.getVerificationData(
+                entityId = this.id,
+                startTime = timeRange.start,
+                endTime = timeRange.end
+            )
+        } else {
+            null
+        }
+        
+        // Generate hashed event chain for verification
+        val eventHashes = events.map { it.eventHash }
+        val chainHash = generateChainHash(eventHashes)
+        
+        // Generate digital signature of the chain
+        val signature = auditSigningService.signAuditTrail(
+            entityId = this.id,
+            entityType = "ControlledMedication",
+            chainHash = chainHash,
+            timestamp = LocalDateTime.now()
+        )
+        
+        // Apply regulatory redaction (cannot be bypassed, even for signed audits)
+        val regulatoryRedaction = privacyService.applyRegulatoryRedaction(
+            events = events,
+            medicationType = controlSchedule,
+            requestorType = currentUser.role
+        )
+        
+        // Create metadata about the signing
+        val metadata = mapOf(
+            "generatedAt" to LocalDateTime.now().toString(),
+            "generatedBy" to currentUser.username,
+            "generatedFor" to currentUser.organization,
+            "medicationName" to medicationName,
+            "controlSchedule" to controlSchedule.name,
+            "timeRangeStart" to timeRange.start?.toString(),
+            "timeRangeEnd" to timeRange.end?.toString(),
+            "totalEvents" to events.size,
+            "regulatoryAuthority" to "Department of Drug Administration, Nepal"
+        )
+        
+        return SignedAuditTrail(
+            entityId = this.id,
+            entityType = "ControlledMedication",
+            events = regulatoryRedaction,
+            timeRange = timeRange,
+            signature = signature,
+            verificationData = verificationData,
+            metadata = metadata
+        )
+    }
+    
+    override fun getDataBreachRisks(): List<DataBreachRisk> {
+        val risks = mutableListOf<DataBreachRisk>()
+        
+        // Assess patient identification risks
+        if (dispensationRecords.isNotEmpty()) {
+            risks.add(
+                DataBreachRisk(
+                    riskType = RiskType.PATIENT_IDENTIFICATION,
+                    severity = calculateRiskSeverity(
+                        controlSchedule = controlSchedule,
+                        recordCount = dispensationRecords.size
+                    ),
+                    description = "Contains identifiable patient data for ${dispensationRecords.size} patients",
+                    affectedRecords = dispensationRecords.size,
+                    mitigation = "Patient identifiers are stored with field-level encryption"
+                )
+            )
+        }
+        
+        // Assess prescription details risks
+        if (dispensationRecords.any { it.diagnosisCode != null }) {
+            risks.add(
+                DataBreachRisk(
+                    riskType = RiskType.MEDICAL_CONDITION_DISCLOSURE,
+                    severity = RiskSeverity.HIGH,
+                    description = "Contains diagnosis codes that could reveal sensitive medical conditions",
+                    affectedRecords = dispensationRecords.count { it.diagnosisCode != null },
+                    mitigation = "Diagnosis codes are stored with access restrictions"
+                )
+            )
+        }
+        
+        // Assess substance abuse risks for certain medications
+        if (controlSchedule in setOf(ControlSchedule.SCHEDULE_I, ControlSchedule.SCHEDULE_II)) {
+            risks.add(
+                DataBreachRisk(
+                    riskType = RiskType.SUBSTANCE_TREATMENT_DISCLOSURE,
+                    severity = RiskSeverity.CRITICAL,
+                    description = "Schedule ${controlSchedule.scheduleNumber} medication may indicate substance abuse treatment",
+                    affectedRecords = dispensationRecords.size,
+                    mitigation = "Enhanced access controls and audit trails are in place"
+                )
+            )
+        }
+        
+        // Assess inventory management risks
+        if (stockQuantity > 0 && controlSchedule in setOf(
+                ControlSchedule.SCHEDULE_I, 
+                ControlSchedule.SCHEDULE_II
+            )) {
+            risks.add(
+                DataBreachRisk(
+                    riskType = RiskType.INVENTORY_TARGETING,
+                    severity = RiskSeverity.MEDIUM,
+                    description = "Current stock information could be used to target physical inventory",
+                    affectedRecords = 1,
+                    mitigation = "Stock quantities have restricted visibility"
+                )
+            )
+        }
+        
+        // Assess prescriber pattern risks
+        val prescriberCounts = dispensationRecords
+            .groupBy { it.prescriberId }
+            .mapValues { it.value.size }
+        
+        if (prescriberCounts.any { it.value > PRESCRIBER_PATTERN_THRESHOLD }) {
+            risks.add(
+                DataBreachRisk(
+                    riskType = RiskType.PRESCRIBER_PATTERN_ANALYSIS,
+                    severity = RiskSeverity.MEDIUM,
+                    description = "Prescriber patterns could reveal prescription behaviors",
+                    affectedRecords = prescriberCounts.keys.size,
+                    mitigation = "Aggregated reporting only without exposing individual patterns"
+                )
+            )
+        }
+        
+        return risks
+    }
+    
+    // Helper methods
+    private fun getNarcoticsComplianceConfig(): ComplianceConfig {
+        return ComplianceConfig(
+            configType = "NARCOTICS",
+            regulatoryFramework = "Narcotic Drugs (Control) Act, 2033 (1976)",
+            complianceAuthority = "Department of Drug Administration",
+            rules = listOf(
+                ComplianceRule(
+                    id = "NAR-001",
+                    description = "Import authorization documentation",
+                    ruleType = RuleType.IMPORT_DOCUMENTATION,
+                    criticalRule = true
+                ),
+                ComplianceRule(
+                    id = "NAR-002",
+                    description = "Daily stock reconciliation",
+                    ruleType = RuleType.STOCK_RECONCILIATION,
+                    criticalRule = true
+                ),
+                ComplianceRule(
+                    id = "NAR-003",
+                    description = "Maximum 7-day supply per dispensation",
+                    ruleType = RuleType.DISPENSATION_LIMITS,
+                    criticalRule = true
+                ),
+                ComplianceRule(
+                    id = "NAR-004",
+                    description = "Prescriber specialty authorization",
+                    ruleType = RuleType.PRESCRIBER_AUTHORIZATION,
+                    criticalRule = true
+                ),
+                ComplianceRule(
+                    id = "NAR-005",
+                    description = "Secure storage requirements",
+                    ruleType = RuleType.STORAGE_REQUIREMENTS,
+                    criticalRule = false
+                ),
+                ComplianceRule(
+                    id = "NAR-006",
+                    description = "Complete audit trail for all transactions",
+                    ruleType = RuleType.AUDIT_COMPLETENESS,
+                    criticalRule = true
+                ),
+                ComplianceRule(
+                    id = "NAR-007",
+                    description = "Patient identity verification",
+                    ruleType = RuleType.PATIENT_VERIFICATION,
+                    criticalRule = false
+                )
+            )
+        )
+    }
+    
+    private fun getPsychotropicsComplianceConfig(): ComplianceConfig {
+        // Similar to narcotics but with specific psychotropic rules
+        // Simplified for brevity
+        return ComplianceConfig(
+            configType = "PSYCHOTROPICS",
+            regulatoryFramework = "Narcotic Drugs (Control) Act, 2033 (1976)",
+            complianceAuthority = "Department of Drug Administration",
+            rules = listOf(
+                // Rules similar to narcotics but with different limits
+            )
+        )
+    }
+    
+    private fun getRestrictedMedicationConfig(): ComplianceConfig {
+        // Configuration for Schedule III medications
+        // Simplified for brevity  
+        return ComplianceConfig(
+            configType = "RESTRICTED",
+            regulatoryFramework = "DDA Guidelines for Restricted Medications",
+            complianceAuthority = "Department of Drug Administration",
+            rules = listOf(
+                // Less stringent rules than narcotics
+            )
+        )
+    }
+    
+    private fun getMonitoredMedicationConfig(): ComplianceConfig {
+        // Configuration for Schedule IV medications
+        // Simplified for brevity
+        return ComplianceConfig(
+            configType = "MONITORED",
+            regulatoryFramework = "DDA Guidelines for Monitored Medications",
+            complianceAuthority = "Department of Drug Administration",
+            rules = listOf(
+                // Basic monitoring rules
+            )
+        )
+    }
+    
+    private fun getStandardMedicationConfig(): ComplianceConfig {
+        // Configuration for non-controlled medications
+        // Simplified for brevity
+        return ComplianceConfig(
+            configType = "STANDARD",
+            regulatoryFramework = "Pharmacy Operation Directive",
+            complianceAuthority = "Department of Drug Administration",
+            rules = listOf(
+                // Basic pharmacy rules
+            )
+        )
+    }
+    
+    private fun redactEvent(event: MedicationAuditEvent, accessLevel: AccessLevel): MedicationAuditEvent {
+        // Create a copy of the event with sensitive fields redacted based on access level
+        val redactedEvent = event.copy()
+        
+        if (!accessLevel.canViewPatientIdentifiers()) {
+            // Redact patient identifiers
+            val metadata = redactedEvent.metadata.toMutableMap()
+            
+            if (metadata.containsKey("patientId")) {
+                metadata["patientId"] = redactPatientId(metadata["patientId"] as String)
+            }
+            
+            if (metadata.containsKey("patientName")) {
+                metadata["patientName"] = "REDACTED"
+            }
+            
+            redactedEvent.metadata = metadata
+        }
+        
+        if (!accessLevel.canViewMedicalDetails()) {
+            // Redact medical details
+            val metadata = redactedEvent.metadata.toMutableMap()
+            
+            if (metadata.containsKey("diagnosisCode")) {
+                metadata["diagnosisCode"] = "REDACTED"
+            }
+            
+            if (metadata.containsKey("medicalNotes")) {
+                metadata["medicalNotes"] = "REDACTED"
+            }
+            
+            redactedEvent.metadata = metadata
+        }
+        
+        return redactedEvent
+    }
+    
+    private fun redactPatientId(patientId: String): String {
+        // Keep first two and last two characters, replace the rest with asterisks
+        if (patientId.length <= 4) return "****"
+        
+        val firstTwo = patientId.substring(0, 2)
+        val lastTwo = patientId.substring(patientId.length - 2)
+        val middleStars = "*".repeat(patientId.length - 4)
+        
+        return "$firstTwo$middleStars$lastTwo"
+    }
+    
+    private fun generateEventHash(event: MedicationAuditEvent): String {
+        // Create a deterministic string representation of the event
+        val eventString = "${event.timestamp}|${event.eventType}|${event.performedBy}|" +
+            "${event.metadata.entries.sortedBy { it.key }.joinToString(",") { "${it.key}=${it.value}" }}"
+        
+        // Generate SHA-256 hash
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashBytes = digest.digest(eventString.toByteArray())
+        
+        // Convert to hexadecimal string
+        return hashBytes.joinToString("") { "%02x".format(it) }
+    }
+    
+    private fun generateChainHash(hashes: List<String>): String {
+        // Combine all hashes into a single string
+        val combinedHashes = hashes.joinToString("")
+        
+        // Generate SHA-256 hash
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashBytes = digest.digest(combinedHashes.toByteArray())
+        
+        // Convert to hexadecimal string
+        return hashBytes.joinToString("") { "%02x".format(it) }
+    }
+    
+    private fun verifyAuditTrailIntegrity(): Boolean {
+        // Simple verification - we would do more in a real implementation
+        val sortedEvents = auditEvents.sortedBy { it.timestamp }
+        
+        // Check that there are no gaps in the chain
+        for (i in 1 until sortedEvents.size) {
+            val currentEvent = sortedEvents[i]
+            val previousEvent = sortedEvents[i - 1]
+            
+            // Verify the previous event hash matches
+            if (currentEvent.previousEventHash != previousEvent.eventHash) {
+                return false
+            }
+            
+            // Verify the event's own hash is correct
+            val calculatedHash = generateEventHash(currentEvent)
+            if (calculatedHash != currentEvent.eventHash) {
+                return false
+            }
+        }
+        
+        return true
+    }
+    
+    private fun calculateExpectedStock(): Int {
+        // Calculate what the stock should be based on all recorded transactions
+        var expectedStock = 0
+        
+        // Add imports
+        for (auth in importAuthorizations) {
+            expectedStock += auth.quantity
+        }
+        
+        // Add adjustments
+        for (adjustment in stockAdjustments) {
+            expectedStock += adjustment.quantityChange
+        }
+        
+        // Subtract dispensations
+        for (dispensation in dispensationRecords) {
+            expectedStock -= dispensation.quantityDispensed
+        }
+        
+        return expectedStock
+    }
+    
+    private fun checkDispensationCompliance(): List<ComplianceIssue> {
+        val issues = mutableListOf<ComplianceIssue>()
+        
+        // Group dispensations by patient and check limits based on schedule
+        val patientDispensations = dispensationRecords.groupBy { it.patientId }
+        
+        for ((patientId, dispensations) in patientDispensations) {
+            // Sort by date
+            val sortedDispensations = dispensations.sortedBy { it.dispensationDate }
+            
+            // Check for multiple dispensations in short time periods
+            val maxDaysBetweenDispensations = when (controlSchedule) {
+                ControlSchedule.SCHEDULE_I -> 7
+                ControlSchedule.SCHEDULE_II -> 14
+                ControlSchedule.SCHEDULE_III -> 30
+                else -> 0 // No specific limit for other schedules
+            }
+            
+            if (maxDaysBetweenDispensations > 0) {
+                for (i in 1 until sortedDispensations.size) {
+                    val current = sortedDispensations[i]
+                    val previous = sortedDispensations[i - 1]
+                    
+                    val daysBetween = ChronoUnit.DAYS.between(
+                        previous.dispensationDate, 
+                        current.dispensationDate
+                    )
+                    
+                    if (daysBetween < maxDaysBetweenDispensations) {
+                        issues.add(
+                            ComplianceIssue(
+                                ruleId = "EARLY_REFILL",
+                                severity = IssueSeverity.HIGH,
+                                description = "Early refill: only $daysBetween days after previous dispensation for patient $patientId (minimum $maxDaysBetweenDispensations days required)",
+                                remediation = "Review patient records and prescriber authorization"
+                            )
+                        )
+                    }
+                }
+            }
+            
+            // Check for excessive individual dispensations
+            val maxIndividualSupply = when (controlSchedule) {
+                ControlSchedule.SCHEDULE_I -> 7
+                ControlSchedule.SCHEDULE_II -> 30
+                ControlSchedule.SCHEDULE_III -> 90
+                else -> 0 // No specific limit for other schedules
+            }
+            
+            if (maxIndividualSupply > 0) {
+                for (dispensation in sortedDispensations) {
+                    val daysSupply = calculateDaysSupply(dispensation)
+                    
+                    if (daysSupply > maxIndividualSupply) {
+                        issues.add(
+                            ComplianceIssue(
+                                ruleId = "EXCESS_SUPPLY",
+                                severity = IssueSeverity.HIGH,
+                                description = "Excessive supply: $daysSupply days provided for patient $patientId (maximum $maxIndividualSupply days allowed)",
+                                remediation = "Review dispensation quantity and prescription"
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        
+        return issues
+    }
+    
+    private fun calculateDaysSupply(dispensation: DispensationRecord): Int {
+        // Calculate how many days the dispensed medication will last
+        val dailyDose = dispensation.dosage * dispensation.frequency
+        
+        return if (dailyDose > 0) {
+            (dispensation.quantityDispensed / dailyDose).toInt()
+        } else {
+            // If we can't determine dosage, estimate based on standard dose
+            (dispensation.quantityDispensed / maximumDailyDose).toInt()
+        }
+    }
+    
+    private fun calculateRiskSeverity(controlSchedule: ControlSchedule, recordCount: Int): RiskSeverity {
+        return when {
+            controlSchedule == ControlSchedule.SCHEDULE_I && recordCount > 10 -> RiskSeverity.CRITICAL
+            controlSchedule == ControlSchedule.SCHEDULE_I -> RiskSeverity.HIGH
+            controlSchedule == ControlSchedule.SCHEDULE_II && recordCount > 50 -> RiskSeverity.HIGH
+            controlSchedule == ControlSchedule.SCHEDULE_II -> RiskSeverity.MEDIUM
+            recordCount > 100 -> RiskSeverity.MEDIUM
+            else -> RiskSeverity.LOW
+        }
+    }
+    
+    private fun validateStockReconciliation(): RuleValidationResult {
+        val calculatedStock = calculateExpectedStock()
+        val stockMatches = calculatedStock == stockQuantity
+        
+        return RuleValidationResult(
+            passed = stockMatches,
+            message = if (stockMatches) {
+                "Stock reconciliation successful"
+            } else {
+                "Stock discrepancy: system shows $stockQuantity, calculated amount is $calculatedStock"
+            }
+        )
+    }
+    
+    private fun validateImportDocumentation(): RuleValidationResult {
+        val requiresImportAuth = controlSchedule in setOf(
+            ControlSchedule.SCHEDULE_I,
+            ControlSchedule.SCHEDULE_II
+        )
+        
+        if (requiresImportAuth && importAuthorizations.isEmpty()) {
+            return RuleValidationResult(
+                passed = false,
+                message = "Missing import authorization for controlled substance"
+            )
+        }
+        
+        if (requiresImportAuth) {
+            val validAuths = importAuthorizations.filter { 
+                it.expiryDate == null || it.expiryDate!!.isAfter(LocalDate.now())
+            }
+            
+            if (validAuths.isEmpty()) {
+                return RuleValidationResult(
+                    passed = false,
+                    message = "No valid import authorizations found"
+                )
+            }
+        }
+        
+        return RuleValidationResult(
+            passed = true,
+            message = "Import documentation is valid"
+        )
+    }
+    
+    // Additional validation methods would go here...
+    
+    // Constants
+    companion object {
+        private val SIGNIFICANT_EVENTS = setOf(
+            "STOCK_ADJUSTMENT",
+            "IMPORT_RECEIPT",
+            "DISPENSATION",
+            "DISPOSAL",
+            "THEFT_LOSS",
+            "TRANSFER"
+        )
+        
+        private const val PRESCRIBER_PATTERN_THRESHOLD = 25
+    }
+}
+
+data class ComplianceConfig(
+    val configType: String,
+    val regulatoryFramework: String,
+    val complianceAuthority: String,
+    val rules: List<ComplianceRule>
+)
+
+data class ComplianceRule(
+    val id: String,
+    val description: String,
+    val ruleType: RuleType,
+    val criticalRule: Boolean
+)
+
+enum class RuleType {
+    STOCK_RECONCILIATION,
+    IMPORT_DOCUMENTATION,
+    DISPENSATION_LIMITS,
+    PRESCRIBER_AUTHORIZATION,
+    STORAGE_REQUIREMENTS,
+    AUDIT_COMPLETENESS,
+    PATIENT_VERIFICATION,
+    CUSTOM
+}
+
+data class ComplianceStatus(
+    val status: ComplianceStatusType = ComplianceStatusType.UNKNOWN,
+    val issues: List<ComplianceIssue> = emptyList()
+)
+
+enum class ComplianceStatusType {
+    FULLY_COMPLIANT,
+    COMPLIANT_WITH_WARNINGS,
+    MINOR_VIOLATION,
+    MAJOR_VIOLATION,
+    CRITICAL_VIOLATION,
+    UNKNOWN
+}
+
+data class ComplianceIssue(
+    val ruleId: String,
+    val severity: IssueSeverity,
+    val description: String,
+    val remediation: String
+)
+
+enum class IssueSeverity {
+    CRITICAL,
+    HIGH,
+    MEDIUM,
+    LOW,
+    INFO
+}
+
+data class ComplianceValidationResult(
+    val passedAllRules: Boolean,
+    val passedCriticalRules: Boolean,
+    val complianceScore: Double,
+    val ruleResults: Map<String, RuleValidationResult>,
+    val validatedAt: LocalDateTime,
+    val validatedBy: String
+)
+
+data class RuleValidationResult(
+    val passed: Boolean,
+    val message: String,
+    val details: Map<String, Any> = emptyMap()
+)
+
+data class RetentionPolicy(
+    val retentionPeriod: Period,
+    val legalBasis: String,
+    val archiveAfterExpiry: Boolean,
+    val deleteAfterArchive: Boolean,
+    val specialInstructions: String?
+)
+
+data class AuditFilter(
+    val startDate: LocalDateTime? = null,
+    val endDate: LocalDateTime? = null,
+    val eventTypes: Set<String> = emptySet(),
+    val userId: UUID? = null,
+    val requestorId: UUID,
+    val noRedaction: Boolean = false
+)
+
+data class SignedAuditTrail(
+    val entityId: UUID,
+    val entityType: String,
+    val events: List<AuditEvent>,
+    val timeRange: TimeRange,
+    val signature: String,
+    val verificationData: Any?,
+    val metadata: Map<String, String>
+)
+
+data class TimeRange(
+    val start: LocalDateTime? = null,
+    val end: LocalDateTime? = null
+)
+
+data class DataBreachRisk(
+    val riskType: RiskType,
+    val severity: RiskSeverity,
+    val description: String,
+    val affectedRecords: Int,
+    val mitigation: String
+)
+
+enum class RiskType {
+    PATIENT_IDENTIFICATION,
+    MEDICAL_CONDITION_DISCLOSURE,
+    SUBSTANCE_TREATMENT_DISCLOSURE,
+    INVENTORY_TARGETING,
+    PRESCRIBER_PATTERN_ANALYSIS
+}
+
+enum class RiskSeverity {
+    CRITICAL,
+    HIGH,
+    MEDIUM,
+    LOW
+}
+
+enum class PrivacyImpactLevel {
+    MINIMAL,
+    LOW,
+    MEDIUM,
+    HIGH,
+    CRITICAL
+}
+
+enum class ControlSchedule(val scheduleNumber: Int) {
+    SCHEDULE_I(1),    // Highest control (e.g., morphine, fentanyl)
+    SCHEDULE_II(2),   // High control (e.g., codeine, diazepam)
+    SCHEDULE_III(3),  // Moderate control (e.g., ketamine)
+    SCHEDULE_IV(4),   // Monitored medications
+    UNCONTROLLED(0)   // Regular medications
+}
+
+interface AuditEvent {
+    val id: UUID
+    val timestamp: LocalDateTime
+    val eventType: String
+    val performedBy: UUID?
+    val ipAddress: String?
+    val metadata: Map<String, Any>
+}
+
+class MedicationAuditEvent(
+    override val id: UUID = UUID.randomUUID(),
+    override var timestamp: LocalDateTime = LocalDateTime.now(),
+    override val eventType: String,
+    override var performedBy: UUID? = null,
+    override var ipAddress: String? = null,
+    override var metadata: Map<String, Any> = mapOf(),
+    var controlledMedication: ControlledMedication? = null,
+    var location: String? = null,
+    var eventHash: String? = null,
+    var previousEventHash: String? = null
+) : AuditEvent
+```

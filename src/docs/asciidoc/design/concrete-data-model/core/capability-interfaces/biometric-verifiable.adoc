@@ -1,0 +1,326 @@
+===== `BiometricVerifiable`
+Interface for entities that can be verified using biometric data.
+
+[source,kotlin]
+----
+interface BiometricVerifiable {
+    fun getBiometricVerificationTypes(): Set<BiometricType>
+    fun isBiometricallyVerified(type: BiometricType): Boolean
+    fun getBiometricVerificationStatus(): VerificationStatus
+    fun getLastVerificationAttempt(): BiometricVerificationAttempt?
+    fun recordVerificationAttempt(attempt: BiometricVerificationAttempt)
+    fun getBiometricVerificationHistory(): List<BiometricVerificationAttempt>
+    fun getRequiredVerificationLevel(): VerificationLevel
+    fun getVerificationExpiry(type: BiometricType): LocalDateTime?
+    fun clearBiometricVerifications(reason: String, performedBy: User)
+}
+----
+
+[cols="1,3", options="header"]
+|===
+| BiometricType        | Description
+| `FINGERPRINT`        | Fingerprint scanning verification
+| `FACIAL_RECOGNITION` | Facial recognition verification
+| `IRIS_SCAN`          | Iris pattern scanning verification
+| `VOICE_RECOGNITION`  | Voice pattern recognition verification
+| `SIGNATURE`          | Digital signature verification
+| `PALM_VEIN`          | Palm vein pattern verification
+| `RETINA_SCAN`        | Retina scanning verification
+| `GAIT_ANALYSIS`      | Walking pattern analysis verification
+| `HAND_GEOMETRY`      | Hand shape and structure verification
+|===
+
+====== Contextual Use Cases for BiometricVerifiable
+
+*Real-World Scenario:* Citizen Identity Verification for Government Services
+
+[plantuml]
+----
+@startuml
+actor "Citizen\n(Krishna Tamang)" as Citizen
+actor "Service Center Officer\n(Maya Shrestha)" as Officer
+actor "Security Admin\n(Naresh Singh)" as Admin
+participant "CitizenProfile\nimplements BiometricVerifiable" as Profile
+participant "BiometricService" as Biometric
+participant "FingerPrintScanner" as FPScanner
+participant "FacialRecognitionSystem" as FaceSystem
+participant "AuditService" as Audit
+
+Citizen -> Officer : Request pension certificate
+Officer -> Profile : retrieveProfile(citizenId)
+activate Profile
+Officer <-- Profile : citizenProfile
+deactivate Profile
+
+Officer -> Profile : getRequiredVerificationLevel()
+activate Profile
+Officer <-- Profile : LEVEL_2 (2-factor biometric)
+deactivate Profile
+
+Officer -> Profile : getBiometricVerificationTypes()
+activate Profile
+Officer <-- Profile : [FINGERPRINT, FACIAL_RECOGNITION]
+deactivate Profile
+
+Officer -> Citizen : Request fingerprint verification
+Citizen -> FPScanner : Place finger on scanner
+FPScanner -> Biometric : scanFingerprint()
+activate Biometric
+Biometric -> Biometric : captureFingerprint()
+Biometric -> Biometric : preprocessImage()
+Biometric -> Biometric : extractMinutiae()
+Officer <-- Biometric : fingerprintSample
+deactivate Biometric
+
+Officer -> Profile : verifyBiometric(FINGERPRINT, sample)
+activate Profile
+Profile -> Biometric : verifyFingerprint(citizenId, sample)
+activate Biometric
+Biometric -> Biometric : retrieveStoredTemplate(citizenId)
+Biometric -> Biometric : compareSamples(storedTemplate, sample)
+Biometric -> Biometric : calculateMatchScore()
+Profile <-- Biometric : matchResult(score=82, threshold=75)
+deactivate Biometric
+
+Profile -> Profile : createVerificationAttempt(FINGERPRINT, SUCCESS)
+Profile -> Profile : recordVerificationAttempt(attempt)
+Officer <-- Profile : fingerprintVerified
+deactivate Profile
+
+Officer -> Citizen : Request facial verification
+Citizen -> FaceSystem : Look at camera
+FaceSystem -> Biometric : captureFacialImage()
+activate Biometric
+Biometric -> Biometric : detectFace()
+Biometric -> Biometric : normalizeFacialImage()
+Biometric -> Biometric : extractFacialFeatures()
+Officer <-- Biometric : facialSample
+deactivate Biometric
+
+Officer -> Profile : verifyBiometric(FACIAL_RECOGNITION, sample)
+activate Profile
+Profile -> Biometric : verifyFace(citizenId, sample)
+activate Biometric
+Biometric -> Biometric : retrieveStoredTemplate(citizenId)
+Biometric -> Biometric : compareSamples(storedTemplate, sample)
+Biometric -> Biometric : calculateMatchScore()
+Profile <-- Biometric : matchResult(score=65, threshold=60)
+deactivate Biometric
+
+Profile -> Profile : createVerificationAttempt(FACIAL_RECOGNITION, SUCCESS)
+Profile -> Profile : recordVerificationAttempt(attempt)
+Officer <-- Profile : faceVerified
+deactivate Profile
+
+Officer -> Profile : getBiometricVerificationStatus()
+activate Profile
+Profile -> Profile : checkVerificationStatus()
+Officer <-- Profile : FULLY_VERIFIED
+deactivate Profile
+
+Officer -> Profile : processPensionRequest()
+activate Profile
+Profile -> Profile : generatePensionCertificate()
+Officer <-- Profile : pensionCertificate
+deactivate Profile
+
+Officer -> Citizen : Provide pension certificate
+
+' Security admin scenario
+Admin -> Profile : auditVerificationStatus(citizenId)
+activate Profile
+Profile -> Profile : getBiometricVerificationHistory()
+activate Profile
+Profile <-- Profile : verificationHistory
+deactivate Profile
+Admin <-- Profile : verificationAudit
+deactivate Profile
+
+Admin -> Profile : clearBiometricVerifications("Annual reset", adminUser)
+activate Profile
+Profile -> Profile : invalidateExistingVerifications()
+Profile -> Audit : logVerificationReset(citizenId, reason, admin)
+activate Audit
+Profile <-- Audit : logCreated
+deactivate Audit
+Admin <-- Profile : verificationsCleared
+deactivate Profile
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Social Security Administration uses the BiometricVerifiable interface in its CitizenProfile entity to ensure secure and reliable identity verification for pension and social benefit disbursements. This implementation helps prevent fraud while making services accessible to legitimate beneficiaries.
+
+When 72-year-old pensioner Krishna Tamang visits a service center to collect his monthly pension certificate, Service Officer Maya Shrestha needs to verify his identity before processing his request. The system retrieves Krishna's CitizenProfile, which implements BiometricVerifiable, and determines that LEVEL_2 verification is required for pension services, meaning two different biometric factors must be confirmed.
+
+The system indicates that Krishna's profile supports fingerprint and facial recognition verification types. Maya first asks Krishna to place his finger on the fingerprint scanner. The BiometricService captures his fingerprint, processes the image to extract distinctive features (minutiae), and compares it against the template stored in Krishna's secure profile. The system calculates a match score of 82, which exceeds the required threshold of 75, resulting in successful fingerprint verification.
+
+Next, Maya asks Krishna to look at the facial recognition camera. The system captures his facial image, normalizes it, extracts key features, and compares them to his stored template. Despite Krishna's aging appearance differing somewhat from his registered photo, the system identifies enough matching features to generate a score of 65, just above the threshold of 60, and confirms his facial identity.
+
+With both biometric verifications successful, the system updates Krishna's profile with the verification attempts, timestamps, and results. The profile's verification status changes to FULLY_VERIFIED, allowing Maya to generate the pension certificate that Krishna needs.
+
+Meanwhile, Security Administrator Naresh Singh conducts regular audits of the verification system. He can review the complete history of verification attempts on Krishna's profile, including timestamps, verification types, success/failure status, and the officers who conducted each verification. As part of the monthly security protocol, Naresh can also clear all existing verifications, requiring citizens to complete fresh verifications for their next service requests.
+
+The BiometricVerifiable implementation provides several key benefits in this context:
+1. Multi-factor authentication using different biometric types
+2. Configurable verification levels based on service sensitivity
+3. Comprehensive audit trail of all verification attempts
+4. Flexibility in supported biometric methods
+5. Time-limited verifications requiring periodic revalidation
+6. Administrative controls for security management
+
+*Technical Implementation Example:*
+```kotlin
+class CitizenProfile : BaseEntity(), BiometricVerifiable {
+    var citizenId: String = ""
+    var fullName: String = ""
+    var dateOfBirth: LocalDate? = null
+    var gender: Gender? = null
+    var address: Address? = null
+    var phoneNumber: String? = null
+    var email: String? = null
+    
+    @OneToMany(mappedBy = "citizenProfile", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val verificationAttempts: MutableList<BiometricVerificationAttempt> = mutableListOf()
+    
+    @ElementCollection
+    private val supportedBiometricTypes: MutableSet<BiometricType> = mutableSetOf()
+    
+    @ElementCollection
+    private val verificationExpiries: MutableMap<BiometricType, LocalDateTime> = mutableMapOf()
+    
+    // Implementation of BiometricVerifiable interface
+    override fun getBiometricVerificationTypes(): Set<BiometricType> {
+        return supportedBiometricTypes.toSet()
+    }
+    
+    override fun isBiometricallyVerified(type: BiometricType): Boolean {
+        if (!supportedBiometricTypes.contains(type)) {
+            return false
+        }
+        
+        val expiry = verificationExpiries[type]
+        if (expiry != null && expiry.isBefore(LocalDateTime.now())) {
+            return false
+        }
+        
+        val lastAttempt = verificationAttempts
+            .filter { it.biometricType == type }
+            .maxByOrNull { it.attemptedAt }
+            
+        return lastAttempt?.status == VerificationStatus.SUCCESS
+    }
+    
+    override fun getBiometricVerificationStatus(): VerificationStatus {
+        val requiredLevel = getRequiredVerificationLevel()
+        val verifiedTypes = supportedBiometricTypes.filter { isBiometricallyVerified(it) }
+        
+        return when {
+            verifiedTypes.isEmpty() -> VerificationStatus.NOT_VERIFIED
+            verifiedTypes.size < requiredLevel.requiredFactors -> VerificationStatus.PARTIALLY_VERIFIED
+            else -> VerificationStatus.FULLY_VERIFIED
+        }
+    }
+    
+    override fun getLastVerificationAttempt(): BiometricVerificationAttempt? {
+        return verificationAttempts.maxByOrNull { it.attemptedAt }
+    }
+    
+    override fun recordVerificationAttempt(attempt: BiometricVerificationAttempt) {
+        attempt.citizenProfile = this
+        verificationAttempts.add(attempt)
+        
+        if (attempt.status == VerificationStatus.SUCCESS) {
+            val expiryDuration = when (attempt.biometricType) {
+                BiometricType.FINGERPRINT -> Duration.ofHours(24)
+                BiometricType.FACIAL_RECOGNITION -> Duration.ofHours(12)
+                BiometricType.IRIS_SCAN -> Duration.ofHours(48)
+                else -> Duration.ofHours(8)
+            }
+            
+            verificationExpiries[attempt.biometricType] = LocalDateTime.now().plus(expiryDuration)
+        }
+        
+        auditService.logBiometricVerification(
+            citizenId = this.citizenId,
+            biometricType = attempt.biometricType,
+            status = attempt.status,
+            location = attempt.location,
+            officer = attempt.verifiedBy,
+            timestamp = attempt.attemptedAt
+        )
+    }
+    
+    override fun getBiometricVerificationHistory(): List<BiometricVerificationAttempt> {
+        return verificationAttempts.sortedByDescending { it.attemptedAt }
+    }
+    
+    override fun getRequiredVerificationLevel(): VerificationLevel {
+        // The required level could be determined based on profile attributes,
+        // service being accessed, or security settings
+        return when {
+            isHighRiskProfile() -> VerificationLevel.LEVEL_3
+            isVulnerableIndividual() -> VerificationLevel.LEVEL_1
+            else -> VerificationLevel.LEVEL_2
+        }
+    }
+    
+    override fun getVerificationExpiry(type: BiometricType): LocalDateTime? {
+        return verificationExpiries[type]
+    }
+    
+    override fun clearBiometricVerifications(reason: String, performedBy: User) {
+        verificationExpiries.clear()
+        
+        val clearanceEvent = BiometricVerificationAttempt(
+            biometricType = BiometricType.SYSTEM,
+            status = VerificationStatus.CLEARED,
+            verifiedBy = performedBy,
+            attemptedAt = Instant.now(),
+            location = "ADMINISTRATIVE",
+            notes = "Verification cleared: $reason"
+        )
+        
+        recordVerificationAttempt(clearanceEvent)
+    }
+    
+    // Helper methods
+    private fun isHighRiskProfile(): Boolean {
+        // Logic to determine if this profile requires higher security
+        return false // Simplified for example
+    }
+    
+    private fun isVulnerableIndividual(): Boolean {
+        // Logic to determine if this is a vulnerable individual who might
+        // have difficulty with multiple biometric factors
+        return age() > 80 || hasDisabilityFlags()
+    }
+    
+    private fun age(): Int {
+        if (dateOfBirth == null) return 0
+        return Period.between(dateOfBirth, LocalDate.now()).years
+    }
+    
+    private fun hasDisabilityFlags(): Boolean {
+        // Logic to check for registered disabilities
+        return false // Simplified for example
+    }
+}
+
+enum class VerificationLevel(val requiredFactors: Int) {
+    LEVEL_1(1),  // Basic verification (1 factor)
+    LEVEL_2(2),  // Standard verification (2 factors)
+    LEVEL_3(3)   // Enhanced verification (3 factors)
+}
+
+enum class VerificationStatus {
+    SUCCESS,
+    FAILURE,
+    PARTIAL_MATCH,
+    NOT_VERIFIED,
+    PARTIALLY_VERIFIED,
+    FULLY_VERIFIED,
+    EXPIRED,
+    CLEARED
+}
+```

@@ -1,0 +1,417 @@
+===== `FullTextSearchable`
+Interface with additional fields for optimizing search capabilities.
+
+[source,kotlin]
+----
+interface FullTextSearchable {
+    fun getSearchableContent(): Map<String, String>
+    fun getSearchKeywords(): Set<String>
+    fun getSearchBoostFactors(): Map<String, Double>
+    fun getSearchFacets(): Map<String, Set<String>>
+    fun getSearchSynonyms(): Map<String, Set<String>>
+    fun indexForSearch()
+    fun getSuggestedSearchQueries(): List<String>
+    fun getSearchRelevanceScore(query: String): Double
+    fun updateSearchMetadata(metadata: Map<String, Any>)
+}
+----
+
+====== Contextual Use Cases for FullTextSearchable
+
+*Real-World Scenario:* Government Document Management System
+
+[plantuml]
+----
+@startuml
+actor "Content Manager\n(Srijana Adhikari)" as Manager
+actor "Government Official\n(Bharat Poudel)" as Official
+actor "Citizen\n(Neha Shrestha)" as Citizen
+participant "GovernmentDocument\nimplements FullTextSearchable" as Document
+participant "SearchService" as Search
+participant "IndexingService" as Indexing
+participant "SearchAnalyticsService" as Analytics
+participant "LanguageProcessor" as Language
+
+Manager -> Document : createDocument(documentData)
+activate Document
+Document -> Document : setTitle("COVID-19 Vaccination Guidelines for Municipalities")
+Document -> Document : setContent(documentText)
+Document -> Document : setDocumentType(GUIDELINE)
+Document -> Document : setDepartment(HEALTH_MINISTRY)
+Document -> Document : setPublicAccess(true)
+Document -> Document : setTags(["vaccination", "covid-19", "public-health"])
+Document -> Document : setEffectiveDate(2023-01-15)
+Manager <-- Document : documentCreated
+deactivate Document
+
+Manager -> Document : prepareForPublishing()
+activate Document
+Document -> Document : updateSearchMetadata(searchMetadata)
+Document -> Language : extractKeyPhrases(content)
+activate Language
+Document <-- Language : keyPhrases
+deactivate Language
+Document -> Document : setSearchKeywords(keyPhrases)
+Document -> Document : setSearchSynonyms(synonymMap)
+Manager <-- Document : documentPrepared
+deactivate Document
+
+Manager -> Document : indexForSearch()
+activate Document
+Document -> Document : getSearchableContent()
+activate Document
+Document <-- Document : contentMap
+deactivate Document
+Document -> Document : getSearchKeywords()
+activate Document
+Document <-- Document : keywords
+deactivate Document
+Document -> Indexing : indexDocument(id, contentMap, keywords)
+activate Indexing
+Indexing -> Indexing : normalizeContent()
+Indexing -> Indexing : createSearchIndexEntry()
+Document <-- Indexing : indexingComplete
+deactivate Indexing
+Manager <-- Document : documentIndexed
+deactivate Document
+
+Manager -> Document : configureBoostFactors()
+activate Document
+Document -> Document : setSearchBoostFactors(boostMap)
+Manager <-- Document : boostFactorsSet
+deactivate Document
+
+Manager -> Document : defineFacets()
+activate Document
+Document -> Document : setSearchFacets(facetMap)
+Manager <-- Document : facetsConfigured
+deactivate Document
+
+Official -> Search : findDocuments("covid vaccination guidelines")
+activate Search
+Search -> Search : preProcessQuery()
+Search -> Indexing : executeSearch(query)
+activate Indexing
+Search <-- Indexing : searchResults
+deactivate Indexing
+Search -> Search : rankResults()
+Search -> Document : getSearchRelevanceScore(query)
+activate Document
+Search <-- Document : relevanceScore
+deactivate Document
+Official <-- Search : rankedResults
+deactivate Search
+
+Official -> Document : viewDocument()
+activate Document
+Document -> Analytics : recordSearchHit(queryText)
+activate Analytics
+Document <-- Analytics : recorded
+deactivate Analytics
+Official <-- Document : documentContent
+deactivate Document
+
+Citizen -> Search : findVaccinationInformation("टीकारण निर्देशिका")
+activate Search
+Search -> Language : detectLanguage(query)
+activate Language
+Search <-- Language : NEPALI
+deactivate Language
+Search -> Language : translateToEnglish("टीकारण निर्देशिका")
+activate Language
+Search <-- Language : "vaccination guidelines"
+deactivate Language
+Search -> Document : getSearchSynonyms()
+activate Document
+Search <-- Document : synonyms
+deactivate Document
+Search -> Search : expandQueryWithSynonyms(query, synonyms)
+Search -> Indexing : executeMultilingualSearch(expandedQuery)
+activate Indexing
+Search <-- Indexing : searchResults
+deactivate Indexing
+Citizen <-- Search : documentResults
+deactivate Search
+
+Citizen -> Search : browseByCategory()
+activate Search
+Search -> Document : getSearchFacets()
+activate Document
+Search <-- Document : facets
+deactivate Document
+Search -> Search : generateFacetNavigation(facets)
+Citizen <-- Search : categoryBrowser
+deactivate Search
+
+Manager -> Analytics : getSearchPerformanceReport()
+activate Analytics
+Analytics -> Analytics : aggregateSearchMetrics()
+Analytics -> Document : getSuggestedSearchQueries()
+activate Document
+Analytics <-- Document : suggestions
+deactivate Document
+Analytics -> Analytics : generatePopularQueriesReport()
+Manager <-- Analytics : searchAnalyticsReport
+deactivate Analytics
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Ministry of Health and Population uses the FullTextSearchable interface in its Document Management System to ensure critical health information is easily discoverable by government officials and citizens. This implementation enables powerful, multi-language search capabilities for documents like vaccination guidelines, COVID-19 protocols, and health advisories.
+
+When Content Manager Srijana Adhikari creates a new document for "COVID-19 Vaccination Guidelines for Municipalities," the system prepares it for optimal searchability. Using natural language processing, it automatically extracts key phrases like "vaccination schedule," "cold chain management," "priority groups," and "adverse events reporting" to be used as search keywords. Srijana also configures search synonyms, mapping terms like "inoculation" and "immunization" to "vaccination," and critically, their Nepali equivalents ("खोप", "टीकाकरण") to ensure bilingual discovery.
+
+For this important public health document, Srijana assigns higher boost factors to the title and executive summary sections, ensuring they carry more weight in search rankings. She also configures facets including document type (GUIDELINE), department (HEALTH_MINISTRY), target audience (MUNICIPALITIES, HEALTH_WORKERS), topic (VACCINATION, COVID-19), and geographic applicability (ALL_PROVINCES).
+
+When Government Official Bharat Poudel later searches for "covid vaccination guidelines," the system leverages these optimizations to return the most relevant results first. The search process calculates a relevance score based on term frequency, field boosts, and keyword matches. Each document view is tracked by the analytics system to continuously improve search algorithms.
+
+The system's multilingual capabilities prove essential when Citizen Neha Shrestha searches in Nepali for "टीकारण निर्देशिका" (vaccination guidelines). The system detects the language, translates the query, expands it with synonyms from both languages, and returns relevant documents. The interface even supports transliteration, allowing those who speak Nepali but type in Roman script to find results with queries like "tikakarana nirdeshika."
+
+For citizens who don't know exactly what to search for, the system provides a category-based browsing experience using the facets defined earlier. Neha can navigate through health topics, document types, or target audiences to discover relevant information.
+
+The analytics capabilities also help the Ministry improve its information distribution. By examining popular search terms that yield few results, they can identify information gaps that need to be addressed with new content.
+
+The FullTextSearchable implementation provides several benefits in this public health information context:
+1. Multilingual discovery of critical health information
+2. Field-specific relevance boosting for prioritizing key content
+3. Synonym mapping to accommodate different terminologies
+4. Faceted navigation for browsing without specific search terms
+5. Search analytics for continuous improvement
+6. Suggested queries to help users find related information
+
+*Technical Implementation Example:*
+```kotlin
+class GovernmentDocument : BaseEntity(), FullTextSearchable {
+    var title: String = ""
+    var content: String = ""
+    var summary: String? = null
+    var documentType: DocumentType = DocumentType.GENERAL
+    var department: Department? = null
+    var effectiveDate: LocalDate? = null
+    var expirationDate: LocalDate? = null
+    var publicAccess: Boolean = false
+    var tags: MutableSet<String> = mutableSetOf()
+    
+    @OneToMany(mappedBy = "document", cascade = [CascadeType.ALL], orphanRemoval = true)
+    private val searchMetadata: MutableList<DocumentSearchMetadata> = mutableListOf()
+    
+    // Implementation of FullTextSearchable interface
+    override fun getSearchableContent(): Map<String, String> {
+        val contentMap = mutableMapOf<String, String>()
+        contentMap["title"] = this.title
+        contentMap["content"] = this.content
+        contentMap["summary"] = this.summary ?: ""
+        contentMap["documentType"] = this.documentType.name
+        contentMap["department"] = this.department?.name ?: ""
+        contentMap["tags"] = this.tags.joinToString(" ")
+        contentMap["effectiveDate"] = this.effectiveDate?.toString() ?: ""
+        
+        // Add document-specific fields
+        getCustomFields().forEach { (key, value) ->
+            contentMap[key] = value.toString()
+        }
+        
+        return contentMap
+    }
+    
+    override fun getSearchKeywords(): Set<String> {
+        val keywordMetadata = searchMetadata.find { it.metadataType == "KEYWORDS" }
+        return if (keywordMetadata != null) {
+            @Suppress("UNCHECKED_CAST")
+            keywordMetadata.metadataValue as Set<String>
+        } else {
+            // Default to extracting from title and tags if not explicitly set
+            (titleToKeywords() + tags).toSet()
+        }
+    }
+    
+    override fun getSearchBoostFactors(): Map<String, Double> {
+        val boostMetadata = searchMetadata.find { it.metadataType == "BOOST_FACTORS" }
+        return if (boostMetadata != null) {
+            @Suppress("UNCHECKED_CAST")
+            boostMetadata.metadataValue as Map<String, Double>
+        } else {
+            // Default boost factors
+            mapOf(
+                "title" to 5.0,
+                "summary" to 3.0,
+                "content" to 1.0,
+                "tags" to 2.0
+            )
+        }
+    }
+    
+    override fun getSearchFacets(): Map<String, Set<String>> {
+        val facets = mutableMapOf<String, Set<String>>()
+        
+        // Document type facet
+        facets["documentType"] = setOf(documentType.name)
+        
+        // Department facet
+        if (department != null) {
+            facets["department"] = setOf(department!!.name)
+        }
+        
+        // Tags as facets
+        if (tags.isNotEmpty()) {
+            facets["tags"] = tags
+        }
+        
+        // Date facets
+        effectiveDate?.let {
+            facets["year"] = setOf(it.year.toString())
+            facets["month"] = setOf("${it.year}-${it.monthValue.toString().padStart(2, '0')}")
+        }
+        
+        // Custom facets from metadata
+        val facetMetadata = searchMetadata.find { it.metadataType == "FACETS" }
+        if (facetMetadata != null) {
+            @Suppress("UNCHECKED_CAST")
+            val customFacets = facetMetadata.metadataValue as Map<String, Set<String>>
+            facets.putAll(customFacets)
+        }
+        
+        return facets
+    }
+    
+    override fun getSearchSynonyms(): Map<String, Set<String>> {
+        val synonymMetadata = searchMetadata.find { it.metadataType == "SYNONYMS" }
+        return if (synonymMetadata != null) {
+            @Suppress("UNCHECKED_CAST")
+            synonymMetadata.metadataValue as Map<String, Set<String>>
+        } else {
+            // Default synonyms
+            mapOf(
+                "covid" to setOf("coronavirus", "covid-19", "sars-cov-2", "कोभिड", "कोरोना"),
+                "vaccination" to setOf("vaccine", "immunization", "inoculation", "खोप", "टीकाकरण")
+            )
+        }
+    }
+    
+    override fun indexForSearch() {
+        val contentMap = getSearchableContent()
+        val keywords = getSearchKeywords()
+        val boostFactors = getSearchBoostFactors()
+        val facets = getSearchFacets()
+        val synonyms = getSearchSynonyms()
+        
+        searchIndexingService.indexDocument(
+            id = this.id,
+            contentMap = contentMap,
+            keywords = keywords,
+            boostFactors = boostFactors,
+            facets = facets,
+            synonyms = synonyms
+        )
+        
+        // Record indexing event
+        val indexingEvent = SearchIndexingEvent(
+            entityId = this.id,
+            entityType = "GovernmentDocument",
+            timestamp = Instant.now(),
+            indexedBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM"
+        )
+        searchIndexingEventRepository.save(indexingEvent)
+    }
+    
+    override fun getSuggestedSearchQueries(): List<String> {
+        val suggestionsMetadata = searchMetadata.find { it.metadataType == "SUGGESTED_QUERIES" }
+        return if (suggestionsMetadata != null) {
+            @Suppress("UNCHECKED_CAST")
+            suggestionsMetadata.metadataValue as List<String>
+        } else {
+            // Generate basic suggestions from title and keywords
+            val titleWords = title.split(" ")
+                .filter { it.length > 3 }
+                .take(3)
+            
+            val suggestions = mutableListOf<String>()
+            suggestions.add(title)
+            
+            if (documentType == DocumentType.GUIDELINE) {
+                suggestions.add("${titleWords.first()} guideline")
+                suggestions.add("${titleWords.first()} instructions")
+            }
+            
+            if (tags.contains("covid-19") || tags.contains("vaccination")) {
+                suggestions.add("covid vaccination")
+            }
+            
+            suggestions.take(5)
+        }
+    }
+    
+    override fun getSearchRelevanceScore(query: String): Double {
+        // This method can be used to provide custom relevance scoring
+        // beyond what the search engine provides by default
+        
+        // Simple term frequency scoring example
+        val queryTerms = query.lowercase().split(" ")
+        val titleTerms = title.lowercase().split(" ")
+        val contentSample = content.take(1000).lowercase()
+        
+        var score = 0.0
+        
+        // Title match has high value
+        for (term in queryTerms) {
+            if (titleTerms.contains(term)) {
+                score += 10.0
+            }
+            
+            // Content match has lower value
+            if (contentSample.contains(term)) {
+                score += 5.0
+            }
+            
+            // Tag match has medium value
+            if (tags.any { it.lowercase().contains(term) }) {
+                score += 7.0
+            }
+        }
+        
+        // Adjust score based on freshness
+        effectiveDate?.let {
+            val daysSinceEffective = ChronoUnit.DAYS.between(it, LocalDate.now())
+            if (daysSinceEffective in 0..30) {
+                // Recent documents get a boost
+                score *= 1.2
+            }
+        }
+        
+        return score
+    }
+    
+    override fun updateSearchMetadata(metadata: Map<String, Any>) {
+        for ((key, value) in metadata) {
+            val existingMetadata = searchMetadata.find { it.metadataType == key }
+            
+            if (existingMetadata != null) {
+                existingMetadata.metadataValue = value
+            } else {
+                val newMetadata = DocumentSearchMetadata(
+                    document = this,
+                    metadataType = key,
+                    metadataValue = value
+                )
+                searchMetadata.add(newMetadata)
+            }
+        }
+        
+        // Mark document for reindexing
+        indexForSearch()
+    }
+    
+    // Helper methods
+    private fun titleToKeywords(): Set<String> {
+        return title.split(" ")
+            .filter { it.length > 3 }
+            .map { it.lowercase() }
+            .toSet()
+    }
+    
+    private fun getCustomFields(): Map<String, Any> {
+        // Document-specific custom fields
+        return emptyMap() // Override in subclasses
+    }
+}
+```

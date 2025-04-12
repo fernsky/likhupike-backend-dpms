@@ -1,0 +1,311 @@
+===== `Subscribable`
+Interface for entities that support subscription capabilities.
+
+[source,kotlin]
+----
+interface Subscribable {
+    fun getSubscribers(): Set<User>
+    fun addSubscriber(user: User, notificationType: NotificationType)
+    fun removeSubscriber(user: User)
+    fun notifySubscribers(eventType: String, data: Map<String, Any>)
+    fun isUserSubscribed(user: User): Boolean
+}
+----
+
+[cols="1,3", options="header"]
+|===
+| NotificationType    | Description
+| `ALL_CHANGES`       | Notify on all entity changes
+| `MAJOR_CHANGES`     | Notify only on significant changes
+| `STATUS_CHANGES`    | Notify only on status/state changes
+| `COMMENTS_ONLY`     | Notify only when comments are added
+| `APPROVALS_ONLY`    | Notify only for approval events
+| `MENTIONS`          | Notify only when user is mentioned
+| `DIGEST`            | Periodic digest of all changes
+|===
+
+====== Contextual Use Cases for Subscribable
+
+*Real-World Scenario:* Public Infrastructure Project Monitoring System
+
+[plantuml]
+----
+@startuml
+actor "Project Manager\n(Prakash Thapa)" as Manager
+actor "Elected Official\n(Sarita Sharma)" as Official
+actor "Local Resident\n(Ram Bahadur)" as Resident
+actor "Contractor\n(Bina Construction)" as Contractor
+participant "InfrastructureProject\nimplements Subscribable" as Project
+participant "SubscriptionService" as Subscription
+participant "NotificationService" as Notify
+participant "UserPreferenceService" as Preference
+
+Manager -> Project : createProject("Kalanki Underpass Construction")
+activate Project
+Project -> Project : initialize()
+Project -> Project : setStatus(PLANNING)
+Project -> Project : setBudget(NPR 350,000,000)
+Project -> Project : setLocation(Kalanki)
+Project -> Project : setStartDate(2023-07-01)
+Project -> Project : setEndDate(2024-06-30)
+Manager <-- Project : projectCreated
+deactivate Project
+
+Official -> Project : viewProject()
+activate Project
+Official <-- Project : projectDetails
+deactivate Project
+
+Official -> Project : subscribe()
+activate Project
+Project -> Subscription : addSubscriber(official, ALL_CHANGES)
+activate Subscription
+Subscription -> Subscription : validateSubscription()
+Subscription -> Subscription : createSubscription(project, official, ALL_CHANGES)
+Project <-- Subscription : subscriptionCreated
+deactivate Subscription
+Official <-- Project : subscriptionConfirmed
+deactivate Project
+
+Resident -> Project : discoverProject()
+activate Project
+Resident <-- Project : projectDetails
+deactivate Project
+
+Resident -> Project : subscribe(STATUS_CHANGES)
+activate Project
+Project -> Subscription : addSubscriber(resident, STATUS_CHANGES)
+activate Subscription
+Subscription -> Preference : getUserNotificationPreferences(resident)
+activate Preference
+Subscription <-- Preference : prefersSMS
+deactivate Preference
+Subscription -> Subscription : createSubscription(project, resident, STATUS_CHANGES, SMS)
+Project <-- Subscription : subscriptionCreated
+deactivate Subscription
+Resident <-- Project : subscriptionConfirmed
+deactivate Project
+
+Contractor -> Project : subscribe(COMMENTS_ONLY)
+activate Project
+Project -> Subscription : addSubscriber(contractor, COMMENTS_ONLY)
+activate Subscription
+Subscription -> Subscription : createSubscription(project, contractor, COMMENTS_ONLY)
+Project <-- Subscription : subscriptionCreated
+deactivate Subscription
+Contractor <-- Project : subscriptionConfirmed
+deactivate Project
+
+Manager -> Project : updateStatus(PROCUREMENT)
+activate Project
+Project -> Project : setStatus(PROCUREMENT)
+Project -> Subscription : getSubscribers(STATUS_CHANGES)
+activate Subscription
+Project <-- Subscription : statusChangeSubscribers
+deactivate Subscription
+Project -> Project : notifySubscribers("STATUS_CHANGED", statusData)
+activate Project
+Project -> Notify : sendNotifications(statusChangeSubscribers, statusData)
+activate Notify
+Notify -> Notify : formatForPreference(official, EMAIL)
+Notify -> Notify : formatForPreference(resident, SMS)
+Official <-- Notify : emailNotification
+Resident <-- Notify : smsNotification
+Project <-- Notify : notificationsSent
+deactivate Notify
+Project <-- Project : subscribersNotified
+deactivate Project
+Manager <-- Project : statusUpdated
+deactivate Project
+
+Manager -> Project : addComment("Tender documents ready for review")
+activate Project
+Project -> Project : storeComment(comment)
+Project -> Subscription : getSubscribers(COMMENTS_ONLY)
+activate Subscription
+Project <-- Subscription : commentSubscribers
+deactivate Subscription
+Project -> Project : notifySubscribers("COMMENT_ADDED", commentData)
+activate Project
+Project -> Notify : sendNotifications(commentSubscribers, commentData)
+activate Notify
+Notify -> Notify : formatForPreference(contractor, EMAIL)
+Contractor <-- Notify : emailNotification
+Project <-- Notify : notificationsSent
+deactivate Notify
+Project <-- Project : subscribersNotified
+deactivate Project
+Manager <-- Project : commentAdded
+deactivate Project
+
+Resident -> Project : unsubscribe()
+activate Project
+Project -> Subscription : removeSubscriber(resident)
+activate Subscription
+Subscription -> Subscription : markSubscriptionInactive(project, resident)
+Project <-- Subscription : subscriptionRemoved
+deactivate Subscription
+Resident <-- Project : unsubscribeConfirmed
+deactivate Project
+
+Manager -> Project : majorUpdate(updatedData)
+activate Project
+Project -> Project : updateProjectDetails(updatedData)
+Project -> Subscription : getSubscribers(ALL_CHANGES)
+activate Subscription
+Project <-- Subscription : allChangesSubscribers
+deactivate Subscription
+Project -> Project : notifySubscribers("MAJOR_UPDATE", majorUpdateData)
+activate Project
+Project -> Notify : sendNotifications(allChangesSubscribers, majorUpdateData)
+activate Notify
+Notify -> Notify : formatForPreference(official, EMAIL)
+Official <-- Notify : emailNotification
+Project <-- Notify : notificationsSent
+deactivate Notify
+Project <-- Project : subscribersNotified
+deactivate Project
+Manager <-- Project : updateCompleted
+deactivate Project
+
+Manager -> Project : generateSubscriberReport()
+activate Project
+Project -> Subscription : getAllSubscribers()
+activate Subscription
+Project <-- Subscription : allSubscribers
+deactivate Subscription
+Project -> Project : aggregateByNotificationType()
+Project -> Project : groupByUserType()
+Manager <-- Project : subscriberReport
+deactivate Project
+@enduml
+----
+
+*Implementation Details:*
+The Kathmandu Metropolitan City's Infrastructure Development Division uses the Subscribable interface to keep stakeholders informed about ongoing urban infrastructure projects. This implementation ensures transparency and enables targeted communications to different stakeholder groups.
+
+Project Manager Prakash Thapa creates a new infrastructure project for the Kalanki Underpass Construction, inputting critical details like the 350 million NPR budget, location, timeline, and initial PLANNING status. The system automatically makes Prakash a subscriber with ALL_CHANGES notifications.
+
+Ward 14 Elected Official Sarita Sharma discovers the project during a system review and subscribes to ALL_CHANGES, wanting to stay fully informed about this major project in her constituency. The system records her preference for email notifications based on her user profile settings.
+
+Local Resident Ram Bahadur, who lives near the construction site, subscribes only to STATUS_CHANGES notifications, as he's primarily concerned with knowing when construction phases will begin and end. Based on his profile preferences, he receives these updates via SMS to accommodate his limited internet access.
+
+The winning contractor, Bina Construction, subscribes to COMMENTS_ONLY notifications to stay informed of official communications and requirements posted on the project page. This selective approach prevents notification fatigue while ensuring they don't miss critical communication.
+
+When Prakash updates the project status from PLANNING to PROCUREMENT, the system automatically triggers notifications to subscribers of STATUS_CHANGES and ALL_CHANGES notification types. Each notification is formatted according to the recipient's preferred channel - email for Sarita and SMS for Ram.
+
+Later, when Prakash adds a comment about tender documents being ready for review, only Bina Construction receives a notification, as they're subscribed to COMMENTS_ONLY updates. This targeted approach ensures stakeholders receive only the information relevant to their needs.
+
+As Ram's interest in the project diminishes after moving to a different area, he unsubscribes from the project. The system marks his subscription as inactive but preserves the record for audit purposes.
+
+For reporting and accountability, Prakash can generate a subscriber report, showing aggregated statistics on how many people are subscribed to each notification type and how engagement has changed over time.
+
+The Subscribable implementation provides several benefits in this municipal infrastructure context:
+1. Transparency through stakeholder engagement and timely updates
+2. Reduced administrative burden through automated, targeted communications
+3. Flexibility in notification types and delivery channels
+4. Self-service subscription management for citizens
+5. Data for measuring public engagement with projects
+
+*Technical Implementation Example:*
+```kotlin
+class InfrastructureProject : BaseEntity(), Subscribable {
+    var name: String = ""
+    var description: String = ""
+    var location: Point? = null
+    var status: ProjectStatus = ProjectStatus.PLANNING
+    var budget: BigDecimal = BigDecimal.ZERO
+    var startDate: LocalDate? = null
+    var endDate: LocalDate? = null
+    
+    @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true)
+    private val subscriptions: MutableSet<Subscription> = mutableSetOf()
+    
+    // Implementation of Subscribable interface
+    override fun getSubscribers(): Set<User> {
+        return subscriptions
+            .filter { it.isActive }
+            .map { it.user }
+            .toSet()
+    }
+    
+    override fun addSubscriber(user: User, notificationType: NotificationType) {
+        val existingSubscription = subscriptions.find { it.user.id == user.id }
+        
+        if (existingSubscription != null) {
+            existingSubscription.notificationType = notificationType
+            existingSubscription.isActive = true
+            existingSubscription.lastModified = Instant.now()
+        } else {
+            val newSubscription = Subscription(
+                project = this,
+                user = user,
+                notificationType = notificationType,
+                subscribedAt = Instant.now(),
+                isActive = true
+            )
+            subscriptions.add(newSubscription)
+        }
+        
+        auditService.logSubscriptionEvent(
+            entityId = this.id,
+            entityType = "InfrastructureProject",
+            userId = user.id,
+            eventType = "SUBSCRIPTION_ADDED",
+            notificationType = notificationType
+        )
+    }
+    
+    override fun removeSubscriber(user: User) {
+        val subscription = subscriptions.find { it.user.id == user.id }
+        if (subscription != null) {
+            subscription.isActive = false
+            subscription.unsubscribedAt = Instant.now()
+            
+            auditService.logSubscriptionEvent(
+                entityId = this.id,
+                entityType = "InfrastructureProject",
+                userId = user.id,
+                eventType = "SUBSCRIPTION_REMOVED"
+            )
+        }
+    }
+    
+    override fun notifySubscribers(eventType: String, data: Map<String, Any>) {
+        val subscribers = when(eventType) {
+            "STATUS_CHANGED" -> getSubscribersForNotificationType(
+                NotificationType.STATUS_CHANGES, 
+                NotificationType.ALL_CHANGES
+            )
+            "COMMENT_ADDED" -> getSubscribersForNotificationType(
+                NotificationType.COMMENTS_ONLY, 
+                NotificationType.ALL_CHANGES
+            )
+            "MAJOR_UPDATE" -> getSubscribersForNotificationType(
+                NotificationType.MAJOR_CHANGES, 
+                NotificationType.ALL_CHANGES
+            )
+            else -> getSubscribersForNotificationType(NotificationType.ALL_CHANGES)
+        }
+        
+        val enrichedData = data + mapOf(
+            "projectName" to this.name,
+            "projectId" to this.id.toString(),
+            "eventTimestamp" to Instant.now().toString()
+        )
+        
+        notificationService.sendNotifications(subscribers, eventType, enrichedData)
+    }
+    
+    override fun isUserSubscribed(user: User): Boolean {
+        return subscriptions.any { it.user.id == user.id && it.isActive }
+    }
+    
+    private fun getSubscribersForNotificationType(vararg types: NotificationType): Set<User> {
+        return subscriptions
+            .filter { it.isActive && types.contains(it.notificationType) }
+            .map { it.user }
+            .toSet()
+    }
+}
+```

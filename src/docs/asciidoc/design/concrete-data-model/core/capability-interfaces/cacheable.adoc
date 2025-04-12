@@ -1,0 +1,882 @@
+===== `Cacheable`
+Interface for entities that can be cached to improve performance and reduce database load.
+
+[source,kotlin]
+----
+interface Cacheable {
+    fun getCacheKey(): String
+    fun getCacheTTL(): Duration
+    fun isCacheable(): Boolean
+    fun getCacheRegion(): String
+    fun getCacheDependencies(): List<CacheDependency>
+    fun getCacheVersion(): String
+    fun generateCacheContent(): Map<String, Any?>
+    fun restoreFromCacheContent(content: Map<String, Any?>)
+    fun invalidateCache()
+}
+----
+
+====== Contextual Use Cases for Cacheable
+
+*Real-World Scenario:* Digital Certificate Distribution in Remote Areas
+
+[plantuml]
+----
+@startuml
+actor "Citizen\n(Goma Tamang)" as Citizen
+actor "Mobile Agent\n(Pasang Sherpa)" as Agent
+participant "CitizenCertificate\nimplements Cacheable" as Certificate
+participant "CacheManager" as Cache
+participant "SyncService" as Sync
+participant "CentralServer" as Central
+participant "RemoteTablet" as Tablet
+
+Citizen -> Agent : Request birth certificate
+Agent -> Tablet : searchCitizen("Goma Tamang")
+activate Tablet
+Tablet -> Cache : getCertificate(citizenId)
+activate Cache
+Cache -> Cache : lookupLocalCache(key)
+alt Cache hit
+    Tablet <-- Cache : cachedCertificate
+else Cache miss
+    Cache -> Sync : isOnline()
+    activate Sync
+    Cache <-- Sync : online = false
+    deactivate Sync
+    
+    Cache -> Certificate : generateCacheContent()
+    activate Certificate
+    Certificate -> Certificate : prepareCertificateData()
+    Cache <-- Certificate : certificateData
+    deactivate Certificate
+    
+    Cache -> Cache : storeInCache(key, certificateData)
+    Cache -> Cache : setExpirationTime(getTTL())
+    Tablet <-- Cache : certificateFromOfflineCache
+end
+deactivate Cache
+
+Agent <-- Tablet : citizenDetails
+deactivate Tablet
+
+Agent -> Tablet : generateCertificate(citizenId)
+activate Tablet
+Tablet -> Certificate : generatePDF()
+activate Certificate
+Certificate -> Certificate : applyTemplateWithQRCode()
+Certificate -> Certificate : addValidationInstructions()
+Certificate -> Certificate : generateVerificationCode()
+Tablet <-- Certificate : certificatePDF
+deactivate Certificate
+Agent <-- Tablet : displayCertificate
+deactivate Tablet
+
+Agent -> Tablet : printCertificate()
+activate Tablet
+Tablet -> Tablet : checkPrinterConnection()
+Agent <-- Tablet : certificatePrinted
+deactivate Tablet
+
+Agent -> Citizen : Provide printed certificate
+
+== Later, when online ==
+
+Tablet -> Sync : synchronize()
+activate Sync
+Sync -> Central : uploadIssuedCertificates()
+activate Central
+Central -> Central : verifyAndStore()
+Sync <-- Central : syncConfirmation
+deactivate Central
+
+Sync -> Certificate : invalidateCache()
+activate Certificate
+Certificate -> Cache : evictFromCache(key)
+Certificate <-- Cache : cacheEvicted
+Sync <-- Certificate : cacheInvalidated
+deactivate Certificate
+deactivate Sync
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Civil Registration and Vital Statistics (CRVS) system employs the Cacheable interface to enable mobile civil registration agents to issue official certificates in remote mountainous regions with limited or no internet connectivity. CitizenCertificate entities implement this interface to allow offline certificate generation and subsequent synchronization with central government databases.
+
+Mobile Registration Agent Pasang Sherpa travels to Rolpa district's remote villages, which are often disconnected from reliable internet for weeks. Using a government-issued tablet with the offline-capable CRVS application, Pasang can generate and print legally valid birth certificates, marriage certificates, and other vital documents without requiring real-time connection to the central database.
+
+When citizen Goma Tamang requests a birth certificate for her child, Pasang searches for her record on the tablet. The CacheManager checks if her information is available in the local cache. For citizens whose data was previously synchronized to the tablet, this provides instant access to their records even without connectivity. The CitizenCertificate entity implements getCacheTTL() to ensure cached records expire after 30 days for security reasons, requiring re-synchronization when internet becomes available.
+
+The getCacheKey() method generates a unique key combining the certificate type and citizen identifier, enabling efficient storage and retrieval from the cache. The isCacheable() method ensures that only approved certificate types (birth, death, marriage) can be cached locally, while more sensitive documents require online verification.
+
+When Pasang generates the certificate, the Certificate entity's generateCacheContent() method creates a serializable representation of all certificate data, including citizen information, certificate type, issuance details, and a unique verification code. The system adds a QR code and specific validation instructions on the printed certificate, enabling later verification of its authenticity even when issued offline.
+
+The getCacheDependencies() method identifies related entities that should be invalidated if this certificate is updated, ensuring data consistency. For example, when a birth certificate is modified, any dependent school enrollment certificates would also be marked for refreshing.
+
+When Pasang returns to the district headquarters where internet is available, the SyncService uploads all offline-issued certificates to the central server. After successful synchronization, invalidateCache() is called to clear offline data that has been successfully transferred, maintaining data protection standards while enabling offline service delivery.
+
+This Cacheable implementation provides several critical benefits in Nepal's context:
+1. Enables vital government services in remote areas with limited connectivity
+2. Ensures legal validity of documents issued offline through secure verification mechanisms
+3. Optimizes limited device storage through TTL-based expiration of cached data
+4. Maintains data consistency between offline and central systems
+5. Follows data protection practices by limiting caching of sensitive information
+6. Provides resilience against network disruptions during monsoon season when landslides frequently cut off connectivity
+
+*Technical Implementation Example:*
+```kotlin
+@Entity
+@Table(name = "citizen_certificates")
+class CitizenCertificate : BaseEntity(), Cacheable {
+    @Column(name = "certificate_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    var certificateType: CertificateType = CertificateType.BIRTH
+    
+    @Column(name = "certificate_number", nullable = false, unique = true)
+    var certificateNumber: String = ""
+    
+    @Column(name = "citizen_id", nullable = false)
+    var citizenId: UUID? = null
+    
+    @Column(name = "issuance_date", nullable = false)
+    var issuanceDate: LocalDate = LocalDate.now()
+    
+    @Column(name = "issued_by", nullable = false)
+    var issuedBy: UUID? = null
+    
+    @Column(name = "issued_at_municipality_id")
+    var issuedAtMunicipalityId: UUID? = null
+    
+    @Column(name = "issued_at_ward_number")
+    var issuedAtWardNumber: Int? = null
+    
+    @Column(name = "verification_code", nullable = false)
+    var verificationCode: String = ""
+    
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    var status: CertificateStatus = CertificateStatus.ISSUED
+    
+    @Column(name = "revocation_reason")
+    var revocationReason: String? = null
+    
+    @Column(name = "revocation_date")
+    var revocationDate: LocalDate? = null
+    
+    @Column(name = "is_replacement")
+    var isReplacement: Boolean = false
+    
+    @Column(name = "replaced_certificate_id")
+    var replacedCertificateId: UUID? = null
+    
+    @Column(name = "data_hash", nullable = false)
+    var dataHash: String = ""
+    
+    @Column(name = "issued_offline")
+    var issuedOffline: Boolean = false
+    
+    @Column(name = "synchronized_date")
+    var synchronizedDate: LocalDateTime? = null
+    
+    @ElementCollection
+    @CollectionTable(
+        name = "certificate_metadata",
+        joinColumns = [JoinColumn(name = "certificate_id")]
+    )
+    @MapKeyColumn(name = "key")
+    @Column(name = "value")
+    var metadata: MutableMap<String, String> = mutableMapOf()
+    
+    // Additional certificate content fields
+    @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @JoinColumn(name = "birth_certificate_data_id")
+    var birthCertificateData: BirthCertificateData? = null
+    
+    @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @JoinColumn(name = "death_certificate_data_id")
+    var deathCertificateData: DeathCertificateData? = null
+    
+    @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @JoinColumn(name = "marriage_certificate_data_id")
+    var marriageCertificateData: MarriageCertificateData? = null
+    
+    // Cacheable implementation
+    override fun getCacheKey(): String {
+        return "certificate:${certificateType}:${id ?: "new"}"
+    }
+    
+    override fun getCacheTTL(): Duration {
+        // Certificates can be cached for 30 days in offline mode
+        return Duration.ofDays(30)
+    }
+    
+    override fun isCacheable(): Boolean {
+        // We only allow caching for certain certificate types
+        // and only for issued certificates that haven't been revoked
+        return certificateType in CACHEABLE_CERTIFICATE_TYPES &&
+               status == CertificateStatus.ISSUED &&
+               revocationDate == null
+    }
+    
+    override fun getCacheRegion(): String {
+        return "certificates"
+    }
+    
+    override fun getCacheDependencies(): List<CacheDependency> {
+        val dependencies = mutableListOf<CacheDependency>()
+        
+        // The citizen record is a dependency
+        citizenId?.let {
+            dependencies.add(
+                CacheDependency(
+                    entityType = "Citizen",
+                    entityId = it.toString()
+                )
+            )
+        }
+        
+        // For marriage certificates, both spouses are dependencies
+        if (certificateType == CertificateType.MARRIAGE) {
+            marriageCertificateData?.let { data ->
+                data.spouse1CitizenId?.let {
+                    dependencies.add(
+                        CacheDependency(
+                            entityType = "Citizen",
+                            entityId = it.toString()
+                        )
+                    )
+                }
+                
+                data.spouse2CitizenId?.let {
+                    dependencies.add(
+                        CacheDependency(
+                            entityType = "Citizen",
+                            entityId = it.toString()
+                        )
+                    )
+                }
+            }
+        }
+        
+        // For birth certificates, parents are dependencies
+        if (certificateType == CertificateType.BIRTH) {
+            birthCertificateData?.let { data ->
+                data.motherCitizenId?.let {
+                    dependencies.add(
+                        CacheDependency(
+                            entityType = "Citizen",
+                            entityId = it.toString()
+                        )
+                    )
+                }
+                
+                data.fatherCitizenId?.let {
+                    dependencies.add(
+                        CacheDependency(
+                            entityType = "Citizen",
+                            entityId = it.toString()
+                        )
+                    )
+                }
+            }
+        }
+        
+        return dependencies
+    }
+    
+    override fun getCacheVersion(): String {
+        // We use a hash of the certificate content as the version
+        // so if any field changes, the cache is effectively invalidated
+        return dataHash
+    }
+    
+    override fun generateCacheContent(): Map<String, Any?> {
+        val content = mutableMapOf<String, Any?>()
+        
+        // Basic certificate information
+        content["id"] = id.toString()
+        content["certificateType"] = certificateType.name
+        content["certificateNumber"] = certificateNumber
+        content["citizenId"] = citizenId.toString()
+        content["issuanceDate"] = issuanceDate.toString()
+        content["issuedBy"] = issuedBy.toString()
+        content["issuedAtMunicipalityId"] = issuedAtMunicipalityId?.toString()
+        content["issuedAtWardNumber"] = issuedAtWardNumber
+        content["verificationCode"] = verificationCode
+        content["status"] = status.name
+        content["issuedOffline"] = issuedOffline
+        content["metadata"] = metadata
+        
+        // Certificate-specific content
+        when (certificateType) {
+            CertificateType.BIRTH -> {
+                birthCertificateData?.let { data ->
+                    content["birthData"] = mapOf(
+                        "childName" to data.childName,
+                        "dateOfBirth" to data.dateOfBirth.toString(),
+                        "placeOfBirth" to data.placeOfBirth,
+                        "gender" to data.gender.name,
+                        "motherName" to data.motherName,
+                        "motherCitizenId" to data.motherCitizenId?.toString(),
+                        "fatherName" to data.fatherName,
+                        "fatherCitizenId" to data.fatherCitizenId?.toString(),
+                        "birthRegistrationNumber" to data.birthRegistrationNumber,
+                        "birthRegistrationDate" to data.birthRegistrationDate?.toString()
+                    )
+                }
+            }
+            CertificateType.DEATH -> {
+                deathCertificateData?.let { data ->
+                    content["deathData"] = mapOf(
+                        "deceasedName" to data.deceasedName,
+                        "dateOfDeath" to data.dateOfDeath.toString(),
+                        "placeOfDeath" to data.placeOfDeath,
+                        "causeOfDeath" to data.causeOfDeath,
+                        "informantName" to data.informantName,
+                        "informantRelationship" to data.informantRelationship,
+                        "deathRegistrationNumber" to data.deathRegistrationNumber,
+                        "deathRegistrationDate" to data.deathRegistrationDate?.toString()
+                    )
+                }
+            }
+            CertificateType.MARRIAGE -> {
+                marriageCertificateData?.let { data ->
+                    content["marriageData"] = mapOf(
+                        "spouse1Name" to data.spouse1Name,
+                        "spouse1CitizenId" to data.spouse1CitizenId?.toString(),
+                        "spouse2Name" to data.spouse2Name,
+                        "spouse2CitizenId" to data.spouse2CitizenId?.toString(),
+                        "marriageDate" to data.marriageDate.toString(),
+                        "marriagePlace" to data.marriagePlace,
+                        "marriageType" to data.marriageType.name,
+                        "witness1Name" to data.witness1Name,
+                        "witness2Name" to data.witness2Name,
+                        "marriageRegistrationNumber" to data.marriageRegistrationNumber,
+                        "marriageRegistrationDate" to data.marriageRegistrationDate?.toString()
+                    )
+                }
+            }
+            else -> {
+                // Other certificate types handle their specific data here
+            }
+        }
+        
+        return content
+    }
+    
+    override fun restoreFromCacheContent(content: Map<String, Any?>): Unit {
+        // Basic certificate information
+        content["certificateType"]?.let {
+            certificateType = CertificateType.valueOf(it.toString())
+        }
+        
+        content["certificateNumber"]?.let {
+            certificateNumber = it.toString()
+        }
+        
+        content["citizenId"]?.let {
+            citizenId = UUID.fromString(it.toString())
+        }
+        
+        content["issuanceDate"]?.let {
+            issuanceDate = LocalDate.parse(it.toString())
+        }
+        
+        content["issuedBy"]?.let {
+            issuedBy = UUID.fromString(it.toString())
+        }
+        
+        content["issuedAtMunicipalityId"]?.let {
+            issuedAtMunicipalityId = UUID.fromString(it.toString())
+        }
+        
+        content["issuedAtWardNumber"]?.let {
+            issuedAtWardNumber = (it as? Number)?.toInt()
+        }
+        
+        content["verificationCode"]?.let {
+            verificationCode = it.toString()
+        }
+        
+        content["status"]?.let {
+            status = CertificateStatus.valueOf(it.toString())
+        }
+        
+        content["issuedOffline"]?.let {
+            issuedOffline = it as Boolean
+        }
+        
+        @Suppress("UNCHECKED_CAST")
+        content["metadata"]?.let {
+            metadata = (it as Map<String, String>).toMutableMap()
+        }
+        
+        // Certificate-specific content
+        when (certificateType) {
+            CertificateType.BIRTH -> {
+                @Suppress("UNCHECKED_CAST")
+                (content["birthData"] as? Map<String, Any?>)?.let { birthData ->
+                    // Create BirthCertificateData if null
+                    if (birthCertificateData == null) {
+                        birthCertificateData = BirthCertificateData()
+                    }
+                    
+                    birthCertificateData?.let { data ->
+                        birthData["childName"]?.let { data.childName = it.toString() }
+                        birthData["dateOfBirth"]?.let { data.dateOfBirth = LocalDate.parse(it.toString()) }
+                        birthData["placeOfBirth"]?.let { data.placeOfBirth = it.toString() }
+                        birthData["gender"]?.let { data.gender = Gender.valueOf(it.toString()) }
+                        birthData["motherName"]?.let { data.motherName = it.toString() }
+                        birthData["motherCitizenId"]?.let { data.motherCitizenId = UUID.fromString(it.toString()) }
+                        birthData["fatherName"]?.let { data.fatherName = it.toString() }
+                        birthData["fatherCitizenId"]?.let { data.fatherCitizenId = UUID.fromString(it.toString()) }
+                        birthData["birthRegistrationNumber"]?.let { data.birthRegistrationNumber = it.toString() }
+                        birthData["birthRegistrationDate"]?.let { 
+                            data.birthRegistrationDate = LocalDate.parse(it.toString()) 
+                        }
+                    }
+                }
+            }
+            CertificateType.DEATH -> {
+                @Suppress("UNCHECKED_CAST")
+                (content["deathData"] as? Map<String, Any?>)?.let { deathData ->
+                    // Create DeathCertificateData if null
+                    if (deathCertificateData == null) {
+                        deathCertificateData = DeathCertificateData()
+                    }
+                    
+                    deathCertificateData?.let { data ->
+                        deathData["deceasedName"]?.let { data.deceasedName = it.toString() }
+                        deathData["dateOfDeath"]?.let { data.dateOfDeath = LocalDate.parse(it.toString()) }
+                        deathData["placeOfDeath"]?.let { data.placeOfDeath = it.toString() }
+                        deathData["causeOfDeath"]?.let { data.causeOfDeath = it.toString() }
+                        deathData["informantName"]?.let { data.informantName = it.toString() }
+                        deathData["informantRelationship"]?.let { data.informantRelationship = it.toString() }
+                        deathData["deathRegistrationNumber"]?.let { data.deathRegistrationNumber = it.toString() }
+                        deathData["deathRegistrationDate"]?.let { 
+                            data.deathRegistrationDate = LocalDate.parse(it.toString()) 
+                        }
+                    }
+                }
+            }
+            CertificateType.MARRIAGE -> {
+                @Suppress("UNCHECKED_CAST")
+                (content["marriageData"] as? Map<String, Any?>)?.let { marriageData ->
+                    // Create MarriageCertificateData if null
+                    if (marriageCertificateData == null) {
+                        marriageCertificateData = MarriageCertificateData()
+                    }
+                    
+                    marriageCertificateData?.let { data ->
+                        marriageData["spouse1Name"]?.let { data.spouse1Name = it.toString() }
+                        marriageData["spouse1CitizenId"]?.let { 
+                            data.spouse1CitizenId = UUID.fromString(it.toString()) 
+                        }
+                        marriageData["spouse2Name"]?.let { data.spouse2Name = it.toString() }
+                        marriageData["spouse2CitizenId"]?.let { 
+                            data.spouse2CitizenId = UUID.fromString(it.toString()) 
+                        }
+                        marriageData["marriageDate"]?.let { data.marriageDate = LocalDate.parse(it.toString()) }
+                        marriageData["marriagePlace"]?.let { data.marriagePlace = it.toString() }
+                        marriageData["marriageType"]?.let { data.marriageType = MarriageType.valueOf(it.toString()) }
+                        marriageData["witness1Name"]?.let { data.witness1Name = it.toString() }
+                        marriageData["witness2Name"]?.let { data.witness2Name = it.toString() }
+                        marriageData["marriageRegistrationNumber"]?.let { 
+                            data.marriageRegistrationNumber = it.toString() 
+                        }
+                        marriageData["marriageRegistrationDate"]?.let { 
+                            data.marriageRegistrationDate = LocalDate.parse(it.toString()) 
+                        }
+                    }
+                }
+            }
+            else -> {
+                // Handle other certificate types
+            }
+        }
+        
+        // Recalculate data hash
+        updateDataHash()
+    }
+    
+    override fun invalidateCache() {
+        val cacheKey = getCacheKey()
+        cacheManager.evict("certificates", cacheKey)
+        
+        // Also invalidate any dependencies that should be updated together
+        getCacheDependencies().forEach { dependency ->
+            cacheManager.evict(dependency.entityType.lowercase(), dependency.entityId)
+        }
+        
+        // Log cache invalidation for audit
+        logger.debug("Invalidated cache for certificate: $cacheKey")
+    }
+    
+    // Helper methods
+    private fun updateDataHash() {
+        val content = generateCacheContent()
+        val jsonContent = objectMapper.writeValueAsString(content)
+        dataHash = DigestUtils.sha256Hex(jsonContent)
+    }
+    
+    fun generatePDF(): ByteArray {
+        // Generate certificate PDF using template
+        val template = when (certificateType) {
+            CertificateType.BIRTH -> templateService.getBirthCertificateTemplate()
+            CertificateType.DEATH -> templateService.getDeathCertificateTemplate()
+            CertificateType.MARRIAGE -> templateService.getMarriageCertificateTemplate()
+            else -> templateService.getDefaultTemplate()
+        }
+        
+        // Create context with certificate data
+        val context = mutableMapOf<String, Any>()
+        context["certificate"] = this
+        
+        when (certificateType) {
+            CertificateType.BIRTH -> context["birthData"] = birthCertificateData
+            CertificateType.DEATH -> context["deathData"] = deathCertificateData
+            CertificateType.MARRIAGE -> context["marriageData"] = marriageCertificateData
+            else -> {}
+        }
+        
+        // Add verification QR code
+        val verificationUrl = "https://verify.gov.np/certificate/${verificationCode}"
+        val qrCode = qrCodeService.generateQRCode(verificationUrl)
+        context["qrCode"] = qrCode
+        
+        // Add watermark for offline-issued certificates
+        if (issuedOffline) {
+            context["watermark"] = "ISSUED OFFLINE - VERIFY WITH VERIFICATION CODE"
+        }
+        
+        // Generate PDF from template
+        return pdfGenerationService.generateFromTemplate(template, context)
+    }
+    
+    companion object {
+        private val CACHEABLE_CERTIFICATE_TYPES = setOf(
+            CertificateType.BIRTH,
+            CertificateType.DEATH,
+            CertificateType.MARRIAGE,
+            CertificateType.RELATIONSHIP,
+            CertificateType.MIGRATION
+        )
+    }
+}
+
+// Supporting classes
+data class CacheDependency(
+    val entityType: String,
+    val entityId: String
+)
+
+enum class CertificateType {
+    BIRTH,
+    DEATH,
+    MARRIAGE,
+    RELATIONSHIP,
+    MIGRATION,
+    PROPERTY,
+    BUSINESS,
+    EDUCATION,
+    EMPLOYMENT,
+    CUSTOM
+}
+
+enum class CertificateStatus {
+    DRAFT,
+    ISSUED,
+    REVOKED,
+    EXPIRED,
+    REPLACED
+}
+
+enum class Gender {
+    MALE,
+    FEMALE,
+    OTHER
+}
+
+enum class MarriageType {
+    ARRANGED,
+    COURT,
+    RELIGIOUS,
+    LOVE
+}
+
+class BirthCertificateData {
+    var childName: String = ""
+    var dateOfBirth: LocalDate = LocalDate.now()
+    var placeOfBirth: String = ""
+    var gender: Gender = Gender.MALE
+    var motherName: String = ""
+    var motherCitizenId: UUID? = null
+    var fatherName: String = ""
+    var fatherCitizenId: UUID? = null
+    var birthRegistrationNumber: String = ""
+    var birthRegistrationDate: LocalDate? = null
+}
+
+class DeathCertificateData {
+    var deceasedName: String = ""
+    var dateOfDeath: LocalDate = LocalDate.now()
+    var placeOfDeath: String = ""
+    var causeOfDeath: String = ""
+    var informantName: String = ""
+    var informantRelationship: String = ""
+    var deathRegistrationNumber: String = ""
+    var deathRegistrationDate: LocalDate? = null
+}
+
+class MarriageCertificateData {
+    var spouse1Name: String = ""
+    var spouse1CitizenId: UUID? = null
+    var spouse2Name: String = ""
+    var spouse2CitizenId: UUID? = null
+    var marriageDate: LocalDate = LocalDate.now()
+    var marriagePlace: String = ""
+    var marriageType: MarriageType = MarriageType.COURT
+    var witness1Name: String = ""
+    var witness2Name: String = ""
+    var marriageRegistrationNumber: String = ""
+    var marriageRegistrationDate: LocalDate? = null
+}
+
+// Cache Manager Service Implementation
+@Service
+class CacheManager {
+    private val cache = ConcurrentHashMap<String, CacheEntry>()
+    
+    fun get(region: String, key: String): Any? {
+        val cacheKey = "${region}:${key}"
+        val entry = cache[cacheKey] ?: return null
+        
+        // Check if entry has expired
+        if (entry.expirationTime != null && entry.expirationTime.isBefore(LocalDateTime.now())) {
+            cache.remove(cacheKey)
+            return null
+        }
+        
+        return entry.content
+    }
+    
+    fun put(region: String, key: String, value: Any, ttl: Duration?) {
+        val cacheKey = "${region}:${key}"
+        val expirationTime = ttl?.let { LocalDateTime.now().plus(it) }
+        
+        cache[cacheKey] = CacheEntry(
+            content = value,
+            creationTime = LocalDateTime.now(),
+            expirationTime = expirationTime,
+            version = UUID.randomUUID().toString()
+        )
+    }
+    
+    fun evict(region: String, key: String) {
+        val cacheKey = "${region}:${key}"
+        cache.remove(cacheKey)
+    }
+    
+    fun evictRegion(region: String) {
+        val keysToRemove = cache.keys.filter { it.startsWith("${region}:") }
+        keysToRemove.forEach { cache.remove(it) }
+    }
+    
+    fun clear() {
+        cache.clear()
+    }
+    
+    private data class CacheEntry(
+        val content: Any,
+        val creationTime: LocalDateTime,
+        val expirationTime: LocalDateTime?,
+        val version: String
+    )
+}
+
+// Application Service to use Cacheable
+@Service
+class CitizenCertificateService {
+    @Autowired
+    private lateinit var certificateRepository: CitizenCertificateRepository
+    
+    @Autowired
+    private lateinit var cacheManager: CacheManager
+    
+    @Autowired
+    private lateinit var syncStatusService: SyncStatusService
+    
+    fun getCertificate(id: UUID): CitizenCertificate? {
+        // First check the cache
+        val cachedCertificate = cacheManager.get("certificates", "certificate:*:$id") as? CitizenCertificate
+        if (cachedCertificate != null) {
+            return cachedCertificate
+        }
+        
+        // If not in cache, check if we're online or offline
+        if (syncStatusService.isOnline()) {
+            // Online mode - fetch from database
+            val certificate = certificateRepository.findById(id).orElse(null)
+            
+            // If found and cacheable, store in cache
+            if (certificate != null && certificate.isCacheable()) {
+                cacheManager.put(
+                    region = certificate.getCacheRegion(),
+                    key = certificate.getCacheKey(),
+                    value = certificate,
+                    ttl = certificate.getCacheTTL()
+                )
+            }
+            
+            return certificate
+        } else {
+            // Offline mode - certificate not available
+            return null
+        }
+    }
+    
+    fun issueCertificate(certificate: CitizenCertificate): CitizenCertificate {
+        // Check if we're online or offline
+        if (syncStatusService.isOnline()) {
+            // Online mode - save directly to database
+            val savedCertificate = certificateRepository.save(certificate)
+            
+            if (savedCertificate.isCacheable()) {
+                // Store in cache
+                cacheManager.put(
+                    region = savedCertificate.getCacheRegion(),
+                    key = savedCertificate.getCacheKey(),
+                    value = savedCertificate,
+                    ttl = savedCertificate.getCacheTTL()
+                )
+            }
+            
+            return savedCertificate
+        } else {
+            // Offline mode - store locally only
+            certificate.issuedOffline = true
+            
+            // Generate a temporary ID
+            if (certificate.id == null) {
+                certificate.id = UUID.randomUUID()
+            }
+            
+            // Store certificate in local offline queue
+            offlineQueueService.queue(OfflineOperation(
+                operationType = OperationType.CREATE,
+                entityType = "CitizenCertificate",
+                entityId = certificate.id.toString(),
+                entityData = certificate.generateCacheContent()
+            ))
+            
+            // Cache the certificate
+            if (certificate.isCacheable()) {
+                cacheManager.put(
+                    region = certificate.getCacheRegion(),
+                    key = certificate.getCacheKey(),
+                    value = certificate,
+                    ttl = certificate.getCacheTTL()
+                )
+            }
+            
+            return certificate
+        }
+    }
+    
+    fun generateAndPrintCertificate(citizenId: UUID, certificateType: CertificateType): ByteArray {
+        val citizen = getCitizen(citizenId) ?: throw EntityNotFoundException("Citizen not found")
+        
+        // Create new certificate
+        val certificate = CitizenCertificate()
+        certificate.citizenId = citizenId
+        certificate.certificateType = certificateType
+        certificate.verificationCode = generateVerificationCode()
+        certificate.issuedBy = SecurityContext.getCurrentUser()?.id
+        certificate.issuedAtMunicipalityId = SecurityContext.getCurrentUser()?.municipalityId
+        certificate.issuedAtWardNumber = SecurityContext.getCurrentUser()?.wardNumber
+        
+        // Populate certificate type-specific data
+        when (certificateType) {
+            CertificateType.BIRTH -> populateBirthCertificateData(certificate, citizen)
+            CertificateType.DEATH -> populateDeathCertificateData(certificate, citizen)
+            CertificateType.MARRIAGE -> populateMarriageCertificateData(certificate, citizen)
+            else -> throw UnsupportedOperationException("Certificate type not supported: $certificateType")
+        }
+        
+        // Save certificate
+        val savedCertificate = issueCertificate(certificate)
+        
+        // Generate PDF
+        return savedCertificate.generatePDF()
+    }
+    
+    private fun generateVerificationCode(): String {
+        val chars = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+        return (1..10).map { chars.random() }.joinToString("")
+    }
+    
+    private fun getCitizen(id: UUID): Citizen? {
+        // Check cache first
+        val cachedCitizen = cacheManager.get("citizens", "citizen:$id") as? Citizen
+        if (cachedCitizen != null) {
+            return cachedCitizen
+        }
+        
+        // If not in cache and we're online, fetch from database
+        if (syncStatusService.isOnline()) {
+            return citizenRepository.findById(id).orElse(null)
+        }
+        
+        // Offline and not cached - not available
+        return null
+    }
+    
+    private fun populateBirthCertificateData(certificate: CitizenCertificate, citizen: Citizen) {
+        // Create birth certificate data
+        val birthData = BirthCertificateData()
+        
+        // Populate from citizen data
+        birthData.childName = citizen.fullName
+        birthData.dateOfBirth = citizen.dateOfBirth ?: LocalDate.now()
+        birthData.placeOfBirth = citizen.placeOfBirth ?: "Unknown"
+        birthData.gender = citizen.gender
+        
+        // Try to find parent information
+        citizen.parentRelations?.forEach { relation ->
+            when (relation.relationType) {
+                RelationType.MOTHER -> {
+                    birthData.motherName = relation.relatedPersonName ?: "Unknown"
+                    birthData.motherCitizenId = relation.relatedPersonId
+                }
+                RelationType.FATHER -> {
+                    birthData.fatherName = relation.relatedPersonName ?: "Unknown"
+                    birthData.fatherCitizenId = relation.relatedPersonId
+                }
+                else -> {}
+            }
+        }
+        
+        // Generate registration number
+        birthData.birthRegistrationNumber = generateRegistrationNumber("BIRTH")
+        birthData.birthRegistrationDate = LocalDate.now()
+        
+        certificate.birthCertificateData = birthData
+    }
+    
+    private fun populateDeathCertificateData(certificate: CitizenCertificate, citizen: Citizen) {
+        // Implementation details omitted for brevity
+    }
+    
+    private fun populateMarriageCertificateData(certificate: CitizenCertificate, citizen: Citizen) {
+        // Implementation details omitted for brevity
+    }
+    
+    private fun generateRegistrationNumber(prefix: String): String {
+        val office = SecurityContext.getCurrentUser()?.municipalityId?.toString()?.substring(0, 6) ?: "UNKNOWN"
+        val year = Year.now().value
+        val sequence = sequenceGenerator.nextValue("${prefix}_${office}_${year}")
+        
+        return "${prefix}-${office}-${year}-${sequence.toString().padStart(6, '0')}"
+    }
+}
+```

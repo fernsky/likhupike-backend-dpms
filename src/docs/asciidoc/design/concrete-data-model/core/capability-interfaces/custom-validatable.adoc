@@ -1,0 +1,359 @@
+===== `CustomValidatable`
+Interface for entities with complex business rule validations.
+
+[source,kotlin]
+----
+interface CustomValidatable {
+    fun validate(): ValidationResult
+    fun getValidationRules(): List<ValidationRule>
+    fun addValidationRule(rule: ValidationRule)
+    fun removeValidationRule(ruleId: String)
+    fun getValidationHistory(): List<ValidationEvent>
+    fun validateField(fieldName: String, value: Any?): FieldValidationResult
+    fun runCustomValidation(validationId: String, context: Map<String, Any>): ValidationResult
+    fun getActiveValidators(): List<Validator>
+}
+----
+
+====== Contextual Use Cases for CustomValidatable
+
+*Real-World Scenario:* Business Loan Application System
+
+[plantuml]
+----
+@startuml
+actor "Loan Applicant\n(Krishna Tamang)" as Applicant
+actor "Loan Officer\n(Ratna Shakya)" as Officer
+actor "Bank Compliance\nManager" as Compliance
+participant "LoanApplication\nimplements CustomValidatable" as Application
+participant "ValidationService" as Validator
+participant "RuleEngine" as Rules
+participant "BusinessLogicService" as Logic
+
+Applicant -> Application : createLoanApplication()
+activate Application
+Application -> Application : initializeApplication()
+Application -> Rules : loadDefaultValidationRules()
+activate Rules
+Application <-- Rules : standardRules
+deactivate Rules
+Applicant <-- Application : applicationCreated
+deactivate Application
+
+Compliance -> Application : addCustomRule(newRule)
+activate Application
+Application -> Rules : validateRuleDefinition(rule)
+activate Rules
+Application <-- Rules : validationPassed
+deactivate Rules
+Application -> Application : validationRules.add(rule)
+Compliance <-- Application : ruleAdded
+deactivate Application
+
+Applicant -> Application : setBusinessType("Restaurant")
+activate Application
+Application -> Application : updateField("businessType", "Restaurant")
+Application -> Application : validateField("businessType", "Restaurant")
+activate Application
+Application -> Rules : findRulesForField("businessType")
+activate Rules
+Application <-- Rules : applicableRules
+deactivate Rules
+Application -> Rules : evaluateRules(applicableRules, "Restaurant")
+activate Rules
+Application <-- Rules : fieldValidation
+deactivate Rules
+Application <-- Application : valid
+deactivate Application
+Applicant <-- Application : fieldUpdated
+deactivate Application
+
+Applicant -> Application : setLoanAmount(5000000)
+activate Application
+Application -> Application : updateField("loanAmount", 5000000)
+Application -> Application : validateField("loanAmount", 5000000)
+activate Application
+Application -> Rules : findRulesForField("loanAmount")
+activate Rules
+Application <-- Rules : amountRules
+deactivate Rules
+Application -> Rules : evaluateRules(amountRules, 5000000)
+activate Rules
+Application <-- Rules : fieldValidation(FAILED)
+deactivate Rules
+Application <-- Application : {"valid": false, "errors": ["Amount exceeds maximum for business type"]}
+deactivate Application
+Applicant <-- Application : validationError
+deactivate Application
+
+Applicant -> Application : setLoanAmount(2000000)
+activate Application
+Application -> Application : updateField("loanAmount", 2000000)
+Application -> Application : validateField("loanAmount", 2000000)
+activate Application
+Application -> Rules : evaluateRules(amountRules, 2000000)
+activate Rules
+Application <-- Rules : fieldValidation(PASSED)
+deactivate Rules
+Application <-- Application : valid
+deactivate Application
+Applicant <-- Application : fieldUpdated
+deactivate Application
+
+Applicant -> Application : submitApplication()
+activate Application
+Application -> Application : validate()
+activate Application
+Application -> Rules : getActiveRules(applicationId)
+activate Rules
+Application <-- Rules : allActiveRules
+deactivate Rules
+
+loop for each validation rule
+  Application -> Rules : evaluateRule(rule, applicationData)
+  activate Rules
+  Application <-- Rules : ruleResult
+  deactivate Rules
+  
+  alt Rule Failed
+    Application -> Application : addValidationError(ruleResult.error)
+  end
+end
+
+Application -> Rules : evaluateCrossfieldRules(applicationData)
+activate Rules
+Rules -> Rules : checkBusinessIncomeVsLoanAmount()
+Rules -> Rules : checkDocumentConsistency()
+Application <-- Rules : crossfieldValidation
+deactivate Rules
+
+Application -> Logic : runCustomBusinessValidations()
+activate Logic
+Logic -> Logic : validateIndustryRiskLevel()
+Logic -> Logic : validateCollateralValue()
+Application <-- Logic : businessLogicValidation
+deactivate Logic
+
+alt Any Validation Error
+  Application <-- Application : {"valid": false, "errors": [...]}
+else All Validations Passed
+  Application <-- Application : {"valid": true}
+end
+deactivate Application
+
+alt Validation Failed
+  Applicant <-- Application : validationErrors
+else Validation Passed
+  Application -> Application : markSubmitted()
+  Applicant <-- Application : submissionConfirmed
+end
+deactivate Application
+
+Officer -> Application : reviewApplication()
+activate Application
+Officer <-- Application : applicationWithValidations
+deactivate Application
+
+Officer -> Application : runCustomValidation("creditCheckValidation", context)
+activate Application
+Application -> Rules : getValidationById("creditCheckValidation")
+activate Rules
+Application <-- Rules : customValidation
+deactivate Rules
+Application -> Rules : executeCustomValidation(customValidation, context)
+activate Rules
+Rules -> Rules : checkCreditHistory()
+Rules -> Rules : evaluateCreditRatio()
+Application <-- Rules : customValidationResult
+deactivate Rules
+Officer <-- Application : customValidationResults
+deactivate Application
+
+Officer -> Application : getValidationHistory()
+activate Application
+Application -> Validator : getValidationEvents(applicationId)
+activate Validator
+Application <-- Validator : validationHistory
+deactivate Validator
+Officer <-- Application : validationEventLog
+deactivate Application
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Finance Limited uses the CustomValidatable interface in its Business Loan Application System to implement complex, industry-specific validation rules that ensure compliance with banking regulations and risk management policies.
+
+When restaurant owner Krishna Tamang begins a loan application, the system initializes with standard validation rules. The Bank's Compliance Manager has previously configured industry-specific rules, adding a custom rule that restaurants require specific licensing documentation and have certain loan amount limitations based on their business category.
+
+As Krishna completes the application, each field is validated in real-time. When he enters "Restaurant" as the business type, the system validates this against allowed business categories. However, when he enters a loan amount of 5,000,000 NPR, the validation fails because the custom rule for restaurants limits initial loans to 3,000,000 NPR without additional collateral. The system provides specific feedback, allowing Krishna to adjust his request to a compliant 2,000,000 NPR.
+
+Upon submission, the system performs a comprehensive validation across all rules, including:
+1. Field-level validations (e.g., required fields, format checks)
+2. Cross-field validations (e.g., income must be proportional to requested loan amount)
+3. Business logic validations (e.g., industry risk assessments, collateral evaluations)
+
+During review, Loan Officer Ratna runs additional custom validations that require external data, such as credit checks that weren't possible during the initial submission. She can also review the complete validation history, showing which rules were evaluated, when, and what results they produced.
+
+The system implements several validation rule types:
+- Required field rules (ensuring necessary information is provided)
+- Format rules (ensuring data is in the correct format)
+- Range rules (ensuring numerical values fall within acceptable ranges)
+- Relational rules (ensuring relationships between fields are valid)
+- Business-specific rules (applying industry regulations to specific business types)
+- Temporal rules (ensuring date-based constraints are satisfied)
+
+This comprehensive validation approach ensures that only compliant applications proceed to the approval stage, reducing risk and streamlining the loan processing workflow.
+
+*Technical Implementation Example:*
+```kotlin
+class LoanApplication : BaseEntity(), CustomValidatable {
+    var applicantName: String = ""
+    var businessType: String = ""
+    var loanAmount: BigDecimal = BigDecimal.ZERO
+    var loanPurpose: String = ""
+    var businessIncomeMonthly: BigDecimal = BigDecimal.ZERO
+    var businessAgeYears: Int = 0
+    
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
+    var validationRules: MutableList<ValidationRule> = mutableListOf()
+    
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
+    var validationHistory: MutableList<ValidationEvent> = mutableListOf()
+    
+    // Implementation of CustomValidatable interface
+    override fun validate(): ValidationResult {
+        val errors = mutableListOf<ValidationError>()
+        
+        // Get all active rules for this application
+        val rules = getValidationRules()
+        
+        // Run field-level validations
+        for (rule in rules) {
+            val fieldName = rule.fieldName
+            if (fieldName != null) {
+                val fieldValue = when (fieldName) {
+                    "applicantName" -> applicantName
+                    "businessType" -> businessType
+                    "loanAmount" -> loanAmount
+                    "loanPurpose" -> loanPurpose
+                    "businessIncomeMonthly" -> businessIncomeMonthly
+                    "businessAgeYears" -> businessAgeYears
+                    else -> null
+                }
+                
+                val result = rule.validate(fieldValue)
+                if (!result.valid) {
+                    errors.addAll(result.errors)
+                }
+            }
+        }
+        
+        // Run cross-field validations
+        val crossFieldRules = rules.filter { it.fieldName == null }
+        for (rule in crossFieldRules) {
+            val dataMap = mapOf(
+                "applicantName" to applicantName,
+                "businessType" to businessType,
+                "loanAmount" to loanAmount,
+                "loanPurpose" to loanPurpose,
+                "businessIncomeMonthly" to businessIncomeMonthly,
+                "businessAgeYears" to businessAgeYears
+            )
+            
+            val result = rule.validate(dataMap)
+            if (!result.valid) {
+                errors.addAll(result.errors)
+            }
+        }
+        
+        // Record validation event
+        val event = ValidationEvent(
+            entityId = this.id,
+            timestamp = Instant.now(),
+            validationType = "FULL",
+            performedBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM",
+            successful = errors.isEmpty(),
+            errorCount = errors.size,
+            details = if (errors.isNotEmpty()) errors.joinToString("; ") else "Validation successful"
+        )
+        validationHistory.add(event)
+        
+        return ValidationResult(errors.isEmpty(), errors)
+    }
+    
+    override fun getValidationRules(): List<ValidationRule> {
+        return validationRules
+    }
+    
+    override fun addValidationRule(rule: ValidationRule) {
+        // Check if a similar rule already exists
+        val existingRule = validationRules.find { it.ruleId == rule.ruleId }
+        if (existingRule != null) {
+            validationRules.remove(existingRule)
+        }
+        
+        validationRules.add(rule)
+    }
+    
+    override fun removeValidationRule(ruleId: String) {
+        validationRules.removeIf { it.ruleId == ruleId }
+    }
+    
+    override fun getValidationHistory(): List<ValidationEvent> {
+        return validationHistory
+    }
+    
+    override fun validateField(fieldName: String, value: Any?): FieldValidationResult {
+        val rules = validationRules.filter { it.fieldName == fieldName }
+        val errors = mutableListOf<ValidationError>()
+        
+        for (rule in rules) {
+            val result = rule.validate(value)
+            if (!result.valid) {
+                errors.addAll(result.errors)
+            }
+        }
+        
+        // Record field validation event
+        val event = ValidationEvent(
+            entityId = this.id,
+            timestamp = Instant.now(),
+            validationType = "FIELD",
+            field = fieldName,
+            performedBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM",
+            successful = errors.isEmpty(),
+            errorCount = errors.size,
+            details = if (errors.isNotEmpty()) errors.joinToString("; ") else "Field validation successful"
+        )
+        validationHistory.add(event)
+        
+        return FieldValidationResult(fieldName, errors.isEmpty(), errors)
+    }
+    
+    override fun runCustomValidation(validationId: String, context: Map<String, Any>): ValidationResult {
+        val validator = validatorRegistry.getValidator(validationId)
+            ?: return ValidationResult(false, listOf(ValidationError("Unknown validator: $validationId")))
+        
+        val result = validator.validate(this, context)
+        
+        // Record custom validation event
+        val event = ValidationEvent(
+            entityId = this.id,
+            timestamp = Instant.now(),
+            validationType = "CUSTOM",
+            customValidatorId = validationId,
+            performedBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM",
+            successful = result.valid,
+            errorCount = result.errors.size,
+            details = if (result.errors.isNotEmpty()) result.errors.joinToString("; ") else "Custom validation successful"
+        )
+        validationHistory.add(event)
+        
+        return result
+    }
+    
+    override fun getActiveValidators(): List<Validator> {
+        return validatorRegistry.getValidatorsForEntityType("LoanApplication")
+    }
+}
+```

@@ -1,0 +1,256 @@
+===== `AccessControlled`
+Interface for entities with fine-grained access control.
+
+[source,kotlin]
+----
+interface AccessControlled {
+    fun getOwner(): User
+    fun getAccessControlList(): Set<AccessControlEntry>
+    fun hasPermission(user: User, permission: Permission): Boolean
+    fun grantPermission(user: User, permission: Permission)
+    fun revokePermission(user: User, permission: Permission)
+    fun getEffectivePermissions(user: User): Set<Permission>
+}
+----
+
+[cols="1,3", options="header"]
+|===
+| Permission    | Description
+| `VIEW`        | Permission to view/read the entity
+| `EDIT`        | Permission to modify the entity
+| `DELETE`      | Permission to delete the entity
+| `APPROVE`     | Permission to approve/reject the entity
+| `SHARE`       | Permission to share the entity with others
+| `EXPORT`      | Permission to export the entity
+| `ADMIN`       | Full administrative control of the entity
+| `COMMENT`     | Permission to add comments
+|===
+
+====== Contextual Use Cases for AccessControlled
+
+*Real-World Scenario:* Secure Land Records Management System 
+
+[plantuml]
+----
+@startuml
+actor "Land Owner\n(Asha Gurung)" as Owner
+actor "Lawyer\n(Ajay Sharma)" as Lawyer
+actor "Land Registry\nOfficer" as Officer
+actor "District Chief\nLand Officer" as Chief
+participant "LandParcel\nimplements AccessControlled" as LandParcel
+participant "SecurityService" as Security
+participant "AccessControlService" as Access
+participant "AuditLogger" as Audit
+
+Owner -> LandParcel : create land record
+activate LandParcel
+LandParcel -> LandParcel : setOwner(Asha)
+LandParcel -> Access : initializeAccessControl()
+activate Access
+Access -> Access : grantPermission(Asha, ADMIN)
+Access -> Access : registerRecord(landParcel)
+LandParcel <-- Access : acl
+deactivate Access
+Owner <-- LandParcel : landParcel
+deactivate LandParcel
+
+Owner -> LandParcel : shareWithLawyer(Ajay)
+activate LandParcel
+LandParcel -> Access : grantPermission(Ajay, VIEW)
+activate Access
+Access -> Access : createAccessControlEntry(landParcel, Ajay, VIEW)
+Access -> Audit : logPermissionGrant(landParcel, Owner, Lawyer, VIEW)
+LandParcel <-- Access : updated
+deactivate Access
+Owner <-- LandParcel : shareConfirmation
+deactivate LandParcel
+
+Lawyer -> LandParcel : viewLandRecord()
+activate LandParcel
+LandParcel -> Security : hasPermission(Ajay, VIEW)
+activate Security
+Security -> Access : getAccessControlList(landParcel)
+activate Access
+Security <-- Access : aclEntries
+deactivate Access
+Security -> Security : checkPermission(aclEntries, Ajay, VIEW)
+LandParcel <-- Security : true
+deactivate Security
+Lawyer <-- LandParcel : landRecordDetails
+deactivate LandParcel
+
+Lawyer -> LandParcel : editLandRecord()
+activate LandParcel
+LandParcel -> Security : hasPermission(Ajay, EDIT)
+activate Security
+Security -> Access : getAccessControlList(landParcel)
+activate Access
+Security <-- Access : aclEntries
+deactivate Access
+Security -> Security : checkPermission(aclEntries, Ajay, EDIT)
+LandParcel <-- Security : false
+deactivate Security
+Lawyer <-- LandParcel : accessDenied
+deactivate LandParcel
+
+Owner -> LandParcel : upgradeAccessForLawyer(Ajay, EDIT)
+activate LandParcel
+LandParcel -> Access : grantPermission(Ajay, EDIT)
+activate Access
+Access -> Access : updateAccessControlEntry(landParcel, Ajay, [VIEW, EDIT])
+Access -> Audit : logPermissionUpdate(landParcel, Owner, Lawyer, EDIT)
+LandParcel <-- Access : updated
+deactivate Access
+Owner <-- LandParcel : permissionGranted
+deactivate LandParcel
+
+Lawyer -> LandParcel : editLandRecord()
+activate LandParcel
+LandParcel -> Security : hasPermission(Ajay, EDIT)
+activate Security
+Security <-- Security : true
+deactivate Security
+Lawyer <-- LandParcel : editEnabled
+deactivate LandParcel
+
+Officer -> LandParcel : viewLandRecord()
+activate LandParcel
+LandParcel -> Security : hasPermission(Officer, VIEW)
+activate Security
+Security -> Security : checkPermissionByRole(Officer, "LAND_REGISTRY_OFFICER")
+Security <-- Security : true (role-based override)
+LandParcel <-- Security : true
+deactivate Security
+Officer <-- LandParcel : landRecordDetails
+deactivate LandParcel
+
+Owner -> LandParcel : revokeAccessForLawyer(Ajay)
+activate LandParcel
+LandParcel -> Access : revokeAllPermissions(Ajay)
+activate Access
+Access -> Access : removeAccessControlEntries(landParcel, Ajay)
+Access -> Audit : logPermissionRevoke(landParcel, Owner, Lawyer, ALL)
+LandParcel <-- Access : updated
+deactivate Access
+Owner <-- LandParcel : accessRevoked
+deactivate LandParcel
+
+Chief -> LandParcel : getAccessControlList()
+activate LandParcel
+LandParcel -> Security : hasPermission(Chief, ADMIN)
+activate Security
+Security -> Security : checkPermissionByRole(Chief, "DISTRICT_CHIEF")
+Security <-- Security : true (administrative override)
+LandParcel <-- Security : true
+deactivate Security
+LandParcel -> Access : getAccessControlList()
+activate Access
+LandParcel <-- Access : fullAccessControlList
+deactivate Access
+Chief <-- LandParcel : accessControlList
+deactivate LandParcel
+@enduml
+----
+
+*Implementation Details:*
+The Digital Land Registry System implements the AccessControlled interface to provide fine-grained permissions for land records. This implementation ensures only authorized individuals can view or modify sensitive land ownership data while enabling necessary sharing capabilities.
+
+Land owner Asha Gurung creates a new land record in the system for her property in Lamjung district. As the creator, she automatically receives ADMIN permission on the record, which grants her full control over who can access it. The system generates an initial Access Control List (ACL) for the land parcel with Asha as the only entry.
+
+When Asha hires lawyer Ajay Sharma to help with a boundary dispute, she grants him VIEW permission to access the land record. Lawyer Ajay can now view the details but receives an "Access Denied" message when attempting to edit the record, as he lacks EDIT permission. After Asha upgrades Ajay's permissions to include EDIT capability, he can make necessary changes to help prepare documents for the boundary dispute resolution.
+
+The system also implements role-based permission overrides. When Land Registry Officer Sita Thapa accesses the record, she can view it automatically without explicit permission from Asha because her role "LAND_REGISTRY_OFFICER" has system-wide VIEW permissions for all land records. Similarly, District Chief Land Officer Ramesh Adhikari can view the complete access control list due to his administrative role.
+
+When the legal work is completed, Asha revokes all of Ajay's permissions. The system maintains a detailed audit log of all permission changes, recording who granted or revoked permissions, when, and for what purpose.
+
+The AccessControlled implementation provides:
+1. Owner-based controls (where the record creator has full control)
+2. Permission granularity (with distinct permissions like VIEW, EDIT, DELETE)
+3. Delegation capabilities (the ability to grant and revoke permissions)
+4. Role-based overrides (for administrative and regulatory access)
+5. Comprehensive audit trails (tracking all permission changes)
+
+*Technical Implementation Example:*
+```kotlin
+class LandParcel : BaseEntity(), AccessControlled {
+    @ManyToOne
+    private lateinit var owner: User
+    
+    @OneToMany(mappedBy = "entity", cascade = [CascadeType.ALL])
+    private val accessControlEntries: MutableSet<AccessControlEntry> = mutableSetOf()
+    
+    // Implementation of AccessControlled interface
+    override fun getOwner(): User = owner
+    
+    override fun getAccessControlList(): Set<AccessControlEntry> {
+        return accessControlEntries.toSet()
+    }
+    
+    override fun hasPermission(user: User, permission: Permission): Boolean {
+        // Owner always has all permissions
+        if (user.id == owner.id) {
+            return true
+        }
+        
+        // Check for direct permission
+        val hasDirectPermission = accessControlEntries.any { 
+            it.user.id == user.id && it.permission == permission 
+        }
+        
+        if (hasDirectPermission) {
+            return true
+        }
+        
+        // Check for role-based permission overrides
+        return SecurityService.hasRoleBasedPermission(user, this, permission)
+    }
+    
+    override fun grantPermission(user: User, permission: Permission) {
+        val existingEntry = accessControlEntries.find { it.user.id == user.id }
+        
+        if (existingEntry != null) {
+            existingEntry.permission = permission
+        } else {
+            val newEntry = AccessControlEntry(
+                entity = this,
+                user = user,
+                permission = permission,
+                grantedBy = SecurityContext.getCurrentUser(),
+                grantedAt = Instant.now()
+            )
+            accessControlEntries.add(newEntry)
+        }
+        
+        AuditLogger.logPermissionChange(this, user, permission, "GRANT")
+    }
+    
+    override fun revokePermission(user: User, permission: Permission) {
+        accessControlEntries.removeIf { 
+            it.user.id == user.id && it.permission == permission 
+        }
+        
+        AuditLogger.logPermissionChange(this, user, permission, "REVOKE")
+    }
+    
+    override fun getEffectivePermissions(user: User): Set<Permission> {
+        val permissions = mutableSetOf<Permission>()
+        
+        // Owner has all permissions
+        if (user.id == owner.id) {
+            return Permission.values().toSet()
+        }
+        
+        // Add direct permissions
+        permissions.addAll(
+            accessControlEntries
+                .filter { it.user.id == user.id }
+                .map { it.permission }
+        )
+        
+        // Add role-based permissions
+        permissions.addAll(SecurityService.getRoleBasedPermissions(user, this))
+        
+        return permissions
+    }
+}
+```

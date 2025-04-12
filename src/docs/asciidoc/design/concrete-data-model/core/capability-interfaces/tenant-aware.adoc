@@ -1,0 +1,502 @@
+===== `TenantAware`
+Interface for entities that can be partitioned by tenant in a multi-tenant system.
+
+[source,kotlin]
+----
+interface TenantAware {
+    fun getTenantId(): UUID
+    fun setTenantId(tenantId: UUID)
+    fun validateTenantAccess(accessingTenantId: UUID): Boolean
+    fun getTenantMetadata(): Map<String, String>
+    fun setTenantMetadata(metadata: Map<String, String>)
+    fun getTenantHierarchy(): List<UUID>
+    fun isTenantShared(): Boolean
+    fun getTenantAccessControl(): TenantAccessControl
+    fun getTenantPartitionKey(): String
+}
+----
+
+====== Contextual Use Cases for TenantAware
+
+*Real-World Scenario:* Municipal Services Portal for Rural Municipalities
+
+[plantuml]
+----
+@startuml
+actor "Development Agency\n(Krishna Sharma)" as Agency
+actor "Palika Officer\n(Kopila Tamang)" as Officer
+actor "Ward Secretary\n(Nirmala Thapa)" as Secretary
+participant "ServiceRequest\nimplements TenantAware" as Service
+participant "TenantManager" as Manager
+participant "TenantResolver" as Resolver
+participant "PalikaService" as Palika
+participant "AnalyticsService" as Analytics
+
+Agency -> Manager : registerMunicipality("Kalika Gaunpalika")
+activate Manager
+Manager -> Manager : createTenant(municipalityDetails)
+Manager -> Manager : assignTenantResources()
+Agency <-- Manager : municipalityTenantId
+deactivate Manager
+
+Officer -> Service : createNewService("Building Permit")
+activate Service
+Service -> Resolver : resolveTenantId()
+activate Resolver
+Resolver -> Resolver : extractFromContext()
+Service <-- Resolver : tenantId (Kalika Palika)
+deactivate Resolver
+
+Service -> Service : setTenantId(kalikaPalikaId)
+Service -> Service : generateLocalIdentifier()
+Officer <-- Service : serviceCreated
+deactivate Service
+
+Secretary -> Service : getServiceRequests()
+activate Service
+Service -> Resolver : resolveTenantId()
+activate Resolver
+Resolver -> Resolver : extractFromContext()
+Service <-- Resolver : tenantId (Kalika Palika)
+deactivate Resolver
+
+Service -> Service : validateTenantAccess(kalikaPalikaId)
+note right: Access granted - same tenant
+
+Service -> Service : filterByTenantId(kalikaPalikaId)
+Secretary <-- Service : wardServiceRequests
+deactivate Service
+
+Agency -> Service : getAggregatedStatistics()
+activate Service
+Service -> Resolver : resolveTenantId()
+activate Resolver
+Resolver -> Resolver : extractFromContext()
+Service <-- Resolver : tenantId (Agency)
+deactivate Resolver
+
+Service -> Service : getTenantHierarchy()
+activate Service
+Service -> Service : queryManagedTenants(agencyId)
+Service <-- Service : [kalikaPalikaId, other managed palikas]
+deactivate Service
+
+Service -> Service : validateTenantAccess(agencyId)
+note right: Access granted - parent tenant
+
+Service -> Analytics : aggregateAcrossTenants(tenantHierarchy)
+activate Analytics
+Service <-- Analytics : aggregatedStatistics
+deactivate Analytics
+
+Agency <-- Service : crossTenantStatistics
+deactivate Service
+
+Officer -> Palika : updatePalikaSettings(updatedSettings)
+activate Palika
+Palika -> Resolver : resolveTenantId()
+activate Resolver
+Palika <-- Resolver : tenantId (Kalika Palika)
+deactivate Resolver
+
+Palika -> Palika : setTenantMetadata(updatedSettings)
+Officer <-- Palika : settingsUpdated
+deactivate Palika
+
+Secretary -> Service : accessCentralizedService()
+activate Service
+Service -> Service : isTenantShared()
+note right: Returns true for shared services
+
+Service -> Service : getTenantPartitionKey()
+note right
+  Returns "centralized"
+  instead of tenant ID
+end note
+Secretary <-- Service : centralizedServiceAccess
+deactivate Service
+@enduml
+----
+
+*Implementation Details:*
+Digital Nepal, a nationwide initiative supporting digital transformation for 753 local governments, implements TenantAware entities to manage distinct municipal service portals while sharing infrastructure and code. This design allows each Gaunpalika (rural municipality) and Nagarpalika (urban municipality) to maintain autonomous digital operations while benefiting from a common platform.
+
+In this scenario, the ServiceRequest entity implements the TenantAware interface to enable proper data segregation across multiple municipalities. Local Government Resource Person Krishna Sharma from the Digital Nepal project helps register Kalika Gaunpalika (a rural municipality in Chitwan district) as a new tenant in the system. This creates a dedicated tenant ID for all Kalika's digital operations while still leveraging the shared platform.
+
+When Kopila Tamang, the Municipal Executive Officer at Kalika, creates a new online building permit application service, the system automatically associates this service with Kalika's tenant ID through the TenantResolver. This ensures that all building permit applications submitted by Kalika residents remain within their municipal jurisdiction and administrative control. The system generates a localized identifier prefixed with "KLK-" to ensure uniqueness across the national system.
+
+When Nirmala Thapa, the Ward 3 Secretary, accesses the system to view building permit applications for her ward, the ServiceRequest entity validates her tenant access. Since she's also part of the Kalika Gaunpalika tenant, the system grants access but further filters results to only show applications from Ward 3 based on her role permissions.
+
+When Krishna needs to generate aggregate statistics across all rural municipalities in Province 3 to assess building permit processing efficiency, the system leverages the getTenantHierarchy() method to determine which tenants he has access to. As a provincial-level administrator, he can view aggregated, anonymized data across multiple municipality tenants without accessing their specific application details, maintaining appropriate data isolation.
+
+The system also handles specialized cases where certain services should be shared across tenants. For example, when Nirmala accesses the centralized disaster reporting service, the isTenantShared() method returns true, and the getTenantPartitionKey() provides a special partition key that allows data aggregation across municipalities for emergency response management.
+
+This implementation of TenantAware entities provides several critical benefits for Nepal's municipal services context:
+1. Complete data isolation between municipalities, maintaining local government autonomy
+2. Efficient infrastructure utilization through shared architecture
+3. Centralized security updates and feature improvements
+4. Local customization capabilities through tenant metadata
+5. Hierarchical data access for provincial and federal government oversight
+6. Cost-effective implementation that allows resource-constrained municipalities to leverage enterprise-grade technology
+
+*Technical Implementation Example:*
+```kotlin
+@Entity
+@Table(name = "service_requests")
+class ServiceRequest : BaseEntity(), TenantAware {
+    @Column(name = "request_type")
+    var requestType: String = ""
+    
+    @Column(name = "title")
+    var title: String = ""
+    
+    @Column(name = "description", columnDefinition = "TEXT")
+    var description: String? = null
+    
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    var status: RequestStatus = RequestStatus.DRAFT
+    
+    @Column(name = "submitted_by")
+    var submittedBy: UUID? = null
+    
+    @Column(name = "assigned_to")
+    var assignedTo: UUID? = null
+    
+    @Column(name = "submitted_date")
+    var submittedDate: LocalDateTime? = null
+    
+    @Column(name = "completed_date")
+    var completedDate: LocalDateTime? = null
+    
+    @Column(name = "priority")
+    @Enumerated(EnumType.STRING)
+    var priority: RequestPriority = RequestPriority.NORMAL
+    
+    @Column(name = "ward_number")
+    var wardNumber: Int? = null
+    
+    @ElementCollection
+    @CollectionTable(
+        name = "service_request_attachments",
+        joinColumns = [JoinColumn(name = "service_request_id")]
+    )
+    var attachments: MutableList<String> = mutableListOf()
+    
+    @Column(name = "reference_number")
+    var referenceNumber: String? = null
+    
+    // TenantAware implementation
+    @Column(name = "tenant_id", nullable = false)
+    private var tenantId: UUID? = null
+    
+    @Column(name = "is_shared", nullable = false)
+    private var shared: Boolean = false
+    
+    @Embedded
+    private var tenantAccess: TenantAccessControl = TenantAccessControl()
+    
+    @ElementCollection
+    @CollectionTable(
+        name = "service_request_tenant_metadata",
+        joinColumns = [JoinColumn(name = "service_request_id")]
+    )
+    @MapKeyColumn(name = "metadata_key")
+    @Column(name = "metadata_value")
+    private var tenantMetadata: MutableMap<String, String> = mutableMapOf()
+    
+    override fun getTenantId(): UUID {
+        return tenantId ?: throw IllegalStateException("Tenant ID not set")
+    }
+    
+    override fun setTenantId(tenantId: UUID) {
+        this.tenantId = tenantId
+        
+        // Set the tenant prefix for the reference number if not already set
+        if (referenceNumber == null) {
+            val prefix = tenantPrefixService.getPrefixForTenant(tenantId)
+            val sequenceNumber = sequenceGeneratorService.getNextSequence("service_request", tenantId)
+            referenceNumber = "$prefix-$sequenceNumber"
+        }
+    }
+    
+    override fun validateTenantAccess(accessingTenantId: UUID): Boolean {
+        // Direct tenant match
+        if (tenantId == accessingTenantId) {
+            return true
+        }
+        
+        // Check if accessing tenant is a parent tenant (e.g., province or federal agency)
+        if (tenantHierarchyService.isParentTenant(accessingTenantId, tenantId!!)) {
+            return true
+        }
+        
+        // Check if this is a shared service
+        if (shared) {
+            // Check if the accessing tenant is in the allowed tenants list
+            if (tenantAccess.allowedTenants.contains(accessingTenantId)) {
+                return true
+            }
+            
+            // Check if the service is shared with all tenants
+            if (tenantAccess.sharingMode == SharingMode.ALL_TENANTS) {
+                return true
+            }
+            
+            // Check if the service is shared within the same province
+            if (tenantAccess.sharingMode == SharingMode.SAME_PROVINCE) {
+                return tenantHierarchyService.areInSameProvince(accessingTenantId, tenantId!!)
+            }
+        }
+        
+        return false
+    }
+    
+    override fun getTenantMetadata(): Map<String, String> {
+        return tenantMetadata.toMap()
+    }
+    
+    override fun setTenantMetadata(metadata: Map<String, String>) {
+        // Clear existing metadata and add new entries
+        tenantMetadata.clear()
+        tenantMetadata.putAll(metadata)
+    }
+    
+    override fun getTenantHierarchy(): List<UUID> {
+        if (tenantId == null) {
+            return emptyList()
+        }
+        
+        // Get the hierarchical chain of tenants
+        // For a municipality, this might include the district, province, and federal levels
+        return tenantHierarchyService.getTenantHierarchy(tenantId!!)
+    }
+    
+    override fun isTenantShared(): Boolean {
+        return shared
+    }
+    
+    override fun getTenantAccessControl(): TenantAccessControl {
+        return tenantAccess
+    }
+    
+    override fun getTenantPartitionKey(): String {
+        // For service requests that are part of specialized services shared across tenants,
+        // return a special partition key instead of the tenant ID
+        if (shared && requestType in CENTRALIZED_SERVICE_TYPES) {
+            return "centralized"
+        }
+        
+        // For normal tenant-specific service requests, use the tenant ID as partition key
+        return tenantId.toString()
+    }
+    
+    // Helper methods
+    fun generateReferenceNumber() {
+        if (tenantId == null) {
+            throw IllegalStateException("Cannot generate reference number without tenant ID")
+        }
+        
+        val prefix = tenantPrefixService.getPrefixForTenant(tenantId!!)
+        val sequenceNumber = sequenceGeneratorService.getNextSequence("service_request", tenantId!!)
+        referenceNumber = "$prefix-$sequenceNumber"
+    }
+    
+    fun markAsShared(sharingMode: SharingMode, allowedTenants: Set<UUID> = emptySet()) {
+        shared = true
+        tenantAccess.sharingMode = sharingMode
+        tenantAccess.allowedTenants.clear()
+        tenantAccess.allowedTenants.addAll(allowedTenants)
+    }
+    
+    companion object {
+        private val CENTRALIZED_SERVICE_TYPES = setOf(
+            "DISASTER_REPORT",
+            "REGIONAL_PLANNING",
+            "EMERGENCY_SERVICE",
+            "EPIDEMIC_REPORTING"
+        )
+    }
+}
+
+@Embeddable
+class TenantAccessControl {
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sharing_mode")
+    var sharingMode: SharingMode = SharingMode.NONE
+    
+    @ElementCollection
+    @CollectionTable(
+        name = "tenant_access_allowed_tenants",
+        joinColumns = [JoinColumn(name = "entity_id")]
+    )
+    @Column(name = "allowed_tenant_id")
+    var allowedTenants: MutableSet<UUID> = mutableSetOf()
+}
+
+enum class SharingMode {
+    NONE,              // Not shared
+    SPECIFIED_TENANTS, // Shared only with specified tenants
+    SAME_PROVINCE,     // Shared with all tenants in the same province
+    ALL_TENANTS        // Shared with all tenants
+}
+
+enum class RequestStatus {
+    DRAFT,
+    SUBMITTED,
+    IN_REVIEW,
+    ADDITIONAL_INFO_NEEDED,
+    APPROVED,
+    REJECTED,
+    IN_PROGRESS,
+    COMPLETED,
+    CANCELLED
+}
+
+enum class RequestPriority {
+    LOW,
+    NORMAL,
+    HIGH,
+    URGENT
+}
+
+interface TenantHierarchyService {
+    fun getTenantHierarchy(tenantId: UUID): List<UUID>
+    fun isParentTenant(potentialParentId: UUID, childId: UUID): Boolean
+    fun areInSameProvince(tenantId1: UUID, tenantId2: UUID): Boolean
+}
+
+interface TenantPrefixService {
+    fun getPrefixForTenant(tenantId: UUID): String
+}
+
+interface SequenceGeneratorService {
+    fun getNextSequence(sequenceName: String, tenantId: UUID): Long
+}
+
+class TenantPrefixServiceImpl : TenantPrefixService {
+    private val prefixCache = ConcurrentHashMap<UUID, String>()
+    
+    override fun getPrefixForTenant(tenantId: UUID): String {
+        return prefixCache.computeIfAbsent(tenantId) {
+            val tenant = tenantRepository.findById(it).orElseThrow { 
+                EntityNotFoundException("Tenant not found: $it") 
+            }
+            
+            // Create a 3-4 letter prefix based on municipality name
+            // For example, "Kalika Gaunpalika" becomes "KLK"
+            generatePrefixFromName(tenant.name)
+        }
+    }
+    
+    private fun generatePrefixFromName(name: String): String {
+        // Simple prefix generation algorithm
+        // More sophisticated algorithms could be used based on requirements
+        val words = name.split("\\s+".toRegex())
+        
+        return when {
+            words.size >= 2 -> {
+                // Take first letter of each word, up to 4 letters
+                words.take(4)
+                    .map { it.first().toUpperCase() }
+                    .joinToString("")
+            }
+            words.size == 1 -> {
+                // For single word, take first 3-4 letters
+                words[0].take(4).toUpperCase()
+            }
+            else -> {
+                // Fallback
+                "SRV"
+            }
+        }
+    }
+}
+
+@Service
+class SequenceGeneratorServiceImpl : SequenceGeneratorService {
+    @Autowired
+    private lateinit var entityManager: EntityManager
+    
+    override fun getNextSequence(sequenceName: String, tenantId: UUID): Long {
+        // Combining sequenceName and tenantId ensures sequences are tenant-specific
+        val actualSequenceName = "${sequenceName}_${tenantId}"
+        
+        val query = entityManager.createNativeQuery(
+            "INSERT INTO sequence_table (sequence_name, next_val) " +
+            "VALUES (:name, 1) " +
+            "ON CONFLICT (sequence_name) DO UPDATE " +
+            "SET next_val = sequence_table.next_val + 1 " +
+            "RETURNING next_val"
+        )
+        
+        query.setParameter("name", actualSequenceName)
+        
+        return (query.singleResult as Number).toLong()
+    }
+}
+
+@Component
+class TenantResolver {
+    @Autowired
+    private lateinit var tenantContext: TenantContext
+    
+    @Autowired
+    private lateinit var userService: UserService
+    
+    fun resolveTenantId(): UUID {
+        // First check if there's an explicit tenant set in the context
+        tenantContext.getCurrentTenant()?.let {
+            return it
+        }
+        
+        // Otherwise, try to resolve from the authenticated user
+        val currentUser = SecurityContextHolder.getContext().authentication?.principal as? UserDetails
+        
+        if (currentUser != null) {
+            val user = userService.findByUsername(currentUser.username)
+            
+            // If user has a primary tenant, use that
+            user.primaryTenantId?.let {
+                return it
+            }
+            
+            // If user belongs to only one tenant, use that
+            if (user.tenantMemberships.size == 1) {
+                return user.tenantMemberships.first().tenantId
+            }
+            
+            // If user has multiple tenants, check if there's a tenant selection in session
+            val selectedTenant = SessionHelper.getSelectedTenant()
+            if (selectedTenant != null && user.tenantMemberships.any { it.tenantId == selectedTenant }) {
+                return selectedTenant
+            }
+            
+            // Default to first tenant
+            if (user.tenantMemberships.isNotEmpty()) {
+                return user.tenantMemberships.first().tenantId
+            }
+        }
+        
+        // If no tenant can be resolved, use the default tenant
+        return UUID.fromString("00000000-0000-0000-0000-000000000000") // Default tenant
+    }
+}
+
+@Component
+class TenantContext {
+    private val currentTenant = ThreadLocal<UUID?>()
+    
+    fun getCurrentTenant(): UUID? {
+        return currentTenant.get()
+    }
+    
+    fun setCurrentTenant(tenantId: UUID) {
+        currentTenant.set(tenantId)
+    }
+    
+    fun clear() {
+        currentTenant.remove()
+    }
+}
+```

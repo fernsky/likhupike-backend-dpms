@@ -1,0 +1,481 @@
+===== `ImportableEntity`
+Interface for entities that can be imported from external systems.
+
+[source,kotlin]
+----
+interface ImportableEntity {
+    fun validateImportData(data: Map<String, Any>): ValidationResult
+    fun mapExternalFields(externalData: Map<String, Any>): Map<String, Any>
+    fun getImportHistory(): List<ImportRecord>
+    fun resolveImportConflicts(conflicts: List<FieldConflict>): Resolution
+    fun postImportProcess()
+    fun getSourceSystemIdentifier(): String?
+    fun getLastImportDate(): LocalDateTime?
+}
+----
+
+====== Contextual Use Cases for ImportableEntity
+
+*Real-World Scenario:* Voter Registration System Integration
+
+[plantuml]
+----
+@startuml
+actor "Election Officer\n(Binod Sharma)" as Officer
+actor "Database Admin\n(Rajan Thapa)" as Admin
+participant "CitizenProfile\nimplements ImportableEntity" as Citizen
+participant "VoterImportService" as ImportService
+participant "ElectionCommissionAPI" as EC_API
+participant "ValidationService" as Validation
+participant "AddressService" as Address
+participant "ConflictResolutionService" as Resolution
+
+Officer -> ImportService : initiateVoterImport(districtId)
+activate ImportService
+
+ImportService -> EC_API : requestVoterData(districtId)
+activate EC_API
+ImportService <-- EC_API : voterRecords
+deactivate EC_API
+
+ImportService -> ImportService : processImportBatch(voterRecords)
+activate ImportService
+
+loop for each voter record
+  ImportService -> Citizen : validateImportData(voterRecord)
+  activate Citizen
+  Citizen -> Validation : validateRequiredFields(voterRecord)
+  activate Validation
+  Citizen <-- Validation : fieldValidation
+  deactivate Validation
+  Citizen -> Validation : validateFormatting(voterRecord)
+  activate Validation
+  Citizen <-- Validation : formatValidation
+  deactivate Validation
+  ImportService <-- Citizen : validationResult
+  deactivate Citizen
+  
+  alt Data Valid
+    ImportService -> Citizen : mapExternalFields(voterRecord)
+    activate Citizen
+    Citizen -> Citizen : mapVoterFields()
+    
+    Citizen -> Address : validateAddress(mappedData.address)
+    activate Address
+    Citizen <-- Address : addressValidation
+    deactivate Address
+    
+    ImportService <-- Citizen : mappedData
+    deactivate Citizen
+    
+    alt New Citizen Record
+      ImportService -> Citizen : createNewCitizen(mappedData)
+      ImportService -> Citizen : postImportProcess()
+      activate Citizen
+      Citizen -> Citizen : activateVoterStatus()
+      Citizen -> Citizen : recordImportSource(ECNepal)
+      ImportService <-- Citizen : citizenActivated
+      deactivate Citizen
+    else Existing Citizen Found
+      ImportService -> Citizen : checkForConflicts(mappedData)
+      activate Citizen
+      Citizen -> Citizen : compareFieldValues()
+      ImportService <-- Citizen : conflicts
+      deactivate Citizen
+      
+      alt Conflicts Exist
+        ImportService -> Resolution : resolveConflicts(conflicts)
+        activate Resolution
+        Resolution -> Officer : presentConflictsForResolution()
+        Officer -> Resolution : resolveManually(resolutions)
+        ImportService <-- Resolution : resolutionDecisions
+        deactivate Resolution
+        
+        ImportService -> Citizen : resolveImportConflicts(resolutions)
+        activate Citizen
+        Citizen -> Citizen : applyResolutions()
+        ImportService <-- Citizen : conflictsResolved
+        deactivate Citizen
+      end
+      
+      ImportService -> Citizen : updateExistingCitizen(mappedData)
+      ImportService -> Citizen : postImportProcess()
+      activate Citizen
+      Citizen -> Citizen : updateImportMetadata()
+      ImportService <-- Citizen : citizenUpdated
+      deactivate Citizen
+    end
+  else Data Invalid
+    ImportService -> ImportService : recordImportFailure(voterRecord, validationResult)
+  end
+end
+
+ImportService -> ImportService : generateBatchSummary()
+
+Officer <-- ImportService : importBatchResults
+deactivate ImportService
+deactivate ImportService
+
+Admin -> Citizen : getImportHistory()
+activate Citizen
+Admin <-- Citizen : importHistory
+deactivate Citizen
+
+Admin -> ImportService : viewFailedImports()
+activate ImportService
+Admin <-- ImportService : failedRecords
+deactivate ImportService
+
+Admin -> ImportService : retryFailedImports(selectedRecords)
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Electoral Management System uses the ImportableEntity interface to integrate citizen data from multiple sources into a unified voter registry. This implementation enables smooth data migration between government systems while maintaining data quality and resolving conflicts.
+
+Election Officer Binod Sharma initiates an import of voter registration data for Kaski district from the Election Commission's legacy database. The system requests approximately 10,000 voter records through the Commission's API. Each record contains essential voter information like name, address, citizenship number, and voter ID.
+
+For each record, the CitizenProfile entity (which implements ImportableEntity) validates the data against requirements. It checks for mandatory fields (names, citizenship ID, date of birth), format correctness (valid dates, properly formatted citizenship numbers), and logical consistency (age > 18 years for voting eligibility).
+
+The system then maps the external fields to the internal data model. This mapping handles structural differences between systems, such as transforming the legacy "permanentAddress" field into the structured AddressComponent format used by the new system. It also standardizes formats—for example, converting phone numbers to the standard +977 format.
+
+When the system identifies that a voter record corresponds to an existing citizen in the database, it checks for conflicts. For example, the legacy system might have a slightly different spelling of the citizen's name ("Bishnu B. Sharma" vs. "Bishnu Bahadur Sharma") or a different address format. Simple differences like capitalization are automatically resolved, but substantive conflicts require manual resolution.
+
+For conflict resolution, the system presents Officer Binod with side-by-side comparisons and resolution options. He can choose to keep the existing value, use the imported value, or create a merged value. For complex cases involving potential identity issues, the system might request additional verification.
+
+After successful import, each CitizenProfile entity maintains a record of its data origins. The postImportProcess() method activates the voter status flag and ensures the citizen is assigned to the correct voting ward based on their address. It also triggers notifications if the imported data requires citizen verification (such as newly added phone numbers).
+
+Database Administrator Rajan Thapa can review the comprehensive import history, which records details of each import operation, including source systems, timestamps, and the specific fields that were updated. This audit trail is critical for troubleshooting and regulatory compliance.
+
+The ImportableEntity implementation provides several benefits in this electoral context:
+1. Standardized validation across multiple data sources
+2. Transparent conflict resolution with audit trails
+3. Preservation of data provenance for each citizen record
+4. Systematic handling of data mapping between different schemas
+5. Batch processing capabilities for efficient large-scale imports
+6. Detailed history tracking for compliance and troubleshooting
+
+*Technical Implementation Example:*
+```kotlin
+class CitizenProfile : BaseEntity(), ImportableEntity {
+    var citizenshipNumber: String? = null
+    var fullName: String = ""
+    var dateOfBirth: LocalDate? = null
+    var gender: Gender? = null
+    var permanentAddress: AddressComponent? = null
+    var temporaryAddress: AddressComponent? = null
+    var phoneNumber: String? = null
+    var email: String? = null
+    var isVoter: Boolean = false
+    var voterCardNumber: String? = null
+    var votingWardId: UUID? = null
+    
+    @OneToMany(mappedBy = "citizenProfile", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val importRecords: MutableList<ImportRecord> = mutableListOf()
+    
+    // Implementation of ImportableEntity interface
+    override fun validateImportData(data: Map<String, Any>): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // Check required fields
+        if (!data.containsKey("citizenshipNumber") || data["citizenshipNumber"] as? String == null) {
+            errors.add("Missing or invalid citizenship number")
+        }
+        
+        if (!data.containsKey("fullName") || (data["fullName"] as? String).isNullOrBlank()) {
+            errors.add("Missing or invalid full name")
+        }
+        
+        // Validate date of birth and age for voter
+        if (data.containsKey("dateOfBirth")) {
+            try {
+                val dob = when (val dobValue = data["dateOfBirth"]) {
+                    is LocalDate -> dobValue
+                    is String -> LocalDate.parse(dobValue)
+                    else -> null
+                }
+                
+                if (dob != null) {
+                    val age = Period.between(dob, LocalDate.now()).years
+                    if (data["isVoter"] == true && age < 18) {
+                        errors.add("Voter must be at least 18 years old")
+                    }
+                } else {
+                    errors.add("Invalid date of birth format")
+                }
+            } catch (e: Exception) {
+                errors.add("Invalid date of birth: ${e.message}")
+            }
+        }
+        
+        // Validate voter ID if present
+        if (data.containsKey("voterCardNumber") && data["voterCardNumber"] != null) {
+            val voterCardNumber = data["voterCardNumber"] as String
+            if (!voterCardNumber.matches(Regex("^[A-Z]{2}\\d{8}$"))) {
+                errors.add("Voter card number must be in format XX99999999")
+            }
+        }
+        
+        // Address validation
+        if (data.containsKey("permanentAddress")) {
+            val addressResult = addressValidationService.validateAddressData(
+                data["permanentAddress"] as Map<String, Any>
+            )
+            if (!addressResult.valid) {
+                errors.addAll(addressResult.errors)
+            }
+        }
+        
+        return ValidationResult(errors.isEmpty(), errors)
+    }
+    
+    override fun mapExternalFields(externalData: Map<String, Any>): Map<String, Any> {
+        val mappedData = mutableMapOf<String, Any>()
+        
+        // Direct field mappings
+        mappedData["citizenshipNumber"] = externalData["citizenshipNumber"] ?: ""
+        mappedData["fullName"] = externalData["fullName"] ?: ""
+        
+        // Date parsing with format handling
+        externalData["dateOfBirth"]?.let { dobValue ->
+            val dob = when (dobValue) {
+                is LocalDate -> dobValue
+                is String -> {
+                    try {
+                        // Try different date formats
+                        val formats = listOf(
+                            DateTimeFormatter.ISO_DATE,
+                            DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                        )
+                        
+                        formats.fold<DateTimeFormatter, LocalDate?>(null) { result, format ->
+                            result ?: try {
+                                LocalDate.parse(dobValue, format)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        } ?: throw IllegalArgumentException("Unsupported date format: $dobValue")
+                    } catch (e: Exception) {
+                        throw IllegalArgumentException("Invalid date of birth: ${e.message}")
+                    }
+                }
+                else -> throw IllegalArgumentException("Unsupported date of birth type")
+            }
+            mappedData["dateOfBirth"] = dob
+        }
+        
+        // Enum mapping for gender
+        externalData["gender"]?.let { genderValue ->
+            val gender = when (genderValue.toString().lowercase()) {
+                "male", "m", "पुरुष" -> Gender.MALE
+                "female", "f", "महिला" -> Gender.FEMALE
+                "other", "o", "अन्य" -> Gender.OTHER
+                else -> null
+            }
+            if (gender != null) {
+                mappedData["gender"] = gender
+            }
+        }
+        
+        // Complex address mapping
+        externalData["permanentAddress"]?.let { addressData ->
+            val address = when (addressData) {
+                is Map<*, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    mapAddressComponent(addressData as Map<String, Any>)
+                }
+                is String -> {
+                    // Parse simple string addresses
+                    parseAddressString(addressData)
+                }
+                else -> null
+            }
+            if (address != null) {
+                mappedData["permanentAddress"] = address
+            }
+        }
+        
+        // Format phone number standardization
+        externalData["phoneNumber"]?.let { phone ->
+            val phoneStr = phone.toString()
+            val formattedPhone = when {
+                phoneStr.startsWith("+") -> phoneStr
+                phoneStr.startsWith("977") -> "+$phoneStr"
+                else -> "+977$phoneStr"
+            }
+            mappedData["phoneNumber"] = formattedPhone
+        }
+        
+        // Voter-specific fields
+        if (externalData.containsKey("voterCardNumber")) {
+            mappedData["isVoter"] = true
+            mappedData["voterCardNumber"] = externalData["voterCardNumber"]
+        }
+        
+        // Map voting location to ward
+        externalData["votingLocation"]?.let { location ->
+            // Look up ward id by location name
+            val wardId = wardLookupService.findWardIdByName(location.toString())
+            if (wardId != null) {
+                mappedData["votingWardId"] = wardId
+            }
+        }
+        
+        return mappedData
+    }
+    
+    override fun getImportHistory(): List<ImportRecord> {
+        return importRecords.sortedByDescending { it.importDate }
+    }
+    
+    override fun resolveImportConflicts(conflicts: List<FieldConflict>): Resolution {
+        val resolutions = mutableMapOf<String, Any?>()
+        val unresolvedConflicts = mutableListOf<FieldConflict>()
+        
+        // Process each conflict
+        for (conflict in conflicts) {
+            when (conflict.resolutionStrategy) {
+                ResolutionStrategy.USE_EXISTING -> {
+                    // Keep existing value (do nothing)
+                }
+                ResolutionStrategy.USE_IMPORTED -> {
+                    // Use the imported value
+                    resolutions[conflict.fieldName] = conflict.importedValue
+                }
+                ResolutionStrategy.USE_MERGED -> {
+                    // Use the merged value if provided
+                    conflict.mergedValue?.let {
+                        resolutions[conflict.fieldName] = it
+                    }
+                }
+                ResolutionStrategy.UNRESOLVED -> {
+                    // Add to unresolved list
+                    unresolvedConflicts.add(conflict)
+                }
+            }
+        }
+        
+        // Apply the resolved values
+        for ((fieldName, value) in resolutions) {
+            when (fieldName) {
+                "fullName" -> this.fullName = value as String
+                "dateOfBirth" -> this.dateOfBirth = value as LocalDate
+                "gender" -> this.gender = value as Gender
+                "phoneNumber" -> this.phoneNumber = value as String
+                "email" -> this.email = value as String
+                "permanentAddress" -> this.permanentAddress = value as AddressComponent
+                "isVoter" -> this.isVoter = value as Boolean
+                "voterCardNumber" -> this.voterCardNumber = value as String
+                "votingWardId" -> this.votingWardId = value as UUID
+            }
+        }
+        
+        return Resolution(
+            appliedResolutions = resolutions,
+            unresolvedConflicts = unresolvedConflicts
+        )
+    }
+    
+    override fun postImportProcess() {
+        // Perform any post-import tasks
+        
+        // Update voter ward if needed
+        if (isVoter && permanentAddress != null && votingWardId == null) {
+            // Determine voting ward from address
+            val ward = wardLookupService.findWardByAddress(permanentAddress!!)
+            if (ward != null) {
+                votingWardId = ward.id
+            }
+        }
+        
+        // Send verification requests for newly added contact info
+        val lastImport = importRecords.maxByOrNull { it.importDate }
+        if (lastImport != null) {
+            val fieldsAdded = lastImport.fieldsUpdated.keys
+            
+            if (fieldsAdded.contains("phoneNumber") && phoneNumber != null) {
+                verificationService.sendPhoneVerificationRequest(this)
+            }
+            
+            if (fieldsAdded.contains("email") && email != null) {
+                verificationService.sendEmailVerificationRequest(this)
+            }
+        }
+        
+        // Notify relevant systems of import
+        if (isVoter) {
+            eventPublisher.publishEvent(VoterImportedEvent(this.id))
+        }
+    }
+    
+    override fun getSourceSystemIdentifier(): String? {
+        val lastImport = importRecords.maxByOrNull { it.importDate }
+        return lastImport?.sourceSystem
+    }
+    
+    override fun getLastImportDate(): LocalDateTime? {
+        val lastImport = importRecords.maxByOrNull { it.importDate }
+        return lastImport?.importDate
+    }
+    
+    // Helper methods
+    private fun mapAddressComponent(addressData: Map<String, Any>): AddressComponent {
+        // Convert from external address format to internal AddressComponent
+        return AddressComponent(
+            line1 = addressData["street"] as? String ?: "",
+            ward = addressData["ward"] as? String,
+            municipality = addressData["municipality"] as? String,
+            district = addressData["district"] as? String,
+            province = addressData["province"] as? String,
+            postalCode = addressData["postalCode"] as? String
+        )
+    }
+    
+    private fun parseAddressString(addressString: String): AddressComponent {
+        // Simple parsing logic for comma-separated address strings
+        val parts = addressString.split(",").map { it.trim() }
+        
+        // Assuming format like: "Street, Ward, Municipality, District, Province"
+        return AddressComponent(
+            line1 = parts.getOrNull(0) ?: "",
+            ward = parts.getOrNull(1),
+            municipality = parts.getOrNull(2),
+            district = parts.getOrNull(3),
+            province = parts.getOrNull(4),
+            postalCode = null
+        )
+    }
+}
+
+data class FieldConflict(
+    val fieldName: String,
+    val existingValue: Any?,
+    val importedValue: Any?,
+    val mergedValue: Any? = null,
+    val resolutionStrategy: ResolutionStrategy = ResolutionStrategy.UNRESOLVED
+)
+
+enum class ResolutionStrategy {
+    USE_EXISTING,
+    USE_IMPORTED,
+    USE_MERGED,
+    UNRESOLVED
+}
+
+data class Resolution(
+    val appliedResolutions: Map<String, Any?>,
+    val unresolvedConflicts: List<FieldConflict>
+)
+
+data class ImportRecord(
+    val id: UUID = UUID.randomUUID(),
+    val citizenProfile: CitizenProfile,
+    val sourceSystem: String,
+    val externalId: String,
+    val importDate: LocalDateTime,
+    val importedBy: String,
+    val fieldsUpdated: Map<String, Any>,
+    val importBatchId: String?
+)
+```

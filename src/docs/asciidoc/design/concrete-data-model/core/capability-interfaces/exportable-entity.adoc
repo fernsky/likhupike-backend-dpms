@@ -1,0 +1,611 @@
+===== `ExportableEntity`
+Interface for entities that can be exported to various formats.
+
+[source,kotlin]
+----
+interface ExportableEntity {
+    fun toJson(options: ExportOptions): String
+    fun toCsv(options: ExportOptions): String
+    fun toXml(options: ExportOptions): String
+    fun toPdf(options: ExportOptions): ByteArray
+    fun getExportableFields(exportContext: ExportContext): List<String>
+    fun getExportHistory(): List<ExportRecord>
+    fun sanitizeForExport(securityContext: SecurityContext): ExportableEntity
+    fun enrichForExport(enrichmentContext: EnrichmentContext): ExportableEntity
+}
+----
+
+====== Contextual Use Cases for ExportableEntity
+
+*Real-World Scenario:* Agricultural Extension Service Data Portal
+
+[plantuml]
+----
+@startuml
+actor "Agricultural Officer\n(Deepak Khadka)" as AgrOfficer
+actor "Farmer\n(Goma Tamang)" as Farmer
+actor "Data Analyst\n(Prakash Joshi)" as Analyst
+actor "Ministry Official\n(Durga Thapa)" as Ministry
+participant "Crop Record\nimplements ExportableEntity" as CropRecord
+participant "ExportService" as Export
+participant "DataValidationService" as Validation
+participant "AuditService" as Audit
+participant "FormatConverter" as Converter
+
+AgrOfficer -> CropRecord : collectData(farmerId, cropData)
+activate CropRecord
+CropRecord -> CropRecord : validateAndStore(cropData)
+AgrOfficer <-- CropRecord : dataCollected
+deactivate CropRecord
+
+Farmer -> AgrOfficer : requestCropCertificate()
+AgrOfficer -> Export : generateCropCertificate(farmerId)
+activate Export
+Export -> CropRecord : getCropRecord(farmerId)
+activate CropRecord
+Export <-- CropRecord : cropRecord
+deactivate CropRecord
+
+Export -> CropRecord : toPdf(CERTIFICATE_OPTIONS)
+activate CropRecord
+CropRecord -> CropRecord : enrichForExport(CERTIFICATE_CONTEXT)
+activate CropRecord
+CropRecord -> CropRecord : addCertificationDetails()
+CropRecord -> CropRecord : addQrCode()
+CropRecord <-- CropRecord : enriched record
+deactivate CropRecord
+
+CropRecord -> Converter : convertToPdf(enrichedData)
+activate Converter
+CropRecord <-- Converter : pdfDocument
+deactivate Converter
+
+Export <-- CropRecord : certificatePdf
+deactivate CropRecord
+
+Export -> Audit : recordExport(CERTIFICATE, farmerId, AgrOfficer)
+AgrOfficer <-- Export : cropCertificate
+deactivate Export
+
+AgrOfficer -> Farmer : provideCertificate(cropCertificate)
+
+Analyst -> Export : requestDistrictData(districtId, dateRange)
+activate Export
+Export -> CropRecord : getDistrictRecords(districtId, dateRange)
+activate CropRecord
+Export <-- CropRecord : districtRecords
+deactivate CropRecord
+
+Export -> Export : validateExportPermissions(Analyst, DISTRICT_LEVEL)
+Export -> Export : createBatchExport(districtRecords)
+
+loop for each record
+  Export -> CropRecord : sanitizeForExport(RESEARCHER_CONTEXT)
+  activate CropRecord
+  CropRecord -> CropRecord : removePII()
+  CropRecord -> CropRecord : generalizeLocation()
+  Export <-- CropRecord : sanitizedRecord
+  deactivate CropRecord
+end
+
+Export -> CropRecord : toCsv(RESEARCH_OPTIONS)
+activate CropRecord
+CropRecord -> CropRecord : getExportableFields(RESEARCH_CONTEXT)
+activate CropRecord
+CropRecord <-- CropRecord : researchFields
+deactivate CropRecord
+
+CropRecord -> Converter : convertToCsv(sanitizedRecords, researchFields)
+activate Converter
+CropRecord <-- Converter : csvData
+deactivate Converter
+
+Export <-- CropRecord : districtCsvData
+deactivate CropRecord
+
+Export -> Audit : recordExport(RESEARCH, districtId, Analyst)
+Analyst <-- Export : districtCropDataCsv
+deactivate Export
+
+Ministry -> Export : requestNationalReport(yearFilter)
+activate Export
+Export -> CropRecord : getNationalCropData(yearFilter)
+activate CropRecord
+Export <-- CropRecord : nationalData
+deactivate CropRecord
+
+Export -> Export : validateExportPermissions(Ministry, NATIONAL_LEVEL)
+Export -> CropRecord : toJson(MINISTRY_OPTIONS)
+activate CropRecord
+CropRecord -> CropRecord : enrichForExport(MINISTRY_CONTEXT)
+activate CropRecord
+CropRecord -> CropRecord : addProductionTrends()
+CropRecord -> CropRecord : calculateYields()
+CropRecord <-- CropRecord : enriched data
+deactivate CropRecord
+
+CropRecord -> Converter : convertToJson(enrichedData)
+activate Converter
+CropRecord <-- Converter : jsonData
+deactivate Converter
+
+Export <-- CropRecord : nationalJsonData
+deactivate CropRecord
+
+Export -> CropRecord : toPdf(REPORT_OPTIONS)
+activate CropRecord
+CropRecord -> Converter : convertToPdfReport(nationalData)
+activate Converter
+CropRecord <-- Converter : reportPdf
+deactivate Converter
+Export <-- CropRecord : nationalReportPdf
+deactivate CropRecord
+
+Export -> Audit : recordExport(NATIONAL_REPORT, yearFilter, Ministry)
+Ministry <-- Export : nationalCropReport
+deactivate Export
+
+Analyst -> CropRecord : getExportHistory()
+activate CropRecord
+Analyst <-- CropRecord : exportHistory
+deactivate CropRecord
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Agricultural Extension Service uses the ExportableEntity interface for its CropRecord entity to facilitate data sharing among different stakeholders while enforcing proper data governance. This implementation enables controlled data exports across multiple formats and audiences.
+
+Agricultural Officer Deepak Khadka collects crop data from farmers in Dolakha district, recording details like crop type, planting date, area cultivated, expected harvest date, and seed variety. When farmer Goma Tamang requests a crop certificate for her organic rice cultivation to qualify for government subsidy programs, Deepak initiates a certificate export.
+
+The system uses toPdf() with specialized certificate options to create a formal document. Before generation, the enrichForExport() method adds certification details, including an official seal, QR code for verification, and digital signature. This produces a legally valid document that Goma can use to prove her organic farming practices and crop production estimates.
+
+Data Analyst Prakash Joshi, working on crop diversity research, requests district-level data. The system first validates his permissions for district-level access. Since researchers aren't entitled to farmers' personal information, the sanitizeForExport() method removes personally identifiable information (PII) and generalizes location data to ward level rather than specific GPS coordinates. Prakash receives a CSV file containing anonymized cultivation records with the field subset appropriate for research: crop varieties, planting periods, cultivation area, farming techniques, and generalized location.
+
+For high-level planning, Ministry Official Durga Thapa needs a national agricultural production report. With ministry-level access permissions, she receives both raw JSON data for further analysis and a comprehensive PDF report. The enrichForExport() method enhances this data with calculated metrics like yield trends, regional comparisons, and production forecasts based on historical data.
+
+Each export operation is recorded in the system's audit log, tracking who exported what data, when, and for what purpose. This comprehensive export history enables data governance oversight and regulatory compliance.
+
+The ExportableEntity implementation provides several important benefits in this agricultural context:
+1. Format flexibility for different stakeholders (farmers need PDFs, researchers prefer CSV, ministry officials use both JSON and PDF)
+2. Contextual data sanitization to protect farmer privacy
+3. Data enrichment tailored to different use cases
+4. Comprehensive audit trails for accountability
+5. Permission-based export controls
+6. Specialized document generation for official certificates
+
+*Technical Implementation Example:*
+```kotlin
+class CropRecord : BaseEntity(), ExportableEntity {
+    var farmerId: UUID? = null
+    var farmerName: String = ""
+    var farmerContact: String? = null
+    
+    var cropType: String = ""
+    var cropVariety: String = ""
+    var cultivationMethod: CultivationMethod = CultivationMethod.CONVENTIONAL
+    var fieldLocation: Point? = null
+    var areaHectares: Double = 0.0
+    
+    var plantingDate: LocalDate? = null
+    var expectedHarvestDate: LocalDate? = null
+    var actualHarvestDate: LocalDate? = null
+    var estimatedYieldKg: Double? = null
+    var actualYieldKg: Double? = null
+    
+    var wardId: UUID? = null
+    var municipalityId: UUID? = null
+    var districtId: UUID? = null
+    var provinceId: UUID? = null
+    
+    var certificationStatus: CertificationStatus = CertificationStatus.PENDING
+    var certificationDate: LocalDate? = null
+    var certifiedBy: UUID? = null
+    
+    var notes: String? = null
+    var tags: MutableSet<String> = mutableSetOf()
+    
+    @OneToMany(mappedBy = "cropRecord", cascade = [CascadeType.ALL], orphanRemoval = true)
+    private val exportRecords: MutableList<ExportRecord> = mutableListOf()
+    
+    // Implementation of ExportableEntity interface
+    override fun toJson(options: ExportOptions): String {
+        val mapper = ObjectMapper()
+        mapper.registerModule(JavaTimeModule())
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        
+        // Get the fields to include
+        val fieldsToExport = getExportableFields(options.exportContext)
+        
+        // Create a map with only the selected fields
+        val dataToExport = fieldsToExport.associateWith { fieldName ->
+            when (fieldName) {
+                "farmerId" -> farmerId
+                "farmerName" -> farmerName
+                "farmerContact" -> farmerContact
+                "cropType" -> cropType
+                "cropVariety" -> cropVariety
+                "cultivationMethod" -> cultivationMethod.name
+                "fieldLocation" -> if (fieldLocation != null) {
+                    mapOf("longitude" to fieldLocation!!.x, "latitude" to fieldLocation!!.y)
+                } else null
+                "areaHectares" -> areaHectares
+                "plantingDate" -> plantingDate?.toString()
+                "expectedHarvestDate" -> expectedHarvestDate?.toString()
+                "actualHarvestDate" -> actualHarvestDate?.toString()
+                "estimatedYieldKg" -> estimatedYieldKg
+                "actualYieldKg" -> actualYieldKg
+                "wardId" -> wardId
+                "municipalityId" -> municipalityId
+                "districtId" -> districtId
+                "provinceId" -> provinceId
+                "certificationStatus" -> certificationStatus.name
+                "certificationDate" -> certificationDate?.toString()
+                "certifiedBy" -> certifiedBy
+                "notes" -> notes
+                "tags" -> tags
+                else -> null
+            }
+        }
+        
+        // Additional metadata if requested
+        val exportData = if (options.includeMetadata) {
+            val metadata = mapOf(
+                "exportDate" to LocalDateTime.now().toString(),
+                "exportedBy" to options.exportContext.requestedBy,
+                "exportPurpose" to options.exportContext.purpose,
+                "recordId" to id.toString()
+            )
+            dataToExport + ("metadata" to metadata)
+        } else {
+            dataToExport
+        }
+        
+        return mapper.writeValueAsString(exportData)
+    }
+    
+    override fun toCsv(options: ExportOptions): String {
+        val fieldsToExport = getExportableFields(options.exportContext)
+        
+        // Create CSV header
+        val headerRow = fieldsToExport.joinToString(",")
+        
+        // Create CSV data row
+        val dataRow = fieldsToExport.joinToString(",") { fieldName ->
+            val value = when (fieldName) {
+                "farmerId" -> farmerId?.toString() ?: ""
+                "farmerName" -> "\"${farmerName.replace("\"", "\"\"")}\""
+                "farmerContact" -> "\"${farmerContact?.replace("\"", "\"\"") ?: ""}\""
+                "cropType" -> "\"${cropType.replace("\"", "\"\"")}\""
+                "cropVariety" -> "\"${cropVariety.replace("\"", "\"\"")}\""
+                "cultivationMethod" -> cultivationMethod.name
+                "fieldLocation" -> if (fieldLocation != null) {
+                    "\"${fieldLocation!!.x},${fieldLocation!!.y}\""
+                } else ""
+                "areaHectares" -> areaHectares.toString()
+                "plantingDate" -> plantingDate?.toString() ?: ""
+                "expectedHarvestDate" -> expectedHarvestDate?.toString() ?: ""
+                "actualHarvestDate" -> actualHarvestDate?.toString() ?: ""
+                "estimatedYieldKg" -> estimatedYieldKg?.toString() ?: ""
+                "actualYieldKg" -> actualYieldKg?.toString() ?: ""
+                "wardId" -> wardId?.toString() ?: ""
+                "municipalityId" -> municipalityId?.toString() ?: ""
+                "districtId" -> districtId?.toString() ?: ""
+                "provinceId" -> provinceId?.toString() ?: ""
+                "certificationStatus" -> certificationStatus.name
+                "certificationDate" -> certificationDate?.toString() ?: ""
+                "certifiedBy" -> certifiedBy?.toString() ?: ""
+                "notes" -> "\"${notes?.replace("\"", "\"\"") ?: ""}\""
+                "tags" -> "\"${tags.joinToString(";")}\""
+                else -> ""
+            }
+            value
+        }
+        
+        // Combine header and data
+        return "$headerRow\n$dataRow"
+    }
+    
+    override fun toXml(options: ExportOptions): String {
+        val fieldsToExport = getExportableFields(options.exportContext)
+        
+        val xmlBuilder = StringBuilder()
+        xmlBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+        xmlBuilder.append("<CropRecord id=\"$id\">\n")
+        
+        // Add fields based on export context
+        for (fieldName in fieldsToExport) {
+            val value = when (fieldName) {
+                "farmerId" -> farmerId?.toString()
+                "farmerName" -> escapeXml(farmerName)
+                "farmerContact" -> escapeXml(farmerContact)
+                "cropType" -> escapeXml(cropType)
+                "cropVariety" -> escapeXml(cropVariety)
+                "cultivationMethod" -> cultivationMethod.name
+                "fieldLocation" -> fieldLocation?.let { "${it.x},${it.y}" }
+                "areaHectares" -> areaHectares.toString()
+                "plantingDate" -> plantingDate?.toString()
+                "expectedHarvestDate" -> expectedHarvestDate?.toString()
+                "actualHarvestDate" -> actualHarvestDate?.toString()
+                "estimatedYieldKg" -> estimatedYieldKg?.toString()
+                "actualYieldKg" -> actualYieldKg?.toString()
+                "wardId" -> wardId?.toString()
+                "municipalityId" -> municipalityId?.toString()
+                "districtId" -> districtId?.toString()
+                "provinceId" -> provinceId?.toString()
+                "certificationStatus" -> certificationStatus.name
+                "certificationDate" -> certificationDate?.toString()
+                "certifiedBy" -> certifiedBy?.toString()
+                "notes" -> escapeXml(notes)
+                else -> null
+            }
+            
+            if (value != null) {
+                xmlBuilder.append("  <$fieldName>$value</$fieldName>\n")
+            } else if (fieldName == "tags" && tags.isNotEmpty()) {
+                xmlBuilder.append("  <tags>\n")
+                for (tag in tags) {
+                    xmlBuilder.append("    <tag>${escapeXml(tag)}</tag>\n")
+                }
+                xmlBuilder.append("  </tags>\n")
+            }
+        }
+        
+        // Add metadata if requested
+        if (options.includeMetadata) {
+            xmlBuilder.append("  <metadata>\n")
+            xmlBuilder.append("    <exportDate>${LocalDateTime.now()}</exportDate>\n")
+            xmlBuilder.append("    <exportedBy>${escapeXml(options.exportContext.requestedBy)}</exportedBy>\n")
+            xmlBuilder.append("    <exportPurpose>${escapeXml(options.exportContext.purpose)}</exportPurpose>\n")
+            xmlBuilder.append("  </metadata>\n")
+        }
+        
+        xmlBuilder.append("</CropRecord>")
+        return xmlBuilder.toString()
+    }
+    
+    override fun toPdf(options: ExportOptions): ByteArray {
+        // For PDF generation, we'd use a library like iText or Apache PDFBox
+        // This implementation is a simplified representation
+        
+        // Determine PDF type based on context
+        when (options.exportContext.purpose) {
+            "CERTIFICATE" -> return generateCertificatePdf(options)
+            "REPORT" -> return generateReportPdf(options)
+            else -> return generateStandardPdf(options)
+        }
+    }
+    
+    override fun getExportableFields(exportContext: ExportContext): List<String> {
+        // Define field sets based on context
+        return when (exportContext.securityLevel) {
+            SecurityLevel.PUBLIC -> listOf(
+                "cropType", "cropVariety", "cultivationMethod", 
+                "areaHectares", "plantingDate", "districtId", "provinceId"
+            )
+            SecurityLevel.RESEARCHER -> listOf(
+                "cropType", "cropVariety", "cultivationMethod", "areaHectares",
+                "plantingDate", "expectedHarvestDate", "actualHarvestDate",
+                "estimatedYieldKg", "actualYieldKg", "wardId", 
+                "municipalityId", "districtId", "provinceId", "tags"
+            )
+            SecurityLevel.AGRICULTURAL_OFFICER -> listOf(
+                "farmerId", "farmerName", "cropType", "cropVariety", 
+                "cultivationMethod", "fieldLocation", "areaHectares",
+                "plantingDate", "expectedHarvestDate", "actualHarvestDate",
+                "estimatedYieldKg", "actualYieldKg", "wardId", 
+                "municipalityId", "districtId", "provinceId",
+                "certificationStatus", "certificationDate", "certifiedBy",
+                "notes", "tags"
+            )
+            SecurityLevel.FARMER -> listOf(
+                "cropType", "cropVariety", "cultivationMethod", 
+                "areaHectares", "plantingDate", "expectedHarvestDate",
+                "estimatedYieldKg", "certificationStatus", "certificationDate"
+            )
+            SecurityLevel.MINISTRY -> listOf(
+                "cropType", "cropVariety", "cultivationMethod", 
+                "areaHectares", "plantingDate", "expectedHarvestDate", 
+                "actualHarvestDate", "estimatedYieldKg", "actualYieldKg",
+                "wardId", "municipalityId", "districtId", "provinceId",
+                "certificationStatus", "certificationDate", "tags"
+            )
+            else -> listOf(
+                "cropType", "cropVariety", "cultivationMethod", 
+                "areaHectares", "plantingDate"
+            )
+        }
+    }
+    
+    override fun getExportHistory(): List<ExportRecord> {
+        return exportRecords.sortedByDescending { it.exportDate }
+    }
+    
+    override fun sanitizeForExport(securityContext: SecurityContext): ExportableEntity {
+        // Create a copy of the current object with sanitized data
+        val sanitized = this.copy()
+        
+        // Apply sanitization based on security context
+        when (securityContext.securityLevel) {
+            SecurityLevel.PUBLIC, SecurityLevel.RESEARCHER -> {
+                // Remove personal identification information
+                sanitized.farmerId = null
+                sanitized.farmerName = ""
+                sanitized.farmerContact = null
+                
+                // Generalize location to protect privacy
+                sanitized.fieldLocation = null
+                
+                // Remove internal notes
+                sanitized.notes = null
+            }
+            SecurityLevel.AGRICULTURAL_OFFICER -> {
+                // Agricultural officers can see everything
+            }
+            SecurityLevel.FARMER -> {
+                // If not the farmer owning this record, sanitize
+                if (securityContext.userId != this.farmerId) {
+                    sanitized.farmerId = null
+                    sanitized.farmerName = ""
+                    sanitized.farmerContact = null
+                    sanitized.fieldLocation = null
+                    sanitized.notes = null
+                }
+            }
+            SecurityLevel.MINISTRY -> {
+                // Ministry officials see aggregate data, not individual farmer details
+                sanitized.farmerId = null
+                sanitized.farmerName = ""
+                sanitized.farmerContact = null
+                sanitized.fieldLocation = null
+                sanitized.notes = null
+            }
+            else -> {
+                // Default severe sanitization for unknown security contexts
+                sanitized.farmerId = null
+                sanitized.farmerName = ""
+                sanitized.farmerContact = null
+                sanitized.fieldLocation = null
+                sanitized.areaHectares = 0.0
+                sanitized.estimatedYieldKg = null
+                sanitized.actualYieldKg = null
+                sanitized.notes = null
+                sanitized.certifiedBy = null
+            }
+        }
+        
+        return sanitized
+    }
+    
+    override fun enrichForExport(enrichmentContext: EnrichmentContext): ExportableEntity {
+        // Create a copy to enrich
+        val enriched = this.copy()
+        
+        // Apply enrichment based on context
+        when (enrichmentContext.purpose) {
+            "CERTIFICATE" -> {
+                // Add certification details
+                enriched.addCertificationDetails(enrichmentContext)
+            }
+            "REPORT" -> {
+                // Add statistical context
+                enriched.addStatisticalContext(enrichmentContext)
+            }
+            "RESEARCH" -> {
+                // Add research-relevant enrichment
+                enriched.addResearchContext(enrichmentContext)
+            }
+        }
+        
+        return enriched
+    }
+    
+    // Helper methods
+    private fun copy(): CropRecord {
+        val copy = CropRecord()
+        copy.id = this.id
+        copy.farmerId = this.farmerId
+        copy.farmerName = this.farmerName
+        copy.farmerContact = this.farmerContact
+        copy.cropType = this.cropType
+        copy.cropVariety = this.cropVariety
+        copy.cultivationMethod = this.cultivationMethod
+        copy.fieldLocation = this.fieldLocation
+        copy.areaHectares = this.areaHectares
+        copy.plantingDate = this.plantingDate
+        copy.expectedHarvestDate = this.expectedHarvestDate
+        copy.actualHarvestDate = this.actualHarvestDate
+        copy.estimatedYieldKg = this.estimatedYieldKg
+        copy.actualYieldKg = this.actualYieldKg
+        copy.wardId = this.wardId
+        copy.municipalityId = this.municipalityId
+        copy.districtId = this.districtId
+        copy.provinceId = this.provinceId
+        copy.certificationStatus = this.certificationStatus
+        copy.certificationDate = this.certificationDate
+        copy.certifiedBy = this.certifiedBy
+        copy.notes = this.notes
+        copy.tags = this.tags.toMutableSet()
+        return copy
+    }
+    
+    private fun escapeXml(text: String?): String? {
+        if (text == null) return null
+        return text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&apos;")
+    }
+    
+    private fun generateCertificatePdf(options: ExportOptions): ByteArray {
+        // In a real implementation, this would use a PDF library
+        // Here we're just simulating the result
+        return "Certification PDF content".toByteArray()
+    }
+    
+    private fun generateReportPdf(options: ExportOptions): ByteArray {
+        // In a real implementation, this would use a PDF library
+        // Here we're just simulating the result
+        return "Report PDF content".toByteArray()
+    }
+    
+    private fun generateStandardPdf(options: ExportOptions): ByteArray {
+        // In a real implementation, this would use a PDF library
+        // Here we're just simulating the result
+        return "Standard PDF content".toByteArray()
+    }
+    
+    private fun addCertificationDetails(context: EnrichmentContext) {
+        // In a real implementation, this would add certification-specific data
+        // to the enriched record
+    }
+    
+    private fun addStatisticalContext(context: EnrichmentContext) {
+        // In a real implementation, this would add statistical context
+        // for reporting purposes
+    }
+    
+    private fun addResearchContext(context: EnrichmentContext) {
+        // In a real implementation, this would add research-relevant
+        // contextual information
+    }
+}
+
+data class ExportRecord(
+    val id: UUID = UUID.randomUUID(),
+    val cropRecord: CropRecord,
+    val exportDate: LocalDateTime,
+    val exportFormat: String,
+    val exportedBy: String,
+    val exportPurpose: String,
+    val securityLevel: SecurityLevel,
+    val exportedFields: List<String>
+)
+
+enum class SecurityLevel {
+    PUBLIC,
+    RESEARCHER,
+    FARMER,
+    AGRICULTURAL_OFFICER,
+    MINISTRY
+}
+
+data class ExportOptions(
+    val exportContext: ExportContext,
+    val includeMetadata: Boolean = false,
+    val formatOptions: Map<String, Any> = emptyMap()
+)
+
+data class ExportContext(
+    val securityLevel: SecurityLevel,
+    val purpose: String,
+    val requestedBy: String,
+    val additionalContext: Map<String, Any> = emptyMap()
+)
+
+data class EnrichmentContext(
+    val purpose: String,
+    val enrichmentData: Map<String, Any> = emptyMap(),
+    val securityLevel: SecurityLevel
+)
+```

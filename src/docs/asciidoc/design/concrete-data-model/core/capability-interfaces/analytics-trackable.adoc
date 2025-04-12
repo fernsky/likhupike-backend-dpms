@@ -1,0 +1,1272 @@
+===== `AnalyticsTrackable`
+Interface for entities that collect and provide analytics data.
+
+[source,kotlin]
+----
+interface AnalyticsTrackable {
+    fun trackEvent(event: AnalyticsEvent)
+    fun getEventHistory(filter: AnalyticsFilter): List<AnalyticsEvent>
+    fun getMetrics(metricType: MetricType, timeframe: Timeframe): Map<String, Any>
+    fun getPerformanceIndicators(): List<PerformanceIndicator>
+    fun getUsageStatistics(timeframe: Timeframe): UsageStatistics
+    fun getTrends(metricType: MetricType, timeframe: Timeframe): List<TrendPoint>
+    fun getAggregatedData(aggregationType: AggregationType): AggregatedResult
+}
+----
+
+====== Contextual Use Cases for AnalyticsTrackable
+
+*Real-World Scenario:* Rural Health Post Management System
+
+[plantuml]
+----
+@startuml
+actor "Clinic Manager\n(Sunita Tamang)" as Manager
+actor "Health Official\n(Dr. Ramesh Jha)" as Official
+actor "Patient\n(Gopal Sharma)" as Patient
+participant "HealthPost\nimplements AnalyticsTrackable" as HealthPost
+participant "PatientRecord" as PatientRecord
+participant "AnalyticsService" as Analytics
+participant "VisualizationService" as Viz
+participant "ReportingService" as Reporting
+
+Patient -> HealthPost : visitHealthPost(symptoms)
+activate HealthPost
+HealthPost -> PatientRecord : createVisitRecord(patientId, symptoms)
+activate PatientRecord
+HealthPost <-- PatientRecord : visitRecord
+deactivate PatientRecord
+HealthPost -> HealthPost : trackEvent(PATIENT_VISIT)
+activate HealthPost
+HealthPost -> HealthPost : recordEventDetails(visitData)
+HealthPost <-- HealthPost : eventRecorded
+deactivate HealthPost
+Patient <-- HealthPost : treatmentProvided
+deactivate HealthPost
+
+Manager -> HealthPost : viewDailyStatistics()
+activate HealthPost
+HealthPost -> HealthPost : getUsageStatistics(DAILY)
+activate HealthPost
+HealthPost -> HealthPost : calculateVisitCount()
+HealthPost -> HealthPost : calculateServiceUtilization()
+HealthPost -> HealthPost : calculateMedicationDispensed()
+HealthPost <-- HealthPost : dailyStatistics
+deactivate HealthPost
+Manager <-- HealthPost : statisticsReport
+deactivate HealthPost
+
+Manager -> HealthPost : analyzeTrends(symptomType, MONTHLY)
+activate HealthPost
+HealthPost -> HealthPost : getTrends(SYMPTOM_FREQUENCY, MONTHLY)
+activate HealthPost
+HealthPost -> Analytics : retrieveTrendData(healthPostId, symptomType)
+activate Analytics
+HealthPost <-- Analytics : rawTrendData
+deactivate Analytics
+HealthPost -> HealthPost : processRawData(trendData)
+HealthPost <-- HealthPost : symptomTrends
+deactivate HealthPost
+HealthPost -> Viz : generateTrendChart(symptomTrends)
+activate Viz
+HealthPost <-- Viz : trendVisualization
+deactivate Viz
+Manager <-- HealthPost : trendAnalysis
+deactivate HealthPost
+
+Official -> HealthPost : requestPerformanceReport(district)
+activate HealthPost
+HealthPost -> HealthPost : getPerformanceIndicators()
+activate HealthPost
+HealthPost -> HealthPost : calculatePatientThroughput()
+HealthPost -> HealthPost : calculateAverageWaitTime()
+HealthPost -> HealthPost : calculateTreatmentSuccessRate()
+HealthPost -> HealthPost : calculateResourceUtilization()
+HealthPost <-- HealthPost : performanceMetrics
+deactivate HealthPost
+HealthPost -> Reporting : generateDistrictComparison(metrics)
+activate Reporting
+HealthPost <-- Reporting : benchmarkReport
+deactivate Reporting
+Official <-- HealthPost : performanceReport
+deactivate HealthPost
+
+Official -> HealthPost : analyzeDiseaseBurden(SEASONAL)
+activate HealthPost
+HealthPost -> HealthPost : getAggregatedData(DISEASE_DISTRIBUTION)
+activate HealthPost
+HealthPost -> Analytics : retrieveDiseaseCounts(healthPostId)
+activate Analytics
+HealthPost <-- Analytics : diseaseCounts
+deactivate Analytics
+HealthPost -> Analytics : getSeasonalFactors()
+activate Analytics
+HealthPost <-- Analytics : seasonalPatterns
+deactivate Analytics
+HealthPost -> HealthPost : correlateWithSeasonalFactors(diseaseCounts, seasonalPatterns)
+HealthPost <-- HealthPost : seasonalDiseaseDistribution
+deactivate HealthPost
+Official <-- HealthPost : diseaseAnalysis
+deactivate HealthPost
+
+Manager -> HealthPost : forecastResourceNeeds(QUARTERLY)
+activate HealthPost
+HealthPost -> HealthPost : getMetrics(RESOURCE_UTILIZATION, QUARTERLY)
+activate HealthPost
+HealthPost -> HealthPost : aggregateConsumptionData()
+HealthPost -> HealthPost : analyzeSeasonalDemand()
+HealthPost -> HealthPost : projectFutureNeeds()
+HealthPost <-- HealthPost : resourceForecast
+deactivate HealthPost
+Manager <-- HealthPost : quarterlyForecastReport
+deactivate HealthPost
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Rural Health Initiative uses the AnalyticsTrackable interface in its HealthPost entity to enable data-driven decision making across remote health facilities in mountainous regions. This implementation empowers local healthcare workers with insights despite limited connectivity and infrastructure.
+
+When patient Gopal Sharma visits the Dolakha District health post with respiratory symptoms, Clinic Manager Sunita Tamang records his visit in the system. The HealthPost entity automatically tracks this event using the trackEvent() method, capturing details like symptom type, patient demographics, and treatment provided. This happens locally on Sunita's tablet, even without internet connectivity.
+
+At the end of the day, Sunita reviews the daily statistics using the getUsageStatistics() method, which shows they've treated 28 patients, dispensed 45 medication courses, and conducted 7 immunizations. The system highlights an unusual increase in respiratory cases compared to the typical daily average, prompting Sunita to investigate further.
+
+Using the getTrends() method, Sunita analyzes respiratory cases over the past month, discovering a consistent increase that correlates with the start of the agricultural burning season. The system automatically provides visualizations showing the trend alongside historical patterns, empowering Sunita to implement preventive measures and adjust medication inventory accordingly.
+
+When Dr. Ramesh Jha from the District Health Office conducts his quarterly review, he uses the getPerformanceIndicators() method to assess key metrics across all health posts in the district. This standardized approach allows him to identify that while the Dolakha post has excellent treatment success rates (94% vs. district average of 89%), their patient wait times are longer than other facilities (38 minutes vs. district average of 22 minutes), suggesting a need for process improvements.
+
+For seasonal planning, Dr. Jha uses the getAggregatedData() method to analyze disease patterns across multiple years, revealing clear correlations between monsoon months and waterborne diseases in specific village clusters. This analysis enables targeted preventive interventions before the rainy season begins, reducing disease burden by allocating resources more effectively.
+
+Sunita uses the metrics to forecast resource needs for the upcoming quarter, ensuring adequate supplies of respiratory medications and educational materials on air quality. The system projects a 30% increase in respiratory cases and calculates precise medication requirements based on historical treatment patterns.
+
+The AnalyticsTrackable implementation provides several important benefits in this rural healthcare context:
+1. Evidence-based decision making for resource-constrained facilities
+2. Offline analytics capabilities that function despite intermittent connectivity
+3. Standardized performance metrics for equitable service evaluation
+4. Early warning detection for disease outbreaks and unusual patterns
+5. Seasonal forecasting to prevent stock-outs of critical medications
+6. Comparative analysis to identify best practices across different health posts
+
+*Technical Implementation Example:*
+```kotlin
+class HealthPost : BaseEntity(), AnalyticsTrackable {
+    var name: String = ""
+    var districtId: UUID? = null
+    var municipalityId: UUID? = null
+    var wardId: UUID? = null
+    var location: Point? = null
+    var facilityType: HealthFacilityType = HealthFacilityType.HEALTH_POST
+    var staffCount: Int = 0
+    var bedsCount: Int = 0
+    var operationalStatus: OperationalStatus = OperationalStatus.ACTIVE
+    var servicesOffered: MutableSet<HealthService> = mutableSetOf()
+    
+    @OneToMany(mappedBy = "healthPost", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val analyticsEvents: MutableList<HealthPostAnalyticsEvent> = mutableListOf()
+    
+    @OneToMany(mappedBy = "healthPost", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val dailyStatistics: MutableList<HealthPostDailyStats> = mutableListOf()
+    
+    @OneToMany(mappedBy = "healthPost", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val monthlyStatistics: MutableList<HealthPostMonthlyStats> = mutableListOf()
+    
+    // Implementation of AnalyticsTrackable interface
+    override fun trackEvent(event: AnalyticsEvent) {
+        if (event !is HealthPostAnalyticsEvent) {
+            throw IllegalArgumentException("Event must be a HealthPostAnalyticsEvent")
+        }
+        
+        event.healthPost = this
+        analyticsEvents.add(event)
+        
+        // Update real-time counters for current day stats
+        val todayStats = getDailyStatsForToday()
+        
+        when (event.eventType) {
+            EventType.PATIENT_VISIT -> {
+                todayStats.patientVisitCount++
+                
+                // Update demographic counters if available
+                event.metadata["patientGender"]?.let { gender ->
+                    when (gender) {
+                        "MALE" -> todayStats.malePatientCount++
+                        "FEMALE" -> todayStats.femalePatientCount++
+                        "OTHER" -> todayStats.otherGenderPatientCount++
+                    }
+                }
+                
+                event.metadata["patientAge"]?.let { age ->
+                    when (age.toString().toInt()) {
+                        in 0..5 -> todayStats.infantVisitCount++
+                        in 6..18 -> todayStats.childVisitCount++
+                        in 19..59 -> todayStats.adultVisitCount++
+                        else -> todayStats.elderlyVisitCount++
+                    }
+                }
+                
+                // Track chief complaint for symptom analysis
+                event.metadata["chiefComplaint"]?.let { complaint ->
+                    val currentCount = todayStats.symptomDistribution[complaint] ?: 0
+                    todayStats.symptomDistribution[complaint.toString()] = currentCount + 1
+                }
+            }
+            EventType.MEDICATION_DISPENSED -> {
+                todayStats.medicationDispensedCount++
+                
+                // Track medication types
+                event.metadata["medicationType"]?.let { medicationType ->
+                    val currentCount = todayStats.medicationDistribution[medicationType] ?: 0
+                    todayStats.medicationDistribution[medicationType.toString()] = currentCount + 1
+                }
+                
+                // Track medication stocks
+                event.metadata["medicationId"]?.let { medicationId ->
+                    event.metadata["quantityDispensed"]?.let { quantity ->
+                        val medication = todayStats.medicationInventoryChanges[medicationId] ?: 0
+                        todayStats.medicationInventoryChanges[medicationId.toString()] = 
+                            medication - quantity.toString().toInt()
+                    }
+                }
+            }
+            EventType.IMMUNIZATION_PROVIDED -> {
+                todayStats.immunizationCount++
+                
+                // Track vaccine types
+                event.metadata["vaccineType"]?.let { vaccineType ->
+                    val currentCount = todayStats.immunizationDistribution[vaccineType] ?: 0
+                    todayStats.immunizationDistribution[vaccineType.toString()] = currentCount + 1
+                }
+            }
+            EventType.REFERRAL_MADE -> {
+                todayStats.referralCount++
+                
+                // Track referral reasons and destinations
+                event.metadata["referralReason"]?.let { reason ->
+                    val currentCount = todayStats.referralReasonDistribution[reason] ?: 0
+                    todayStats.referralReasonDistribution[reason.toString()] = currentCount + 1
+                }
+                
+                event.metadata["referralDestination"]?.let { destination ->
+                    val currentCount = todayStats.referralDestinationDistribution[destination] ?: 0
+                    todayStats.referralDestinationDistribution[destination.toString()] = currentCount + 1
+                }
+            }
+            EventType.STAFF_ACTIVITY -> {
+                // Track staff activities for resource utilization analysis
+                event.metadata["staffId"]?.let { staffId ->
+                    event.metadata["activityType"]?.let { activityType ->
+                        val key = "$staffId:$activityType"
+                        val currentCount = todayStats.staffActivityDistribution[key] ?: 0
+                        todayStats.staffActivityDistribution[key] = currentCount + 1
+                    }
+                }
+            }
+            // Handle other event types
+        }
+        
+        // Save updated stats
+        healthPostDailyStatsRepository.save(todayStats)
+        
+        // Attempt to synchronize with central system if network available
+        try {
+            analyticsService.synchronizeEvent(event)
+        } catch (e: Exception) {
+            // Log synchronization failure but continue - will sync later
+            logger.warn("Failed to synchronize event, will retry later: ${e.message}")
+        }
+    }
+    
+    override fun getEventHistory(filter: AnalyticsFilter): List<AnalyticsEvent> {
+        // Convert filter to query parameters
+        val startDate = filter.timeRange?.start
+        val endDate = filter.timeRange?.end ?: LocalDateTime.now()
+        val eventTypes = filter.eventTypes
+        val metadataFilters = filter.metadataFilters
+        
+        // Build dynamic query
+        var filteredEvents = analyticsEvents.asSequence()
+        
+        if (startDate != null) {
+            filteredEvents = filteredEvents.filter { it.timestamp.isAfter(startDate) }
+        }
+        
+        filteredEvents = filteredEvents.filter { it.timestamp.isBefore(endDate) }
+        
+        if (eventTypes.isNotEmpty()) {
+            filteredEvents = filteredEvents.filter { it.eventType in eventTypes }
+        }
+        
+        // Apply metadata filters if any
+        if (metadataFilters.isNotEmpty()) {
+            filteredEvents = filteredEvents.filter { event ->
+                metadataFilters.all { (key, value) -> 
+                    event.metadata[key]?.toString() == value
+                }
+            }
+        }
+        
+        // Sort by timestamp and return
+        return filteredEvents.sortedBy { it.timestamp }.toList()
+    }
+    
+    override fun getMetrics(metricType: MetricType, timeframe: Timeframe): Map<String, Any> {
+        val result = mutableMapOf<String, Any>()
+        
+        when (metricType) {
+            MetricType.PATIENT_DEMOGRAPHICS -> {
+                val stats = when (timeframe) {
+                    Timeframe.DAILY -> getDailyStatsForToday()
+                    Timeframe.WEEKLY -> aggregateDailyStats(LocalDate.now().minusDays(7), LocalDate.now())
+                    Timeframe.MONTHLY -> getMonthlyStatsForCurrentMonth()
+                    Timeframe.QUARTERLY -> aggregateMonthlyStats(getQuarterStartMonth(), getCurrentMonth())
+                    Timeframe.YEARLY -> aggregateMonthlyStats(
+                        YearMonth.of(LocalDate.now().year, 1),
+                        getCurrentMonth()
+                    )
+                }
+                
+                result["totalPatients"] = stats.patientVisitCount
+                result["genderDistribution"] = mapOf(
+                    "male" to stats.malePatientCount,
+                    "female" to stats.femalePatientCount,
+                    "other" to stats.otherGenderPatientCount
+                )
+                result["ageDistribution"] = mapOf(
+                    "infant" to stats.infantVisitCount,
+                    "child" to stats.childVisitCount,
+                    "adult" to stats.adultVisitCount,
+                    "elderly" to stats.elderlyVisitCount
+                )
+                result["symptomDistribution"] = stats.symptomDistribution
+            }
+            MetricType.SERVICE_UTILIZATION -> {
+                val stats = when (timeframe) {
+                    Timeframe.DAILY -> getDailyStatsForToday()
+                    Timeframe.WEEKLY -> aggregateDailyStats(LocalDate.now().minusDays(7), LocalDate.now())
+                    Timeframe.MONTHLY -> getMonthlyStatsForCurrentMonth()
+                    Timeframe.QUARTERLY -> aggregateMonthlyStats(getQuarterStartMonth(), getCurrentMonth())
+                    Timeframe.YEARLY -> aggregateMonthlyStats(
+                        YearMonth.of(LocalDate.now().year, 1),
+                        getCurrentMonth()
+                    )
+                }
+                
+                result["totalVisits"] = stats.patientVisitCount
+                result["medicationsDispensed"] = stats.medicationDispensedCount
+                result["immunizationsProvided"] = stats.immunizationCount
+                result["referralsMade"] = stats.referralCount
+                result["serviceBreakdown"] = calculateServiceBreakdown(stats)
+                result["peakHours"] = calculatePeakHours(timeframe)
+                result["averageWaitTime"] = calculateAverageWaitTime(timeframe)
+                result["averageVisitDuration"] = calculateAverageVisitDuration(timeframe)
+            }
+            MetricType.RESOURCE_UTILIZATION -> {
+                result["staffUtilization"] = calculateStaffUtilization(timeframe)
+                result["medicationUsage"] = calculateMedicationUsage(timeframe)
+                result["suppliesConsumption"] = calculateSuppliesConsumption(timeframe)
+                result["equipmentUsage"] = calculateEquipmentUsage(timeframe)
+                result["resourceEfficiency"] = calculateResourceEfficiency(timeframe)
+            }
+            MetricType.HEALTH_OUTCOMES -> {
+                result["treatmentSuccessRate"] = calculateTreatmentSuccessRate(timeframe)
+                result["readmissionRate"] = calculateReadmissionRate(timeframe)
+                result["referralOutcomes"] = calculateReferralOutcomes(timeframe)
+                result["diseaseOutcomes"] = calculateDiseaseOutcomes(timeframe)
+                result["preventiveSuccessMetrics"] = calculatePreventiveSuccessMetrics(timeframe)
+            }
+        }
+        
+        return result
+    }
+    
+    override fun getPerformanceIndicators(): List<PerformanceIndicator> {
+        val indicators = mutableListOf<PerformanceIndicator>()
+        
+        // Patient throughput indicator
+        val dailyStats = getDailyStatsForLastWeek()
+        val avgDailyPatients = dailyStats.map { it.patientVisitCount }.average()
+        val districtAvg = healthPostStatsService.getDistrictAveragePatientCount(districtId!!)
+        
+        indicators.add(PerformanceIndicator(
+            name = "Patient Throughput",
+            value = avgDailyPatients,
+            comparisonValue = districtAvg,
+            trend = calculateTrend(dailyStats.map { it.patientVisitCount }),
+            status = determineStatus(avgDailyPatients, districtAvg, 0.1),
+            category = "Utilization"
+        ))
+        
+        // Wait time indicator
+        val avgWaitTime = calculateAverageWaitTime(Timeframe.WEEKLY)
+        val districtWaitTime = healthPostStatsService.getDistrictAverageWaitTime(districtId!!)
+        
+        indicators.add(PerformanceIndicator(
+            name = "Average Wait Time",
+            value = avgWaitTime,
+            comparisonValue = districtWaitTime,
+            trend = calculateWaitTimeTrend(),
+            status = determineStatus(districtWaitTime, avgWaitTime, 0.1), // Lower is better
+            category = "Efficiency"
+        ))
+        
+        // Treatment success rate
+        val successRate = calculateTreatmentSuccessRate(Timeframe.MONTHLY)
+        val districtSuccessRate = healthPostStatsService.getDistrictTreatmentSuccessRate(districtId!!)
+        
+        indicators.add(PerformanceIndicator(
+            name = "Treatment Success Rate",
+            value = successRate,
+            comparisonValue = districtSuccessRate,
+            trend = calculateSuccessRateTrend(),
+            status = determineStatus(successRate, districtSuccessRate, 0.05),
+            category = "Quality"
+        ))
+        
+        // Resource utilization indicator
+        val resourceEfficiency = calculateResourceEfficiency(Timeframe.MONTHLY)
+        val districtEfficiency = healthPostStatsService.getDistrictResourceEfficiency(districtId!!)
+        
+        indicators.add(PerformanceIndicator(
+            name = "Resource Efficiency",
+            value = resourceEfficiency,
+            comparisonValue = districtEfficiency,
+            trend = calculateResourceEfficiencyTrend(),
+            status = determineStatus(resourceEfficiency, districtEfficiency, 0.1),
+            category = "Efficiency"
+        ))
+        
+        // Preventive service coverage
+        val preventiveCoverage = calculatePreventiveCoverage()
+        val districtCoverage = healthPostStatsService.getDistrictPreventiveCoverage(districtId!!)
+        
+        indicators.add(PerformanceIndicator(
+            name = "Preventive Service Coverage",
+            value = preventiveCoverage,
+            comparisonValue = districtCoverage,
+            trend = calculatePreventiveCoverageTrend(),
+            status = determineStatus(preventiveCoverage, districtCoverage, 0.1),
+            category = "Quality"
+        ))
+        
+        return indicators
+    }
+    
+    override fun getUsageStatistics(timeframe: Timeframe): UsageStatistics {
+        val stats = when (timeframe) {
+            Timeframe.DAILY -> getDailyStatsForToday()
+            Timeframe.WEEKLY -> aggregateDailyStats(LocalDate.now().minusDays(7), LocalDate.now())
+            Timeframe.MONTHLY -> getMonthlyStatsForCurrentMonth()
+            Timeframe.QUARTERLY -> aggregateMonthlyStats(getQuarterStartMonth(), getCurrentMonth())
+            Timeframe.YEARLY -> aggregateMonthlyStats(
+                YearMonth.of(LocalDate.now().year, 1),
+                getCurrentMonth()
+            )
+        }
+        
+        return UsageStatistics(
+            totalVisits = stats.patientVisitCount,
+            uniquePatients = calculateUniquePatients(timeframe),
+            utilizationRate = calculateUtilizationRate(stats.patientVisitCount, timeframe),
+            serviceCounts = mapOf(
+                "medications" to stats.medicationDispensedCount,
+                "immunizations" to stats.immunizationCount,
+                "referrals" to stats.referralCount
+            ),
+            resourceUtilization = calculateResourceUtilizationMap(timeframe),
+            peakPeriods = calculatePeakPeriods(timeframe),
+            demographicBreakdown = mapOf(
+                "gender" to mapOf(
+                    "male" to stats.malePatientCount,
+                    "female" to stats.femalePatientCount,
+                    "other" to stats.otherGenderPatientCount
+                ),
+                "age" to mapOf(
+                    "infant" to stats.infantVisitCount,
+                    "child" to stats.childVisitCount,
+                    "adult" to stats.adultVisitCount,
+                    "elderly" to stats.elderlyVisitCount
+                )
+            ),
+            // Add geographic distribution of patients if available
+            timeDistribution = calculateTimeDistribution(timeframe),
+            serviceBreakdown = calculateServiceBreakdownPercentages(stats),
+            abnormalPatterns = detectAbnormalPatterns(timeframe)
+        )
+    }
+    
+    override fun getTrends(metricType: MetricType, timeframe: Timeframe): List<TrendPoint> {
+        val trendPoints = mutableListOf<TrendPoint>()
+        
+        when (metricType) {
+            MetricType.PATIENT_DEMOGRAPHICS -> {
+                when (timeframe) {
+                    Timeframe.DAILY -> {
+                        // Get hourly trend for today
+                        val hourlyStats = analyticsEvents
+                            .filter { it.eventType == EventType.PATIENT_VISIT }
+                            .filter { it.timestamp.toLocalDate() == LocalDate.now() }
+                            .groupBy { it.timestamp.hour }
+                        
+                        // Create trend points for each hour
+                        for (hour in 0..23) {
+                            val count = hourlyStats[hour]?.size ?: 0
+                            trendPoints.add(TrendPoint(
+                                label = hour.toString(),
+                                value = count.toDouble(),
+                                timestamp = LocalDateTime.now().withHour(hour).withMinute(0),
+                                metadata = mapOf("hour" to hour)
+                            ))
+                        }
+                    }
+                    Timeframe.WEEKLY -> {
+                        // Get daily trend for past week
+                        val startDate = LocalDate.now().minusDays(6)
+                        for (i in 0..6) {
+                            val date = startDate.plusDays(i.toLong())
+                            val stats = getDailyStatsForDate(date)
+                            
+                            trendPoints.add(TrendPoint(
+                                label = date.toString(),
+                                value = stats.patientVisitCount.toDouble(),
+                                timestamp = date.atStartOfDay(),
+                                metadata = mapOf(
+                                    "dayOfWeek" to date.dayOfWeek.value,
+                                    "maleCount" to stats.malePatientCount,
+                                    "femaleCount" to stats.femalePatientCount
+                                )
+                            ))
+                        }
+                    }
+                    Timeframe.MONTHLY -> {
+                        // Get daily trend for current month
+                        val month = LocalDate.now().month
+                        val year = LocalDate.now().year
+                        val daysInMonth = month.length(Year.isLeap(year.toLong()))
+                        
+                        for (day in 1..daysInMonth) {
+                            val date = LocalDate.of(year, month, day)
+                            if (date.isAfter(LocalDate.now())) break
+                            
+                            val stats = getDailyStatsForDate(date)
+                            trendPoints.add(TrendPoint(
+                                label = day.toString(),
+                                value = stats.patientVisitCount.toDouble(),
+                                timestamp = date.atStartOfDay(),
+                                metadata = mapOf("dayOfMonth" to day)
+                            ))
+                        }
+                    }
+                    Timeframe.QUARTERLY -> {
+                        // Get weekly trend for current quarter
+                        val currentQuarter = (LocalDate.now().monthValue - 1) / 3 + 1
+                        val startMonth = (currentQuarter - 1) * 3 + 1
+                        val startDate = LocalDate.of(LocalDate.now().year, startMonth, 1)
+                        val endDate = LocalDate.now()
+                        
+                        var weekStart = startDate
+                        while (weekStart.isBefore(endDate)) {
+                            val weekEnd = weekStart.plusDays(6)
+                            val stats = aggregateDailyStats(weekStart, weekEnd.minusDays(weekEnd.isAfter(endDate) ? 1 : 0))
+                            
+                            trendPoints.add(TrendPoint(
+                                label = "Week of ${weekStart.monthValue}/${weekStart.dayOfMonth}",
+                                value = stats.patientVisitCount.toDouble(),
+                                timestamp = weekStart.atStartOfDay(),
+                                metadata = mapOf(
+                                    "weekStart" to weekStart.toString(),
+                                    "weekEnd" to weekEnd.toString()
+                                )
+                            ))
+                            
+                            weekStart = weekEnd.plusDays(1)
+                        }
+                    }
+                    Timeframe.YEARLY -> {
+                        // Get monthly trend for current year
+                        for (month in 1..12) {
+                            val yearMonth = YearMonth.of(LocalDate.now().year, month)
+                            if (yearMonth.isAfter(YearMonth.now())) break
+                            
+                            val monthlyStats = getMonthlyStatsForYearMonth(yearMonth)
+                            trendPoints.add(TrendPoint(
+                                label = Month.of(month).toString(),
+                                value = monthlyStats.patientVisitCount.toDouble(),
+                                timestamp = yearMonth.atDay(1).atStartOfDay(),
+                                metadata = mapOf("month" to month)
+                            ))
+                        }
+                    }
+                }
+            }
+            MetricType.SYMPTOM_FREQUENCY -> {
+                // Build custom trends for symptom frequency analysis
+                when (timeframe) {
+                    Timeframe.WEEKLY -> {
+                        // Get daily symptom distribution for past week
+                        val startDate = LocalDate.now().minusDays(6)
+                        for (i in 0..6) {
+                            val date = startDate.plusDays(i.toLong())
+                            val stats = getDailyStatsForDate(date)
+                            
+                            // Get the top symptoms for this day
+                            val topSymptoms = stats.symptomDistribution
+                                .entries
+                                .sortedByDescending { it.value }
+                                .take(5)
+                                .associate { it.key to it.value }
+                            
+                            trendPoints.add(TrendPoint(
+                                label = date.toString(),
+                                value = stats.patientVisitCount.toDouble(), // total visits
+                                timestamp = date.atStartOfDay(),
+                                metadata = mapOf(
+                                    "dayOfWeek" to date.dayOfWeek.value,
+                                    "symptoms" to topSymptoms
+                                )
+                            ))
+                        }
+                    }
+                    Timeframe.MONTHLY -> {
+                        // Get weekly symptom trends for current month
+                        val currentMonth = LocalDate.now().monthValue
+                        val currentYear = LocalDate.now().year
+                        val startDate = LocalDate.of(currentYear, currentMonth, 1)
+                        
+                        // Group by week of month
+                        var weekStart = startDate
+                        while (weekStart.month == Month.of(currentMonth) && !weekStart.isAfter(LocalDate.now())) {
+                            val weekEnd = weekStart.plusDays(6)
+                            val endDate = if (weekEnd.month != Month.of(currentMonth) || weekEnd.isAfter(LocalDate.now())) {
+                                val lastDayOfMonth = YearMonth.of(currentYear, currentMonth).atEndOfMonth()
+                                minOf(lastDayOfMonth, LocalDate.now())
+                            } else {
+                                weekEnd
+                            }
+                            
+                            val stats = aggregateDailyStats(weekStart, endDate)
+                            
+                            // Aggregate symptoms from daily stats
+                            val aggregatedSymptoms = stats.symptomDistribution
+                                .entries
+                                .sortedByDescending { it.value }
+                                .take(5)
+                                .associate { it.key to it.value }
+                            
+                            trendPoints.add(TrendPoint(
+                                label = "Week ${weekStart.dayOfMonth}-${endDate.dayOfMonth}",
+                                value = stats.patientVisitCount.toDouble(),
+                                timestamp = weekStart.atStartOfDay(),
+                                metadata = mapOf(
+                                    "weekStart" to weekStart.toString(),
+                                    "weekEnd" to endDate.toString(),
+                                    "symptoms" to aggregatedSymptoms
+                                )
+                            ))
+                            
+                            weekStart = endDate.plusDays(1)
+                        }
+                    }
+                    else -> {
+                        // Handle other timeframes based on application needs
+                        // Code would be similar to examples above but with
+                        // appropriate time periods
+                    }
+                }
+            }
+            else -> {
+                // Other metric types would follow similar patterns
+                // but with different data processing
+            }
+        }
+        
+        return trendPoints
+    }
+    
+    override fun getAggregatedData(aggregationType: AggregationType): AggregatedResult {
+        val result = when (aggregationType) {
+            AggregationType.DISEASE_DISTRIBUTION -> {
+                // Aggregate disease/symptom data across time periods
+                val monthlyCounts = monthlyStatistics
+                    .sortedBy { it.yearMonth }
+                    .take(12) // Last 12 months
+                
+                // Combine symptoms across months
+                val allSymptoms = mutableMapOf<String, Int>()
+                monthlyCounts.forEach { monthStats ->
+                    monthStats.symptomDistribution.forEach { (symptom, count) ->
+                        allSymptoms[symptom] = (allSymptoms[symptom] ?: 0) + count
+                    }
+                }
+                
+                // Get top diseases/symptoms
+                val topSymptoms = allSymptoms.entries
+                    .sortedByDescending { it.value }
+                    .take(10)
+                    .associate { it.key to it.value }
+                
+                // Calculate seasonal patterns
+                val seasonalPatterns = calculateSeasonalDiseasePatterns(monthlyCounts)
+                
+                AggregatedResult(
+                    aggregationType = aggregationType,
+                    primaryMetric = "totalSymptomsCounted",
+                    primaryValue = allSymptoms.values.sum(),
+                    dimensions = mapOf(
+                        "topSymptoms" to topSymptoms,
+                        "seasonalPatterns" to seasonalPatterns,
+                        "symptomsByMonth" to monthlyCounts.associate { 
+                            it.yearMonth.toString() to it.symptomDistribution
+                        }
+                    ),
+                    timeRange = TimeRange(
+                        start = monthlyCounts.firstOrNull()?.yearMonth?.atDay(1)?.atStartOfDay(),
+                        end = LocalDateTime.now()
+                    )
+                )
+            }
+            AggregationType.DEMOGRAPHIC_TRENDS -> {
+                // Aggregate demographic data across time periods
+                val monthlyCounts = monthlyStatistics
+                    .sortedBy { it.yearMonth }
+                    .take(12) // Last 12 months
+                
+                // Calculate demographic trends
+                val genderTrends = calculateGenderTrends(monthlyCounts)
+                val ageTrends = calculateAgeTrends(monthlyCounts)
+                
+                AggregatedResult(
+                    aggregationType = aggregationType,
+                    primaryMetric = "totalPatients",
+                    primaryValue = monthlyCounts.sumOf { it.patientVisitCount },
+                    dimensions = mapOf(
+                        "genderTrends" to genderTrends,
+                        "ageTrends" to ageTrends,
+                        "monthlyBreakdown" to monthlyCounts.associate {
+                            it.yearMonth.toString() to mapOf(
+                                "total" to it.patientVisitCount,
+                                "male" to it.malePatientCount,
+                                "female" to it.femalePatientCount,
+                                "other" to it.otherGenderPatientCount,
+                                "infant" to it.infantVisitCount,
+                                "child" to it.childVisitCount,
+                                "adult" to it.adultVisitCount,
+                                "elderly" to it.elderlyVisitCount
+                            )
+                        }
+                    ),
+                    timeRange = TimeRange(
+                        start = monthlyCounts.firstOrNull()?.yearMonth?.atDay(1)?.atStartOfDay(),
+                        end = LocalDateTime.now()
+                    )
+                )
+            }
+            AggregationType.RESOURCE_CONSUMPTION -> {
+                // Aggregate resource consumption data
+                val monthlyCounts = monthlyStatistics
+                    .sortedBy { it.yearMonth }
+                    .take(12) // Last 12 months
+                
+                // Calculate medication usage trends
+                val medicationTrends = calculateMedicationTrends(monthlyCounts)
+                
+                AggregatedResult(
+                    aggregationType = aggregationType,
+                    primaryMetric = "totalMedicationsDispensed",
+                    primaryValue = monthlyCounts.sumOf { it.medicationDispensedCount },
+                    dimensions = mapOf(
+                        "medicationTrends" to medicationTrends,
+                        "monthlyConsumption" to monthlyCounts.associate {
+                            it.yearMonth.toString() to mapOf(
+                                "medications" to it.medicationDispensedCount,
+                                "topMedications" to it.medicationDistribution
+                                    .entries
+                                    .sortedByDescending { entry -> entry.value }
+                                    .take(5)
+                                    .associate { entry -> entry.key to entry.value }
+                            )
+                        }
+                    ),
+                    timeRange = TimeRange(
+                        start = monthlyCounts.firstOrNull()?.yearMonth?.atDay(1)?.atStartOfDay(),
+                        end = LocalDateTime.now()
+                    )
+                )
+            }
+            AggregationType.SERVICE_EFFICIENCY -> {
+                // Aggregate service efficiency metrics
+                val monthlyCounts = monthlyStatistics
+                    .sortedBy { it.yearMonth }
+                    .take(12) // Last 12 months
+                
+                AggregatedResult(
+                    aggregationType = aggregationType,
+                    primaryMetric = "averageWaitTime",
+                    primaryValue = calculateAverageWaitTimeForYear(),
+                    dimensions = mapOf(
+                        "waitTimeTrend" to monthlyCounts.associate {
+                            it.yearMonth.toString() to it.averageWaitTimeMinutes
+                        },
+                        "visitDurationTrend" to monthlyCounts.associate {
+                            it.yearMonth.toString() to it.averageVisitDurationMinutes
+                        },
+                        "staffUtilization" to calculateStaffUtilizationTrend(monthlyCounts)
+                    ),
+                    timeRange = TimeRange(
+                        start = monthlyCounts.firstOrNull()?.yearMonth?.atDay(1)?.atStartOfDay(),
+                        end = LocalDateTime.now()
+                    )
+                )
+            }
+        }
+        
+        return result
+    }
+    
+    // Helper methods
+    private fun getDailyStatsForToday(): HealthPostDailyStats {
+        val today = LocalDate.now()
+        return dailyStatistics.find { it.date == today } ?: createNewDailyStats(today)
+    }
+    
+    private fun getDailyStatsForDate(date: LocalDate): HealthPostDailyStats {
+        return dailyStatistics.find { it.date == date } ?: createNewDailyStats(date)
+    }
+    
+    private fun createNewDailyStats(date: LocalDate): HealthPostDailyStats {
+        val stats = HealthPostDailyStats(
+            healthPost = this,
+            date = date,
+            patientVisitCount = 0,
+            malePatientCount = 0,
+            femalePatientCount = 0,
+            otherGenderPatientCount = 0,
+            infantVisitCount = 0,
+            childVisitCount = 0,
+            adultVisitCount = 0,
+            elderlyVisitCount = 0,
+            medicationDispensedCount = 0,
+            immunizationCount = 0,
+            referralCount = 0,
+            symptomDistribution = mutableMapOf(),
+            medicationDistribution = mutableMapOf(),
+            medicationInventoryChanges = mutableMapOf(),
+            immunizationDistribution = mutableMapOf(),
+            referralReasonDistribution = mutableMapOf(),
+            referralDestinationDistribution = mutableMapOf(),
+            staffActivityDistribution = mutableMapOf(),
+            averageWaitTimeMinutes = 0.0,
+            averageVisitDurationMinutes = 0.0
+        )
+        
+        healthPostDailyStatsRepository.save(stats)
+        return stats
+    }
+    
+    private fun getMonthlyStatsForCurrentMonth(): HealthPostMonthlyStats {
+        val currentYearMonth = YearMonth.now()
+        return getMonthlyStatsForYearMonth(currentYearMonth)
+    }
+    
+    private fun getMonthlyStatsForYearMonth(yearMonth: YearMonth): HealthPostMonthlyStats {
+        return monthlyStatistics.find { it.yearMonth == yearMonth } ?: createNewMonthlyStats(yearMonth)
+    }
+    
+    private fun createNewMonthlyStats(yearMonth: YearMonth): HealthPostMonthlyStats {
+        // Create new or calculate from daily stats
+        val startDate = yearMonth.atDay(1)
+        val endDate = yearMonth.atEndOfMonth()
+        
+        val stats = aggregateDailyStats(startDate, endDate)
+        val monthlyStats = HealthPostMonthlyStats(
+            healthPost = this,
+            yearMonth = yearMonth,
+            patientVisitCount = stats.patientVisitCount,
+            malePatientCount = stats.malePatientCount,
+            femalePatientCount = stats.femalePatientCount,
+            otherGenderPatientCount = stats.otherGenderPatientCount,
+            infantVisitCount = stats.infantVisitCount,
+            childVisitCount = stats.childVisitCount,
+            adultVisitCount = stats.adultVisitCount,
+            elderlyVisitCount = stats.elderlyVisitCount,
+            medicationDispensedCount = stats.medicationDispensedCount,
+            immunizationCount = stats.immunizationCount,
+            referralCount = stats.referralCount,
+            symptomDistribution = stats.symptomDistribution,
+            medicationDistribution = stats.medicationDistribution,
+            immunizationDistribution = stats.immunizationDistribution,
+            referralReasonDistribution = stats.referralReasonDistribution,
+            referralDestinationDistribution = stats.referralDestinationDistribution,
+            averageWaitTimeMinutes = stats.averageWaitTimeMinutes,
+            averageVisitDurationMinutes = stats.averageVisitDurationMinutes
+        )
+        
+        healthPostMonthlyStatsRepository.save(monthlyStats)
+        return monthlyStats
+    }
+    
+    private fun aggregateDailyStats(startDate: LocalDate, endDate: LocalDate): HealthPostDailyStats {
+        // Get all stats in date range
+        val statsInRange = dailyStatistics.filter { 
+            !it.date.isBefore(startDate) && !it.date.isAfter(endDate) 
+        }
+        
+        if (statsInRange.isEmpty()) {
+            return HealthPostDailyStats(
+                healthPost = this,
+                date = startDate,
+                patientVisitCount = 0,
+                // Other fields initialized to zero/empty
+            )
+        }
+        
+        // Aggregate counts
+        val patientVisitCount = statsInRange.sumOf { it.patientVisitCount }
+        val malePatientCount = statsInRange.sumOf { it.malePatientCount }
+        val femalePatientCount = statsInRange.sumOf { it.femalePatientCount }
+        val otherGenderPatientCount = statsInRange.sumOf { it.otherGenderPatientCount }
+        val infantVisitCount = statsInRange.sumOf { it.infantVisitCount }
+        val childVisitCount = statsInRange.sumOf { it.childVisitCount }
+        val adultVisitCount = statsInRange.sumOf { it.adultVisitCount }
+        val elderlyVisitCount = statsInRange.sumOf { it.elderlyVisitCount }
+        val medicationDispensedCount = statsInRange.sumOf { it.medicationDispensedCount }
+        val immunizationCount = statsInRange.sumOf { it.immunizationCount }
+        val referralCount = statsInRange.sumOf { it.referralCount }
+        
+        // Aggregate distributions
+        val symptomDistribution = aggregateDistributions(statsInRange.map { it.symptomDistribution })
+        val medicationDistribution = aggregateDistributions(statsInRange.map { it.medicationDistribution })
+        val immunizationDistribution = aggregateDistributions(statsInRange.map { it.immunizationDistribution })
+        val referralReasonDistribution = aggregateDistributions(statsInRange.map { it.referralReasonDistribution })
+        val referralDestinationDistribution = aggregateDistributions(statsInRange.map { it.referralDestinationDistribution })
+        val staffActivityDistribution = aggregateDistributions(statsInRange.map { it.staffActivityDistribution })
+        
+        // Calculate weighted averages for time metrics
+        val totalPatients = patientVisitCount.toDouble().takeIf { it > 0 } ?: 1.0
+        val weightedWaitTime = statsInRange.sumOf { it.averageWaitTimeMinutes * it.patientVisitCount } / totalPatients
+        val weightedVisitDuration = statsInRange.sumOf { it.averageVisitDurationMinutes * it.patientVisitCount } / totalPatients
+        
+        return HealthPostDailyStats(
+            healthPost = this,
+            date = startDate, // Using start date as reference
+            patientVisitCount = patientVisitCount,
+            malePatientCount = malePatientCount,
+            femalePatientCount = femalePatientCount,
+            otherGenderPatientCount = otherGenderPatientCount,
+            infantVisitCount = infantVisitCount,
+            childVisitCount = childVisitCount,
+            adultVisitCount = adultVisitCount,
+            elderlyVisitCount = elderlyVisitCount,
+            medicationDispensedCount = medicationDispensedCount,
+            immunizationCount = immunizationCount,
+            referralCount = referralCount,
+            symptomDistribution = symptomDistribution,
+            medicationDistribution = medicationDistribution,
+            medicationInventoryChanges = mutableMapOf(), // Not aggregating inventory changes
+            immunizationDistribution = immunizationDistribution,
+            referralReasonDistribution = referralReasonDistribution,
+            referralDestinationDistribution = referralDestinationDistribution,
+            staffActivityDistribution = staffActivityDistribution,
+            averageWaitTimeMinutes = weightedWaitTime,
+            averageVisitDurationMinutes = weightedVisitDuration
+        )
+    }
+    
+    private fun aggregateMonthlyStats(startMonth: YearMonth, endMonth: YearMonth): HealthPostMonthlyStats {
+        // Get all stats in month range
+        val statsInRange = monthlyStatistics.filter { 
+            !it.yearMonth.isBefore(startMonth) && !it.yearMonth.isAfter(endMonth) 
+        }
+        
+        if (statsInRange.isEmpty()) {
+            return HealthPostMonthlyStats(
+                healthPost = this,
+                yearMonth = startMonth,
+                patientVisitCount = 0,
+                // Other fields initialized to zero/empty
+            )
+        }
+        
+        // Aggregate counts
+        val patientVisitCount = statsInRange.sumOf { it.patientVisitCount }
+        val malePatientCount = statsInRange.sumOf { it.malePatientCount }
+        val femalePatientCount = statsInRange.sumOf { it.femalePatientCount }
+        val otherGenderPatientCount = statsInRange.sumOf { it.otherGenderPatientCount }
+        val infantVisitCount = statsInRange.sumOf { it.infantVisitCount }
+        val childVisitCount = statsInRange.sumOf { it.childVisitCount }
+        val adultVisitCount = statsInRange.sumOf { it.adultVisitCount }
+        val elderlyVisitCount = statsInRange.sumOf { it.elderlyVisitCount }
+        val medicationDispensedCount = statsInRange.sumOf { it.medicationDispensedCount }
+        val immunizationCount = statsInRange.sumOf { it.immunizationCount }
+        val referralCount = statsInRange.sumOf { it.referralCount }
+        
+        // Aggregate distributions
+        val symptomDistribution = aggregateDistributions(statsInRange.map { it.symptomDistribution })
+        val medicationDistribution = aggregateDistributions(statsInRange.map { it.medicationDistribution })
+        val immunizationDistribution = aggregateDistributions(statsInRange.map { it.immunizationDistribution })
+        val referralReasonDistribution = aggregateDistributions(statsInRange.map { it.referralReasonDistribution })
+        val referralDestinationDistribution = aggregateDistributions(statsInRange.map { it.referralDestinationDistribution })
+        
+        // Calculate weighted averages for time metrics
+        val totalPatients = patientVisitCount.toDouble().takeIf { it > 0 } ?: 1.0
+        val weightedWaitTime = statsInRange.sumOf { it.averageWaitTimeMinutes * it.patientVisitCount } / totalPatients
+        val weightedVisitDuration = statsInRange.sumOf { it.averageVisitDurationMinutes * it.patientVisitCount } / totalPatients
+        
+        return HealthPostMonthlyStats(
+            healthPost = this,
+            yearMonth = startMonth, // Using start month as reference
+            patientVisitCount = patientVisitCount,
+            malePatientCount = malePatientCount,
+            femalePatientCount = femalePatientCount,
+            otherGenderPatientCount = otherGenderPatientCount,
+            infantVisitCount = infantVisitCount,
+            childVisitCount = childVisitCount,
+            adultVisitCount = adultVisitCount,
+            elderlyVisitCount = elderlyVisitCount,
+            medicationDispensedCount = medicationDispensedCount,
+            immunizationCount = immunizationCount,
+            referralCount = referralCount,
+            symptomDistribution = symptomDistribution,
+            medicationDistribution = medicationDistribution,
+            immunizationDistribution = immunizationDistribution,
+            referralReasonDistribution = referralReasonDistribution,
+            referralDestinationDistribution = referralDestinationDistribution,
+            averageWaitTimeMinutes = weightedWaitTime,
+            averageVisitDurationMinutes = weightedVisitDuration
+        )
+    }
+    
+    private fun <K> aggregateDistributions(distributions: List<Map<K, Int>>): MutableMap<K, Int> {
+        val result = mutableMapOf<K, Int>()
+        distributions.forEach { distribution ->
+            distribution.forEach { (key, count) ->
+                result[key] = (result[key] ?: 0) + count
+            }
+        }
+        return result
+    }
+    
+    private fun getCurrentMonth(): YearMonth = YearMonth.now()
+    
+    private fun getQuarterStartMonth(): YearMonth {
+        val currentMonth = LocalDate.now().monthValue
+        val quarterStartMonth = ((currentMonth - 1) / 3) * 3 + 1
+        return YearMonth.of(LocalDate.now().year, quarterStartMonth)
+    }
+    
+    private fun getDailyStatsForLastWeek(): List<HealthPostDailyStats> {
+        val endDate = LocalDate.now()
+        val startDate = endDate.minusDays(6)
+        return dailyStatistics.filter { 
+            !it.date.isBefore(startDate) && !it.date.isAfter(endDate) 
+        }.sortedBy { it.date }
+    }
+    
+    // Additional helper methods would implement the various calculation functions
+    // referenced in the code above, such as:
+    // - calculateServiceBreakdown()
+    // - calculatePeakHours()
+    // - calculateAverageWaitTime()
+    // - calculateStaffUtilization()
+    // - calculateTreatmentSuccessRate()
+    // - etc.
+}
+
+// Supporting data classes
+data class AnalyticsFilter(
+    val timeRange: TimeRange? = null,
+    val eventTypes: Set<EventType> = emptySet(),
+    val metadataFilters: Map<String, String> = emptyMap()
+)
+
+data class TimeRange(
+    val start: LocalDateTime? = null,
+    val end: LocalDateTime? = null
+)
+
+data class TrendPoint(
+    val label: String,
+    val value: Double,
+    val timestamp: LocalDateTime,
+    val metadata: Map<String, Any> = emptyMap()
+)
+
+data class PerformanceIndicator(
+    val name: String,
+    val value: Double,
+    val comparisonValue: Double? = null,
+    val trend: Trend = Trend.STABLE,
+    val status: IndicatorStatus = IndicatorStatus.NORMAL,
+    val category: String
+)
+
+data class UsageStatistics(
+    val totalVisits: Int,
+    val uniquePatients: Int,
+    val utilizationRate: Double,
+    val serviceCounts: Map<String, Int>,
+    val resourceUtilization: Map<String, Double>,
+    val peakPeriods: Map<String, List<String>>,
+    val demographicBreakdown: Map<String, Map<String, Int>>,
+    val timeDistribution: Map<String, Int>,
+    val serviceBreakdown: Map<String, Double>,
+    val abnormalPatterns: List<AbnormalPattern>?
+)
+
+data class AbnormalPattern(
+    val metric: String,
+    val expectedValue: Double,
+    val actualValue: Double,
+    val deviation: Double,
+    val significance: Double,
+    val possibleCauses: List<String>?
+)
+
+data class AggregatedResult(
+    val aggregationType: AggregationType,
+    val primaryMetric: String,
+    val primaryValue: Number,
+    val dimensions: Map<String, Any>,
+    val timeRange: TimeRange? = null
+)
+
+enum class Trend {
+    INCREASING,
+    DECREASING,
+    STABLE,
+    FLUCTUATING
+}
+
+enum class IndicatorStatus {
+    EXCELLENT,
+    GOOD,
+    NORMAL,
+    WARNING,
+    CRITICAL
+}
+
+enum class MetricType {
+    PATIENT_DEMOGRAPHICS,
+    SERVICE_UTILIZATION,
+    RESOURCE_UTILIZATION,
+    HEALTH_OUTCOMES,
+    SYMPTOM_FREQUENCY
+}
+
+enum class Timeframe {
+    DAILY,
+    WEEKLY,
+    MONTHLY,
+    QUARTERLY,
+    YEARLY
+}
+
+enum class AggregationType {
+    DISEASE_DISTRIBUTION,
+    DEMOGRAPHIC_TRENDS,
+    RESOURCE_CONSUMPTION,
+    SERVICE_EFFICIENCY
+}
+
+enum class EventType {
+    PATIENT_VISIT,
+    MEDICATION_DISPENSED,
+    IMMUNIZATION_PROVIDED,
+    REFERRAL_MADE,
+    STAFF_ACTIVITY,
+    SUPPLY_RECEIVED,
+    SUPPLY_DEPLETED,
+    EQUIPMENT_USED,
+    EQUIPMENT_MAINTAINED
+}
+
+// Entity classes
+class HealthPostAnalyticsEvent(
+    @Id
+    val id: UUID = UUID.randomUUID(),
+    
+    @ManyToOne
+    @JoinColumn(name = "health_post_id")
+    var healthPost: HealthPost? = null,
+    
+    val eventType: EventType,
+    val timestamp: LocalDateTime = LocalDateTime.now(),
+    val userId: UUID? = null,
+    val patientId: UUID? = null,
+    val metadata: Map<String, Any> = emptyMap()
+) : AnalyticsEvent
+
+class HealthPostDailyStats(
+    @Id
+    val id: UUID = UUID.randomUUID(),
+    
+    @ManyToOne
+    @JoinColumn(name = "health_post_id")
+    val healthPost: HealthPost,
+    
+    val date: LocalDate,
+    
+    // Demographic counts
+    var patientVisitCount: Int = 0,
+    var malePatientCount: Int = 0,
+    var femalePatientCount: Int = 0,
+    var otherGenderPatientCount: Int = 0,
+    var infantVisitCount: Int = 0,
+    var childVisitCount: Int = 0,
+    var adultVisitCount: Int = 0,
+    var elderlyVisitCount: Int = 0,
+    
+    // Service counts
+    var medicationDispensedCount: Int = 0,
+    var immunizationCount: Int = 0,
+    var referralCount: Int = 0,
+    
+    // Distributions
+    var symptomDistribution: MutableMap<String, Int> = mutableMapOf(),
+    var medicationDistribution: MutableMap<String, Int> = mutableMapOf(),
+    var medicationInventoryChanges: MutableMap<String, Int> = mutableMapOf(),
+    var immunizationDistribution: MutableMap<String, Int> = mutableMapOf(),
+    var referralReasonDistribution: MutableMap<String, Int> = mutableMapOf(),
+    var referralDestinationDistribution: MutableMap<String, Int> = mutableMapOf(),
+    var staffActivityDistribution: MutableMap<String, Int> = mutableMapOf(),
+    
+    // Time metrics
+    var averageWaitTimeMinutes: Double = 0.0,
+    var averageVisitDurationMinutes: Double = 0.0
+)
+
+class HealthPostMonthlyStats(
+    @Id
+    val id: UUID = UUID.randomUUID(),
+    
+    @ManyToOne
+    @JoinColumn(name = "health_post_id")
+    val healthPost: HealthPost,
+    
+    val yearMonth: YearMonth,
+    
+    // Demographic counts
+    var patientVisitCount: Int = 0,
+    var malePatientCount: Int = 0,
+    var femalePatientCount: Int = 0,
+    var otherGenderPatientCount: Int = 0,
+    var infantVisitCount: Int = 0,
+    var childVisitCount: Int = 0,
+    var adultVisitCount: Int = 0,
+    var elderlyVisitCount: Int = 0,
+    
+    // Service counts
+    var medicationDispensedCount: Int = 0,
+    var immunizationCount: Int = 0,
+    var referralCount: Int = 0,
+    
+    // Distributions
+    var symptomDistribution: Map<String, Int> = mapOf(),
+    var medicationDistribution: Map<String, Int> = mapOf(),
+    var immunizationDistribution: Map<String, Int> = mapOf(),
+    var referralReasonDistribution: Map<String, Int> = mapOf(),
+    var referralDestinationDistribution: Map<String, Int> = mapOf(),
+    
+    // Time metrics
+    var averageWaitTimeMinutes: Double = 0.0,
+    var averageVisitDurationMinutes: Double = 0.0
+)
+```

@@ -1,0 +1,504 @@
+===== `ExternalSystemSyncable`
+Interface for entities that synchronize with external systems.
+
+[source,kotlin]
+----
+interface ExternalSystemSyncable {
+    fun getExternalSystemId(): String?
+    fun getExternalSystemUrl(): String?
+    fun getSyncStatus(): SyncStatus
+    fun getSyncConflicts(): List<SyncConflict>
+    fun updateSyncStatus(status: SyncStatus, lastSyncTime: LocalDateTime)
+    fun resolveSyncConflict(conflictId: UUID, resolution: ConflictResolution): ResolutionResult
+    fun markForSync(priority: SyncPriority = SyncPriority.NORMAL)
+    fun getSyncMetadata(): Map<String, String>
+    fun getLastSyncTime(): LocalDateTime?
+}
+----
+
+====== Contextual Use Cases for ExternalSystemSyncable
+
+*Real-World Scenario:* Election Commission Voter Database Integration
+
+[plantuml]
+----
+@startuml
+actor "Election Officer\n(Binod Sharma)" as Officer
+actor "Citizen\n(Sarita Tamang)" as Citizen
+participant "CitizenProfile\nimplements ExternalSystemSyncable" as Profile
+participant "SyncService" as Sync
+participant "ElectionCommission\nDatabase" as EC
+participant "ConflictResolver" as Resolver
+participant "AuditService" as Audit
+
+Citizen -> Officer : Apply for voter registration
+Officer -> Profile : createOrUpdateProfile(citizenData)
+activate Profile
+Profile -> Profile : validate()
+Profile -> Profile : save()
+Profile -> Profile : markForSync(HIGH)
+Officer <-- Profile : profileCreated
+deactivate Profile
+
+Sync -> Profile : getProfilesToSync()
+activate Profile
+Sync <-- Profile : pendingProfiles
+deactivate Profile
+
+Sync -> EC : syncProfile(profile)
+activate EC
+EC -> EC : findExistingRecord(citizenId)
+
+alt No existing record
+  EC -> EC : createNewVoter(profile)
+  Sync <-- EC : creationSuccess
+  
+  Sync -> Profile : updateSyncStatus(SYNCED, now())
+  activate Profile
+  Profile -> Profile : setSyncStatus(SYNCED)
+  Profile -> Profile : setLastSyncTime(now())
+  Profile -> Profile : setExternalSystemId(voterId)
+  Sync <-- Profile : updated
+  deactivate Profile
+  
+else Record exists with conflicts
+  EC -> EC : detectConflicts(existingVoter, profile)
+  Sync <-- EC : conflictDetails
+  
+  Sync -> Profile : updateSyncStatus(CONFLICT, now())
+  activate Profile
+  Profile -> Profile : setSyncStatus(CONFLICT)
+  Profile -> Profile : addSyncConflict(conflictDetails)
+  Sync <-- Profile : updated
+  deactivate Profile
+  
+  Officer -> Profile : getSyncConflicts()
+  activate Profile
+  Officer <-- Profile : conflicts
+  deactivate Profile
+  
+  Officer -> Resolver : analyzeConflicts(conflicts)
+  activate Resolver
+  Officer <-- Resolver : resolutionOptions
+  deactivate Resolver
+  
+  Officer -> Profile : resolveSyncConflict(conflictId, resolution)
+  activate Profile
+  Profile -> Profile : applyResolution(resolution)
+  Profile -> Profile : recordResolution()
+  Profile -> Profile : clearConflict(conflictId)
+  Profile -> Profile : markForSync(HIGH)
+  Officer <-- Profile : conflictResolved
+  deactivate Profile
+  
+  Sync -> Profile : getProfilesToSync()
+  activate Profile
+  Sync <-- Profile : pendingProfiles
+  deactivate Profile
+  
+  Sync -> EC : syncProfile(profile)
+  activate EC
+  EC -> EC : applyResolution(resolution)
+  Sync <-- EC : syncSuccess
+  deactivate EC
+  
+  Sync -> Profile : updateSyncStatus(SYNCED, now())
+  activate Profile
+  Sync <-- Profile : updated
+  deactivate Profile
+end
+
+else Record exists without conflicts
+  EC -> EC : updateExistingVoter(profile)
+  Sync <-- EC : updateSuccess
+  deactivate EC
+  
+  Sync -> Profile : updateSyncStatus(SYNCED, now())
+  activate Profile
+  Sync <-- Profile : updated
+  deactivate Profile
+end
+
+Sync -> Audit : logSyncOperation(profile, operation)
+activate Audit
+Sync <-- Audit : logConfirmation
+deactivate Audit
+
+Officer -> EC : verifyVoterRegistration(citizenId)
+activate EC
+Officer <-- EC : registrationConfirmed
+deactivate EC
+
+Officer -> Citizen : Provide voter registration card
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Election Commission manages the voter database that must synchronize with the Digital Profile system to ensure eligible citizens are properly registered for elections. The CitizenProfile entity implements the ExternalSystemSyncable interface to facilitate this critical integration, ensuring data consistency across government systems while resolving the practical challenges of rural connectivity and manual processes.
+
+When Sarita Tamang, a 19-year-old citizen from Dhankuta District, visits her local ward office to register as a voter, Election Officer Binod Sharma creates her digital profile in the system. The CitizenProfile entity is automatically marked for synchronization using the markForSync() method with a HIGH priority, as voter registration has strict deadlines for upcoming elections.
+
+The central SyncService periodically processes pending synchronizations, identifying profiles that need to be synchronized with the Election Commission database. When Sarita's profile is processed, the system establishes a secure connection to the EC's voter registration API and attempts to sync her information.
+
+The EC system detects that a partial record for Sarita already exists from a previous paper-based registration, but there's a discrepancy in her date of birth (the paper form shows 2062-03-15 BS while the digital profile shows 2062-02-15 BS). The EC system returns a CONFLICT status with details about the discrepancy.
+
+The SyncService updates Sarita's profile using updateSyncStatus() to reflect the CONFLICT status and records the specific conflict details. When Officer Sharma reviews his pending tasks, he sees Sarita's profile needs resolution. Using getSyncConflicts(), he retrieves the conflict details and collaborates with Sarita to determine the correct date of birth by reviewing her citizenship certificate, confirming it's 2062-02-15 BS (the digital record is correct).
+
+Sharma uses the resolveSyncConflict() method to apply the resolution, which records the decision, clears the conflict, and marks the profile for synchronization again. During the next sync cycle, the SyncService successfully updates the EC database with the corrected information and updates Sarita's profile status to SYNCED.
+
+The system stores the EC's unique voter ID in Sarita's profile using the external system reference fields, allowing future lookups and updates. All synchronization activities are thoroughly logged for audit purposes, creating a verifiable trail of changes and decisions.
+
+This implementation provides several critical benefits in Nepal's context:
+1. Maintains consistency between the Digital Profile system and the Election Commission database
+2. Handles conflict resolution in a structured, auditable manner
+3. Works with intermittent internet connectivity through queued synchronization
+4. Preserves the authoritative record's integrity while enabling cross-system updates
+5. Supports both automated and manual resolution workflows depending on conflict complexity
+6. Provides citizens with a streamlined registration experience despite backend complexity
+
+*Technical Implementation Example:*
+```kotlin
+class CitizenProfile : BaseEntity(), ExternalSystemSyncable {
+    var citizenId: String = ""
+    var fullName: String = ""
+    var dateOfBirth: LocalDate? = null
+    var gender: Gender = Gender.UNSPECIFIED
+    var fatherName: String? = null
+    var motherName: String? = null
+    var permanentAddress: AddressComponent? = null
+    var temporaryAddress: AddressComponent? = null
+    var contactNumber: String? = null
+    var emailAddress: String? = null
+    var maritalStatus: MaritalStatus = MaritalStatus.UNSPECIFIED
+    var photoId: UUID? = null
+    var citizenshipNumber: String? = null
+    var citizenshipIssuedDate: LocalDate? = null
+    var citizenshipIssuedPlace: String? = null
+    
+    // ExternalSystemSyncable implementation fields
+    private var ecVoterId: String? = null
+    private var ecVoterUrl: String? = null
+    private var syncStatus: SyncStatus = SyncStatus.NOT_SYNCED
+    private var lastSyncTime: LocalDateTime? = null
+    private var syncPriority: SyncPriority = SyncPriority.NORMAL
+    private var syncMetadata: MutableMap<String, String> = mutableMapOf()
+    
+    @OneToMany(mappedBy = "citizenProfile", cascade = [CascadeType.ALL], orphanRemoval = true)
+    private val syncConflicts: MutableList<ProfileSyncConflict> = mutableListOf()
+    
+    // Implementation of ExternalSystemSyncable interface
+    override fun getExternalSystemId(): String? = ecVoterId
+    
+    override fun getExternalSystemUrl(): String? = ecVoterUrl
+    
+    override fun getSyncStatus(): SyncStatus = syncStatus
+    
+    override fun updateSyncStatus(status: SyncStatus, lastSyncTime: LocalDateTime) {
+        this.syncStatus = status
+        this.lastSyncTime = lastSyncTime
+        
+        // Log status change
+        auditService.logSyncStatusChange(
+            entityId = id,
+            entityType = "CitizenProfile",
+            oldStatus = syncStatus,
+            newStatus = status,
+            timestamp = lastSyncTime,
+            userId = SecurityContext.getCurrentUser()?.id
+        )
+        
+        // If successfully synced, update any metadata
+        if (status == SyncStatus.SYNCED) {
+            syncPriority = SyncPriority.NORMAL
+        }
+    }
+    
+    override fun getSyncConflicts(): List<SyncConflict> = syncConflicts.toList()
+    
+    override fun resolveSyncConflict(conflictId: UUID, resolution: ConflictResolution): ResolutionResult {
+        // Find the conflict by ID
+        val conflict = syncConflicts.find { it.id == conflictId }
+            ?: return ResolutionResult(
+                success = false,
+                message = "Conflict not found with ID: $conflictId"
+            )
+        
+        try {
+            // Apply the resolution based on the resolution type
+            when (resolution.resolutionType) {
+                ResolutionType.USE_LOCAL -> {
+                    // Keep local value, no change needed to the entity
+                    // Just mark the conflict as resolved
+                }
+                ResolutionType.USE_REMOTE -> {
+                    // Update our entity with the remote value
+                    when (conflict.fieldName) {
+                        "fullName" -> this.fullName = conflict.remoteValue
+                        "dateOfBirth" -> this.dateOfBirth = LocalDate.parse(conflict.remoteValue)
+                        "gender" -> this.gender = Gender.valueOf(conflict.remoteValue)
+                        "fatherName" -> this.fatherName = conflict.remoteValue
+                        "motherName" -> this.motherName = conflict.remoteValue
+                        "permanentAddress" -> {
+                            // We'd need to parse the address from string or JSON
+                            val addressMapper = ObjectMapper()
+                            this.permanentAddress = addressMapper.readValue(
+                                conflict.remoteValue,
+                                AddressComponent::class.java
+                            )
+                        }
+                        "citizenshipNumber" -> this.citizenshipNumber = conflict.remoteValue
+                        "citizenshipIssuedDate" -> this.citizenshipIssuedDate = 
+                            LocalDate.parse(conflict.remoteValue)
+                        "citizenshipIssuedPlace" -> this.citizenshipIssuedPlace = conflict.remoteValue
+                        else -> {
+                            return ResolutionResult(
+                                success = false,
+                                message = "Unsupported field for resolution: ${conflict.fieldName}"
+                            )
+                        }
+                    }
+                }
+                ResolutionType.USE_CUSTOM -> {
+                    // Use the custom value provided in the resolution
+                    val customValue = resolution.customValue
+                        ?: return ResolutionResult(
+                            success = false,
+                            message = "Custom resolution selected but no custom value provided"
+                        )
+                    
+                    when (conflict.fieldName) {
+                        "fullName" -> this.fullName = customValue
+                        "dateOfBirth" -> this.dateOfBirth = LocalDate.parse(customValue)
+                        "gender" -> this.gender = Gender.valueOf(customValue)
+                        "fatherName" -> this.fatherName = customValue
+                        "motherName" -> this.motherName = customValue
+                        // Handle other fields similarly
+                        else -> {
+                            return ResolutionResult(
+                                success = false,
+                                message = "Unsupported field for resolution: ${conflict.fieldName}"
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Record the resolution in the conflict
+            conflict.resolutionType = resolution.resolutionType
+            conflict.resolvedValue = when (resolution.resolutionType) {
+                ResolutionType.USE_LOCAL -> conflict.localValue
+                ResolutionType.USE_REMOTE -> conflict.remoteValue
+                ResolutionType.USE_CUSTOM -> resolution.customValue
+            }
+            conflict.resolvedBy = SecurityContext.getCurrentUser()?.id
+            conflict.resolvedAt = LocalDateTime.now()
+            conflict.resolutionNotes = resolution.notes
+            conflict.status = ConflictStatus.RESOLVED
+            
+            // If this was the last conflict, mark for sync
+            if (syncConflicts.none { it.status == ConflictStatus.PENDING }) {
+                markForSync(SyncPriority.HIGH)
+            }
+            
+            // Log the resolution
+            auditService.logConflictResolution(
+                entityId = id,
+                entityType = "CitizenProfile",
+                conflictId = conflictId,
+                fieldName = conflict.fieldName,
+                resolutionType = resolution.resolutionType,
+                resolvedValue = conflict.resolvedValue,
+                resolvedBy = conflict.resolvedBy,
+                timestamp = conflict.resolvedAt!!
+            )
+            
+            return ResolutionResult(
+                success = true,
+                message = "Conflict resolved successfully",
+                updatedField = conflict.fieldName,
+                newValue = conflict.resolvedValue
+            )
+        } catch (e: Exception) {
+            logger.error("Error resolving conflict: ${e.message}", e)
+            return ResolutionResult(
+                success = false,
+                message = "Error resolving conflict: ${e.message}"
+            )
+        }
+    }
+    
+    override fun markForSync(priority: SyncPriority) {
+        this.syncPriority = priority
+        this.syncStatus = SyncStatus.PENDING
+        
+        // Add to sync queue
+        syncQueueService.enqueue(
+            entityId = id,
+            entityType = "CitizenProfile",
+            priority = priority
+        )
+    }
+    
+    override fun getSyncMetadata(): Map<String, String> = syncMetadata
+    
+    override fun getLastSyncTime(): LocalDateTime? = lastSyncTime
+    
+    // Helper methods for EC Voter Registration specific functionality
+    fun setEcVoterId(voterId: String) {
+        this.ecVoterId = voterId
+        this.ecVoterUrl = "https://voter.election.gov.np/api/voters/$voterId"
+        this.syncMetadata["voterConstituency"] = getConstituencyFromAddress()
+        this.syncMetadata["voterRegistrationDate"] = LocalDate.now().toString()
+    }
+    
+    fun addSyncConflict(conflict: ProfileSyncConflict) {
+        conflict.citizenProfile = this
+        syncConflicts.add(conflict)
+        
+        // Update sync status
+        syncStatus = SyncStatus.CONFLICT
+    }
+    
+    fun isSyncedWithElectionCommission(): Boolean = 
+        syncStatus == SyncStatus.SYNCED && ecVoterId != null
+    
+    // Helper to determine constituency from address
+    private fun getConstituencyFromAddress(): String {
+        val address = permanentAddress ?: return "UNKNOWN"
+        
+        // Logic to determine constituency based on address
+        return constituencyService.determineConstituency(
+            provinceId = address.provinceId,
+            districtId = address.districtId,
+            municipalityId = address.municipalityId,
+            wardId = address.wardId
+        )
+    }
+    
+    // Method to apply changes from the EC system during sync
+    fun applyChangesFromEC(ecProfile: EcVoterProfile): List<ProfileSyncConflict> {
+        val conflicts = mutableListOf<ProfileSyncConflict>()
+        
+        // Compare and potentially update fields
+        if (fullName != ecProfile.voterName && ecProfile.voterName.isNotEmpty()) {
+            val conflict = ProfileSyncConflict(
+                citizenProfile = this,
+                fieldName = "fullName",
+                localValue = fullName,
+                remoteValue = ecProfile.voterName,
+                conflictType = ConflictType.VALUE_MISMATCH,
+                systemName = "EC_VOTER_DB",
+                detectedAt = LocalDateTime.now()
+            )
+            conflicts.add(conflict)
+        }
+        
+        if (dateOfBirth != ecProfile.dateOfBirth && ecProfile.dateOfBirth != null) {
+            val conflict = ProfileSyncConflict(
+                citizenProfile = this,
+                fieldName = "dateOfBirth",
+                localValue = dateOfBirth.toString(),
+                remoteValue = ecProfile.dateOfBirth.toString(),
+                conflictType = ConflictType.VALUE_MISMATCH,
+                systemName = "EC_VOTER_DB",
+                detectedAt = LocalDateTime.now()
+            )
+            conflicts.add(conflict)
+        }
+        
+        // Handle other fields similarly
+        
+        // Return all detected conflicts
+        return conflicts
+    }
+}
+
+// Supporting data classes
+enum class SyncStatus {
+    NOT_SYNCED,
+    PENDING,
+    IN_PROGRESS,
+    SYNCED,
+    CONFLICT,
+    FAILED,
+    REJECTED
+}
+
+enum class SyncPriority {
+    LOW,
+    NORMAL,
+    HIGH,
+    URGENT
+}
+
+enum class ConflictType {
+    VALUE_MISMATCH,
+    MISSING_REMOTE,
+    MISSING_LOCAL,
+    FORMAT_MISMATCH,
+    RELATIONSHIP_CONFLICT
+}
+
+enum class ConflictStatus {
+    PENDING,
+    RESOLVED,
+    IGNORED
+}
+
+enum class ResolutionType {
+    USE_LOCAL,
+    USE_REMOTE,
+    USE_CUSTOM,
+    IGNORE
+}
+
+data class ConflictResolution(
+    val resolutionType: ResolutionType,
+    val customValue: String? = null,
+    val notes: String? = null
+)
+
+data class ResolutionResult(
+    val success: Boolean,
+    val message: String,
+    val updatedField: String? = null,
+    val newValue: String? = null
+)
+
+class ProfileSyncConflict(
+    @Id
+    val id: UUID = UUID.randomUUID(),
+    
+    @ManyToOne
+    @JoinColumn(name = "citizen_profile_id")
+    var citizenProfile: CitizenProfile? = null,
+    
+    val fieldName: String,
+    val localValue: String,
+    val remoteValue: String,
+    val conflictType: ConflictType,
+    val systemName: String,
+    val detectedAt: LocalDateTime,
+    
+    var resolutionType: ResolutionType? = null,
+    var resolvedValue: String? = null,
+    var resolvedBy: UUID? = null,
+    var resolvedAt: LocalDateTime? = null,
+    var resolutionNotes: String? = null,
+    var status: ConflictStatus = ConflictStatus.PENDING
+) : SyncConflict
+
+// EC System integration data classes
+data class EcVoterProfile(
+    val voterId: String,
+    val voterName: String,
+    val dateOfBirth: LocalDate?,
+    val gender: String,
+    val fatherName: String?,
+    val motherName: String?,
+    val permanentAddress: String?,
+    val citizenshipNumber: String?,
+    val constituencyId: String,
+    val pollingSiteName: String?
+)
+```

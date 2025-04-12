@@ -1,0 +1,305 @@
+===== `EventSourcingCapable`
+Interface for entities supporting event sourcing pattern.
+
+[source,kotlin]
+----
+interface EventSourcingCapable {
+    fun getEventStream(): List<DomainEvent>
+    fun applyEvent(event: DomainEvent)
+    fun getCurrentState(): Map<String, Any>
+    fun rebuildFromEvents(events: List<DomainEvent>)
+    fun getLastEventSequence(): Long
+}
+----
+
+====== Contextual Use Cases for EventSourcingCapable
+
+*Real-World Scenario:* Land Ownership Transfer System
+
+[plantuml]
+----
+@startuml
+actor "Land Registry Officer\n(Hari Bahadur)" as Officer
+actor "Property Seller\n(Ramesh Shrestha)" as Seller
+actor "Property Buyer\n(Sita Gurung)" as Buyer
+actor "Auditor\n(Sudip Oli)" as Auditor
+participant "LandParcel\nimplements EventSourcingCapable" as LandParcel
+participant "EventStore" as EventStore
+participant "EventPublisher" as Publisher
+participant "OwnershipService" as Ownership
+participant "AuditService" as Audit
+
+Seller -> Officer : Request property transfer
+Officer -> LandParcel : initiateOwnershipTransfer(parcelId)
+activate LandParcel
+LandParcel -> LandParcel : getEventStream()
+activate LandParcel
+LandParcel <-- LandParcel : eventHistory
+deactivate LandParcel
+LandParcel -> LandParcel : validateCurrentState()
+Officer <-- LandParcel : transferRequest
+deactivate LandParcel
+
+Officer -> LandParcel : recordTransferDocuments(documents)
+activate LandParcel
+LandParcel -> LandParcel : createDocumentsReceivedEvent(documents)
+LandParcel -> EventStore : save(documentsReceivedEvent)
+activate EventStore
+LandParcel <-- EventStore : saved
+deactivate EventStore
+LandParcel -> LandParcel : applyEvent(documentsReceivedEvent)
+Officer <-- LandParcel : documentsRecorded
+deactivate LandParcel
+
+Officer -> LandParcel : validateDocuments()
+activate LandParcel
+LandParcel -> LandParcel : createDocumentsValidatedEvent(validationResults)
+LandParcel -> EventStore : save(documentsValidatedEvent)
+activate EventStore
+LandParcel <-- EventStore : saved
+deactivate EventStore
+LandParcel -> LandParcel : applyEvent(documentsValidatedEvent)
+Officer <-- LandParcel : documentsValid
+deactivate LandParcel
+
+Officer -> LandParcel : recordTransferDetails(transferDetails)
+activate LandParcel
+LandParcel -> LandParcel : createTransferDetailsRecordedEvent(details)
+LandParcel -> EventStore : save(transferDetailsEvent)
+activate EventStore
+LandParcel <-- EventStore : saved
+deactivate EventStore
+LandParcel -> LandParcel : applyEvent(transferDetailsEvent)
+Officer <-- LandParcel : detailsRecorded
+deactivate LandParcel
+
+Seller -> LandParcel : signTransfer(digitalSignature)
+activate LandParcel
+LandParcel -> LandParcel : createSellerSignedEvent(signature)
+LandParcel -> EventStore : save(sellerSignedEvent)
+activate EventStore
+LandParcel <-- EventStore : saved
+deactivate EventStore
+LandParcel -> LandParcel : applyEvent(sellerSignedEvent)
+Seller <-- LandParcel : signatureRecorded
+deactivate LandParcel
+
+Buyer -> LandParcel : signTransfer(digitalSignature)
+activate LandParcel
+LandParcel -> LandParcel : createBuyerSignedEvent(signature)
+LandParcel -> EventStore : save(buyerSignedEvent)
+activate EventStore
+LandParcel <-- EventStore : saved
+deactivate EventStore
+LandParcel -> LandParcel : applyEvent(buyerSignedEvent)
+Buyer <-- LandParcel : signatureRecorded
+deactivate LandParcel
+
+Officer -> LandParcel : approveTransfer()
+activate LandParcel
+LandParcel -> LandParcel : createTransferApprovedEvent(approvalDetails)
+LandParcel -> EventStore : save(transferApprovedEvent)
+activate EventStore
+LandParcel <-- EventStore : saved
+deactivate EventStore
+LandParcel -> LandParcel : applyEvent(transferApprovedEvent)
+Officer <-- LandParcel : transferApproved
+deactivate LandParcel
+
+LandParcel -> Ownership : updateOwnershipRecords()
+activate Ownership
+Ownership -> Ownership : transferOwnership(parcelId, oldOwner, newOwner)
+LandParcel <-- Ownership : ownershipUpdated
+deactivate Ownership
+
+LandParcel -> Publisher : publishTransferCompletedEvent()
+activate Publisher
+Publisher -> Publisher : notifyStakeholders()
+LandParcel <-- Publisher : published
+deactivate Publisher
+
+Auditor -> LandParcel : auditTransferProcess(parcelId)
+activate LandParcel
+LandParcel -> EventStore : getEvents(parcelId)
+activate EventStore
+LandParcel <-- EventStore : completeEventStream
+deactivate EventStore
+LandParcel -> Audit : generateAuditTrail(eventStream)
+activate Audit
+LandParcel <-- Audit : auditReport
+deactivate Audit
+Auditor <-- LandParcel : complete transfer history
+deactivate LandParcel
+
+Auditor -> LandParcel : reconstructStateAt(timestamp)
+activate LandParcel
+LandParcel -> EventStore : getEventsUntil(parcelId, timestamp)
+activate EventStore
+LandParcel <-- EventStore : eventStreamUntilTimestamp
+deactivate EventStore
+LandParcel -> LandParcel : rebuildFromEvents(eventStreamUntilTimestamp)
+Auditor <-- LandParcel : historicalState
+deactivate LandParcel
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Land Registry Department uses the EventSourcingCapable interface to maintain a complete, immutable history of land ownership transfers. This implementation ensures transparency, auditability, and data integrity for one of Nepal's most critical government functions.
+
+When property owner Ramesh Shrestha decides to sell his land to Sita Gurung, Land Registry Officer Hari Bahadur initiates the transfer process. Rather than simply updating a database record of who owns the parcel, the system creates a series of events that together constitute the complete transfer process.
+
+First, Hari initiates the transfer process, generating a `TransferInitiatedEvent` with details including the parcel ID, current owner (Ramesh), prospective owner (Sita), and timestamp. This event is stored in the event store and applied to the LandParcel entity to update its current state.
+
+Next, Hari uploads and records the necessary documents (sale deed, tax clearance, property valuation). This creates a `DocumentsReceivedEvent` containing document metadata and references to the stored files. After validating the documents, a `DocumentsValidatedEvent` is created, detailing the validation checks performed and their outcomes.
+
+Once the preliminary administrative steps are complete, Hari records the specific details of the transfer (sale amount of 7,500,000 NPR, payment verification, etc.), generating a `TransferDetailsRecordedEvent`.
+
+The system then captures signatures from both parties: Ramesh's digital signature generates a `SellerSignedEvent`, and Sita's signature creates a `BuyerSignedEvent`. Both events include cryptographic proof of the signatures and timestamps.
+
+Finally, Hari approves the transfer, creating a `TransferApprovedEvent` with his digital approval signature and timestamp. The system uses these events to update the official ownership records and publishes a `TransferCompletedEvent` to notify relevant stakeholders.
+
+When Auditor Sudip Oli reviews this transaction later, he can see the complete sequence of events with precise timestamps, responsible officials, and all supporting documentation. If questions arise about the state of the parcel at any point in time, he can reconstruct the exact state by replaying the event stream up to that specific moment.
+
+The EventSourcingCapable approach provides several benefits in this land registry context:
+1. Immutable audit trail of all property transactions
+2. Complete history of ownership changes over time
+3. Ability to reconstruct the exact state at any historical point
+4. Built-in data integrity since events are append-only
+5. Detailed tracking of who performed which actions and when
+6. Separation of state changes (events) from current state (projections)
+
+*Technical Implementation Example:*
+```kotlin
+class LandParcel : BaseEntity(), EventSourcingCapable {
+    var parcelNumber: String = ""
+    var currentOwner: UUID? = null
+    var areaInSquareMeters: Double = 0.0
+    var address: String = ""
+    var parcelType: ParcelType = ParcelType.RESIDENTIAL
+    var registrationDate: LocalDate? = null
+    var taxPaymentStatus: TaxPaymentStatus = TaxPaymentStatus.PAID
+    var encumbrances: MutableList<Encumbrance> = mutableListOf()
+    
+    // Event sourcing state variables
+    private var lastEventSequence: Long = 0
+    
+    // Implementation of EventSourcingCapable interface
+    override fun getEventStream(): List<DomainEvent> {
+        return eventStore.getEventsByEntityId(this.id)
+    }
+    
+    override fun applyEvent(event: DomainEvent) {
+        when (event) {
+            is ParcelCreatedEvent -> {
+                this.parcelNumber = event.parcelNumber
+                this.areaInSquareMeters = event.areaInSquareMeters
+                this.address = event.address
+                this.parcelType = event.parcelType
+                this.registrationDate = event.registrationDate
+                this.currentOwner = event.ownerId
+            }
+            is OwnerChangedEvent -> {
+                this.currentOwner = event.newOwnerId
+            }
+            is ParcelTypeChangedEvent -> {
+                this.parcelType = event.newParcelType
+            }
+            is EncumbranceAddedEvent -> {
+                this.encumbrances.add(event.encumbrance)
+            }
+            is EncumbranceRemovedEvent -> {
+                this.encumbrances.removeIf { it.id == event.encumbranceId }
+            }
+            is TaxStatusChangedEvent -> {
+                this.taxPaymentStatus = event.newStatus
+            }
+            // Additional event types handled here
+        }
+        
+        this.lastEventSequence = event.sequenceNumber
+    }
+    
+    override fun getCurrentState(): Map<String, Any> {
+        val state = mutableMapOf<String, Any>()
+        state["id"] = this.id
+        state["parcelNumber"] = this.parcelNumber
+        state["currentOwner"] = this.currentOwner ?: "UNASSIGNED"
+        state["areaInSquareMeters"] = this.areaInSquareMeters
+        state["address"] = this.address
+        state["parcelType"] = this.parcelType.name
+        state["registrationDate"] = this.registrationDate?.toString() ?: ""
+        state["taxPaymentStatus"] = this.taxPaymentStatus.name
+        state["encumbrances"] = this.encumbrances.map { it.toMap() }
+        state["lastEventSequence"] = this.lastEventSequence
+        
+        return state
+    }
+    
+    override fun rebuildFromEvents(events: List<DomainEvent>) {
+        // Reset to initial state
+        this.parcelNumber = ""
+        this.currentOwner = null
+        this.areaInSquareMeters = 0.0
+        this.address = ""
+        this.parcelType = ParcelType.RESIDENTIAL
+        this.registrationDate = null
+        this.taxPaymentStatus = TaxPaymentStatus.UNPAID
+        this.encumbrances.clear()
+        this.lastEventSequence = 0
+        
+        // Apply all events in sequence
+        for (event in events.sortedBy { it.sequenceNumber }) {
+            applyEvent(event)
+        }
+    }
+    
+    override fun getLastEventSequence(): Long {
+        return this.lastEventSequence
+    }
+    
+    // Business functions that create and apply events
+    fun initiateOwnershipTransfer(newOwnerId: UUID): OwnershipTransferInitiatedEvent {
+        if (taxPaymentStatus != TaxPaymentStatus.PAID) {
+            throw IllegalStateException("Cannot transfer parcel with unpaid taxes")
+        }
+        
+        if (encumbrances.any { it.type == EncumbranceType.LIEN }) {
+            throw IllegalStateException("Cannot transfer parcel with active liens")
+        }
+        
+        val event = OwnershipTransferInitiatedEvent(
+            entityId = this.id,
+            currentOwnerId = this.currentOwner ?: throw IllegalStateException("No current owner"),
+            prospectiveOwnerId = newOwnerId,
+            initiatedBy = SecurityContext.getCurrentUser().id,
+            initiatedAt = Instant.now(),
+            sequenceNumber = this.lastEventSequence + 1
+        )
+        
+        eventStore.save(event)
+        applyEvent(event)
+        return event
+    }
+    
+    fun recordTransferDocuments(documents: List<Document>): DocumentsReceivedEvent {
+        val event = DocumentsReceivedEvent(
+            entityId = this.id,
+            documentIds = documents.map { it.id },
+            documentTypes = documents.map { it.type.name },
+            recordedBy = SecurityContext.getCurrentUser().id,
+            recordedAt = Instant.now(),
+            sequenceNumber = this.lastEventSequence + 1
+        )
+        
+        eventStore.save(event)
+        applyEvent(event)
+        return event
+    }
+    
+    // Additional transfer process methods follow the same pattern:
+    // 1. Create an event
+    // 2. Save it to the event store
+    // 3. Apply it to update current state
+    // 4. Return the event
+}
+```

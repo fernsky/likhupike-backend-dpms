@@ -1,0 +1,246 @@
+===== `Taggable`
+Interface marking an entity as taggable with methods for tag management.
+
+[source,kotlin]
+----
+interface Taggable {
+    fun getTags(): Set<Tag>
+    fun addTag(tag: Tag)
+    fun removeTag(tag: Tag)
+    fun hasTag(tagName: String): Boolean
+    fun getTagsByCategory(category: String): Set<Tag>
+    fun getTagsAsString(): String
+    fun setTagsFromString(tagString: String, delimiter: String = ",")
+    fun clearAllTags()
+}
+----
+
+====== Contextual Use Cases for Taggable
+
+*Real-World Scenario:* Cultural Heritage Documentation System
+
+[plantuml]
+----
+@startuml
+actor "Heritage Officer\n(Laxmi Prajapati)" as Officer
+actor "Researcher\n(Rajiv Manandhar)" as Researcher
+actor "Digital Curator\n(Anupa Shrestha)" as Curator
+participant "HeritageArtifact\nimplements Taggable" as Artifact
+participant "TagService" as Tags
+participant "TagCategoryService" as Categories
+participant "SearchService" as Search
+
+Officer -> Artifact : createNewArtifact("Pottery from Ancient Janakpur")
+activate Artifact
+Artifact -> Artifact : generateArtifactRecord()
+Officer <-- Artifact : artifactCreated
+deactivate Artifact
+
+Officer -> Categories : getAvailableCategories()
+activate Categories
+Categories -> Categories : loadCategoriesWithTags()
+Officer <-- Categories : tagCategories
+deactivate Categories
+
+Officer -> Artifact : addTag(newTag("Material", "Clay"))
+activate Artifact
+Artifact -> Tags : validateTag(tag)
+activate Tags
+Artifact <-- Tags : validated
+deactivate Tags
+Artifact -> Artifact : tags.add(tag)
+Officer <-- Artifact : tagAdded
+deactivate Artifact
+
+Officer -> Artifact : addTag(newTag("Period", "Licchavi"))
+activate Artifact
+Artifact -> Artifact : tags.add(tag)
+Officer <-- Artifact : tagAdded
+deactivate Artifact
+
+Officer -> Artifact : addTag(newTag("Type", "Household"))
+activate Artifact
+Artifact -> Artifact : tags.add(tag)
+Officer <-- Artifact : tagAdded
+deactivate Artifact
+
+Officer -> Artifact : addTag(newTag("Location", "Janakpurdham"))
+activate Artifact
+Artifact -> Artifact : tags.add(tag)
+Officer <-- Artifact : tagAdded
+deactivate Artifact
+
+Officer -> Artifact : addTag(newTag("Style", "Mithila"))
+activate Artifact
+Artifact -> Artifact : tags.add(tag)
+Officer <-- Artifact : tagAdded
+deactivate Artifact
+
+Researcher -> Search : findArtifactsByTag("Period", "Licchavi")
+activate Search
+Search -> Search : queryTaggedEntities()
+Researcher <-- Search : licchaviArtifacts
+deactivate Search
+
+Researcher -> Artifact : getTagsByCategory("Material")
+activate Artifact
+Artifact -> Artifact : filterTagsByCategory("Material")
+Researcher <-- Artifact : [Clay]
+deactivate Artifact
+
+Curator -> Artifact : removeTag("Style", "Mithila")
+activate Artifact
+Artifact -> Tags : findTagByNameAndCategory("Style", "Mithila")
+activate Tags
+Artifact <-- Tags : tag
+deactivate Tags
+Artifact -> Artifact : tags.remove(tag)
+Curator <-- Artifact : tagRemoved
+deactivate Artifact
+
+Curator -> Artifact : bulkUpdateTags("Material:Terracotta,Period:Licchavi,Technique:Handmade")
+activate Artifact
+Artifact -> Artifact : clearAllTags()
+Artifact -> Artifact : setTagsFromString(tagString)
+Artifact -> Tags : parseTagString(tagString)
+activate Tags
+Artifact <-- Tags : parsedTags
+deactivate Tags
+loop for each parsedTag
+  Artifact -> Artifact : addTag(tag)
+end
+Curator <-- Artifact : tagsUpdated
+deactivate Artifact
+
+Researcher -> Artifact : getTagsAsString()
+activate Artifact
+Artifact -> Artifact : formatTagsAsString()
+Researcher <-- Artifact : "Material:Terracotta,Period:Licchavi,Technique:Handmade,Location:Janakpurdham,Type:Household"
+deactivate Artifact
+
+Officer -> Search : findRelatedArtifacts(artifactId)
+activate Search
+Search -> Artifact : getTags()
+activate Artifact
+Search <-- Artifact : artifactTags
+deactivate Artifact
+Search -> Search : findBySharedTags(artifactTags)
+Officer <-- Search : relatedArtifacts
+deactivate Search
+
+Curator -> Artifact : exportWithTags()
+activate Artifact
+Artifact -> Artifact : prepareExport()
+Artifact -> Artifact : includeTags()
+Curator <-- Artifact : exportData
+deactivate Artifact
+@enduml
+----
+
+*Implementation Details:*
+The National Cultural Heritage Documentation System uses the Taggable interface to create a comprehensive classification and search system for cultural artifacts. This implementation enables efficient categorization, discovery, and relationship mapping between thousands of cultural heritage items.
+
+Heritage Officer Laxmi Prajapati documents a newly discovered clay pottery artifact from ancient Janakpur. After creating the basic record, she adds multiple tags to properly categorize it: Material:Clay, Period:Licchavi, Type:Household, Location:Janakpurdham, and Style:Mithila. Each tag belongs to a predefined category, creating a consistent taxonomy across the system.
+
+Researcher Rajiv Manandhar later uses this tagging system to find all artifacts from the Licchavi period, regardless of their material or type. The system efficiently retrieves all entities tagged with "Period:Licchavi". He can also focus his analysis by retrieving specific category information, such as all materials used in this particular artifact.
+
+During a review, Digital Curator Anupa Shrestha determines that the style was incorrectly classified. She removes the "Style:Mithila" tag and later performs a bulk update to correct multiple attributes at once, including changing the material from Clay to Terracotta and adding a new Technique:Handmade tag. The system maintains the Location and Type tags while updating the others.
+
+The tagging system enables powerful relationship discovery. When Officer Laxmi searches for related artifacts, the system identifies items that share multiple tags with this pottery piece, revealing patterns in cultural production across different sites with similar characteristics.
+
+For documentation and data exchange, the system can export the artifact information along with its complete tag set, either as structured data or as a simple comma-separated string format that can be easily parsed and imported by other systems.
+
+The Taggable implementation provides several key features:
+1. Hierarchical categorization through category:value tag pairs
+2. Efficient filtering by multiple tag dimensions
+3. Relationship discovery between similarly tagged items
+4. Bulk tag operations for efficient curation
+5. String-based serialization for interchange
+6. Specialized search optimization
+
+*Technical Implementation Example:*
+```kotlin
+class HeritageArtifact : BaseEntity(), Taggable {
+    var name: String = ""
+    var description: String = ""
+    var discoveryDate: LocalDate? = null
+    var discoveryLocation: String? = null
+    
+    @ManyToMany(cascade = [CascadeType.PERSIST])
+    var tags: MutableSet<Tag> = mutableSetOf()
+    
+    // Implementation of Taggable interface
+    override fun getTags(): Set<Tag> {
+        return tags.toSet()
+    }
+    
+    override fun addTag(tag: Tag) {
+        // Ensure tag is in canonical form
+        val canonicalTag = tagService.canonicalizeTag(tag)
+        tags.add(canonicalTag)
+        
+        // Update search index
+        searchService.updateTagIndex(this.id, canonicalTag)
+    }
+    
+    override fun removeTag(tag: Tag) {
+        val existingTag = tags.find { 
+            it.category == tag.category && it.value == tag.value 
+        }
+        
+        if (existingTag != null) {
+            tags.remove(existingTag)
+            
+            // Update search index
+            searchService.removeFromTagIndex(this.id, existingTag)
+        }
+    }
+    
+    override fun hasTag(tagName: String): Boolean {
+        // Support both formats: "category:value" or just "value"
+        if (tagName.contains(":")) {
+            val (category, value) = tagName.split(":", limit = 2)
+            return tags.any { it.category == category && it.value == value }
+        }
+        
+        return tags.any { it.value == tagName }
+    }
+    
+    override fun getTagsByCategory(category: String): Set<Tag> {
+        return tags.filter { it.category == category }.toSet()
+    }
+    
+    override fun getTagsAsString(): String {
+        return tags.joinToString(",") { "${it.category}:${it.value}" }
+    }
+    
+    override fun setTagsFromString(tagString: String, delimiter: String) {
+        // Clear existing tags
+        clearAllTags()
+        
+        // Parse and add new tags
+        tagString.split(delimiter).forEach { tagStr ->
+            if (tagStr.isNotBlank()) {
+                val parts = tagStr.trim().split(":", limit = 2)
+                if (parts.size == 2) {
+                    val tag = Tag(category = parts[0].trim(), value = parts[1].trim())
+                    addTag(tag)
+                } else {
+                    // If no category is provided, use a default
+                    val tag = Tag(category = "General", value = parts[0].trim())
+                    addTag(tag)
+                }
+            }
+        }
+    }
+    
+    override fun clearAllTags() {
+        // Remove from search index before clearing
+        tags.forEach { tag ->
+            searchService.removeFromTagIndex(this.id, tag)
+        }
+        
+        tags.clear()
+    }
+}
+```

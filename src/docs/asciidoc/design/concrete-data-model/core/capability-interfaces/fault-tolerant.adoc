@@ -1,0 +1,968 @@
+===== `FaultTolerant`
+Interface for entities that implement recovery mechanisms for system failures.
+
+[source,kotlin]
+----
+interface FaultTolerant {
+    fun checkpointState(): CheckpointResult
+    fun recoverFromCheckpoint(checkpointId: String): RecoveryResult
+    fun validateStateIntegrity(): ValidationResult
+    fun repairInconsistentState(): RepairResult
+    fun getFailureHistory(): List<FailureRecord>
+    fun getRecoveryActions(): List<RecoveryAction>
+    fun logFailureEvent(failure: FailureEvent)
+}
+----
+
+====== Contextual Use Cases for FaultTolerant
+
+*Real-World Scenario:* Citizen Identity Card Issuance System
+
+[plantuml]
+----
+@startuml
+actor "ID Registration\nOfficer (Mohan)" as Officer
+actor "System Administrator\n(Rita Gurung)" as Admin
+participant "CitizenIdentity\nimplements FaultTolerant" as Identity
+participant "CheckpointService" as Checkpoint
+participant "BiometricService" as Biometric
+participant "CardPrintingService" as Printer
+participant "RecoveryService" as Recovery
+participant "DatabaseService" as Database
+
+Officer -> Identity : submitApplication(citizenData)
+activate Identity
+
+Identity -> Checkpoint : createCheckpoint("PRE_SUBMISSION")
+activate Checkpoint
+Identity <-- Checkpoint : checkpointId
+deactivate Checkpoint
+
+Identity -> Database : saveCitizenProfile(citizenProfile)
+activate Database
+note right: Power outage occurs here!
+Identity <-- Database : connectionError
+deactivate Database
+
+Identity -> Identity : logFailureEvent(failureDetails)
+activate Identity
+Identity -> Identity : createRecoveryTask()
+Identity <-- Identity : taskCreated
+deactivate Identity
+
+Officer <-- Identity : systemError
+deactivate Identity
+
+Officer -> Admin : reportSystemFailure()
+
+Admin -> Recovery : viewPendingRecoveryActions()
+activate Recovery
+Admin <-- Recovery : pendingActions
+deactivate Recovery
+
+Admin -> Recovery : initiateRecovery(transactionId)
+activate Recovery
+
+Recovery -> Identity : getFailureHistory()
+activate Identity
+Recovery <-- Identity : failureRecords
+deactivate Identity
+
+Recovery -> Identity : recoverFromCheckpoint(checkpointId)
+activate Identity
+
+Identity -> Identity : loadCheckpointData()
+Identity -> Identity : validateCheckpointIntegrity()
+Identity -> Database : verifyProfileCreation(citizenProfile)
+activate Database
+Identity <-- Database : notFound
+deactivate Database
+
+Identity -> Database : retryDatabaseOperation(citizenProfile)
+activate Database
+Identity <-- Database : success
+deactivate Database
+
+Identity -> Identity : updateRecoveryStatus(RECOVERED)
+Recovery <-- Identity : recoveryResult
+deactivate Identity
+
+Admin <-- Recovery : recoveryCompleted
+deactivate Recovery
+
+Officer -> Identity : resumeProcess(citizenId)
+activate Identity
+Identity -> Biometric : captureBiometrics(citizenId)
+activate Biometric
+Identity <-- Biometric : biometricData
+deactivate Biometric
+
+Identity -> Checkpoint : createCheckpoint("POST_BIOMETRIC")
+activate Checkpoint
+Identity <-- Checkpoint : checkpointId
+deactivate Checkpoint
+
+Identity -> Printer : printIdentityCard(citizenId, biometricData)
+activate Printer
+
+alt Printer error occurs
+  Identity <-- Printer : printerError
+  deactivate Printer
+  
+  Identity -> Identity : logFailureEvent(printerFailure)
+  activate Identity
+  Identity <-- Identity : failureLogged
+  deactivate Identity
+  
+  Identity -> Identity : schedulePrintingRetry(citizenId)
+  
+  Identity -> Recovery : automaticRecoveryAttempt()
+  activate Recovery
+  
+  Recovery -> Printer : evaluatePrinterStatus()
+  activate Printer
+  Recovery <-- Printer : printerStatus
+  deactivate Printer
+  
+  alt Printer fixed
+    Recovery -> Identity : resumePrinting(citizenId)
+    activate Identity
+    Identity -> Printer : retryPrinting(citizenId)
+    activate Printer
+    Identity <-- Printer : success
+    deactivate Printer
+    Recovery <-- Identity : retrySuccessful
+    deactivate Identity
+  else Printer still down
+    Recovery -> Identity : updateCardStatus(PRINTING_PENDING)
+    activate Identity
+    Recovery <-- Identity : statusUpdated
+    deactivate Identity
+  end
+  
+  Identity <-- Recovery : recoveryStatus
+  deactivate Recovery
+  
+else Printing succeeds
+  Identity <-- Printer : cardPrinted
+  deactivate Printer
+  
+  Identity -> Checkpoint : createCheckpoint("CARD_PRINTED")
+  activate Checkpoint
+  Identity <-- Checkpoint : checkpointId
+  deactivate Checkpoint
+end
+
+Officer <-- Identity : issuanceStatus
+deactivate Identity
+
+Admin -> Identity : validateStateIntegrity()
+activate Identity
+Identity -> Identity : verifyEntityConsistency()
+Identity -> Identity : checkRelatedEntitiesIntegrity()
+Identity -> Identity : verifyBiometricLinkage()
+Admin <-- Identity : integrityReport
+deactivate Identity
+
+Admin -> Identity : getRecoveryActions()
+activate Identity
+Admin <-- Identity : systemWideRecoveryOptions
+deactivate Identity
+@enduml
+----
+
+*Implementation Details:*
+The Nepal National ID Card Issuance System uses the FaultTolerant interface to maintain data integrity and service continuity despite infrastructure challenges like power outages, network instability, and hardware failures. The CitizenIdentity entity implements robust failure detection, recovery mechanisms, and automated repair capabilities to ensure that citizens receive their ID cards even when system failures occur.
+
+Identity Registration Officer Mohan is processing Sunita Tamang's citizenship card application at a remote district office in Dolakha. As he submits the application data, including personal details, photo, and supporting documents, the system automatically creates a checkpoint using the checkpointState() method. This checkpoint captures the submission state before any database operations occur. Unfortunately, a power outage hits the office during the database save operation, causing the transaction to fail.
+
+The system's fault tolerance mechanisms immediately detect the failure and log it with details through the logFailureEvent() method, creating a recovery task that will be visible to system administrators. When power is restored, System Administrator Rita Gurung checks the pending recovery actions through the administrative interface and initiates the recovery process. The system uses recoverFromCheckpoint() to reload Sunita's application data from the checkpoint and verifies whether the citizen profile was actually created in the database despite the error. Finding that it wasn't, the system automatically reruns the database operation to create the profile.
+
+Once recovery is complete, Officer Mohan can resume the process. He collects Sunita's fingerprints and facial scan, with another checkpoint automatically created after successful biometric capture. When he initiates ID card printing, a hardware issue with the printer causes another failure. The system's fault tolerance detects this issue and logs it, but instead of requiring administrator intervention, it attempts automatic recovery. The RecoveryService evaluates the printer status and, once the printer is back online, automatically retries the printing operation without requiring manual intervention.
+
+Throughout this process, the FaultTolerant implementation maintains a comprehensive failure history that administrators can review to identify patterns of system issues. The validateStateIntegrity() method allows periodic verification of data consistency, checking that all citizen profiles have the required linked documents, biometric data is properly associated, and card issuance status is accurate. Any inconsistencies detected can be repaired using the repairInconsistentState() method.
+
+The FaultTolerant implementation provides several important benefits in this context:
+1. Resilience against common infrastructure failures in remote offices
+2. Automated recovery mechanisms that minimize manual intervention
+3. Comprehensive audit trails of system failures and recovery actions
+4. Data integrity guarantees during multi-step processes
+5. Self-healing capabilities for certain types of failures
+6. The ability to continue operations from the point of failure rather than restarting
+
+*Technical Implementation Example:*
+```kotlin
+class CitizenIdentity : BaseEntity(), FaultTolerant {
+    var citizenId: String = ""
+    var fullName: String = ""
+    var dateOfBirth: LocalDate? = null
+    var address: Address? = null
+    var issuanceStatus: IssuanceStatus = IssuanceStatus.DRAFT
+    var applicationDate: LocalDate = LocalDate.now()
+    var cardPrintDate: LocalDate? = null
+    var cardExpiryDate: LocalDate? = null
+    var cardNumber: String? = null
+    var biometricDataId: UUID? = null
+    var supportingDocumentIds: MutableList<UUID> = mutableListOf()
+    
+    @OneToMany(mappedBy = "citizenIdentity", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val checkpoints: MutableList<ProcessCheckpoint> = mutableListOf()
+    
+    @OneToMany(mappedBy = "citizenIdentity", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    private val failureRecords: MutableList<FailureRecord> = mutableListOf()
+    
+    // Implementation of FaultTolerant interface
+    override fun checkpointState(): CheckpointResult {
+        try {
+            // Create a snapshot of current state
+            val stateSnapshot = mapOf(
+                "citizenId" to citizenId,
+                "fullName" to fullName,
+                "dateOfBirth" to dateOfBirth?.toString(),
+                "address" to address?.toMap(),
+                "issuanceStatus" to issuanceStatus.name,
+                "applicationDate" to applicationDate.toString(),
+                "cardPrintDate" to cardPrintDate?.toString(),
+                "cardExpiryDate" to cardExpiryDate?.toString(),
+                "cardNumber" to cardNumber,
+                "biometricDataId" to biometricDataId?.toString(),
+                "supportingDocumentIds" to supportingDocumentIds.map { it.toString() }
+            )
+            
+            // Create a checkpoint token
+            val checkpointId = UUID.randomUUID().toString()
+            val checkpointToken = generateSecureToken()
+            
+            // Determine checkpoint stage based on issuance status
+            val stage = when (issuanceStatus) {
+                IssuanceStatus.DRAFT -> "PRE_SUBMISSION"
+                IssuanceStatus.APPLICATION_SUBMITTED -> "POST_SUBMISSION"
+                IssuanceStatus.BIOMETRICS_CAPTURED -> "POST_BIOMETRIC"
+                IssuanceStatus.CARD_PRINTED -> "CARD_PRINTED"
+                IssuanceStatus.CARD_ISSUED -> "CARD_ISSUED"
+                else -> "CUSTOM_CHECKPOINT"
+            }
+            
+            // Store checkpoint in persistent storage
+            val checkpoint = ProcessCheckpoint(
+                id = UUID.fromString(checkpointId),
+                citizenIdentity = this,
+                stage = stage,
+                checkpointData = objectMapper.writeValueAsString(stateSnapshot),
+                checkpointToken = checkpointToken,
+                createdAt = Instant.now(),
+                createdBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM"
+            )
+            
+            checkpoints.add(checkpoint)
+            checkpointRepository.save(checkpoint)
+            
+            // Log checkpoint creation
+            auditService.logCheckpointCreation(
+                entityId = this.id,
+                entityType = "CitizenIdentity",
+                checkpointId = checkpointId,
+                stage = stage
+            )
+            
+            return CheckpointResult(
+                success = true,
+                checkpointId = checkpointId,
+                stage = stage,
+                timestamp = checkpoint.createdAt
+            )
+        } catch (e: Exception) {
+            // Log checkpoint failure
+            logger.error("Failed to create checkpoint for citizen ID $citizenId", e)
+            
+            return CheckpointResult(
+                success = false,
+                error = "Failed to create checkpoint: ${e.message}"
+            )
+        }
+    }
+    
+    override fun recoverFromCheckpoint(checkpointId: String): RecoveryResult {
+        try {
+            // Find the checkpoint
+            val checkpoint = checkpointRepository.findById(UUID.fromString(checkpointId))
+                .orElseThrow { IllegalArgumentException("Checkpoint not found: $checkpointId") }
+            
+            // Validate the checkpoint belongs to this entity
+            if (checkpoint.citizenIdentity.id != this.id) {
+                return RecoveryResult(
+                    success = false,
+                    error = "Checkpoint does not belong to this citizen identity"
+                )
+            }
+            
+            // Parse checkpoint data
+            val checkpointData = objectMapper.readValue<Map<String, Any?>>(
+                checkpoint.checkpointData,
+                object : TypeReference<Map<String, Any?>>() {}
+            )
+            
+            // Record recovery attempt
+            val recoveryAttempt = RecoveryAttempt(
+                citizenIdentity = this,
+                checkpointId = UUID.fromString(checkpointId),
+                attemptedAt = Instant.now(),
+                attemptedBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM",
+                recoveryStage = checkpoint.stage
+            )
+            
+            // Begin recovery based on checkpoint stage
+            val recoveryActions = mutableListOf<String>()
+            
+            when (checkpoint.stage) {
+                "PRE_SUBMISSION" -> {
+                    // This is an early checkpoint, we need to verify if database operations completed
+                    // despite the failure, or if we need to retry them
+                    
+                    val citizenExists = citizenRepository.existsByCitizenId(this.citizenId)
+                    
+                    if (!citizenExists) {
+                        // The database save failed, let's retry
+                        recoveryActions.add("Retry database save operation")
+                        
+                        // Here we would perform the actual retry logic
+                        // citizenRepository.save(this)
+                    } else {
+                        recoveryActions.add("Verified citizen record exists")
+                    }
+                    
+                    // Ensure supporting documents are linked
+                    val documentIds = checkpointData["supportingDocumentIds"] as? List<String> ?: emptyList()
+                    documentIds.forEach { docId ->
+                        val documentLinked = documentService.isDocumentLinkedToCitizen(
+                            UUID.fromString(docId), 
+                            this.id
+                        )
+                        
+                        if (!documentLinked) {
+                            recoveryActions.add("Relink document $docId")
+                            documentService.linkDocumentToCitizen(UUID.fromString(docId), this.id)
+                        }
+                    }
+                }
+                "POST_SUBMISSION" -> {
+                    // Verify application approval status
+                    val currentStatus = this.issuanceStatus
+                    val checkpointStatus = IssuanceStatus.valueOf(
+                        checkpointData["issuanceStatus"] as String
+                    )
+                    
+                    if (currentStatus.ordinal < checkpointStatus.ordinal) {
+                        recoveryActions.add("Update issuance status to $checkpointStatus")
+                        this.issuanceStatus = checkpointStatus
+                    }
+                }
+                "POST_BIOMETRIC" -> {
+                    // Verify biometric data is properly linked
+                    val checkpointBiometricId = checkpointData["biometricDataId"] as? String
+                    
+                    if (checkpointBiometricId != null && 
+                        (this.biometricDataId == null || 
+                         this.biometricDataId.toString() != checkpointBiometricId)) {
+                        
+                        recoveryActions.add("Restore biometric data link")
+                        this.biometricDataId = UUID.fromString(checkpointBiometricId)
+                    }
+                    
+                    // Check if we need to recover a failed print job
+                    if (cardPrintDate == null && 
+                        checkpointData["issuanceStatus"] == IssuanceStatus.BIOMETRICS_CAPTURED.name) {
+                        
+                        recoveryActions.add("Schedule card printing retry")
+                        printerService.scheduleCardPrinting(this.id)
+                    }
+                }
+                "CARD_PRINTED" -> {
+                    // Verify card details are saved
+                    val checkpointCardNumber = checkpointData["cardNumber"] as? String
+                    
+                    if (checkpointCardNumber != null && this.cardNumber != checkpointCardNumber) {
+                        recoveryActions.add("Restore card number")
+                        this.cardNumber = checkpointCardNumber
+                    }
+                    
+                    // Verify card print date
+                    val checkpointPrintDate = checkpointData["cardPrintDate"] as? String
+                    
+                    if (checkpointPrintDate != null && 
+                        (this.cardPrintDate == null || 
+                         this.cardPrintDate.toString() != checkpointPrintDate)) {
+                        
+                        recoveryActions.add("Restore card print date")
+                        this.cardPrintDate = LocalDate.parse(checkpointPrintDate)
+                    }
+                }
+            }
+            
+            // Update entity state
+            citizenRepository.save(this)
+            
+            // Record recovery result
+            recoveryAttempt.successful = true
+            recoveryAttempt.actions = recoveryActions.joinToString("; ")
+            recoveryAttemptRepository.save(recoveryAttempt)
+            
+            // Log recovery completion
+            auditService.logRecoveryCompletion(
+                entityId = this.id,
+                entityType = "CitizenIdentity",
+                checkpointId = checkpointId,
+                recoveryActions = recoveryActions
+            )
+            
+            return RecoveryResult(
+                success = true,
+                actions = recoveryActions,
+                recoveredState = IssuanceStatus.valueOf(checkpointData["issuanceStatus"] as String)
+            )
+        } catch (e: Exception) {
+            // Log recovery failure
+            logger.error("Failed to recover from checkpoint $checkpointId for citizen ID $citizenId", e)
+            
+            return RecoveryResult(
+                success = false,
+                error = "Recovery failed: ${e.message}"
+            )
+        }
+    }
+    
+    override fun validateStateIntegrity(): ValidationResult {
+        val validationIssues = mutableListOf<String>()
+        
+        // Validate basic entity properties
+        if (citizenId.isBlank()) {
+            validationIssues.add("Citizen ID is blank")
+        }
+        
+        if (fullName.isBlank()) {
+            validationIssues.add("Full name is blank")
+        }
+        
+        if (dateOfBirth == null) {
+            validationIssues.add("Date of birth is null")
+        }
+        
+        // Validate issuance status and related fields
+        when (issuanceStatus) {
+            IssuanceStatus.BIOMETRICS_CAPTURED -> {
+                if (biometricDataId == null) {
+                    validationIssues.add("Status is BIOMETRICS_CAPTURED but biometricDataId is null")
+                } else {
+                    // Verify biometric data exists in the biometric service
+                    val biometricExists = biometricService.exists(biometricDataId!!)
+                    if (!biometricExists) {
+                        validationIssues.add("Biometric data with ID $biometricDataId not found")
+                    }
+                }
+            }
+            IssuanceStatus.CARD_PRINTED, IssuanceStatus.CARD_ISSUED -> {
+                if (biometricDataId == null) {
+                    validationIssues.add("Status is ${issuanceStatus.name} but biometricDataId is null")
+                }
+                
+                if (cardNumber == null) {
+                    validationIssues.add("Status is ${issuanceStatus.name} but cardNumber is null")
+                }
+                
+                if (cardPrintDate == null) {
+                    validationIssues.add("Status is ${issuanceStatus.name} but cardPrintDate is null")
+                }
+                
+                if (cardExpiryDate == null) {
+                    validationIssues.add("Status is ${issuanceStatus.name} but cardExpiryDate is null")
+                }
+            }
+            else -> {}
+        }
+        
+        // Validate document references
+        if (supportingDocumentIds.isEmpty()) {
+            validationIssues.add("No supporting documents linked")
+        } else {
+            // Verify documents exist
+            for (docId in supportingDocumentIds) {
+                val documentExists = documentService.exists(docId)
+                if (!documentExists) {
+                    validationIssues.add("Supporting document $docId not found")
+                }
+            }
+        }
+        
+        // Check for data inconsistencies between checkpoints and current state
+        val latestCheckpoint = checkpoints.maxByOrNull { it.createdAt }
+        if (latestCheckpoint != null) {
+            try {
+                val checkpointData = objectMapper.readValue<Map<String, Any?>>(
+                    latestCheckpoint.checkpointData,
+                    object : TypeReference<Map<String, Any?>>() {}
+                )
+                
+                val checkpointStatus = IssuanceStatus.valueOf(
+                    checkpointData["issuanceStatus"] as String
+                )
+                
+                if (checkpointStatus.ordinal > issuanceStatus.ordinal) {
+                    validationIssues.add(
+                        "Current status (${issuanceStatus.name}) is behind checkpoint status (${checkpointStatus.name})"
+                    )
+                }
+            } catch (e: Exception) {
+                validationIssues.add("Could not parse latest checkpoint data: ${e.message}")
+            }
+        }
+        
+        return ValidationResult(
+            valid = validationIssues.isEmpty(),
+            issues = validationIssues
+        )
+    }
+    
+    override fun repairInconsistentState(): RepairResult {
+        val validationResult = validateStateIntegrity()
+        if (validationResult.valid) {
+            return RepairResult(
+                success = true,
+                message = "No repairs needed",
+                repairActions = emptyList()
+            )
+        }
+        
+        val repairActions = mutableListOf<String>()
+        
+        try {
+            // Fix blank/null fields
+            if (citizenId.isBlank() && id != null) {
+                val fetchedCitizen = citizenRepository.findById(id!!)
+                if (fetchedCitizen.isPresent) {
+                    val citizen = fetchedCitizen.get()
+                    this.citizenId = citizen.citizenId
+                    repairActions.add("Restored citizenId from database")
+                }
+            }
+            
+            // Find and fix biometric data links
+            if (issuanceStatus.ordinal >= IssuanceStatus.BIOMETRICS_CAPTURED.ordinal && 
+                biometricDataId == null) {
+                
+                // Try to find biometric data by citizen ID
+                val biometricId = biometricService.findByCitizenId(citizenId)
+                if (biometricId != null) {
+                    this.biometricDataId = biometricId
+                    repairActions.add("Restored biometricDataId from biometric service")
+                }
+            }
+            
+            // Find and fix card information
+            if (issuanceStatus.ordinal >= IssuanceStatus.CARD_PRINTED.ordinal) {
+                if (cardNumber == null) {
+                    // Try to find card number from card issuance records
+                    val cardInfo = cardIssuanceService.findByCitizenId(citizenId)
+                    if (cardInfo != null) {
+                        this.cardNumber = cardInfo.cardNumber
+                        repairActions.add("Restored cardNumber from issuance records")
+                        
+                        if (cardPrintDate == null) {
+                            this.cardPrintDate = cardInfo.printDate
+                            repairActions.add("Restored cardPrintDate from issuance records")
+                        }
+                        
+                        if (cardExpiryDate == null) {
+                            this.cardExpiryDate = cardInfo.expiryDate
+                            repairActions.add("Restored cardExpiryDate from issuance records")
+                        }
+                    }
+                }
+            }
+            
+            // Repair supporting documents
+            if (supportingDocumentIds.isEmpty()) {
+                // Try to find documents linked to this citizen
+                val linkedDocs = documentService.findDocumentsByCitizenId(citizenId)
+                if (linkedDocs.isNotEmpty()) {
+                    this.supportingDocumentIds.addAll(linkedDocs.map { it.id })
+                    repairActions.add("Restored ${linkedDocs.size} supporting document links")
+                }
+            } else {
+                // Remove any invalid document references
+                val invalidDocs = supportingDocumentIds.filter { !documentService.exists(it) }
+                supportingDocumentIds.removeAll(invalidDocs)
+                if (invalidDocs.isNotEmpty()) {
+                    repairActions.add("Removed ${invalidDocs.size} invalid document references")
+                }
+            }
+            
+            // Repair state from checkpoint if needed
+            val latestCheckpoint = checkpoints.maxByOrNull { it.createdAt }
+            if (latestCheckpoint != null) {
+                try {
+                    val checkpointData = objectMapper.readValue<Map<String, Any?>>(
+                        latestCheckpoint.checkpointData,
+                        object : TypeReference<Map<String, Any?>>() {}
+                    )
+                    
+                    val checkpointStatus = IssuanceStatus.valueOf(
+                        checkpointData["issuanceStatus"] as String
+                    )
+                    
+                    if (checkpointStatus.ordinal > issuanceStatus.ordinal) {
+                        this.issuanceStatus = checkpointStatus
+                        repairActions.add("Restored issuance status from checkpoint: ${checkpointStatus.name}")
+                        
+                        // Restore other fields based on checkpoint status
+                        when (checkpointStatus) {
+                            IssuanceStatus.BIOMETRICS_CAPTURED, 
+                            IssuanceStatus.CARD_PRINTED,
+                            IssuanceStatus.CARD_ISSUED -> {
+                                val biometricId = checkpointData["biometricDataId"] as? String
+                                if (biometricId != null && biometricDataId == null) {
+                                    this.biometricDataId = UUID.fromString(biometricId)
+                                    repairActions.add("Restored biometricDataId from checkpoint")
+                                }
+                            }
+                            IssuanceStatus.CARD_PRINTED,
+                            IssuanceStatus.CARD_ISSUED -> {
+                                val cardNum = checkpointData["cardNumber"] as? String
+                                if (cardNum != null && cardNumber == null) {
+                                    this.cardNumber = cardNum
+                                    repairActions.add("Restored cardNumber from checkpoint")
+                                }
+                                
+                                val printDateStr = checkpointData["cardPrintDate"] as? String
+                                if (printDateStr != null && cardPrintDate == null) {
+                                    this.cardPrintDate = LocalDate.parse(printDateStr)
+                                    repairActions.add("Restored cardPrintDate from checkpoint")
+                                }
+                                
+                                val expiryDateStr = checkpointData["cardExpiryDate"] as? String
+                                if (expiryDateStr != null && cardExpiryDate == null) {
+                                    this.cardExpiryDate = LocalDate.parse(expiryDateStr)
+                                    repairActions.add("Restored cardExpiryDate from checkpoint")
+                                }
+                            }
+                            else -> {}
+                        }
+                    }
+                } catch (e: Exception) {
+                    logger.error("Error parsing checkpoint data during repair", e)
+                }
+            }
+            
+            // Save repaired entity
+            citizenRepository.save(this)
+            
+            // Log repair actions
+            val repairRecord = StateRepairRecord(
+                citizenIdentity = this,
+                repairedAt = Instant.now(),
+                repairedBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM",
+                repairActions = repairActions.joinToString("; "),
+                previousValidationIssues = validationResult.issues.joinToString("; ")
+            )
+            repairRecordRepository.save(repairRecord)
+            
+            return RepairResult(
+                success = true,
+                message = "State repaired successfully",
+                repairActions = repairActions
+            )
+        } catch (e: Exception) {
+            logger.error("Error repairing inconsistent state for citizen ID $citizenId", e)
+            
+            return RepairResult(
+                success = false,
+                message = "Failed to repair state: ${e.message}",
+                repairActions = repairActions,
+                error = e.message
+            )
+        }
+    }
+    
+    override fun getFailureHistory(): List<FailureRecord> {
+        return failureRecords.sortedByDescending { it.occurredAt }
+    }
+    
+    override fun getRecoveryActions(): List<RecoveryAction> {
+        val actions = mutableListOf<RecoveryAction>()
+        
+        // Add standard recovery actions based on current state
+        when (issuanceStatus) {
+            IssuanceStatus.DRAFT -> {
+                actions.add(
+                    RecoveryAction(
+                        actionId = "RECREATE_APPLICATION",
+                        description = "Recreate application from scratch",
+                        applicableFailureTypes = listOf("DATABASE_ERROR", "SUBMISSION_FAILURE"),
+                        automatable = false
+                    )
+                )
+            }
+            IssuanceStatus.APPLICATION_SUBMITTED -> {
+                actions.add(
+                    RecoveryAction(
+                        actionId = "REVERIFY_SUBMISSION",
+                        description = "Verify application submission status",
+                        applicableFailureTypes = listOf("DATABASE_ERROR", "SUBMISSION_FAILURE"),
+                        automatable = true
+                    )
+                )
+                actions.add(
+                    RecoveryAction(
+                        actionId = "RELINK_DOCUMENTS",
+                        description = "Relink supporting documents",
+                        applicableFailureTypes = listOf("DOCUMENT_LINKING_FAILURE"),
+                        automatable = true
+                    )
+                )
+            }
+            IssuanceStatus.BIOMETRICS_CAPTURED -> {
+                actions.add(
+                    RecoveryAction(
+                        actionId = "VERIFY_BIOMETRICS",
+                        description = "Verify biometric data capture",
+                        applicableFailureTypes = listOf("BIOMETRIC_STORAGE_FAILURE"),
+                        automatable = true
+                    )
+                )
+                actions.add(
+                    RecoveryAction(
+                        actionId = "RETRY_PRINTING",
+                        description = "Retry card printing",
+                        applicableFailureTypes = listOf("PRINTER_FAILURE", "CARD_GENERATION_ERROR"),
+                        automatable = true
+                    )
+                )
+            }
+            IssuanceStatus.CARD_PRINTED -> {
+                actions.add(
+                    RecoveryAction(
+                        actionId = "VERIFY_CARD_ISSUANCE",
+                        description = "Verify card issuance status",
+                        applicableFailureTypes = listOf("ISSUANCE_RECORDING_FAILURE"),
+                        automatable = true
+                    )
+                )
+                actions.add(
+                    RecoveryAction(
+                        actionId = "REPRINT_CARD",
+                        description = "Reprint identity card",
+                        applicableFailureTypes = listOf("CARD_DAMAGE", "PRINTER_FAILURE"),
+                        automatable = true
+                    )
+                )
+            }
+            else -> {}
+        }
+        
+        // Add state repair action for any situation
+        actions.add(
+            RecoveryAction(
+                actionId = "REPAIR_STATE",
+                description = "Repair inconsistent entity state",
+                applicableFailureTypes = listOf("DATA_INCONSISTENCY", "CHECKPOINT_MISMATCH"),
+                automatable = true
+            )
+        )
+        
+        return actions
+    }
+    
+    override fun logFailureEvent(failure: FailureEvent) {
+        try {
+            val failureRecord = FailureRecord(
+                citizenIdentity = this,
+                failureType = failure.failureType,
+                failureMessage = failure.message,
+                failureDetails = failure.details,
+                failureStack = failure.stackTrace,
+                occurredAt = Instant.now(),
+                currentState = issuanceStatus.name,
+                affectedOperation = failure.operation,
+                failedComponent = failure.component,
+                transactionId = failure.transactionId
+            )
+            
+            failureRecords.add(failureRecord)
+            failureRecordRepository.save(failureRecord)
+            
+            // Create recovery task if needed
+            if (failure.requiresRecovery) {
+                val recoveryTask = RecoveryTask(
+                    citizenIdentity = this,
+                    failureRecord = failureRecord,
+                    status = RecoveryTaskStatus.PENDING,
+                    createdAt = Instant.now(),
+                    priority = failure.recoveryPriority,
+                    suggestedAction = getAutomatedRecoveryAction(failure.failureType)
+                )
+                
+                recoveryTaskRepository.save(recoveryTask)
+            }
+            
+            // Log to monitoring system for alerts
+            monitoringService.reportFailure(
+                entityType = "CitizenIdentity",
+                entityId = this.id.toString(),
+                failureType = failure.failureType,
+                severity = failure.severity,
+                message = failure.message
+            )
+        } catch (e: Exception) {
+            // If we can't log the failure, log to system logs at least
+            logger.error(
+                "Failed to log failure event for citizen ID $citizenId. " +
+                "Original failure: ${failure.message}. " +
+                "Logging failure: ${e.message}", 
+                e
+            )
+        }
+    }
+    
+    // Helper methods
+    private fun generateSecureToken(): String {
+        return UUID.randomUUID().toString() + "-" + Instant.now().toEpochMilli()
+    }
+    
+    private fun getAutomatedRecoveryAction(failureType: String): String? {
+        return when (failureType) {
+            "DATABASE_ERROR", "SUBMISSION_FAILURE" -> "REVERIFY_SUBMISSION"
+            "DOCUMENT_LINKING_FAILURE" -> "RELINK_DOCUMENTS"
+            "BIOMETRIC_STORAGE_FAILURE" -> "VERIFY_BIOMETRICS"
+            "PRINTER_FAILURE", "CARD_GENERATION_ERROR" -> "RETRY_PRINTING"
+            "ISSUANCE_RECORDING_FAILURE" -> "VERIFY_CARD_ISSUANCE"
+            "CARD_DAMAGE" -> "REPRINT_CARD"
+            "DATA_INCONSISTENCY", "CHECKPOINT_MISMATCH" -> "REPAIR_STATE"
+            else -> null
+        }
+    }
+}
+
+data class CheckpointResult(
+    val success: Boolean,
+    val checkpointId: String? = null,
+    val stage: String? = null,
+    val timestamp: Instant? = null,
+    val error: String? = null
+)
+
+data class RecoveryResult(
+    val success: Boolean,
+    val actions: List<String> = emptyList(),
+    val recoveredState: IssuanceStatus? = null,
+    val error: String? = null
+)
+
+data class ValidationResult(
+    val valid: Boolean,
+    val issues: List<String> = emptyList()
+)
+
+data class RepairResult(
+    val success: Boolean,
+    val message: String,
+    val repairActions: List<String> = emptyList(),
+    val error: String? = null
+)
+
+data class FailureEvent(
+    val failureType: String,
+    val message: String,
+    val details: String? = null,
+    val stackTrace: String? = null,
+    val operation: String? = null,
+    val component: String? = null,
+    val transactionId: String? = null,
+    val requiresRecovery: Boolean = true,
+    val recoveryPriority: Int = 5, // 1-10 scale
+    val severity: FailureSeverity = FailureSeverity.MEDIUM
+)
+
+enum class FailureSeverity {
+    LOW, MEDIUM, HIGH, CRITICAL
+}
+
+enum class IssuanceStatus {
+    DRAFT,
+    APPLICATION_SUBMITTED,
+    BIOMETRICS_CAPTURED,
+    CARD_PRINTED,
+    CARD_ISSUED
+}
+
+enum class RecoveryTaskStatus {
+    PENDING,
+    IN_PROGRESS,
+    COMPLETED,
+    FAILED
+}
+
+data class RecoveryAction(
+    val actionId: String,
+    val description: String,
+    val applicableFailureTypes: List<String>,
+    val automatable: Boolean
+)
+
+class ProcessCheckpoint(
+    val id: UUID,
+    val citizenIdentity: CitizenIdentity,
+    val stage: String,
+    val checkpointData: String,
+    val checkpointToken: String,
+    val createdAt: Instant,
+    val createdBy: String
+)
+
+class FailureRecord(
+    val id: UUID = UUID.randomUUID(),
+    val citizenIdentity: CitizenIdentity,
+    val failureType: String,
+    val failureMessage: String,
+    val failureDetails: String? = null,
+    val failureStack: String? = null,
+    val occurredAt: Instant,
+    val currentState: String,
+    val affectedOperation: String? = null,
+    val failedComponent: String? = null,
+    val transactionId: String? = null
+)
+
+class RecoveryTask(
+    val id: UUID = UUID.randomUUID(),
+    val citizenIdentity: CitizenIdentity,
+    val failureRecord: FailureRecord,
+    var status: RecoveryTaskStatus,
+    val createdAt: Instant,
+    var startedAt: Instant? = null,
+    var completedAt: Instant? = null,
+    var assignedTo: String? = null,
+    val priority: Int,
+    val suggestedAction: String? = null,
+    var resolutionNotes: String? = null
+)
+
+class RecoveryAttempt(
+    val id: UUID = UUID.randomUUID(),
+    val citizenIdentity: CitizenIdentity,
+    val checkpointId: UUID,
+    val attemptedAt: Instant,
+    val attemptedBy: String,
+    val recoveryStage: String,
+    var successful: Boolean = false,
+    var actions: String? = null,
+    var errorMessage: String? = null
+)
+
+class StateRepairRecord(
+    val id: UUID = UUID.randomUUID(),
+    val citizenIdentity: CitizenIdentity,
+    val repairedAt: Instant,
+    val repairedBy: String,
+    val repairActions: String,
+    val previousValidationIssues: String
+)
+```

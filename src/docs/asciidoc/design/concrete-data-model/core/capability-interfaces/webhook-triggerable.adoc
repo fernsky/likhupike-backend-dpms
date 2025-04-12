@@ -1,0 +1,759 @@
+===== `WebhookTriggerable`
+Interface for entities that can trigger webhooks to notify external systems.
+
+[source,kotlin]
+----
+interface WebhookTriggerable {
+    fun registerWebhook(endpoint: WebhookEndpoint): WebhookRegistration
+    fun unregisterWebhook(webhookId: UUID): Boolean
+    fun triggerWebhooks(event: String, payload: Map<String, Any>)
+    fun getWebhookRegistrations(): List<WebhookRegistration>
+    fun validateWebhookEndpoint(endpoint: WebhookEndpoint): ValidationResult
+    fun getSupportedWebhookEvents(): List<String>
+    fun getWebhookDeliveryStatus(webhookId: UUID, eventId: UUID): DeliveryStatus
+    fun resendWebhook(webhookId: UUID, eventId: UUID): DeliveryResult
+    fun getWebhookCallHistory(webhookId: UUID): List<WebhookDeliveryAttempt>
+}
+----
+
+====== Contextual Use Cases for WebhookTriggerable
+
+*Real-World Scenario:* Integrated Municipal Service System
+
+[plantuml]
+----
+@startuml
+actor "Municipality Admin\n(Kiran KC)" as Admin
+actor "Digital Kiosk User\n(Aarati Thapa)" as User
+participant "CitizenDocumentService\nimplements WebhookTriggerable" as Document
+participant "WebhookRegistry" as Registry
+participant "NationalID\nSystem" as NID
+participant "Local Tax System\n(Kathmandu Municipality)" as Tax
+participant "SignatureVerifier" as Signature
+participant "DeliveryService" as Delivery
+
+Admin -> Document : registerWebhook(taxSystemEndpoint)
+activate Document
+Document -> Document : validateWebhookEndpoint(endpoint)
+Document -> Registry : saveRegistration(endpoint, secret)
+activate Registry
+Document <-- Registry : registration
+deactivate Registry
+Admin <-- Document : registrationConfirmed
+deactivate Document
+
+Admin -> Document : registerWebhook(nationalIdEndpoint)
+activate Document
+Document -> Registry : saveRegistration(endpoint, secret)
+activate Registry
+Document <-- Registry : registration
+deactivate Registry
+Admin <-- Document : registrationConfirmed
+deactivate Document
+
+User -> Document : applyForBirthCertificate(citizenData)
+activate Document
+Document -> Document : processApplication()
+Document -> Document : issueDocument()
+
+Document -> Document : triggerWebhooks("DOCUMENT_ISSUED", payload)
+activate Document
+Document -> Registry : getRegisteredWebhooks("DOCUMENT_ISSUED")
+activate Registry
+Document <-- Registry : webhookEndpoints
+deactivate Registry
+
+loop for each endpoint
+  Document -> Document : preparePayload(endpoint)
+  Document -> Document : signPayload(secret)
+  Document -> Delivery : sendAsync(endpoint, payload, signature)
+end
+User <-- Document : certificateIssued
+deactivate Document
+deactivate Document
+
+Delivery -> NID : POST /webhooks/document-event
+activate NID
+Delivery <-- NID : 202 Accepted
+deactivate NID
+Delivery -> Document : recordDeliveryAttempt(success)
+activate Document
+Delivery <-- Document
+deactivate Document
+
+Delivery -> Tax : POST /webhooks/document-event
+activate Tax
+Tax -> Signature : verifySignature(payload, signature, secret)
+activate Signature
+Tax <-- Signature : valid
+deactivate Signature
+Tax -> Tax : extractDocumentData()
+Tax -> Tax : updateTaxEligibility()
+Delivery <-- Tax : 200 OK
+deactivate Tax
+Delivery -> Document : recordDeliveryAttempt(success)
+activate Document
+Delivery <-- Document
+deactivate Document
+
+Admin -> Document : getWebhookCallHistory(taxWebhookId)
+activate Document
+Document -> Registry : getDeliveryAttempts(webhookId)
+activate Registry
+Document <-- Registry : callHistory
+deactivate Registry
+Admin <-- Document : deliveryHistory
+deactivate Document
+
+NID -> NID : processDocumentDataAsync()
+NID -> Document : POST /webhook-callback
+activate Document
+Document -> Document : validateCallback(signature)
+NID <-- Document : 200 OK
+deactivate Document
+@enduml
+----
+
+*Implementation Details:*
+The Kathmandu Municipal Service System implements the WebhookTriggerable interface to provide real-time integration with both local municipal systems and the national government digital infrastructure. This enables immediate sharing of critical document and civil registration events without requiring continuous polling or batch processing, significantly reducing operational latency and ensuring systems remain synchronized despite connectivity challenges.
+
+Municipality Admin Kiran KC configures the document service to notify both the local tax system and the national ID system whenever a new birth certificate is issued. He registers two webhook endpoints through the administrative interface, with each registration generating a unique secret key for securing webhook payloads. The system validates each endpoint's availability with a test call, confirming the services can receive webhooks before saving the registration.
+
+When citizen Aarati Thapa visits a digital service kiosk to apply for her child's birth certificate, the system processes her application and issues the certificate. Upon document issuance, the CitizenDocumentService automatically triggers webhooks to all registered endpoints interested in the "DOCUMENT_ISSUED" event. The webhook payload includes essential information: document type, issuing authority, citizen's demographic details, unique identifier, and issuance date.
+
+For each webhook delivery, the system:
+1. Prepares a payload specific to the endpoint's requirements
+2. Creates an HMAC signature using the endpoint's secret key to secure the payload
+3. Sends the payload asynchronously to prevent blocking the main application flow
+4. Records each delivery attempt for audit and troubleshooting purposes
+
+The National ID System receives the webhook but acknowledges it with a 202 Accepted status, indicating it will process the document data asynchronously due to its high-volume processing queue. Later, it sends a callback to confirm successful processing.
+
+The Kathmandu Municipality Tax System immediately verifies the payload's signature using the shared secret to ensure the data hasn't been tampered with during transmission. Finding the signature valid, it extracts the birth certificate data and automatically updates its records to include this new dependent child for family tax eligibility calculations. It returns a 200 OK response indicating successful processing.
+
+When network issues arise, which are common in Nepal's mountainous regions, the webhook delivery service implements automatic retries with exponential backoff. Kiran can monitor delivery status through the administrative interface, viewing a complete history of webhook calls, including delivery timestamps, response codes, and retry attempts. If critical webhooks fail despite retries, he can manually trigger a resend from the interface.
+
+The WebhookTriggerable implementation provides several important benefits in this context:
+1. Enables near real-time data sharing across government systems despite network limitations
+2. Secures transmitted data with signature verification to prevent tampering
+3. Provides robust delivery monitoring and manual intervention capabilities
+4. Maintains a comprehensive audit trail of all inter-system notifications
+5. Allows flexible integration of new systems without modifying core application code
+
+*Technical Implementation Example:*
+```kotlin
+class CitizenDocumentService : BaseService(), WebhookTriggerable {
+    @Autowired
+    private lateinit var webhookRegistryRepository: WebhookRegistryRepository
+    
+    @Autowired
+    private lateinit var webhookDeliveryRepository: WebhookDeliveryRepository
+    
+    @Autowired
+    private lateinit var webhookDeliveryService: WebhookDeliveryService
+    
+    @Autowired
+    private lateinit var hmacSignatureService: HmacSignatureService
+    
+    // Document service specific properties
+    private val supportedDocumentTypes = listOf(
+        "BIRTH_CERTIFICATE",
+        "DEATH_CERTIFICATE",
+        "MARRIAGE_CERTIFICATE",
+        "RELATIONSHIP_CERTIFICATE",
+        "MIGRATION_CERTIFICATE"
+    )
+    
+    // Implementation of WebhookTriggerable interface
+    override fun registerWebhook(endpoint: WebhookEndpoint): WebhookRegistration {
+        val validationResult = validateWebhookEndpoint(endpoint)
+        if (!validationResult.isValid) {
+            throw InvalidWebhookException("Webhook validation failed: ${validationResult.errors.joinToString()}")
+        }
+        
+        // Generate secret if not provided
+        val secret = endpoint.secret ?: generateSecureSecret()
+        
+        // Create registration
+        val registration = WebhookRegistration(
+            id = UUID.randomUUID(),
+            endpoint = endpoint.url,
+            events = endpoint.events,
+            description = endpoint.description,
+            secret = secret,
+            createdBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM",
+            createdAt = LocalDateTime.now(),
+            status = WebhookStatus.ACTIVE
+        )
+        
+        // Save to repository
+        return webhookRegistryRepository.save(registration)
+    }
+    
+    override fun unregisterWebhook(webhookId: UUID): Boolean {
+        val registration = webhookRegistryRepository.findById(webhookId)
+            .orElseThrow { WebhookNotFoundException("Webhook registration not found with ID: $webhookId") }
+        
+        registration.status = WebhookStatus.DISABLED
+        registration.disabledAt = LocalDateTime.now()
+        registration.disabledBy = SecurityContext.getCurrentUser()?.username ?: "SYSTEM"
+        
+        webhookRegistryRepository.save(registration)
+        
+        // Log the unregistration for audit
+        auditService.logEvent(
+            entityType = "WEBHOOK",
+            entityId = webhookId.toString(),
+            action = "UNREGISTER",
+            actor = SecurityContext.getCurrentUser()?.username ?: "SYSTEM",
+            details = "Webhook endpoint ${registration.endpoint} was unregistered"
+        )
+        
+        return true
+    }
+    
+    override fun triggerWebhooks(event: String, payload: Map<String, Any>) {
+        if (!getSupportedWebhookEvents().contains(event)) {
+            logger.warn("Unsupported webhook event: $event")
+            return
+        }
+        
+        // Find all active webhook registrations for this event
+        val registrations = webhookRegistryRepository.findByEventsContainingAndStatus(event, WebhookStatus.ACTIVE)
+        
+        if (registrations.isEmpty()) {
+            logger.debug("No webhooks registered for event: $event")
+            return
+        }
+        
+        val eventId = UUID.randomUUID()
+        val timestamp = LocalDateTime.now()
+        
+        for (registration in registrations) {
+            // Prepare the payload for this specific webhook
+            val webhookPayload = preparePayload(event, payload, registration)
+            
+            // Sign the payload
+            val signature = hmacSignatureService.generateSignature(
+                jsonMapper.writeValueAsString(webhookPayload),
+                registration.secret
+            )
+            
+            // Create delivery record
+            val delivery = WebhookDeliveryAttempt(
+                id = UUID.randomUUID(),
+                webhookId = registration.id,
+                eventId = eventId,
+                eventType = event,
+                payload = jsonMapper.writeValueAsString(webhookPayload),
+                signature = signature,
+                timestamp = timestamp,
+                status = DeliveryStatus.PENDING
+            )
+            
+            webhookDeliveryRepository.save(delivery)
+            
+            // Send webhook asynchronously
+            webhookDeliveryService.sendWebhookAsync(
+                delivery.id,
+                registration.endpoint,
+                webhookPayload,
+                signature,
+                registration.secret,
+                registration.id
+            )
+        }
+    }
+    
+    override fun getWebhookRegistrations(): List<WebhookRegistration> {
+        return webhookRegistryRepository.findAll().toList()
+    }
+    
+    override fun validateWebhookEndpoint(endpoint: WebhookEndpoint): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // Validate URL format
+        try {
+            URL(endpoint.url)
+        } catch (e: Exception) {
+            errors.add("Invalid URL format: ${endpoint.url}")
+        }
+        
+        // Validate events
+        if (endpoint.events.isEmpty()) {
+            errors.add("At least one event must be specified")
+        } else {
+            val supportedEvents = getSupportedWebhookEvents()
+            val unsupportedEvents = endpoint.events.filter { !supportedEvents.contains(it) }
+            if (unsupportedEvents.isNotEmpty()) {
+                errors.add("Unsupported events: ${unsupportedEvents.joinToString()}")
+            }
+        }
+        
+        // Validate URL accessibility with a test call if no other errors
+        if (errors.isEmpty()) {
+            try {
+                val testResult = webhookDeliveryService.testEndpoint(endpoint.url)
+                if (!testResult.isSuccessful) {
+                    errors.add("Endpoint test failed: ${testResult.errorMessage}")
+                }
+            } catch (e: Exception) {
+                errors.add("Endpoint test failed: ${e.message}")
+            }
+        }
+        
+        return ValidationResult(
+            isValid = errors.isEmpty(),
+            errors = errors
+        )
+    }
+    
+    override fun getSupportedWebhookEvents(): List<String> {
+        return listOf(
+            "DOCUMENT_ISSUED",
+            "DOCUMENT_REVOKED",
+            "DOCUMENT_UPDATED",
+            "APPLICATION_SUBMITTED",
+            "APPLICATION_APPROVED",
+            "APPLICATION_REJECTED",
+            "VERIFICATION_COMPLETED"
+        )
+    }
+    
+    override fun getWebhookDeliveryStatus(webhookId: UUID, eventId: UUID): DeliveryStatus {
+        val delivery = webhookDeliveryRepository
+            .findByWebhookIdAndEventId(webhookId, eventId)
+            .orElseThrow { 
+                ResourceNotFoundException("No webhook delivery found for webhookId: $webhookId and eventId: $eventId") 
+            }
+        
+        return delivery.status
+    }
+    
+    override fun resendWebhook(webhookId: UUID, eventId: UUID): DeliveryResult {
+        // Find the original delivery record
+        val originalDelivery = webhookDeliveryRepository
+            .findByWebhookIdAndEventId(webhookId, eventId)
+            .orElseThrow { 
+                ResourceNotFoundException("No webhook delivery found for webhookId: $webhookId and eventId: $eventId") 
+            }
+        
+        // Find the webhook registration
+        val registration = webhookRegistryRepository
+            .findById(webhookId)
+            .orElseThrow { WebhookNotFoundException("Webhook registration not found with ID: $webhookId") }
+        
+        // Create a new delivery attempt record
+        val newDelivery = WebhookDeliveryAttempt(
+            id = UUID.randomUUID(),
+            webhookId = webhookId,
+            eventId = eventId,
+            eventType = originalDelivery.eventType,
+            payload = originalDelivery.payload,
+            signature = originalDelivery.signature,
+            timestamp = LocalDateTime.now(),
+            status = DeliveryStatus.PENDING,
+            isResend = true,
+            originalDeliveryId = originalDelivery.id
+        )
+        
+        webhookDeliveryRepository.save(newDelivery)
+        
+        // Parse the payload back to a map
+        val payloadMap = jsonMapper.readValue(originalDelivery.payload, Map::class.java) as Map<String, Any>
+        
+        // Send the webhook
+        return webhookDeliveryService.sendWebhook(
+            newDelivery.id,
+            registration.endpoint,
+            payloadMap,
+            originalDelivery.signature,
+            registration.secret,
+            registration.id
+        )
+    }
+    
+    override fun getWebhookCallHistory(webhookId: UUID): List<WebhookDeliveryAttempt> {
+        return webhookDeliveryRepository
+            .findByWebhookIdOrderByTimestampDesc(webhookId)
+    }
+    
+    // Helper methods
+    private fun generateSecureSecret(): String {
+        val bytes = ByteArray(32)
+        SecureRandom().nextBytes(bytes)
+        return Base64.getEncoder().encodeToString(bytes)
+    }
+    
+    private fun preparePayload(
+        event: String,
+        originalPayload: Map<String, Any>,
+        registration: WebhookRegistration
+    ): Map<String, Any> {
+        // Create a standardized envelope for the webhook
+        val payload = mutableMapOf<String, Any>()
+        
+        // Add standard metadata
+        payload["eventType"] = event
+        payload["eventId"] = UUID.randomUUID().toString()
+        payload["timestamp"] = LocalDateTime.now().toString()
+        payload["issuerId"] = applicationProperties.issuerId
+        payload["issuerName"] = "Kathmandu Municipality Document Service"
+        
+        // Add the original payload data
+        payload["data"] = originalPayload
+        
+        return payload
+    }
+    
+    // Document service specific methods
+    fun processBirthCertificateApplication(applicationData: Map<String, Any>): String {
+        // Process application logic
+        val documentId = UUID.randomUUID().toString()
+        
+        // After successfully processing the application, trigger webhooks
+        val webhookPayload = mapOf(
+            "documentId" to documentId,
+            "documentType" to "BIRTH_CERTIFICATE",
+            "issueDate" to LocalDate.now().toString(),
+            "childName" to applicationData["childName"],
+            "dateOfBirth" to applicationData["dateOfBirth"],
+            "placeOfBirth" to applicationData["placeOfBirth"],
+            "fatherName" to applicationData["fatherName"],
+            "motherName" to applicationData["motherName"],
+            "wardNumber" to applicationData["wardNumber"],
+            "municipalityCode" to applicationData["municipalityCode"]
+        )
+        
+        triggerWebhooks("DOCUMENT_ISSUED", webhookPayload)
+        
+        return documentId
+    }
+}
+
+data class WebhookEndpoint(
+    val url: String,
+    val events: List<String>,
+    val description: String? = null,
+    val secret: String? = null,
+    val contentType: String = "application/json",
+    val metadata: Map<String, String> = emptyMap()
+)
+
+data class ValidationResult(
+    val isValid: Boolean,
+    val errors: List<String> = emptyList()
+)
+
+data class DeliveryResult(
+    val success: Boolean,
+    val statusCode: Int? = null,
+    val responseBody: String? = null,
+    val errorMessage: String? = null,
+    val deliveryId: UUID? = null,
+    val timestamp: LocalDateTime = LocalDateTime.now()
+)
+
+enum class WebhookStatus {
+    ACTIVE,
+    DISABLED,
+    FAILED,
+    PENDING_VERIFICATION
+}
+
+enum class DeliveryStatus {
+    PENDING,
+    DELIVERED,
+    FAILED,
+    RETRYING
+}
+
+class WebhookRegistration(
+    val id: UUID,
+    val endpoint: String,
+    val events: List<String>,
+    val description: String? = null,
+    val secret: String,
+    val createdBy: String,
+    val createdAt: LocalDateTime,
+    var status: WebhookStatus = WebhookStatus.ACTIVE,
+    var disabledAt: LocalDateTime? = null,
+    var disabledBy: String? = null,
+    var lastSuccessfulDelivery: LocalDateTime? = null,
+    var failureCount: Int = 0,
+    var metadata: Map<String, String> = emptyMap()
+)
+
+class WebhookDeliveryAttempt(
+    val id: UUID,
+    val webhookId: UUID,
+    val eventId: UUID,
+    val eventType: String,
+    val payload: String,
+    val signature: String,
+    val timestamp: LocalDateTime,
+    var status: DeliveryStatus = DeliveryStatus.PENDING,
+    var statusCode: Int? = null,
+    var responseBody: String? = null,
+    var errorMessage: String? = null,
+    var completedAt: LocalDateTime? = null,
+    var retryCount: Int = 0,
+    var nextRetryAt: LocalDateTime? = null,
+    var isResend: Boolean = false,
+    var originalDeliveryId: UUID? = null
+)
+
+class WebhookDeliveryService {
+    @Autowired
+    private lateinit var webhookDeliveryRepository: WebhookDeliveryRepository
+    
+    @Autowired
+    private lateinit var restTemplate: RestTemplate
+    
+    // Custom HTTP headers for webhook deliveries
+    private val httpHeaders: HttpHeaders
+        get() {
+            val headers = HttpHeaders()
+            headers.contentType = MediaType.APPLICATION_JSON
+            return headers
+        }
+    
+    /**
+     * Asynchronously send a webhook
+     */
+    @Async
+    fun sendWebhookAsync(
+        deliveryId: UUID,
+        endpoint: String,
+        payload: Map<String, Any>,
+        signature: String,
+        secret: String,
+        webhookId: UUID
+    ) {
+        val result = sendWebhook(deliveryId, endpoint, payload, signature, secret, webhookId)
+        
+        // If delivery failed and we should retry, schedule a retry
+        if (!result.success && shouldRetry(deliveryId)) {
+            scheduleRetry(deliveryId, endpoint, payload, signature, secret, webhookId)
+        }
+    }
+    
+    /**
+     * Send a webhook synchronously and update the delivery record
+     */
+    fun sendWebhook(
+        deliveryId: UUID,
+        endpoint: String,
+        payload: Map<String, Any>,
+        signature: String,
+        secret: String,
+        webhookId: UUID
+    ): DeliveryResult {
+        // Find the delivery record
+        val delivery = webhookDeliveryRepository.findById(deliveryId).orElseThrow {
+            IllegalStateException("Delivery record not found: $deliveryId")
+        }
+        
+        // Prepare headers with signature
+        val headers = httpHeaders
+        headers.set("X-Webhook-Signature", signature)
+        headers.set("X-Event-Type", delivery.eventType)
+        headers.set("X-Event-Id", delivery.eventId.toString())
+        
+        val requestEntity = HttpEntity(payload, headers)
+        
+        try {
+            // Send the webhook
+            val response = restTemplate.exchange(
+                endpoint,
+                HttpMethod.POST,
+                requestEntity,
+                String::class.java
+            )
+            
+            // Update delivery record
+            delivery.status = if (response.statusCode.is2xxSuccessful) {
+                DeliveryStatus.DELIVERED
+            } else {
+                DeliveryStatus.FAILED
+            }
+            delivery.statusCode = response.statusCodeValue
+            delivery.responseBody = response.body
+            delivery.completedAt = LocalDateTime.now()
+            webhookDeliveryRepository.save(delivery)
+            
+            // Update the webhook registration's last successful delivery if successful
+            if (response.statusCode.is2xxSuccessful) {
+                updateWebhookRegistrationSuccess(webhookId)
+            } else {
+                updateWebhookRegistrationFailure(webhookId)
+            }
+            
+            return DeliveryResult(
+                success = response.statusCode.is2xxSuccessful,
+                statusCode = response.statusCodeValue,
+                responseBody = response.body,
+                deliveryId = deliveryId
+            )
+        } catch (e: Exception) {
+            // Update delivery record with failure
+            delivery.status = DeliveryStatus.FAILED
+            delivery.errorMessage = "${e.javaClass.simpleName}: ${e.message}"
+            delivery.completedAt = LocalDateTime.now()
+            webhookDeliveryRepository.save(delivery)
+            
+            // Update webhook registration failure count
+            updateWebhookRegistrationFailure(webhookId)
+            
+            return DeliveryResult(
+                success = false,
+                errorMessage = e.message,
+                deliveryId = deliveryId
+            )
+        }
+    }
+    
+    /**
+     * Test if an endpoint is reachable
+     */
+    fun testEndpoint(endpoint: String): DeliveryResult {
+        val testPayload = mapOf(
+            "test" to true,
+            "timestamp" to LocalDateTime.now().toString()
+        )
+        
+        val headers = httpHeaders
+        val requestEntity = HttpEntity(testPayload, headers)
+        
+        try {
+            val response = restTemplate.exchange(
+                endpoint,
+                HttpMethod.POST,
+                requestEntity,
+                String::class.java
+            )
+            
+            return DeliveryResult(
+                success = response.statusCode.is2xxSuccessful,
+                statusCode = response.statusCodeValue,
+                responseBody = response.body
+            )
+        } catch (e: Exception) {
+            return DeliveryResult(
+                success = false,
+                errorMessage = "${e.javaClass.simpleName}: ${e.message}"
+            )
+        }
+    }
+    
+    /**
+     * Determine if we should retry a failed webhook delivery
+     */
+    private fun shouldRetry(deliveryId: UUID): Boolean {
+        val delivery = webhookDeliveryRepository.findById(deliveryId).orElse(null) ?: return false
+        
+        // Don't retry if it already succeeded
+        if (delivery.status == DeliveryStatus.DELIVERED) {
+            return false
+        }
+        
+        // Don't retry more than MAX_RETRY_COUNT times
+        if (delivery.retryCount >= MAX_RETRY_COUNT) {
+            return false
+        }
+        
+        // For certain status codes, don't retry
+        if (delivery.statusCode in listOf(400, 401, 403, 404, 410)) {
+            return false
+        }
+        
+        return true
+    }
+    
+    /**
+     * Schedule a retry of a failed webhook delivery
+     */
+    private fun scheduleRetry(
+        deliveryId: UUID,
+        endpoint: String,
+        payload: Map<String, Any>,
+        signature: String,
+        secret: String,
+        webhookId: UUID
+    ) {
+        val delivery = webhookDeliveryRepository.findById(deliveryId).orElse(null) ?: return
+        
+        // Calculate next retry time with exponential backoff
+        val retryDelaySeconds = INITIAL_RETRY_DELAY_SECONDS * (2.0.pow(delivery.retryCount.toDouble())).toLong()
+        val nextRetryAt = LocalDateTime.now().plusSeconds(retryDelaySeconds)
+        
+        // Update delivery record
+        delivery.status = DeliveryStatus.RETRYING
+        delivery.retryCount++
+        delivery.nextRetryAt = nextRetryAt
+        webhookDeliveryRepository.save(delivery)
+        
+        // Schedule the retry
+        taskScheduler.schedule(
+            {
+                sendWebhookAsync(deliveryId, endpoint, payload, signature, secret, webhookId)
+            },
+            Date.from(nextRetryAt.toInstant(ZoneOffset.UTC))
+        )
+    }
+    
+    /**
+     * Update webhook registration with successful delivery
+     */
+    private fun updateWebhookRegistrationSuccess(webhookId: UUID) {
+        webhookRegistryRepository.findById(webhookId).ifPresent { registration ->
+            registration.lastSuccessfulDelivery = LocalDateTime.now()
+            webhookRegistryRepository.save(registration)
+        }
+    }
+    
+    /**
+     * Update webhook registration with failed delivery
+     */
+    private fun updateWebhookRegistrationFailure(webhookId: UUID) {
+        webhookRegistryRepository.findById(webhookId).ifPresent { registration ->
+            registration.failureCount++
+            
+            // If too many consecutive failures, disable the webhook
+            if (registration.failureCount >= MAX_FAILURE_COUNT) {
+                registration.status = WebhookStatus.FAILED
+            }
+            
+            webhookRegistryRepository.save(registration)
+        }
+    }
+    
+    companion object {
+        private const val INITIAL_RETRY_DELAY_SECONDS = 30L
+        private const val MAX_RETRY_COUNT = 5
+        private const val MAX_FAILURE_COUNT = 20
+    }
+}
+
+class HmacSignatureService {
+    /**
+     * Generate an HMAC-SHA256 signature for a payload using the provided secret
+     */
+    fun generateSignature(payload: String, secret: String): String {
+        val algorithm = "HmacSHA256"
+        val secretKeySpec = SecretKeySpec(secret.toByteArray(), algorithm)
+        val mac = Mac.getInstance(algorithm)
+        mac.init(secretKeySpec)
+        val hmacBytes = mac.doFinal(payload.toByteArray())
+        return Base64.getEncoder().encodeToString(hmacBytes)
+    }
+    
+    /**
+     * Verify that a signature matches a payload using the provided secret
+     */
+    fun verifySignature(payload: String, signature: String, secret: String): Boolean {
+        val calculatedSignature = generateSignature(payload, secret)
+        return calculatedSignature == signature
+    }
+}
+```

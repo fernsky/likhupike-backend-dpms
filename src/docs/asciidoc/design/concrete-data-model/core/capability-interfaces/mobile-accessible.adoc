@@ -1,0 +1,448 @@
+===== `MobileAccessible`
+Interface for entities that support mobile access with additional context.
+
+[source,kotlin]
+----
+interface MobileAccessible {
+    fun getMobileViewConfiguration(): MobileViewConfig
+    fun getOfflineCapabilities(): Set<OfflineCapability>
+    fun getLastMobileAccess(): MobileAccessRecord?
+    fun getMobileAccessHistory(): List<MobileAccessRecord>
+    fun getLocationRequirements(): LocationRequirement?
+    fun isSupportedOnMobileVersion(version: String): Boolean
+    fun getMobileSyncStatus(): SyncStatus
+    fun getFallbackDisplayMode(): MobileDisplayMode
+    fun prepareForOfflineAccess(): OfflinePackage
+    fun getEstimatedMobileDataUsage(): Long
+    fun getRequiredMobilePermissions(): Set<MobilePermission>
+}
+----
+
+[cols="1,3", options="header"]
+|===
+| OfflineCapability   | Description
+| `VIEW_ONLY`         | Can only view entity content when offline
+| `EDIT`              | Can edit entity while offline
+| `CREATE_NEW`        | Can create new entities while offline
+| `DELETE`            | Can delete entities while offline
+| `SUBMIT`            | Can submit forms/changes while offline (will sync later)
+| `PARTIAL_CONTENT`   | Only critical content available offline
+| `FULL_CONTENT`      | All entity content available offline
+| `MEDIA_EXCLUDED`    | All media assets excluded from offline access
+| `LOW_RES_MEDIA`     | Only low-resolution media available offline
+|===
+
+====== Contextual Use Cases for MobileAccessible
+
+*Real-World Scenario:* Health Worker Field Service Application
+
+[plantuml]
+----
+@startuml
+actor "Health Worker\n(Sunita Chaudhary)" as Worker
+actor "Doctor\n(Dr. Anil Kumar)" as Doctor
+actor "Sync Admin\n(Raju Gurung)" as Admin
+participant "PatientRecord\nimplements MobileAccessible" as Patient
+participant "MobileAppService" as App
+participant "SyncService" as Sync
+participant "LocationService" as Location
+participant "MobilePermissionService" as Permissions
+
+Worker -> App : login(credentials)
+activate App
+App -> App : authenticateUser()
+App -> Patient : getOfflineCapabilities()
+activate Patient
+App <-- Patient : [VIEW_ONLY, PARTIAL_CONTENT, SUBMIT]
+deactivate Patient
+Worker <-- App : authenticated
+deactivate App
+
+Worker -> App : synchronizeData()
+activate App
+App -> Sync : initiateSync()
+activate Sync
+Sync -> Patient : prepareForOfflineAccess()
+activate Patient
+Patient -> Patient : createOfflinePackage()
+Sync <-- Patient : offlinePatientRecords
+deactivate Patient
+App <-- Sync : synchronizationComplete
+deactivate Sync
+Worker <-- App : dataSynchronized
+deactivate App
+
+Worker -> App : startFieldVisitMode()
+activate App
+App -> Location : startLocationTracking()
+activate Location
+App <-- Location : locationTrackingStarted
+deactivate Location
+App -> Permissions : checkRequiredPermissions()
+activate Permissions
+App <-- Permissions : permissionsVerified
+deactivate Permissions
+Worker <-- App : fieldModeActive
+deactivate App
+
+Worker -> App : searchPatient("Ram Thapa")
+activate App
+App -> App : searchOfflineData(patientName)
+Worker <-- App : matchingPatients
+deactivate App
+
+Worker -> App : openPatientRecord(patientId)
+activate App
+App -> Patient : getOfflineData(patientId)
+activate Patient
+App <-- Patient : patientData
+deactivate Patient
+App -> Patient : getMobileViewConfiguration()
+activate Patient
+App <-- Patient : mobileViewConfig
+deactivate Patient
+App -> App : renderPatientView(patientData, mobileViewConfig)
+Worker <-- App : patientRecordView
+deactivate App
+
+Worker -> App : recordVitals(patientId, vitalsData)
+activate App
+App -> App : validateVitalsData(vitalsData)
+App -> App : storeOfflineChanges(patientId, vitalsData)
+App -> App : markForSync(patientId)
+Worker <-- App : vitalsRecorded
+deactivate App
+
+Worker -> App : recordPrescription(patientId, prescription)
+activate App
+App -> App : validatePrescription(prescription)
+App -> Patient : getLastMobileAccess()
+activate Patient
+App <-- Patient : lastAccess
+deactivate Patient
+App -> App : checkOfflineAuthorization(lastAccess)
+alt No offline prescription authority
+  App -> Doctor : requestRemoteApproval(prescription)
+  activate Doctor
+  Doctor -> Doctor : reviewPrescription()
+  App <-- Doctor : approvalDecision
+  deactivate Doctor
+else Has offline prescription authority
+  App -> App : grantLocalPrescriptionApproval()
+end
+App -> App : storeOfflineChanges(patientId, prescription)
+App -> App : markForSync(patientId)
+Worker <-- App : prescriptionRecorded
+deactivate App
+
+Worker -> App : goOffline()
+activate App
+App -> App : switchToOfflineMode()
+Worker <-- App : offlineModeActive
+deactivate App
+
+Worker -> App : visitNextPatient(patientId)
+activate App
+App -> Patient : getLocationRequirements()
+activate Patient
+App <-- Patient : VILLAGE_LEVEL_ACCURACY
+deactivate Patient
+App -> Location : verifyCurrentLocation(patientAddress)
+activate Location
+App <-- Location : locationVerified
+deactivate Location
+Worker <-- App : locationConfirmed
+deactivate App
+
+Worker -> App : returnToClinic()
+activate App
+App -> App : reconnectToNetwork()
+App -> Sync : syncOfflineChanges()
+activate Sync
+Sync -> Patient : getMobileSyncStatus()
+activate Patient
+Sync <-- Patient : pendingChanges
+deactivate Patient
+Sync -> Sync : uploadPendingChanges()
+App <-- Sync : syncComplete
+deactivate Sync
+Worker <-- App : changesSynchronized
+deactivate App
+
+Admin -> Sync : getFieldWorkerSyncStatus()
+activate Sync
+Sync -> Patient : getMobileAccessHistory()
+activate Patient
+Sync <-- Patient : accessRecords
+deactivate Patient
+Admin <-- Sync : syncReport
+deactivate Sync
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Rural Health Initiative uses the MobileAccessible interface to support health workers providing essential services in remote areas with limited connectivity. This implementation enables continuous service delivery despite infrastructure challenges.
+
+Community Health Worker Sunita Chaudhary serves villages in the remote hills of Dolakha district, where internet connectivity is intermittent. Before heading to the field, she logs into the health worker mobile app at the district health office. The system determines which patient records she needs based on her assigned area and prepares an offline package with essential patient information.
+
+The PatientRecord entity supports offline capabilities including VIEW_ONLY (she can view patient histories), PARTIAL_CONTENT (only critical data is included to save space), and SUBMIT (she can submit new observations that will sync later). This selective approach ensures the app remains functional on basic smartphones with limited storage.
+
+When Sunita enables field visit mode, the app begins tracking her location to verify patient visits and ensures all required mobile permissions are active. In the remote village, she searches for patient Ram Thapa in the offline database and accesses his record. The system uses a custom mobile view configuration to optimize the display for her small screen, prioritizing critical information like medication history and outstanding health issues.
+
+After checking Ram's vitals, she records the new measurements in the app. Because she's working offline, these changes are stored locally and marked for synchronization when connectivity is restored. When Ram needs a new prescription for hypertension medication, the app checks Sunita's authorization level. For certain basic medications, she has offline prescription authority; for others, she would need to call a doctor for remote approval.
+
+As connectivity is lost entirely, the app switches to full offline mode. When Sunita visits her next patient, the app verifies she's in the correct village based on GPS coordinates, implementing the VILLAGE_LEVEL_ACCURACY location requirement for patient visits.
+
+Upon returning to the clinic with internet access, all offline changes are automatically synchronized with the central system. The Sync Administrator can review a complete report of field activities, including which records were accessed, what changes were made, and when they were synchronized.
+
+The MobileAccessible implementation provides several benefits in this healthcare context:
+1. Continuity of care in areas with poor connectivity
+2. Bandwidth and storage optimization for low-resource devices
+3. Location verification to confirm actual patient visits
+4. Selective offline capabilities based on worker authorizations
+5. Efficient synchronization when connectivity is restored
+6. Complete audit trail of mobile access and changes
+
+*Technical Implementation Example:*
+```kotlin
+class PatientRecord : BaseEntity(), MobileAccessible {
+    var patientId: String = ""
+    var fullName: String = ""
+    var dateOfBirth: LocalDate? = null
+    var gender: Gender? = null
+    var contactInformation: ContactInfo? = null
+    var bloodType: BloodType? = null
+    var allergies: MutableList<String> = mutableListOf()
+    var chronicConditions: MutableList<String> = mutableListOf()
+    var medications: MutableList<Medication> = mutableListOf()
+    var vitalHistory: MutableList<VitalSigns> = mutableListOf()
+    var consultationHistory: MutableList<Consultation> = mutableListOf()
+    
+    @OneToMany(mappedBy = "patientRecord", cascade = [CascadeType.ALL])
+    private val mobileAccessRecords: MutableList<MobileAccessRecord> = mutableListOf()
+    
+    // Implementation of MobileAccessible interface
+    override fun getMobileViewConfiguration(): MobileViewConfig {
+        return MobileViewConfig(
+            primaryFields = listOf("patientId", "fullName", "dateOfBirth", "gender", "bloodType", "allergies"),
+            expandableFields = listOf("chronicConditions", "medications"),
+            tabSections = listOf(
+                TabSection("Vitals", "vitalHistory", sortOrder = "-date"),
+                TabSection("Consultations", "consultationHistory", sortOrder = "-date"),
+                TabSection("Medications", "medications", sortOrder = "-prescribedDate")
+            ),
+            criticalAlerts = listOf("allergies", "chronicConditions"),
+            customStyles = mapOf(
+                "allergies" to "highlight-red",
+                "chronicConditions" to "highlight-orange"
+            )
+        )
+    }
+    
+    override fun getOfflineCapabilities(): Set<OfflineCapability> {
+        // Determine capabilities based on patient status, worker role, etc.
+        val capabilities = mutableSetOf(OfflineCapability.VIEW_ONLY, OfflineCapability.PARTIAL_CONTENT)
+        
+        // Health workers can submit vitals offline
+        if (SecurityContext.hasRole("HEALTH_WORKER")) {
+            capabilities.add(OfflineCapability.SUBMIT)
+        }
+        
+        // Doctors can edit records offline
+        if (SecurityContext.hasRole("DOCTOR")) {
+            capabilities.add(OfflineCapability.EDIT)
+        }
+        
+        return capabilities
+    }
+    
+    override fun getLastMobileAccess(): MobileAccessRecord? {
+        return mobileAccessRecords.maxByOrNull { it.accessTimestamp }
+    }
+    
+    override fun getMobileAccessHistory(): List<MobileAccessRecord> {
+        return mobileAccessRecords.sortedByDescending { it.accessTimestamp }
+    }
+    
+    override fun getLocationRequirements(): LocationRequirement? {
+        // Return different location requirements based on patient context
+        return when {
+            isInQuarantine() -> LocationRequirement.PRECISE_LOCATION
+            isInRuralArea() -> LocationRequirement.VILLAGE_LEVEL_ACCURACY
+            else -> LocationRequirement.DISTRICT_LEVEL_ACCURACY
+        }
+    }
+    
+    override fun isSupportedOnMobileVersion(version: String): Boolean {
+        // Check version compatibility
+        val minimumVersion = "2.5.0"
+        return compareVersions(version, minimumVersion) >= 0
+    }
+    
+    override fun getMobileSyncStatus(): SyncStatus {
+        // Check if there are pending changes to be synced
+        val lastSync = mobileAccessRecords
+            .filter { it.accessType == AccessType.SYNC }
+            .maxByOrNull { it.accessTimestamp }
+            
+        val lastModification = mobileAccessRecords
+            .filter { it.accessType == AccessType.MODIFY }
+            .maxByOrNull { it.accessTimestamp }
+            
+        return if (lastModification != null && (lastSync == null || lastModification.accessTimestamp.isAfter(lastSync.accessTimestamp))) {
+            SyncStatus.PENDING_SYNC
+        } else {
+            SyncStatus.SYNCED
+        }
+    }
+    
+    override fun getFallbackDisplayMode(): MobileDisplayMode {
+        return MobileDisplayMode.TEXT_ONLY
+    }
+    
+    override fun prepareForOfflineAccess(): OfflinePackage {
+        // Record this access
+        val accessRecord = MobileAccessRecord(
+            patientRecord = this,
+            accessType = AccessType.OFFLINE_PREPARATION,
+            accessedBy = SecurityContext.getCurrentUser(),
+            accessTimestamp = Instant.now(),
+            deviceId = SecurityContext.getDeviceId(),
+            ipAddress = SecurityContext.getClientIp(),
+            location = SecurityContext.getCurrentLocation()
+        )
+        mobileAccessRecords.add(accessRecord)
+        
+        // Create optimized offline content based on user role
+        val content = mutableMapOf<String, Any?>()
+        content["patientId"] = this.patientId
+        content["fullName"] = this.fullName
+        content["dateOfBirth"] = this.dateOfBirth
+        content["gender"] = this.gender
+        content["bloodType"] = this.bloodType
+        content["allergies"] = this.allergies
+        content["chronicConditions"] = this.chronicConditions
+        
+        // Include recent vitals
+        content["vitalHistory"] = this.vitalHistory
+            .sortedByDescending { it.timestamp }
+            .take(5)
+        
+        // Include active medications
+        content["medications"] = this.medications
+            .filter { it.endDate == null || it.endDate.isAfter(LocalDate.now()) }
+        
+        // Include recent consultations
+        content["consultationHistory"] = this.consultationHistory
+            .sortedByDescending { it.consultationDate }
+            .take(3)
+        
+        return OfflinePackage(
+            entityId = this.id,
+            entityType = "PatientRecord",
+            content = content,
+            preparedAt = Instant.now(),
+            expiresAt = Instant.now().plus(7, ChronoUnit.DAYS),
+            version = 1,
+            dataSize = estimateDataSize(content)
+        )
+    }
+    
+    override fun getEstimatedMobileDataUsage(): Long {
+        // Estimate data size in bytes based on entity size
+        val basicInfoSize = 2 * 1024L // 2KB for basic info
+        val vitalsSize = vitalHistory.size * 500L // 500 bytes per vital record
+        val medicationsSize = medications.size * 800L // 800 bytes per medication
+        val consultationsSize = consultationHistory.size * 1500L // 1.5KB per consultation
+        
+        return basicInfoSize + vitalsSize + medicationsSize + consultationsSize
+    }
+    
+    override fun getRequiredMobilePermissions(): Set<MobilePermission> {
+        val permissions = mutableSetOf(
+            MobilePermission.INTERNET,
+            MobilePermission.ACCESS_NETWORK_STATE
+        )
+        
+        if (getLocationRequirements() != null) {
+            permissions.add(MobilePermission.ACCESS_FINE_LOCATION)
+        }
+        
+        // If biometric authentication is required
+        if (requiresBiometricAuth()) {
+            permissions.add(MobilePermission.USE_BIOMETRIC)
+        }
+        
+        return permissions
+    }
+    
+    // Helper methods
+    private fun isInQuarantine(): Boolean {
+        // Check if patient is in quarantine
+        return false // Simplified for example
+    }
+    
+    private fun isInRuralArea(): Boolean {
+        // Check if patient address is in rural area
+        return contactInformation?.address?.contains("Rural Municipality") ?: false
+    }
+    
+    private fun requiresBiometricAuth(): Boolean {
+        // Determine if this record requires biometric authentication
+        return chronicConditions.any { it.contains("HIV") || it.contains("Mental Health") }
+    }
+    
+    private fun compareVersions(v1: String, v2: String): Int {
+        // Version comparison logic
+        val v1Parts = v1.split(".").map { it.toInt() }
+        val v2Parts = v2.split(".").map { it.toInt() }
+        
+        for (i in 0 until minOf(v1Parts.size, v2Parts.size)) {
+            val comparison = v1Parts[i].compareTo(v2Parts[i])
+            if (comparison != 0) {
+                return comparison
+            }
+        }
+        
+        return v1Parts.size.compareTo(v2Parts.size)
+    }
+    
+    private fun estimateDataSize(content: Map<String, Any?>): Long {
+        // Simplified estimation logic
+        return 5 * 1024L // 5KB as example
+    }
+}
+
+enum class LocationRequirement {
+    PRECISE_LOCATION,       // GPS-level accuracy required
+    VILLAGE_LEVEL_ACCURACY, // Within correct village
+    DISTRICT_LEVEL_ACCURACY // Within correct district
+}
+
+enum class MobileDisplayMode {
+    FULL,           // All content with media
+    SIMPLIFIED,     // Simplified layout, basic media
+    TEXT_ONLY,      // Text only, no media
+    ACCESSIBILITY   // Optimized for accessibility
+}
+
+enum class SyncStatus {
+    SYNCED,         // Fully synchronized
+    PENDING_SYNC,   // Has local changes pending sync
+    SYNC_CONFLICT,  // Has sync conflicts to resolve
+    NEVER_SYNCED    // New record, never synced
+}
+
+enum class MobilePermission {
+    INTERNET,
+    ACCESS_NETWORK_STATE,
+    ACCESS_FINE_LOCATION,
+    ACCESS_COARSE_LOCATION,
+    CAMERA,
+    READ_EXTERNAL_STORAGE,
+    WRITE_EXTERNAL_STORAGE,
+    USE_BIOMETRIC,
+    VIBRATE,
+    RECEIVE_BOOT_COMPLETED
+}
+```

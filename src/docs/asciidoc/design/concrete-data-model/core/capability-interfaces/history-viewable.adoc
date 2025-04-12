@@ -1,0 +1,262 @@
+===== `HistoryViewable`
+Interface for entities that provide a comprehensive view of historical changes.
+
+[source,kotlin]
+----
+interface HistoryViewable {
+    fun getChangeHistory(): List<ChangeRecord>
+    fun getHistorySnapshot(timestamp: LocalDateTime): Map<String, Any>
+    fun compareSnapshots(timestamp1: LocalDateTime, timestamp2: LocalDateTime): ChangeComparison
+    fun getHistoryTimeline(): List<HistoryEvent>
+    fun getFieldHistory(fieldName: String): List<FieldChangeRecord>
+    fun getContributors(): List<User>
+    fun getMajorVersions(): List<VersionInfo>
+    fun restoreToVersion(versionId: String): RestoreResult
+    fun getActivityHeatmap(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int>
+}
+----
+
+====== Contextual Use Cases for HistoryViewable
+
+*Real-World Scenario:* Municipal Development Plan Document Management
+
+[plantuml]
+----
+@startuml
+actor "Urban Planner\n(Sanjay Regmi)" as Planner
+actor "Municipal Engineer\n(Nirmala Thapa)" as Engineer
+actor "Mayor\n(Raj Kumar)" as Mayor
+actor "Citizen\n(Sarita Limbu)" as Citizen
+participant "DevelopmentPlan\nimplements HistoryViewable" as Plan
+participant "HistoryService" as History
+participant "VersionRepository" as Versions
+participant "ComparisonTool" as Comparison
+participant "AuditService" as Audit
+
+Planner -> Plan : createInitialDraft()
+activate Plan
+Plan -> Plan : saveInitialContent()
+Plan -> History : createInitialVersion()
+activate History
+History -> Versions : saveSnapshot(plan, "Initial Draft", 1.0)
+Plan <-- History : versionCreated
+deactivate History
+Planner <-- Plan : initialDraftCreated
+deactivate Plan
+
+Engineer -> Plan : updateInfrastructureSection(newContent)
+activate Plan
+Plan -> Plan : setInfrastructureContent(newContent)
+Plan -> Plan : recordFieldChange("infrastructureSection", oldContent, newContent)
+Plan -> History : saveFieldHistory()
+activate History
+History -> Versions : saveFieldChange(plan, "infrastructureSection")
+Plan <-- History : changeRecorded
+deactivate History
+Engineer <-- Plan : sectionUpdated
+deactivate Plan
+
+Planner -> Plan : getChangeHistory()
+activate Plan
+Plan -> History : getChangeRecords()
+activate History
+History -> Versions : findChangesByEntityId(planId)
+activate Versions
+History <-- Versions : changeRecords
+deactivate Versions
+Plan <-- History : changeHistory
+deactivate History
+Planner <-- Plan : completeChangeHistory
+deactivate Plan
+
+Mayor -> Plan : compareWithLastMonth()
+activate Plan
+Plan -> History : getSnapshotAt(lastMonth)
+activate History
+History -> Versions : findSnapshotByTimestamp(planId, lastMonth)
+activate Versions
+History <-- Versions : lastMonthSnapshot
+deactivate Versions
+Plan <-- History : lastMonthVersion
+deactivate History
+
+Plan -> History : getCurrentSnapshot()
+activate History
+History -> Versions : getLatestSnapshot(planId)
+activate Versions
+History <-- Versions : currentSnapshot
+deactivate Versions
+Plan <-- History : currentVersion
+deactivate History
+
+Plan -> Comparison : compareSnapshots(lastMonthVersion, currentVersion)
+activate Comparison
+Comparison -> Comparison : diffTextContent()
+Comparison -> Comparison : identifyChangedSections()
+Comparison -> Comparison : calculateChangeStatistics()
+Plan <-- Comparison : comparisonResults
+deactivate Comparison
+Mayor <-- Plan : detailedComparison
+deactivate Plan
+
+Citizen -> Plan : viewPublicChanges()
+activate Plan
+Plan -> History : getPublicHistoryTimeline()
+activate History
+History -> History : filterPublicEvents()
+History -> History : formatForPublicDisplay()
+Plan <-- History : publicTimeline
+deactivate History
+Citizen <-- Plan : publicChangesTimeline
+deactivate Plan
+
+Engineer -> Plan : getFieldHistory("budgetSection")
+activate Plan
+Plan -> History : getFieldChangeHistory("budgetSection")
+activate History
+History -> Versions : findFieldChangesByName(planId, "budgetSection")
+activate Versions
+History <-- Versions : fieldChanges
+deactivate Versions
+Plan <-- History : budgetFieldHistory
+deactivate History
+Engineer <-- Plan : budgetChanges
+deactivate Plan
+
+Mayor -> Plan : restoreToVersion("2.1")
+activate Plan
+Plan -> History : getVersionSnapshot("2.1")
+activate History
+History -> Versions : findByEntityIdAndVersion(planId, "2.1")
+activate Versions
+History <-- Versions : v2_1Snapshot
+deactivate Versions
+Plan <-- History : v2_1Content
+deactivate History
+
+Plan -> Plan : restoreContent(v2_1Content)
+Plan -> History : recordVersionRestore(2.1, reason)
+activate History
+History -> Audit : logVersionRestoration(planId, "2.1", mayorId)
+Plan <-- History : restorationRecorded
+deactivate History
+Mayor <-- Plan : planRestoredToV2_1
+deactivate Plan
+
+Planner -> Plan : getContributors()
+activate Plan
+Plan -> History : findAllContributors()
+activate History
+History -> Versions : getDistinctAuthors(planId)
+activate Versions
+History <-- Versions : authorsList
+deactivate Versions
+Plan <-- History : contributors
+deactivate History
+Planner <-- Plan : allContributors
+deactivate Plan
+
+Planner -> Plan : getActivityHeatmap(startDate, endDate)
+activate Plan
+Plan -> History : generateActivityHeatmap(planId, startDate, endDate)
+activate History
+History -> Versions : countChangesByDay(planId, dateRange)
+activate Versions
+History <-- Versions : dailyChangeCounts
+deactivate Versions
+Plan <-- History : activityHeatmap
+deactivate History
+Planner <-- Plan : visualizableHeatmapData
+deactivate Plan
+@enduml
+----
+
+*Implementation Details:*
+The Pokhara Metropolitan City's Urban Planning Department utilizes the HistoryViewable interface to maintain a comprehensive audit trail and version history of their Five-Year Development Plan document. This implementation ensures transparency, accountability, and the ability to track the evolution of this crucial planning document.
+
+Urban Planner Sanjay Regmi creates the initial draft of the development plan, establishing the baseline version (1.0). The system automatically captures this initial state as a complete snapshot in the version repository. When Municipal Engineer Nirmala Thapa updates the infrastructure section with revised road development plans, the system records specifically what changed in that section, who made the change, and when.
+
+Mayor Raj Kumar, who needs to review recent changes, uses the comparison feature to see exactly what's been modified over the past month. The system retrieves the snapshot from one month ago and compares it with the current version, highlighting added, modified, and removed content with different colors. This comparison also provides statistics on the extent of changes (e.g., "15% of the document modified").
+
+Citizens like Sarita Limbu can access a public-facing timeline of significant changes to the development plan, supporting transparency in governance. This timeline is filtered to exclude draft changes and internal notes, showing only officially approved modifications.
+
+The system supports both full document and field-level history tracking. When Nirmala wants to review how the budget section has evolved over time, she can see the complete history of just that section, including who made each change and when.
+
+After a political decision to revert to an earlier infrastructure approach, Mayor Raj Kumar can restore the document to version 2.1, which contained the original infrastructure plan. The system maintains the integrity of the audit trail by recording this restoration as a new version with appropriate metadata about the restoration action.
+
+For project management and accountability, Sanjay can view a complete list of all contributors to the document and analyze work patterns through an activity heatmap that visualizes editing activity over time.
+
+Key features implemented through HistoryViewable include:
+1. Full version history with snapshots at significant milestones
+2. Field-level tracking for granular change history
+3. Visual comparison between any two versions
+4. Contributor tracking for accountability
+5. Timeline visualization of document evolution
+6. Version restoration capabilities
+7. Activity analysis tools
+
+*Technical Implementation Example:*
+```kotlin
+class DevelopmentPlan : BaseEntity(), HistoryViewable {
+    var title: String = ""
+    var content: String = ""
+    var status: DocumentStatus = DocumentStatus.DRAFT
+    
+    // Implementation of HistoryViewable interface
+    override fun getChangeHistory(): List<ChangeRecord> {
+        return historyService.getChangeHistory(this.id)
+    }
+    
+    override fun getHistorySnapshot(timestamp: LocalDateTime): Map<String, Any> {
+        return historyService.getSnapshotAt(this.id, timestamp)
+    }
+    
+    override fun compareSnapshots(timestamp1: LocalDateTime, timestamp2: LocalDateTime): ChangeComparison {
+        val snapshot1 = getHistorySnapshot(timestamp1)
+        val snapshot2 = getHistorySnapshot(timestamp2)
+        
+        return comparisonService.compareSnapshots(snapshot1, snapshot2)
+    }
+    
+    override fun getHistoryTimeline(): List<HistoryEvent> {
+        return historyService.getTimeline(this.id)
+    }
+    
+    override fun getFieldHistory(fieldName: String): List<FieldChangeRecord> {
+        return historyService.getFieldHistory(this.id, fieldName)
+    }
+    
+    override fun getContributors(): List<User> {
+        return historyService.getDistinctContributors(this.id)
+    }
+    
+    override fun getMajorVersions(): List<VersionInfo> {
+        return historyService.getMajorVersions(this.id)
+    }
+    
+    override fun restoreToVersion(versionId: String): RestoreResult {
+        val versionData = historyService.getVersionById(versionId)
+        if (versionData == null) {
+            return RestoreResult(false, "Version not found")
+        }
+        
+        // Restore content from version
+        this.title = versionData["title"] as String
+        this.content = versionData["content"] as String
+        
+        // Record restoration event
+        historyService.recordVersionRestoration(
+            entityId = this.id,
+            versionId = versionId,
+            restoredBy = SecurityContext.getCurrentUser(),
+            reason = "Reverted to previous version per Mayor's direction"
+        )
+        
+        return RestoreResult(true, "Successfully restored to version $versionId")
+    }
+    
+    override fun getActivityHeatmap(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int> {
+        return historyService.generateActivityHeatmap(this.id, startDate, endDate)
+    }
+}
+```

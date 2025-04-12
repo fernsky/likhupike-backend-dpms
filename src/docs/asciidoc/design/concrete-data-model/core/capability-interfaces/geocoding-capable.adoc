@@ -1,0 +1,735 @@
+===== `GeocodingCapable`
+Interface for entities that can convert between address text and geographic coordinates.
+
+[source,kotlin]
+----
+interface GeocodingCapable {
+    fun geocodeAddress(addressText: String): GeocodingResult
+    fun reverseGeocode(latitude: Double, longitude: Double): AddressComponent
+    fun validateCoordinates(latitude: Double, longitude: Double): Boolean
+    fun getGeocodingAccuracy(result: GeocodingResult): AccuracyLevel
+    fun getSupportedGeocodingRegions(): List<String>
+    fun standardizeAddress(addressText: String): String
+    fun enrichAddressWithCoordinates(address: AddressComponent): AddressComponent
+    fun getRelatedSpatialEntities(latitude: Double, longitude: Double): List<SpatialEntityReference>
+    fun getAddressComponents(latitude: Double, longitude: Double): Map<AddressComponentType, String>
+}
+----
+
+====== Contextual Use Cases for GeocodingCapable
+
+*Real-World Scenario:* Community Service Delivery in Rural Nepal
+
+[plantuml]
+----
+@startuml
+actor "Health Worker\n(Dipika Gurung)" as Worker
+actor "Villager\n(Ram Bahadur)" as Villager
+participant "Ward\nimplements GeocodingCapable" as Ward
+participant "LocationService" as Location
+participant "SpatialIndexService" as Spatial
+participant "SettlementRegistry" as Settlement
+participant "AddressService" as Address
+
+Villager -> Worker : Request home visit (provides address)
+Worker -> Ward : geocodeAddress("Ram's House, near Temple, Chepang Basti, Ward 7")
+activate Ward
+Ward -> Ward : standardizeAddress(addressText)
+Ward -> Settlement : findSettlementByName("Chepang Basti", wardId)
+activate Settlement
+Ward <-- Settlement : settlementData
+deactivate Settlement
+
+Ward -> Spatial : geocodeWithinSettlement(standardizedAddress, settlement)
+activate Spatial
+Spatial -> Spatial : matchLocalLandmarks("Temple")
+Spatial -> Spatial : estimateLocation(landmarks, "Ram's House")
+Ward <-- Spatial : approximateCoordinates
+deactivate Spatial
+
+Ward -> Ward : evaluateAccuracy(address, coordinates)
+Ward -> Ward : createGeocodingResult(coordinates, NEIGHBORHOOD_LEVEL)
+Worker <-- Ward : geocodingResult
+deactivate Ward
+
+Worker -> Location : planOptimalRoute(startPoint, geocodingResult)
+activate Location
+Worker <-- Location : routePlan
+deactivate Location
+
+note right of Ward
+  GeocodingCapable enables positioning
+  even with informal addressing
+end note
+
+Worker -> Worker : Travel to location
+
+Worker -> Ward : validateCoordinates(latitude, longitude)
+activate Ward
+Ward -> Spatial : checkPointWithinWardBoundary(coordinates)
+activate Spatial
+Ward <-- Spatial : isWithinBoundary
+deactivate Spatial
+Worker <-- Ward : coordinatesValid
+deactivate Ward
+
+Worker -> Ward : enrichAddressWithCoordinates(visitRecord.address)
+activate Ward
+Ward -> Ward : addCoordinatesToAddress(address)
+Worker <-- Ward : enrichedAddress
+deactivate Ward
+
+Worker -> Settlement : recordHomeVisit(enrichedAddress)
+activate Settlement
+Settlement -> Settlement : updateResidentLocation()
+Worker <-- Settlement : visitRecorded
+deactivate Settlement
+
+Villager -> Worker : Provide updated house description
+Worker -> Ward : reverseGeocode(latitude, longitude)
+activate Ward
+Ward -> Spatial : getLocation(coordinates)
+activate Spatial
+Ward <-- Spatial : locationData
+deactivate Spatial
+
+Ward -> Ward : constructAddressFromCoordinates(locationData)
+Ward -> Address : formatAddress(addressComponents)
+activate Address
+Ward <-- Address : formattedAddress
+deactivate Address
+Worker <-- Ward : standardizedAddress
+deactivate Ward
+
+Worker -> Settlement : updateResidentAddress(villager, standardizedAddress)
+@enduml
+----
+
+*Implementation Details:*
+The Nepal Rural Health Outreach Program uses the GeocodingCapable interface to facilitate healthcare delivery in remote regions where formal addressing systems are limited or non-existent. Ward entities implement this interface to convert descriptive, informal addresses into geographic coordinates that can be used for service planning and delivery.
+
+Health Worker Dipika Gurung serves the mountainous Ward 7 of a rural municipality in Dhading district, where houses lack formal addresses. When villager Ram Bahadur, an elderly resident from the indigenous Chepang community, requests a home visit, he describes his location as "Ram's house, near the temple in Chepang Basti, Ward 7." This descriptive address, while meaningful to locals, offers no standard format that traditional geocoding services could interpret.
+
+The Ward entity's implementation of geocodeAddress() handles this challenge through multiple resolution approaches. First, it standardizes the address text by recognizing local patterns. It then identifies "Chepang Basti" as a registered settlement within the ward boundary using the Settlement Registry. The SpatialIndexService then uses locally mapped landmarks (in this case, the temple) stored in the system to establish a reference point. Finally, it approximates Ram's house location based on pattern analysis of other houses in the settlement.
+
+The system returns coordinates with an accuracy level of NEIGHBORHOOD_LEVEL (roughly 100-meter radius), allowing Dipika to navigate within walking distance of Ram's home. The Ward's validateCoordinates() method confirms that the coordinates fall within the Ward's official boundaries, preventing navigation outside of Dipika's service area.
+
+Once Dipika reaches the actual location, she uses her tablet to record the precise coordinates. The enrichAddressWithCoordinates() method attaches these coordinates to Ram's address record, improving future visit planning. When Ram later mentions his house has been repainted blue, Dipika uses the reverseGeocode() method to generate a more descriptive standardized address: "Blue house, 50m east of Ward 7 Temple, Chepang Basti, Ward 7, Dhunibesi Rural Municipality."
+
+This GeocodingCapable implementation provides several critical benefits in Nepal's rural context:
+1. Enables service delivery without requiring formal postal addresses
+2. Builds a progressive enhancement model where location accuracy improves over time
+3. Works offline in areas with limited connectivity
+4. Incorporates local landmarks and cultural context that global geocoding services miss
+5. Supports Nepal's administrative hierarchy (province, district, municipality, ward, settlement)
+6. Accommodates the reality of hand-drawn or approximate maps common in rural areas
+
+*Technical Implementation Example:*
+```kotlin
+class Ward : BaseEntity(), GeocodingCapable {
+    var wardNumber: Int = 0
+    var name: String = ""
+    var municipality: Municipality? = null
+    var boundary: Polygon? = null
+    var officialAddressFormat: String? = null
+    var settlements: MutableSet<Settlement> = mutableSetOf()
+    var landmarks: MutableSet<Landmark> = mutableSetOf()
+    
+    // GeocodingCapable implementation
+    override fun geocodeAddress(addressText: String): GeocodingResult {
+        // Standardize and clean the address text
+        val standardizedAddress = standardizeAddress(addressText)
+        
+        // Parse for known settlements, landmarks, or identifiable components
+        val parser = AddressParser(standardizedAddress)
+        val components = parser.extractComponents()
+        
+        // Check if we have a settlement reference
+        val settlementName = components["settlement"]
+        val settlement = settlementName?.let { findSettlement(it) }
+        
+        // Check if we have landmark references
+        val landmarks = components["landmarks"]?.split(",")?.map { it.trim() }
+            ?.mapNotNull { findLandmark(it) } ?: emptyList()
+        
+        // Different geocoding approaches based on available information
+        return when {
+            // If we have exact house coordinates from previous visits
+            components["house"] != null -> {
+                val house = findHouse(components["house"]!!)
+                if (house != null && house.latitude != null && house.longitude != null) {
+                    GeocodingResult(
+                        latitude = house.latitude!!,
+                        longitude = house.longitude!!,
+                        accuracy = AccuracyLevel.PREMISE_LEVEL,
+                        matchedAddress = standardizedAddress,
+                        confidence = 0.95
+                    )
+                } else {
+                    geocodeBySettlementAndLandmarks(settlement, landmarks, components)
+                }
+            }
+            
+            // If we have a settlement and landmarks, use them for positioning
+            settlement != null && landmarks.isNotEmpty() -> {
+                geocodeBySettlementAndLandmarks(settlement, landmarks, components)
+            }
+            
+            // If we only have a settlement, use its centroid
+            settlement != null -> {
+                GeocodingResult(
+                    latitude = settlement.latitude,
+                    longitude = settlement.longitude,
+                    accuracy = AccuracyLevel.SETTLEMENT_LEVEL,
+                    matchedAddress = standardizedAddress,
+                    confidence = 0.7
+                )
+            }
+            
+            // Fallback to ward centroid with very low accuracy
+            else -> {
+                val centroid = boundary?.centroid ?: Point(0.0, 0.0)
+                GeocodingResult(
+                    latitude = centroid.x,
+                    longitude = centroid.y,
+                    accuracy = AccuracyLevel.WARD_LEVEL,
+                    matchedAddress = standardizedAddress,
+                    confidence = 0.3
+                )
+            }
+        }
+    }
+    
+    private fun geocodeBySettlementAndLandmarks(
+        settlement: Settlement?, 
+        landmarks: List<Landmark>, 
+        components: Map<String, String>
+    ): GeocodingResult {
+        // If we have multiple landmarks, triangulate position
+        if (landmarks.size > 1) {
+            val triangulation = spatialService.triangulatePosition(landmarks, components)
+            return GeocodingResult(
+                latitude = triangulation.latitude,
+                longitude = triangulation.longitude,
+                accuracy = AccuracyLevel.NEIGHBORHOOD_LEVEL,
+                matchedAddress = components.toString(),
+                confidence = 0.8
+            )
+        } 
+        // If we have one landmark, use relative positioning descriptions
+        else if (landmarks.size == 1) {
+            val landmark = landmarks[0]
+            val direction = components["direction"]
+            val distance = components["distance"]
+            
+            val approximatePoint = if (direction != null && distance != null) {
+                calculatePositionFromLandmark(landmark, direction, distance)
+            } else {
+                // Default to near the landmark
+                Point(
+                    landmark.latitude + Random.nextDouble(-0.0005, 0.0005),
+                    landmark.longitude + Random.nextDouble(-0.0005, 0.0005)
+                )
+            }
+            
+            return GeocodingResult(
+                latitude = approximatePoint.x,
+                longitude = approximatePoint.y,
+                accuracy = AccuracyLevel.NEIGHBORHOOD_LEVEL,
+                matchedAddress = components.toString(),
+                confidence = 0.6
+            )
+        } 
+        // Use settlement centroid if available, otherwise ward centroid
+        else if (settlement != null) {
+            return GeocodingResult(
+                latitude = settlement.latitude,
+                longitude = settlement.longitude,
+                accuracy = AccuracyLevel.SETTLEMENT_LEVEL,
+                matchedAddress = components.toString(),
+                confidence = 0.7
+            )
+        } else {
+            val centroid = boundary?.centroid ?: Point(0.0, 0.0)
+            return GeocodingResult(
+                latitude = centroid.x,
+                longitude = centroid.y,
+                accuracy = AccuracyLevel.WARD_LEVEL,
+                matchedAddress = components.toString(),
+                confidence = 0.3
+            )
+        }
+    }
+    
+    private fun calculatePositionFromLandmark(
+        landmark: Landmark, 
+        direction: String, 
+        distance: String
+    ): Point {
+        // Convert Nepali/English directions to bearings
+        val bearingDegrees = when (direction.toLowerCase()) {
+            "north", "उत्तर" -> 0.0
+            "northeast", "उत्तरपूर्व" -> 45.0
+            "east", "पूर्व" -> 90.0
+            "southeast", "दक्षिणपूर्व" -> 135.0
+            "south", "दक्षिण" -> 180.0
+            "southwest", "दक्षिणपश्चिम" -> 225.0
+            "west", "पश्चिम" -> 270.0
+            "northwest", "उत्तरपश्चिम" -> 315.0
+            else -> 0.0 // Default
+        }
+        
+        // Parse distance - handling both metric (m) and traditional Nepali units (haath)
+        val distanceInMeters = when {
+            distance.endsWith("m") -> distance.removeSuffix("m").toDoubleOrNull() ?: 100.0
+            distance.endsWith("km") -> (distance.removeSuffix("km").toDoubleOrNull() ?: 0.1) * 1000.0
+            distance.endsWith("haath") -> (distance.removeSuffix("haath").toDoubleOrNull() ?: 10.0) * 0.45 // roughly 0.45m per haath
+            else -> distance.toDoubleOrNull() ?: 100.0
+        }
+        
+        // Calculate new position using haversine formula
+        return spatialService.calculatePointFromBearing(
+            latitude = landmark.latitude,
+            longitude = landmark.longitude,
+            bearing = bearingDegrees,
+            distanceMeters = distanceInMeters
+        )
+    }
+    
+    override fun reverseGeocode(latitude: Double, longitude: Double): AddressComponent {
+        // Validate that the coordinates are within this ward's boundary
+        if (!validateCoordinates(latitude, longitude)) {
+            throw IllegalArgumentException("Coordinates are outside this ward's boundary")
+        }
+        
+        val result = AddressComponent()
+        
+        // Set basic administrative hierarchy
+        result.wardNumber = wardNumber
+        result.wardName = name
+        municipality?.let {
+            result.municipalityName = it.name
+            result.municipalityType = it.type.toString()
+            result.districtName = it.district?.name
+            result.provinceName = it.district?.province?.name
+        }
+        
+        // Find containing settlement
+        val containingSettlement = findContainingSettlement(latitude, longitude)
+        if (containingSettlement != null) {
+            result.settlementName = containingSettlement.name
+            result.localityType = containingSettlement.type.toString()
+        }
+        
+        // Find nearest landmarks
+        val nearbyLandmarks = findNearbyLandmarks(latitude, longitude, 500.0) // 500m radius
+        
+        if (nearbyLandmarks.isNotEmpty()) {
+            val nearestLandmark = nearbyLandmarks.first()
+            val distance = calculateDistance(
+                latitude, longitude, 
+                nearestLandmark.latitude, nearestLandmark.longitude
+            )
+            
+            val direction = calculateBearing(
+                nearestLandmark.latitude, nearestLandmark.longitude,
+                latitude, longitude
+            )
+            
+            val directionText = when {
+                direction >= 337.5 || direction < 22.5 -> "north"
+                direction >= 22.5 && direction < 67.5 -> "northeast"
+                direction >= 67.5 && direction < 112.5 -> "east"
+                direction >= 112.5 && direction < 157.5 -> "southeast"
+                direction >= 157.5 && direction < 202.5 -> "south"
+                direction >= 202.5 && direction < 247.5 -> "southwest"
+                direction >= 247.5 && direction < 292.5 -> "west"
+                else -> "northwest"
+            }
+            
+            result.streetAddress = "${Math.round(distance)}m ${directionText} of ${nearestLandmark.name}"
+        }
+        
+        // Find any houses at this location
+        val houses = findHousesNear(latitude, longitude, 10.0) // 10m radius
+        if (houses.isNotEmpty()) {
+            result.buildingName = houses.first().description
+        }
+        
+        return result
+    }
+    
+    override fun validateCoordinates(latitude: Double, longitude: Double): Boolean {
+        // Basic validation
+        if (latitude < -90.0 || latitude > 90.0 || longitude < -180.0 || longitude > 180.0) {
+            return false
+        }
+        
+        // Check if the point is within ward boundary
+        val point = Point(latitude, longitude)
+        return boundary?.contains(point) ?: false
+    }
+    
+    override fun getGeocodingAccuracy(result: GeocodingResult): AccuracyLevel {
+        return result.accuracy
+    }
+    
+    override fun getSupportedGeocodingRegions(): List<String> {
+        // This ward only supports geocoding within its own boundary
+        val regions = mutableListOf<String>()
+        
+        // Add the ward itself 
+        regions.add("$wardNumber-${municipality?.name}")
+        
+        // Add known settlements
+        settlements.forEach { settlement ->
+            regions.add(settlement.name)
+        }
+        
+        return regions
+    }
+    
+    override fun standardizeAddress(addressText: String): String {
+        // First clean up the text
+        var standardized = addressText.trim()
+            .replace(Regex("\\s+"), " ") // normalize whitespace
+        
+        // Check if Ward is mentioned at the start, if not add it
+        if (!standardized.toLowerCase().startsWith("ward") && 
+            !standardized.toLowerCase().startsWith("वडा")) {
+            standardized = "Ward $wardNumber, $standardized"
+        }
+        
+        // Add municipality if missing
+        if (!standardized.contains(municipality?.name ?: "", ignoreCase = true)) {
+            standardized += ", ${municipality?.name ?: "Unknown Municipality"}"
+        }
+        
+        return standardized
+    }
+    
+    override fun enrichAddressWithCoordinates(address: AddressComponent): AddressComponent {
+        // Make a copy to avoid modifying the original
+        val enriched = address.copy()
+        
+        // Only proceed if we don't have coordinates already
+        if (enriched.latitude == null || enriched.longitude == null) {
+            // Try to geocode the address
+            try {
+                val geocodeResult = geocodeAddress(
+                    "${enriched.streetAddress ?: ""}, " +
+                    "${enriched.settlementName ?: ""}, Ward $wardNumber"
+                )
+                
+                // Set the coordinates
+                enriched.latitude = geocodeResult.latitude
+                enriched.longitude = geocodeResult.longitude
+                enriched.geocodingAccuracy = geocodeResult.accuracy.name
+                enriched.lastGeocodedDate = LocalDate.now()
+                
+                // Also record the Ward data if it's missing
+                if (enriched.wardNumber == null) {
+                    enriched.wardNumber = wardNumber
+                }
+                
+                if (enriched.wardName.isNullOrEmpty()) {
+                    enriched.wardName = name
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to enrich address with coordinates: ${e.message}")
+            }
+        }
+        
+        return enriched
+    }
+    
+    override fun getRelatedSpatialEntities(latitude: Double, longitude: Double): List<SpatialEntityReference> {
+        val result = mutableListOf<SpatialEntityReference>()
+        val point = Point(latitude, longitude)
+        
+        // Add settlement if point is within any
+        settlements.forEach { settlement ->
+            if (settlement.boundary?.contains(point) == true) {
+                result.add(
+                    SpatialEntityReference(
+                        id = settlement.id,
+                        type = "SETTLEMENT",
+                        name = settlement.name,
+                        distanceInMeters = 0.0 // Inside the settlement
+                    )
+                )
+            }
+        }
+        
+        // Get nearby landmarks
+        val nearbyLandmarks = findNearbyLandmarks(latitude, longitude, 1000.0)
+        nearbyLandmarks.forEach { landmark ->
+            val distance = calculateDistance(
+                latitude, longitude, 
+                landmark.latitude, landmark.longitude
+            )
+            
+            result.add(
+                SpatialEntityReference(
+                    id = landmark.id,
+                    type = "LANDMARK",
+                    name = landmark.name,
+                    distanceInMeters = distance
+                )
+            )
+        }
+        
+        // Get nearby infrastructure
+        val nearbyInfrastructure = infrastructureService.findNearby(latitude, longitude, 1000.0)
+        nearbyInfrastructure.forEach { infra ->
+            result.add(
+                SpatialEntityReference(
+                    id = infra.id,
+                    type = infra.type.name,
+                    name = infra.name,
+                    distanceInMeters = infra.distance
+                )
+            )
+        }
+        
+        // Sort by distance
+        return result.sortedBy { it.distanceInMeters }
+    }
+    
+    override fun getAddressComponents(latitude: Double, longitude: Double): Map<AddressComponentType, String> {
+        val components = mutableMapOf<AddressComponentType, String>()
+        
+        // Add ward information
+        components[AddressComponentType.WARD_NUMBER] = wardNumber.toString()
+        components[AddressComponentType.WARD_NAME] = name
+        
+        // Add municipality information
+        municipality?.let {
+            components[AddressComponentType.MUNICIPALITY] = it.name
+            components[AddressComponentType.MUNICIPALITY_TYPE] = it.type.toString()
+            
+            // Add district and province if available
+            it.district?.let { district ->
+                components[AddressComponentType.DISTRICT] = district.name
+                
+                district.province?.let { province ->
+                    components[AddressComponentType.PROVINCE] = province.name
+                }
+            }
+        }
+        
+        // Find containing settlement
+        val containingSettlement = findContainingSettlement(latitude, longitude)
+        if (containingSettlement != null) {
+            components[AddressComponentType.SETTLEMENT] = containingSettlement.name
+        }
+        
+        // Find nearest landmark for relative positioning
+        val nearbyLandmarks = findNearbyLandmarks(latitude, longitude, 500.0)
+        if (nearbyLandmarks.isNotEmpty()) {
+            val nearestLandmark = nearbyLandmarks.first()
+            components[AddressComponentType.NEAREST_LANDMARK] = nearestLandmark.name
+            
+            val distance = calculateDistance(
+                latitude, longitude, 
+                nearestLandmark.latitude, nearestLandmark.longitude
+            )
+            
+            components[AddressComponentType.LANDMARK_DISTANCE] = "${Math.round(distance)}m"
+            
+            val direction = calculateBearing(
+                nearestLandmark.latitude, nearestLandmark.longitude,
+                latitude, longitude
+            )
+            
+            val directionText = when {
+                direction >= 337.5 || direction < 22.5 -> "north"
+                direction >= 22.5 && direction < 67.5 -> "northeast"
+                direction >= 67.5 && direction < 112.5 -> "east"
+                direction >= 112.5 && direction < 157.5 -> "southeast"
+                direction >= 157.5 && direction < 202.5 -> "south"
+                direction >= 202.5 && direction < 247.5 -> "southwest"
+                direction >= 247.5 && direction < 292.5 -> "west"
+                else -> "northwest"
+            }
+            
+            components[AddressComponentType.LANDMARK_DIRECTION] = directionText
+        }
+        
+        return components
+    }
+    
+    // Helper methods
+    private fun findSettlement(name: String): Settlement? {
+        return settlements.find { 
+            it.name.equals(name, ignoreCase = true) || 
+            it.localName.equals(name, ignoreCase = true) 
+        }
+    }
+    
+    private fun findLandmark(name: String): Landmark? {
+        return landmarks.find { 
+            it.name.equals(name, ignoreCase = true) || 
+            it.localName.equals(name, ignoreCase = true) 
+        }
+    }
+    
+    private fun findHouse(description: String): House? {
+        return houseRepository.findByDescriptionContainingAndWardId(description, id)
+    }
+    
+    private fun findContainingSettlement(latitude: Double, longitude: Double): Settlement? {
+        val point = Point(latitude, longitude)
+        return settlements.find { it.boundary?.contains(point) == true }
+    }
+    
+    private fun findNearbyLandmarks(latitude: Double, longitude: Double, radiusInMeters: Double): List<Landmark> {
+        return landmarks.filter {
+            calculateDistance(latitude, longitude, it.latitude, it.longitude) <= radiusInMeters
+        }.sortedBy { 
+            calculateDistance(latitude, longitude, it.latitude, it.longitude) 
+        }
+    }
+    
+    private fun findHousesNear(latitude: Double, longitude: Double, radiusInMeters: Double): List<House> {
+        return houseRepository.findNear(latitude, longitude, radiusInMeters, id)
+    }
+    
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        // Implementation of Haversine formula to calculate distance between two points
+        val earthRadius = 6371000.0 // in meters
+        
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        
+        return earthRadius * c
+    }
+    
+    private fun calculateBearing(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val dLon = Math.toRadians(lon2 - lon1)
+        
+        val y = Math.sin(dLon) * Math.cos(Math.toRadians(lat2))
+        val x = Math.cos(Math.toRadians(lat1)) * Math.sin(Math.toRadians(lat2)) -
+                Math.sin(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.cos(dLon)
+        
+        var bearing = Math.toDegrees(Math.atan2(y, x))
+        if (bearing < 0) {
+            bearing += 360.0
+        }
+        
+        return bearing
+    }
+}
+
+// Supporting data models
+enum class AccuracyLevel {
+    COUNTRY_LEVEL,      // Country level accuracy - least precise
+    PROVINCE_LEVEL,     // Province level accuracy
+    DISTRICT_LEVEL,     // District level accuracy
+    MUNICIPALITY_LEVEL, // Municipality level accuracy
+    WARD_LEVEL,         // Ward level accuracy
+    SETTLEMENT_LEVEL,   // Settlement/village level accuracy
+    NEIGHBORHOOD_LEVEL, // Neighborhood level accuracy
+    STREET_LEVEL,       // Street level accuracy
+    PREMISE_LEVEL       // Building/house level accuracy - most precise
+}
+
+data class GeocodingResult(
+    val latitude: Double,
+    val longitude: Double,
+    val accuracy: AccuracyLevel,
+    val matchedAddress: String,
+    val confidence: Double,
+    val alternativeMatches: List<AlternativeMatch> = emptyList()
+)
+
+data class AlternativeMatch(
+    val latitude: Double,
+    val longitude: Double,
+    val accuracy: AccuracyLevel,
+    val matchedAddress: String,
+    val confidence: Double
+)
+
+data class SpatialEntityReference(
+    val id: UUID,
+    val type: String,
+    val name: String,
+    val distanceInMeters: Double
+)
+
+enum class AddressComponentType {
+    PROVINCE,
+    DISTRICT,
+    MUNICIPALITY,
+    MUNICIPALITY_TYPE,
+    WARD_NUMBER,
+    WARD_NAME,
+    SETTLEMENT,
+    NEAREST_LANDMARK,
+    LANDMARK_DISTANCE,
+    LANDMARK_DIRECTION,
+    STREET_NAME,
+    HOUSE_NUMBER,
+    BUILDING_NAME,
+    POSTAL_CODE
+}
+
+class Point(val x: Double, val y: Double)
+class Polygon {
+    fun contains(point: Point): Boolean {
+        // Implementation of point-in-polygon algorithm
+        // For simplicity, assuming this is implemented
+        return true
+    }
+    
+    val centroid: Point
+        get() {
+            // Implementation to calculate centroid
+            // For simplicity, returning a dummy point
+            return Point(0.0, 0.0)
+        }
+}
+
+data class AddressComponent(
+    var streetAddress: String? = null,
+    var buildingName: String? = null,
+    var settlementName: String? = null,
+    var localityType: String? = null,
+    var wardNumber: Int? = null,
+    var wardName: String? = null,
+    var municipalityName: String? = null,
+    var municipalityType: String? = null,
+    var districtName: String? = null,
+    var provinceName: String? = null,
+    var latitude: Double? = null,
+    var longitude: Double? = null,
+    var geocodingAccuracy: String? = null,
+    var lastGeocodedDate: LocalDate? = null
+) {
+    fun copy(): AddressComponent {
+        return AddressComponent(
+            streetAddress = this.streetAddress,
+            buildingName = this.buildingName,
+            settlementName = this.settlementName,
+            localityType = this.localityType,
+            wardNumber = this.wardNumber,
+            wardName = this.wardName,
+            municipalityName = this.municipalityName,
+            municipalityType = this.municipalityType,
+            districtName = this.districtName,
+            provinceName = this.provinceName,
+            latitude = this.latitude,
+            longitude = this.longitude,
+            geocodingAccuracy = this.geocodingAccuracy,
+            lastGeocodedDate = this.lastGeocodedDate
+        )
+    }
+}
+```
