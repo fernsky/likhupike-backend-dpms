@@ -1,0 +1,276 @@
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+interface ExternalSystemSyncable
+interface FullTextSearchable
+interface CustomValidatable
+
+' GenderDistribution implementation
+class GenderDistribution {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID demographicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +String adminAreaName
+  +AdminAreaLevel adminAreaLevel
+  
+  ' Time context
+  +Integer year
+  +String periodType
+  +LocalDate referenceDate
+  +Boolean isCensusData
+  +String censusReference
+  +Boolean isProjected
+  +String projectionMethod
+  
+  ' Population counts by gender
+  +Integer totalPopulation
+  +Integer malePopulation
+  +Integer femalePopulation
+  +Integer thirdGenderPopulation
+  +Integer undisclosedGenderPopulation
+  
+  ' Gender ratios and metrics
+  +Double sexRatio
+  +Double genderParity
+  +Double thirdGenderPercentage
+  +GenderBalance genderBalanceCategory
+  
+  ' Age-related gender metrics
+  +Map<AgeGroup, GenderDistributionByAge> genderByAge
+  +Double femaleFertilityAgePercentage
+  +Double femaleElderlyPercentage
+  +Double maleWorkingAgePercentage
+  
+  ' Socioeconomic indicators
+  +Map<EducationLevel, GenderDistribution> genderByEducation
+  +Map<OccupationType, GenderDistribution> genderByOccupation
+  +Map<MaritalStatus, GenderDistribution> genderByMaritalStatus
+  
+  ' Data quality
+  +ConfidenceLevel confidenceLevel
+  +String dataSource
+  +String methodologyDescription
+  +Double marginOfError
+  +String notes
+  
+  ' Previous reference
+  +UUID previousDistributionId
+  +Integer changeMalePopulation
+  +Integer changeFemalePopulation
+  +Integer changeThirdGenderPopulation
+  +Double changeSexRatio
+  
+  ' External references
+  +UUID sourceDatasetId
+  +UUID populationStatisticsId
+}
+
+' Supporting classes
+class GenderDistributionByAge {
+  +Integer maleCount
+  +Integer femaleCount
+  +Integer thirdGenderCount
+  +Double sexRatio
+  +Boolean isAgeGroupEstimated
+}
+
+class GenderTrendAnalysis {
+  +UUID id
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer startYear
+  +Integer endYear
+  +List<Integer> years
+  +List<Double> sexRatios
+  +List<Double> genderParityIndices
+  +Double averageAnnualChange
+  +TrendDirection sexRatioTrend
+  +Double projectedFutureSexRatio
+  +Integer projectionYear
+  +String analysisNotes
+  +LocalDateTime analyzedAt
+}
+
+class GenderImbalanceIndicator {
+  +UUID id
+  +UUID genderDistributionId
+  +ImbalanceType imbalanceType
+  +Double imbalanceSeverity
+  +String possibleCauses
+  +String implicationsDescription
+  +LocalDateTime detectedAt
+  +Boolean isVerified
+  +UUID verifiedBy
+  +String verificationNotes
+}
+
+class GenderMigrationImpact {
+  +UUID id
+  +UUID genderDistributionId
+  +Double netMaleMigrationRate
+  +Double netFemaleMigrationRate
+  +Integer estimatedMaleMigrants
+  +Integer estimatedFemaleMigrants
+  +MigrationImpactLevel impactLevel
+  +String primaryDestinations
+  +String migrationNotes
+  +UUID migrationDataSourceId
+}
+
+' Enumerations
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum AgeGroup {
+  UNDER_5
+  AGE_5_9
+  AGE_10_14
+  AGE_15_19
+  AGE_20_24
+  AGE_25_29
+  AGE_30_34
+  AGE_35_39
+  AGE_40_44
+  AGE_45_49
+  AGE_50_54
+  AGE_55_59
+  AGE_60_64
+  AGE_65_69
+  AGE_70_74
+  AGE_75_79
+  AGE_80_84
+  AGE_85_PLUS
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+  UNKNOWN
+}
+
+enum TrendDirection {
+  INCREASING
+  DECREASING
+  STABLE
+  FLUCTUATING
+  REVERSING
+}
+
+enum GenderBalance {
+  BALANCED
+  MALE_DOMINATED
+  HIGHLY_MALE_DOMINATED
+  FEMALE_DOMINATED
+  HIGHLY_FEMALE_DOMINATED
+}
+
+enum ImbalanceType {
+  AGE_SPECIFIC
+  BIRTH_SEX_RATIO
+  MIGRATION_INDUCED
+  MORTALITY_DIFFERENTIAL
+  EDUCATIONAL_DISPARITY
+  OCCUPATIONAL_SEGREGATION
+}
+
+enum MigrationImpactLevel {
+  NEGLIGIBLE
+  LOW
+  MODERATE
+  HIGH
+  SEVERE
+}
+
+enum EducationLevel {
+  NO_FORMAL_EDUCATION
+  PRIMARY
+  LOWER_SECONDARY
+  SECONDARY
+  HIGHER_SECONDARY
+  BACHELOR
+  MASTER_OR_ABOVE
+  TECHNICAL_VOCATIONAL
+}
+
+enum OccupationType {
+  AGRICULTURE
+  MANUFACTURING
+  SERVICES
+  GOVERNMENT
+  PRIVATE_SECTOR
+  UNEMPLOYED
+  STUDENT
+  RETIRED
+}
+
+enum MaritalStatus {
+  NEVER_MARRIED
+  MARRIED
+  WIDOWED
+  DIVORCED
+  SEPARATED
+  INFORMAL_UNION
+}
+
+' Inheritance relationships
+BaseEntity <|-- GenderDistribution
+BaseEntity <|-- GenderTrendAnalysis
+BaseEntity <|-- GenderImbalanceIndicator
+BaseEntity <|-- GenderMigrationImpact
+
+' Interface implementation
+GenderDistribution ..|> DataAggregatable
+GenderDistribution ..|> HistoryViewable
+GenderDistribution ..|> ExternalSystemSyncable
+GenderDistribution ..|> FullTextSearchable
+GenderDistribution ..|> CustomValidatable
+
+' Class relationships
+GenderDistribution "1" o-- "many" GenderDistributionByAge
+GenderDistribution "1" o-- "many" GenderImbalanceIndicator
+GenderDistribution "1" o-- "0..1" GenderMigrationImpact
+GenderDistribution -- GenderBalance
+GenderDistribution -- ConfidenceLevel
+GenderDistribution -- AdminAreaLevel
+GenderDistributionByAge -- AgeGroup
+GenderTrendAnalysis -- TrendDirection
+GenderTrendAnalysis -- AdminAreaLevel
+GenderImbalanceIndicator -- ImbalanceType
+GenderMigrationImpact -- MigrationImpactLevel
+@enduml
+----
+
+The GenderDistribution entity extends the BaseEntity core model and implements several capability interfaces to provide comprehensive gender-based demographic analysis. This integration enables sophisticated gender data management while maintaining consistency with the core domain model architecture.
+
+The entity is designed to work with census data, surveys, and demographic estimates, capturing the distribution of population by gender across administrative boundaries. It maintains connections to the administrative hierarchy (ward, municipality, district, province, country) for contextual analysis.
+
+As a DataAggregatable entity, GenderDistribution supports hierarchical roll-ups from smaller to larger administrative units, allowing gender analysis at any level of Nepal's administrative structure. The HistoryViewable interface enables tracking of gender distribution changes over time, essential for analyzing trends in gender demographics.
+
+The entity captures not just raw gender counts but also derived metrics like sex ratio (males per 100 females) and gender parity indicators. These metrics provide valuable insights into demographic imbalances and their potential social and economic implications.
+
+A distinctive feature of the GenderDistribution entity is its explicit inclusion of third gender population data. Nepal was one of the first countries in the world to legally recognize a third gender category in its 2011 census, and the entity model fully supports this progressive approach with dedicated fields for third gender counts and percentages.
+
+The model handles both current data and historical information with clear reference to previous distributions, enabling trend analysis. It also supports gender distribution analysis across different dimensions including age groups, education levels, occupation types, and marital status, providing a multifaceted view of gender demographics.
+
+For quality management, the entity includes explicit confidence level indicators, methodology descriptions, and margin of error calculations. This transparency about data reliability is particularly important for gender-based statistics where data collection challenges can affect accuracy.
+
+Finally, the model includes specialized components for analyzing gender-related phenomena like migration impacts and gender imbalance indicators, supporting deeper investigation of gender demographic patterns and their causes. This comprehensive approach ensures the entity can support a wide range of gender-focused demographic analyses required for evidence-based planning and policy development.
