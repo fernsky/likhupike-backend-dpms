@@ -15,7 +15,10 @@
                   Digital Profile System
                 </h5>
               </div>
-              <p class="text-white-50 mb-2" th:text="#{digital.profile.subtitle}">
+              <p
+                class="text-white-50 mb-2"
+                th:text="#{digital.profile.subtitle}"
+              >
                 A comprehensive digital identity and document management system
                 empowering citizens with secure, accessible, and efficient
                 government services.
@@ -25,7 +28,9 @@
                   <i class="bi bi-building me-1"></i>
                   <span th:text="#{developed.by}">Developed by</span>
                 </span>
-                <strong th:text="#{app.name}">Intensive Study & Research Center</strong>
+                <strong th:text="#{app.name}"
+                  >Intensive Study & Research Center</strong
+                >
               </p>
               <div class="d-flex gap-3">
                 <a href="#" class="social-icon" aria-label="Facebook">
@@ -45,23 +50,36 @@
           </div>
 
           <div class="col-lg-5">
-            <h6 class="text-uppercase text-white-50 mb-3" th:text="#{contact.info.title}">Contact Info</h6>
+            <h6
+              class="text-uppercase text-white-50 mb-3"
+              th:text="#{contact.info.title}"
+            >
+              Contact Info
+            </h6>
             <ul class="list-unstyled">
               <li class="mb-3 d-flex">
                 <i class="bi bi-geo-alt text-primary me-3 mt-1"></i>
-                <span class="text-white-50" th:text="#{contact.address}">Kathmandu, Nepal</span>
+                <span class="text-white-50" th:text="#{contact.address}"
+                  >Kathmandu, Nepal</span
+                >
               </li>
               <li class="mb-3 d-flex">
                 <i class="bi bi-telephone text-primary me-3 mt-1"></i>
-                <span class="text-white-50" th:text="#{contact.phone}">+977 1-XXXXXXX</span>
+                <span class="text-white-50" th:text="#{contact.phone}"
+                  >+977 1-XXXXXXX</span
+                >
               </li>
               <li class="mb-3 d-flex">
                 <i class="bi bi-envelope text-primary me-3 mt-1"></i>
-                <span class="text-white-50" th:text="#{contact.email}">info@intensivestudy.com.np</span>
+                <span class="text-white-50" th:text="#{contact.email}"
+                  >info@intensivestudy.com.np</span
+                >
               </li>
               <li class="mb-3 d-flex">
                 <i class="bi bi-clock text-primary me-3 mt-1"></i>
-                <span class="text-white-50" th:text="#{contact.hours}">9:00 AM - 5:00 PM, Sunday-Friday</span>
+                <span class="text-white-50" th:text="#{contact.hours}"
+                  >9:00 AM - 5:00 PM, Sunday-Friday</span
+                >
               </li>
             </ul>
           </div>
@@ -73,8 +91,12 @@
           <div class="col-md-6">
             <p class="text-white-50 mb-md-0">
               &copy;
-              <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2023</span>
-              <span th:text="#{app.name}">Intensive Study & Research Center</span>.
+              <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}"
+                >2023</span
+              >
+              <span th:text="#{app.name}"
+                >Intensive Study & Research Center</span
+              >.
               <span th:text="#{footer.rights}">All Rights Reserved.</span>
             </p>
           </div>
