@@ -14,6 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpSession
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.web.context.SecurityContextRepository
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository
+import org.springframework.security.authentication.AuthenticationManager
 
 /**
  * Controller handling UI routes for authentication pages.
@@ -27,7 +34,8 @@ import jakarta.servlet.http.HttpServletRequest
 @RequestMapping("/ui")
 class UiAuthController(
     private val authService: AuthService,
-    private val i18nMessageService: I18nMessageService
+    private val i18nMessageService: I18nMessageService,
+    private val authenticationManager: AuthenticationManager
 ) {
 
     /**
@@ -44,6 +52,53 @@ class UiAuthController(
         model.addAttribute("loginRequest", LoginRequest("", ""))
         model.addAttribute("activeTab", "login")
         return "auth/login"
+    }
+
+    /**
+     * Handles form-based login for the UI.
+     * 
+     * This is an alternative form processing method that uses the API auth service 
+     * and manually sets up the session. In most cases, Spring Security's form login handling 
+     * as configured in WebSecurityConfig should be used instead.
+     */
+    @PostMapping("/login")
+    fun processLogin(
+        loginRequest: LoginRequest,
+        request: HttpServletRequest,
+        redirectAttributes: RedirectAttributes
+    ): String {
+        try {
+            // Use AuthService to authenticate
+            val authResponse = authService.login(loginRequest)
+            
+            // Create an Authentication object and set it in the SecurityContext
+            val authentication = UsernamePasswordAuthenticationToken(
+                loginRequest.email, 
+                null, 
+                authResponse.permissions.map { 
+                    org.springframework.security.core.authority.SimpleGrantedAuthority(it)
+                }
+            )
+            
+            // Store authentication in session
+            val securityContext = SecurityContextHolder.getContext()
+            securityContext.authentication = authentication
+            
+            // Save to session repository
+            val session = request.getSession(true)
+            session.setAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, 
+                securityContext
+            )
+            
+            // Redirect to dashboard
+            return "redirect:/ui/dashboard"
+            
+        } catch (e: Exception) {
+            // Handle login failure
+            redirectAttributes.addFlashAttribute("errorMessage", e.message ?: "Login failed")
+            return "redirect:/ui/login?error=true"
+        }
     }
 
     /**

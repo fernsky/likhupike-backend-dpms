@@ -57,7 +57,7 @@ class WebSecurityConfig(
             }
             .formLogin {
                 it.loginPage("/ui/login")
-                  .loginProcessingUrl("/ui/login-processing") // Different URL to avoid conflict with API endpoints
+                  .loginProcessingUrl("/ui/login") // Process login at the same URL as the form action
                   .defaultSuccessUrl("/ui/dashboard")
                   .failureUrl("/ui/login?error=true")
                   .permitAll()

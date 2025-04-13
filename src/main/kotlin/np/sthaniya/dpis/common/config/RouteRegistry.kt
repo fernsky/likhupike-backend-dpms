@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component
  *
  * This component maintains a collection of registered routes and provides functionality to:
  * - Register new routes with their HTTP methods and access levels
+ * - Support multiple HTTP methods for a single route pattern
  * - Validate incoming request paths and methods
  * - Check route accessibility (public/private)
  * - Pattern matching for URL paths with wildcard support
@@ -19,7 +20,7 @@ class RouteRegistry {
     /**
      * Registers a new route with the specified pattern, HTTP method, and accessibility.
      *
-     * @param pattern The URL pattern to match, supporting wildcards (/<all> and /<all>)
+     * @param pattern The URL pattern to match, supporting wildcards (/** and /*)
      * @param method The HTTP method for this route
      * @param isPublic Whether the route is publicly accessible without authentication
      */
@@ -29,6 +30,23 @@ class RouteRegistry {
         isPublic: Boolean = false,
     ) {
         routes.add(Route(pattern, method, isPublic))
+    }
+
+    /**
+     * Registers a new route with multiple HTTP methods and the same accessibility.
+     *
+     * @param pattern The URL pattern to match, supporting wildcards (/** and /*)
+     * @param methods Collection of HTTP methods for this route
+     * @param isPublic Whether the route is publicly accessible without authentication
+     */
+    fun register(
+        pattern: String,
+        methods: Collection<HttpMethod>,
+        isPublic: Boolean = false,
+    ) {
+        methods.forEach { method ->
+            routes.add(Route(pattern, method, isPublic))
+        }
     }
 
     /**
