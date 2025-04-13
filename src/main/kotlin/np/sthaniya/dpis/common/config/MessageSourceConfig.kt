@@ -7,6 +7,9 @@ import org.springframework.context.support.ResourceBundleMessageSource
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver
 import org.springframework.web.servlet.LocaleResolver
+import org.springframework.web.servlet.i18n.CookieLocaleResolver
+import org.springframework.web.servlet.i18n.LocaleChangeInterceptor
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import java.util.*
 
 /**
@@ -42,7 +45,8 @@ class MessageSourceConfig : WebMvcConfigurer {
             "i18n/user/messages",
             "i18n/error/messages",
             "i18n/document/messages",
-            "i18n/citizen/messages"
+            "i18n/citizen/messages",
+            "i18n/ui/messages" // Add UI-specific messages
         )
         messageSource.setDefaultEncoding("UTF-8")
         messageSource.setUseCodeAsDefaultMessage(true)
@@ -54,20 +58,47 @@ class MessageSourceConfig : WebMvcConfigurer {
      *
      * The resolver is configured to:
      * - Support English (default) and Nepali locales
-     * - Determine locale from Accept-Language header
+     * - Determine locale from Accept-Language header for API requests
+     * - Use cookies for UI locale preferences
      * - Fall back to English when requested locale is not supported
      *
-     * @return A configured [AcceptHeaderLocaleResolver]
+     * @return A configured [CookieLocaleResolver]
      */
     @Bean
     fun localeResolver(): LocaleResolver {
-        val resolver = AcceptHeaderLocaleResolver()
+        // Using cookie-based locale resolver for UI
+        val resolver = CookieLocaleResolver("LANGUAGE_PREFERENCE")
         // Create supported locales list
         val supportedLocales = listOf(Locale.ENGLISH, Locale("ne"))
         // Set default locale
         resolver.setDefaultLocale(Locale.ENGLISH)
         // Set supported locales
         resolver.setSupportedLocales(supportedLocales)
+        resolver.setCookieMaxAge(Duration.ofDays(365))
+        resolver.setCookiePath("/")
         return resolver
+    }
+    
+    /**
+     * Creates and configures a [LocaleChangeInterceptor] for changing locales via request parameter.
+     *
+     * This allows changing the locale by adding a query parameter: ?lang=ne or ?lang=en
+     *
+     * @return A configured [LocaleChangeInterceptor]
+     */
+    @Bean
+    fun localeChangeInterceptor(): LocaleChangeInterceptor {
+        val localeChangeInterceptor = LocaleChangeInterceptor()
+        localeChangeInterceptor.paramName = "lang"
+        return localeChangeInterceptor
+    }
+
+    /**
+     * Registers the locale change interceptor.
+     *
+     * @param registry The interceptor registry
+     */
+    override fun addInterceptors(registry: InterceptorRegistry) {
+        registry.addInterceptor(localeChangeInterceptor())
     }
 }
