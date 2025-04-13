@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.web.context.SecurityContextRepository
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 /**
  * Controller handling UI routes for authentication pages.
@@ -75,8 +76,8 @@ class UiAuthController(
             val authentication = UsernamePasswordAuthenticationToken(
                 loginRequest.email, 
                 null, 
-                authResponse.permissions.map { 
-                    org.springframework.security.core.authority.SimpleGrantedAuthority(it)
+                authResponse.permissions.map { permissionName -> 
+                    SimpleGrantedAuthority(permissionName.toString())  // Use the permission string directly
                 }
             )
             

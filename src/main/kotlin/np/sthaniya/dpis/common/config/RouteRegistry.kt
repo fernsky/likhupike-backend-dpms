@@ -20,7 +20,7 @@ class RouteRegistry {
     /**
      * Registers a new route with the specified pattern, HTTP method, and accessibility.
      *
-     * @param pattern The URL pattern to match, supporting wildcards (/** and /*)
+     * @param pattern The URL pattern to match, supporting wildcards (/<all> and /<all>)
      * @param method The HTTP method for this route
      * @param isPublic Whether the route is publicly accessible without authentication
      */
@@ -35,7 +35,7 @@ class RouteRegistry {
     /**
      * Registers a new route with multiple HTTP methods and the same accessibility.
      *
-     * @param pattern The URL pattern to match, supporting wildcards (/** and /*)
+     * @param pattern The URL pattern to match, supporting wildcards (/<all> and /<all>)
      * @param methods Collection of HTTP methods for this route
      * @param isPublic Whether the route is publicly accessible without authentication
      */
