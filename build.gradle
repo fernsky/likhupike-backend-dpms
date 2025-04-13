@@ -160,8 +160,7 @@ asciidoctorPdf {
 	configurations 'asciidoctorExt'
 	inputs.dir snippetsDir
 
-	// Don't depend on test to avoid running during build
-	// dependsOn test
+	dependsOn test
 	
 	sources {
 		include '*.adoc'
