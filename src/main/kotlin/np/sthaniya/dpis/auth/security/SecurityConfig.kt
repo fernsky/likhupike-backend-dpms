@@ -97,6 +97,7 @@ class SecurityConfig(
         val swaggerEnabled = env.getProperty("springdoc.swagger-ui.enabled", Boolean::class.java, false)
 
         http
+            .securityMatcher("/api/**")  // Only apply to API routes, not UI routes
             .csrf { it.disable() }
             .cors { it.configurationSource(corsConfigurationSource()) }
             .authorizeHttpRequests {

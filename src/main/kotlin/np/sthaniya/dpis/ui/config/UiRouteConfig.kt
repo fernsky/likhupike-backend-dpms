@@ -19,6 +19,7 @@ class UiRouteConfig(
     init {
         // Public UI routes - POST (for form submissions)
         routeRegistry.register("/ui/login", HttpMethod.POST, isPublic = true)
+        routeRegistry.register("/ui/login-processing", HttpMethod.POST, isPublic = true) // Add this line
         routeRegistry.register("/ui/register", HttpMethod.POST, isPublic = true)
         routeRegistry.register("/ui/password-reset", HttpMethod.POST, isPublic = true)
         routeRegistry.register("/ui/password-reset/confirm", HttpMethod.POST, isPublic = true)

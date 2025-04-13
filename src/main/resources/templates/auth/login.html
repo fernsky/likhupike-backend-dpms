@@ -40,11 +40,33 @@
             </div>
 
             <form
-              th:action="@{/ui/login}"
+              th:action="@{/ui/login-processing}"
               method="post"
               class="needs-validation"
               novalidate
             >
+              <div
+                th:if="${param.error}"
+                class="alert alert-danger"
+                role="alert"
+              >
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="#{auth.error.AUTH_010}"
+                  >Invalid credentials</span
+                >
+              </div>
+
+              <div
+                th:if="${param.logout}"
+                class="alert alert-success"
+                role="alert"
+              >
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="#{auth.logout.success}"
+                  >You have been logged out</span
+                >
+              </div>
+
               <div class="mb-3">
                 <label for="username" class="form-label" th:text="#{auth.email}"
                   >Email</label
