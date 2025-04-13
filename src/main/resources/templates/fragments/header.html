@@ -12,9 +12,21 @@
       <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
           <a class="navbar-brand" th:href="@{/}">
-            <i class="fas fa-graduation-cap me-2"></i>
-            <span th:text="#{app.name}">Intensive Study & Research Center</span>
+            <i class="bi bi-credit-card-2-front me-2"></i>
+            <span class="d-none d-md-inline" th:text="#{digital.profile.name}"
+              >Digital Profile System</span
+            >
+            <span class="d-md-none">DPS</span>
           </a>
+
+          <div
+            class="organization-badge d-none d-lg-flex align-items-center ms-3 me-auto"
+          >
+            <span class="badge bg-light text-primary px-2 py-1 rounded-pill">
+              <i class="bi bi-building me-1"></i>
+              <span th:text="#{app.name.short}">By ISRC</span>
+            </span>
+          </div>
 
           <button
             class="navbar-toggler"
@@ -36,25 +48,25 @@
                   th:href="@{/}"
                   th:classappend="${activeTab == 'home' ? 'active' : ''}"
                 >
-                  <i class="fas fa-home me-1"></i>
+                  <i class="bi bi-house me-1"></i>
                   <span th:text="#{nav.home}">Home</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#programs">
-                  <i class="fas fa-book me-1"></i>
-                  <span th:text="#{nav.programs}">Programs</span>
+                <a class="nav-link" href="#features">
+                  <i class="bi bi-layers me-1"></i>
+                  <span th:text="#{nav.features}">Features</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#research">
-                  <i class="fas fa-flask me-1"></i>
-                  <span th:text="#{nav.research}">Research</span>
+                <a class="nav-link" href="#about">
+                  <i class="bi bi-building me-1"></i>
+                  <span th:text="#{nav.about}">About ISRC</span>
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#contact">
-                  <i class="fas fa-envelope me-1"></i>
+                  <i class="bi bi-envelope me-1"></i>
                   <span th:text="#{nav.contact}">Contact</span>
                 </a>
               </li>
@@ -70,7 +82,7 @@
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  <i class="fas fa-globe me-1"></i>
+                  <i class="bi bi-globe me-1"></i>
                   <span th:text="${#locale.getDisplayLanguage(#locale)}"
                     >English</span
                   >

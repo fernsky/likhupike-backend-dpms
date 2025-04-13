@@ -1,43 +1,21 @@
 /**
  * Digital Profile System
- * Main JavaScript file for enhancing user experience
+ * Enhanced JavaScript for modern UI interactions
  */
 
-// Common JavaScript functions
-
-// Check if element exists before adding event listeners
-function onElementReady(selector, callback) {
-  const element = document.querySelector(selector);
-  if (element) {
-    callback(element);
-  }
-}
-
-// Initialize all tooltips
+// Main initialization function
 document.addEventListener("DOMContentLoaded", function () {
-  // Initialize Bootstrap tooltips
-  const tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  );
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Initialize scroll-based animations
+  // Initialize all components
   initScrollAnimations();
-
-  // Initialize smooth scrolling for anchor links
   initSmoothScrolling();
-
-  // Initialize language switcher
   initLanguageSwitcher();
-
-  // Initialize form validation
   initFormValidation();
+  initEnhancedUI();
+  initA11yImprovements();
 });
 
 /**
- * Initialize scroll-based fade-in animations
+ * Initialize scroll-based animations with IntersectionObserver
  */
 function initScrollAnimations() {
   const fadeElems = document.querySelectorAll(".fade-in");
@@ -50,21 +28,43 @@ function initScrollAnimations() {
         if (entry.isIntersecting) {
           const delay =
             entry.target.style.getPropertyValue("--animation-order") || 0;
-          entry.target.style.transitionDelay = `${delay * 0.1}s`;
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
+          entry.target.style.animation = `fadeIn 0.6s ${
+            delay * 0.15
+          }s cubic-bezier(0.26, 0.86, 0.44, 0.985) forwards`;
           observer.unobserve(entry.target);
         }
       });
     },
     {
-      threshold: 0.1,
+      threshold: 0.15,
       rootMargin: "0px 0px -50px 0px",
     }
   );
 
   fadeElems.forEach((elem) => {
     observer.observe(elem);
+  });
+
+  // Add parallax scroll effect
+  const parallaxElements = document.querySelectorAll(
+    ".hero-section, .cta-section"
+  );
+
+  window.addEventListener("scroll", function () {
+    const scrolled = window.pageYOffset;
+
+    parallaxElements.forEach((element) => {
+      const elementInView =
+        element.getBoundingClientRect().top < window.innerHeight &&
+        element.getBoundingClientRect().bottom > 0;
+
+      if (elementInView) {
+        const elementTop = element.getBoundingClientRect().top;
+        const speed = 0.5;
+        const yPos = -(elementTop * speed) / 10;
+        element.style.backgroundPosition = `center ${yPos}px`;
+      }
+    });
   });
 }
 
@@ -74,16 +74,16 @@ function initScrollAnimations() {
 function initSmoothScrolling() {
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
-      e.preventDefault();
-
       const targetId = this.getAttribute("href");
       if (targetId === "#") return;
 
       const targetElement = document.querySelector(targetId);
       if (!targetElement) return;
 
+      e.preventDefault();
+
       window.scrollTo({
-        top: targetElement.offsetTop - 80, // Adjust for fixed header
+        top: targetElement.offsetTop - 80,
         behavior: "smooth",
       });
 
@@ -102,7 +102,7 @@ function initLanguageSwitcher() {
   );
 
   languageLinks.forEach((link) => {
-    link.addEventListener("click", function (e) {
+    link.addEventListener("click", function () {
       // Get the language code from the href
       const langParam = this.href.split("lang=")[1];
       const lang = langParam ? langParam.split("&")[0] : "en";
@@ -110,8 +110,10 @@ function initLanguageSwitcher() {
       // Store the language preference in localStorage
       localStorage.setItem("preferredLanguage", lang);
 
-      // Continue with the normal link behavior
-      // The page will reload with the new language parameter
+      // Add a loading indicator
+      document.body.classList.add("page-transitioning");
+
+      // Continue with the normal link behavior (page will reload)
     });
   });
 
@@ -129,125 +131,289 @@ function initLanguageSwitcher() {
 }
 
 /**
- * Initialize form validation for contact form
+ * Initialize enhanced form validation
  */
 function initFormValidation() {
   const contactForm = document.getElementById("contactForm");
   if (!contactForm) return;
 
+  const formFields = contactForm.querySelectorAll("input, textarea");
+
+  // Add real-time validation as user types
+  formFields.forEach((field) => {
+    field.addEventListener("input", function () {
+      validateField(field);
+    });
+
+    field.addEventListener("blur", function () {
+      validateField(field, true);
+    });
+  });
+
   contactForm.addEventListener("submit", function (e) {
     e.preventDefault();
 
-    // Get form fields
-    const name = document.getElementById("name");
-    const email = document.getElementById("email");
-    const subject = document.getElementById("subject");
-    const message = document.getElementById("message");
     let isValid = true;
 
-    // Simple validation
-    if (!name.value.trim()) {
-      markInvalid(name, "Please enter your name");
-      isValid = false;
-    } else {
-      markValid(name);
-    }
+    // Validate all fields on submit
+    formFields.forEach((field) => {
+      if (!validateField(field, true)) {
+        isValid = false;
+      }
+    });
 
-    if (!email.value.trim()) {
-      markInvalid(email, "Please enter your email");
-      isValid = false;
-    } else if (!isValidEmail(email.value.trim())) {
-      markInvalid(email, "Please enter a valid email address");
-      isValid = false;
-    } else {
-      markValid(email);
-    }
-
-    if (!subject.value.trim()) {
-      markInvalid(subject, "Please enter a subject");
-      isValid = false;
-    } else {
-      markValid(subject);
-    }
-
-    if (!message.value.trim()) {
-      markInvalid(message, "Please enter your message");
-      isValid = false;
-    } else {
-      markValid(message);
-    }
-
-    // If the form is valid, show success message
     if (isValid) {
-      // Here you would normally send the form data to the server
-      showFormSuccess(contactForm);
+      // Show success message with animation
+      const successMessage = document.createElement("div");
+      successMessage.className = "alert alert-success mt-3 glass-card";
+      successMessage.innerHTML =
+        '<i class="fas fa-check-circle me-2"></i> Thank you for your message! Our team will get back to you soon.';
+      successMessage.style.opacity = 0;
+      successMessage.style.transform = "translateY(20px)";
+
+      contactForm.appendChild(successMessage);
+
+      // Trigger animation
+      setTimeout(() => {
+        successMessage.style.transition = "all 0.5s ease";
+        successMessage.style.opacity = 1;
+        successMessage.style.transform = "translateY(0)";
+      }, 10);
+
+      // Reset form with animation
+      formFields.forEach((field) => {
+        field.classList.add("is-valid");
+        field.style.transition = "all 0.3s ease";
+        field.style.transform = "translateX(0)";
+
+        setTimeout(() => {
+          field.style.transform = "translateX(10px)";
+          setTimeout(() => {
+            field.style.transform = "translateX(0)";
+            field.value = "";
+            setTimeout(() => {
+              field.classList.remove("is-valid");
+            }, 300);
+          }, 300);
+        }, 100);
+      });
+
+      // Remove success message after delay
+      setTimeout(() => {
+        successMessage.style.opacity = 0;
+        successMessage.style.transform = "translateY(-20px)";
+
+        setTimeout(() => {
+          successMessage.remove();
+        }, 500);
+      }, 5000);
     }
   });
-}
 
-/**
- * Validate email format
- */
-function isValidEmail(email) {
-  const re =
-    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return re.test(email);
-}
+  function validateField(field, showError = false) {
+    // Clear previous errors
+    removeFieldError(field);
 
-/**
- * Mark form field as invalid
- */
-function markInvalid(field, message) {
-  field.classList.add("is-invalid");
+    // Get field value
+    const value = field.value.trim();
 
-  // Create or update feedback div
-  let feedback = field.nextElementSibling;
-  if (!feedback || !feedback.classList.contains("invalid-feedback")) {
-    feedback = document.createElement("div");
+    // Check if field is required
+    if (field.hasAttribute("aria-required") && value === "") {
+      if (showError) {
+        addFieldError(
+          field,
+          `Please enter your ${field.previousElementSibling.textContent.toLowerCase()}`
+        );
+      }
+      return false;
+    }
+
+    // Email validation
+    if (field.type === "email" && value !== "") {
+      const emailRegex =
+        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      if (!emailRegex.test(value)) {
+        if (showError) {
+          addFieldError(field, "Please enter a valid email address");
+        }
+        return false;
+      }
+    }
+
+    // Field is valid
+    if (value !== "") {
+      field.classList.add("is-valid");
+    }
+
+    return true;
+  }
+
+  function addFieldError(field, message) {
+    field.classList.add("is-invalid");
+
+    const feedback = document.createElement("div");
     feedback.className = "invalid-feedback";
-    field.parentNode.insertBefore(feedback, field.nextSibling);
+    feedback.textContent = message;
+
+    field.parentNode.appendChild(feedback);
+
+    // Subtle shake animation for visual feedback
+    field.style.animation = "shake 0.5s cubic-bezier(.36,.07,.19,.97) both";
+    field.addEventListener("animationend", () => {
+      field.style.animation = "";
+    });
   }
-  feedback.textContent = message;
+
+  function removeFieldError(field) {
+    field.classList.remove("is-invalid");
+
+    const feedback = field.parentNode.querySelector(".invalid-feedback");
+    if (feedback) {
+      feedback.remove();
+    }
+  }
 }
 
 /**
- * Mark form field as valid
+ * Initialize enhanced UI effects
  */
-function markValid(field) {
-  field.classList.remove("is-invalid");
-  field.classList.add("is-valid");
+function initEnhancedUI() {
+  // Animate stat counters
+  const statNumbers = document.querySelectorAll(".stat-number");
 
-  // Remove any existing feedback
-  const feedback = field.nextElementSibling;
-  if (feedback && feedback.classList.contains("invalid-feedback")) {
-    feedback.textContent = "";
+  if (statNumbers.length) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    statNumbers.forEach((stat) => {
+      observer.observe(stat);
+    });
   }
-}
 
-/**
- * Show form success message
- */
-function showFormSuccess(form) {
-  // Create success alert
-  const successAlert = document.createElement("div");
-  successAlert.className = "alert alert-success mt-3";
-  successAlert.innerHTML =
-    '<i class="fas fa-check-circle me-2"></i> Thank you for your message! We will get back to you soon.';
+  function animateCounter(element) {
+    const valueText = element.innerText;
+    let finalValue = valueText;
 
-  // Insert before form
-  form.parentNode.insertBefore(successAlert, form.nextSibling);
+    // Extract number portion for animation
+    const numValue = parseFloat(valueText.replace(/[^0-9.]/g, ""));
+    const suffix = valueText.replace(numValue.toString(), "");
 
-  // Reset the form
-  form.reset();
+    if (!isNaN(numValue)) {
+      let startValue = 0;
+      const duration = 2000;
+      const startTime = performance.now();
 
-  // Remove valid class from all inputs
-  form.querySelectorAll(".is-valid").forEach((input) => {
-    input.classList.remove("is-valid");
+      function updateCounter(currentTime) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        // Use easeOutExpo for smooth animation finish
+        const easeProgress = 1 - Math.pow(1 - progress, 4);
+
+        const currentValue = Math.floor(easeProgress * numValue);
+        element.innerText = currentValue + suffix;
+
+        if (progress < 1) {
+          requestAnimationFrame(updateCounter);
+        } else {
+          element.innerText = finalValue;
+        }
+      }
+
+      requestAnimationFrame(updateCounter);
+    }
+  }
+
+  // Add floating effect to feature icons
+  document.querySelectorAll(".feature-icon").forEach((icon) => {
+    icon.style.animation = `float 3s ease-in-out infinite`;
+    // Random delay for natural look
+    icon.style.animationDelay = `${Math.random() * 2}s`;
   });
 
-  // Remove the success message after a delay
-  setTimeout(() => {
-    successAlert.classList.add("fade");
-    setTimeout(() => successAlert.remove(), 500);
-  }, 5000);
+  // Define the float animation
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    @keyframes shake {
+      10%, 90% { transform: translateX(-1px); }
+      20%, 80% { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Added page transition effect
+  window.addEventListener("beforeunload", function () {
+    document.body.classList.add("page-transitioning");
+  });
+}
+
+/**
+ * Initialize accessibility improvements
+ */
+function initA11yImprovements() {
+  // Ensure all interactive elements have appropriate ARIA attributes
+  document
+    .querySelectorAll('button:not([aria-label]):not([aria-hidden="true"])')
+    .forEach((button) => {
+      if (!button.textContent.trim()) {
+        button.setAttribute("aria-label", "Button");
+      }
+    });
+
+  // Add keyboard navigation for dropdown menus
+  const dropdowns = document.querySelectorAll(".dropdown");
+  dropdowns.forEach((dropdown) => {
+    const trigger = dropdown.querySelector(".dropdown-toggle");
+    const menu = dropdown.querySelector(".dropdown-menu");
+    const items = menu ? menu.querySelectorAll(".dropdown-item") : [];
+
+    if (trigger && menu && items.length) {
+      trigger.addEventListener("keydown", function (e) {
+        if (
+          e.key === "ArrowDown" &&
+          trigger.getAttribute("aria-expanded") === "true"
+        ) {
+          e.preventDefault();
+          items[0].focus();
+        }
+      });
+
+      items.forEach((item, index) => {
+        item.addEventListener("keydown", function (e) {
+          if (e.key === "ArrowDown" && index < items.length - 1) {
+            e.preventDefault();
+            items[index + 1].focus();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (index > 0) {
+              items[index - 1].focus();
+            } else {
+              trigger.focus();
+            }
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            trigger.focus();
+            // Close dropdown using Bootstrap API
+            bootstrap.Dropdown.getInstance(trigger).hide();
+          }
+        });
+      });
+    }
+  });
 }

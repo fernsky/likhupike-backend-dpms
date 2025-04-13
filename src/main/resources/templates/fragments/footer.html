@@ -9,29 +9,38 @@
         <div class="row g-4 justify-content-between">
           <div class="col-lg-5">
             <div class="mb-4">
-              <h5 class="text-white mb-3 d-flex align-items-center">
-                <i class="fas fa-graduation-cap me-2"></i>
-                <span th:text="#{app.name}"
-                  >Intensive Study & Research Center</span
-                >
-              </h5>
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-credit-card-2-front me-2 fs-4"></i>
+                <h5 class="text-white mb-0" th:text="#{digital.profile.name}">
+                  Digital Profile System
+                </h5>
+              </div>
+              <p class="text-white-50 mb-2">
+                A comprehensive digital identity and document management system
+                empowering citizens with secure, accessible, and efficient
+                government services.
+              </p>
               <p class="text-white-50 mb-4">
-                Empowering minds through rigorous academic excellence and
-                innovative research methodologies. Creating tomorrow's leaders
-                through knowledge, insight, and discovery.
+                <span class="badge bg-primary me-2">
+                  <i class="bi bi-building me-1"></i>
+                  <span th:text="#{developed.by}">Developed by</span>
+                </span>
+                <strong th:text="#{app.name}"
+                  >Intensive Study & Research Center</strong
+                >
               </p>
               <div class="d-flex gap-3">
                 <a href="#" class="social-icon" aria-label="Facebook">
-                  <i class="fab fa-facebook-f"></i>
+                  <i class="bi bi-facebook"></i>
                 </a>
                 <a href="#" class="social-icon" aria-label="Twitter">
-                  <i class="fab fa-twitter"></i>
+                  <i class="bi bi-twitter-x"></i>
                 </a>
                 <a href="#" class="social-icon" aria-label="LinkedIn">
-                  <i class="fab fa-linkedin-in"></i>
+                  <i class="bi bi-linkedin"></i>
                 </a>
                 <a href="#" class="social-icon" aria-label="Instagram">
-                  <i class="fab fa-instagram"></i>
+                  <i class="bi bi-instagram"></i>
                 </a>
               </div>
             </div>
@@ -41,19 +50,19 @@
             <h6 class="text-uppercase text-white-50 mb-3">Contact Info</h6>
             <ul class="list-unstyled">
               <li class="mb-3 d-flex">
-                <i class="fas fa-map-marker-alt text-primary me-3 mt-1"></i>
+                <i class="bi bi-geo-alt text-primary me-3 mt-1"></i>
                 <span class="text-white-50"> Kathmandu, Nepal </span>
               </li>
               <li class="mb-3 d-flex">
-                <i class="fas fa-phone-alt text-primary me-3 mt-1"></i>
+                <i class="bi bi-telephone text-primary me-3 mt-1"></i>
                 <span class="text-white-50">+977 1-XXXXXXX</span>
               </li>
               <li class="mb-3 d-flex">
-                <i class="fas fa-envelope text-primary me-3 mt-1"></i>
+                <i class="bi bi-envelope text-primary me-3 mt-1"></i>
                 <span class="text-white-50">info@intensivestudy.com.np</span>
               </li>
               <li class="mb-3 d-flex">
-                <i class="fas fa-clock text-primary me-3 mt-1"></i>
+                <i class="bi bi-clock text-primary me-3 mt-1"></i>
                 <span class="text-white-50">
                   9:00 AM - 5:00 PM, Sunday-Friday
                 </span>
@@ -73,12 +82,12 @@
               >
               <span th:text="#{app.name}"
                 >Intensive Study & Research Center</span
-              >. All Rights Reserved.
+              >. <span th:text="#{footer.rights}">All Rights Reserved.</span>
             </p>
           </div>
           <div class="col-md-6 text-md-end">
-            <p class="text-white-50 mb-0">
-              Committed to academic excellence and research innovation
+            <p class="text-white-50 mb-0" th:text="#{footer.tagline}">
+              Committed to innovation and excellence in digital solutions
             </p>
           </div>
         </div>
