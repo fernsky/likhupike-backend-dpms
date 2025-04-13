@@ -1,0 +1,331 @@
+=== Economics Domain Model
+
+This section details the concrete implementation of the Economics Domain, building upon the core domain models.
+
+==== Domain Overview
+
+The Economics Domain represents economic activities, income sources, employment patterns, and related financial insights within the Digital Profile system. It implements a comprehensive model of economic entities that directly leverages the core domain models.
+
+[plantuml]
+----
+@startuml
+skinparam linetype ortho
+
+' Core Model References
+package "Core Models Used" {
+  abstract class BaseEntity
+  abstract class NamedEntity
+  abstract class SpatialEntity
+  abstract class ApprovableEntity
+  abstract class SoftDeletableEntity
+  abstract class WorkflowEntity
+  abstract class ReferenceDataEntity
+  
+  interface HistoryViewable
+  interface AccessControlled
+  interface ExternalSystemSyncable
+  interface WebhookTriggerable
+  interface Taggable
+  interface FullTextSearchable
+  interface DataAggregatable
+  interface CustomValidatable
+  interface BatchProcessable
+}
+
+' Economics Entity Hierarchy
+package "Economics Domain" {
+  class EconomicSummary
+  class EconomicallyActivePopulation
+  class OccupationDistribution
+  class HouseholdChoresStatistics
+  class HouseholdIncomeSource
+  class RemittanceExpenseStatistics
+  class IncomeBasedSustenance
+  class LoanUseStatistics
+  class TrainedPopulationStatistics
+  class SkillsDistribution
+  class ProductsTradeStatistics
+  class LandPossessionStatistics
+  
+  ' Hierarchy relationships
+  EconomicSummary "1" o-- "1" EconomicallyActivePopulation
+  EconomicSummary "1" o-- "1" OccupationDistribution
+  EconomicSummary "1" o-- "1" HouseholdChoresStatistics
+  EconomicSummary "1" o-- "1" HouseholdIncomeSource
+  EconomicSummary "1" o-- "1" RemittanceExpenseStatistics
+  EconomicSummary "1" o-- "1" IncomeBasedSustenance
+  EconomicSummary "1" o-- "1" LoanUseStatistics
+  EconomicSummary "1" o-- "1" TrainedPopulationStatistics
+  EconomicSummary "1" o-- "1" SkillsDistribution
+  EconomicSummary "1" o-- "1" ProductsTradeStatistics
+  EconomicSummary "1" o-- "1" LandPossessionStatistics
+}
+
+' Core Model Inheritance
+SpatialEntity <|-- EconomicSummary
+BaseEntity <|-- EconomicallyActivePopulation
+BaseEntity <|-- OccupationDistribution
+BaseEntity <|-- HouseholdChoresStatistics
+BaseEntity <|-- HouseholdIncomeSource
+BaseEntity <|-- RemittanceExpenseStatistics
+BaseEntity <|-- IncomeBasedSustenance
+BaseEntity <|-- LoanUseStatistics
+BaseEntity <|-- TrainedPopulationStatistics
+BaseEntity <|-- SkillsDistribution
+BaseEntity <|-- ProductsTradeStatistics
+BaseEntity <|-- LandPossessionStatistics
+
+' Capability Implementation
+EconomicSummary ..|> HistoryViewable
+EconomicSummary ..|> AccessControlled
+EconomicSummary ..|> DataAggregatable
+EconomicSummary ..|> FullTextSearchable
+EconomicallyActivePopulation ..|> DataAggregatable
+OccupationDistribution ..|> DataAggregatable
+HouseholdIncomeSource ..|> HistoryViewable
+RemittanceExpenseStatistics ..|> HistoryViewable
+SkillsDistribution ..|> DataAggregatable
+ProductsTradeStatistics ..|> ExternalSystemSyncable
+LandPossessionStatistics ..|> DataAggregatable
+@enduml
+----
+
+==== Core Domain Model Integration
+
+The Economics Domain demonstrates a comprehensive implementation of the core domain models through:
+
+===== Inheritance
+
+Each economic entity extends appropriate base classes:
+
+|===
+| Entity | Extends | Purpose
+| EconomicSummary | SpatialEntity | Geographic representation with spatial attributes
+| EconomicallyActivePopulation | BaseEntity | Economically active population data by demographics
+| OccupationDistribution | BaseEntity | Occupation distribution data for an area
+| HouseholdChoresStatistics | BaseEntity | Time spent on household chores
+| HouseholdIncomeSource | BaseEntity | Sources of household income
+| RemittanceExpenseStatistics | BaseEntity | How remittances are used
+| IncomeBasedSustenance | BaseEntity | Months household can sustain on income
+| LoanUseStatistics | BaseEntity | Purposes for which loans are taken
+| TrainedPopulationStatistics | BaseEntity | Population with specialized skills
+| SkillsDistribution | BaseEntity | Distribution of specific skills
+| ProductsTradeStatistics | BaseEntity | Imported and exported products
+| LandPossessionStatistics | BaseEntity | Land ownership statistics
+|===
+
+===== Capabilities
+
+Economic entities implement interfaces based on their specific needs:
+
+|===
+| Entity | Implements | Capability
+| EconomicSummary | HistoryViewable | Tracks economic changes over time
+| | AccessControlled | Manages summary-level permissions
+| | DataAggregatable | Supports aggregation across geographies
+| | FullTextSearchable | Enables advanced search capabilities
+| EconomicallyActivePopulation | DataAggregatable | Allows aggregation across demographics
+| OccupationDistribution | DataAggregatable | Enables occupation pattern analysis
+| HouseholdIncomeSource | HistoryViewable | Tracks changes in income sources
+| RemittanceExpenseStatistics | HistoryViewable | Monitors remittance usage patterns
+| SkillsDistribution | DataAggregatable | Aggregates skill availability
+| ProductsTradeStatistics | ExternalSystemSyncable | Integrates with trade databases
+| LandPossessionStatistics | DataAggregatable | Enables land distribution analysis
+|===
+
+===== Components
+
+The Economics Domain utilizes reusable components from the core domain:
+
+|===
+| Component | Used By | Purpose
+| VersionInfo | All Economic Entities | Versioning of economic data
+| StatusHistory | EconomicSummary | Status tracking of economic data
+| TaggableEntity | EconomicSummary | Categorization capabilities
+| MonetaryAmount | HouseholdIncomeSource | Income and economic value representation
+| SEOAttributes | Public Economic Information | Search optimization
+|===
+
+==== Economic Summary Lifecycle
+
+[plantuml]
+----
+@startuml
+[*] --> Draft : create
+
+state Draft {
+  state "Data Entry" as Entry
+  state "Data Validation" as Validation
+  state "Issue Resolution" as Issues
+  
+  [*] --> Entry
+  Entry --> Validation : validate
+  Validation --> Entry : validation failed
+  Validation --> Issues : issues detected
+  Issues --> Validation : resolved
+  Validation --> [*] : validation passed
+}
+
+Draft --> UnderReview : submit for review
+UnderReview --> Draft : return for corrections
+UnderReview --> Published : approve
+
+state Published {
+  state "Active" as Active
+  state "Updated" as Updated
+  
+  [*] --> Active
+  Active --> Updated : update data
+  Updated --> [*] : merge updates
+}
+
+Published --> Superseded : newer version published
+Superseded --> Archived : archive old data
+Archived --> [*]
+@enduml
+----
+
+==== Economic Data Collection Process
+
+[plantuml]
+----
+@startuml
+|Data Provider|
+start
+:Collect economic data;
+:Prepare data in standardized format;
+:Submit economic data;
+
+|System|
+:Validate data structure;
+if (Valid Structure?) then (yes)
+  :Create economic summary draft;
+else (no)
+  :Return validation errors;
+  |Data Provider|
+  :Correct data structure;
+  note right
+    Return to validation
+  end note
+endif
+
+|Data Officer|
+:Review submitted data;
+:Cross-validate with existing sources;
+if (Data Accurate?) then (yes)
+  :Process data for storage;
+else (no)
+  :Flag data inconsistencies;
+  |Data Provider|
+  :Address inconsistencies;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Calculate derived economic indicators;
+:Validate statistical consistency;
+if (Consistent?) then (yes)
+  :Prepare for publication;
+else (no)
+  :Generate inconsistency report;
+  |Data Officer|
+  :Resolve statistical inconsistencies;
+  note right
+    Return to calculation
+  end note
+endif
+
+|Approving Authority|
+:Review complete economic summary;
+if (Approve?) then (yes)
+  :Approve for publication;
+else (no)
+  :Return with comments;
+  |Data Officer|
+  :Address comments;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Publish economic summary;
+:Generate economic visualizations;
+:Index for search;
+:Calculate aggregations;
+:Trigger publication notifications;
+
+|Data Consumer|
+:Access economic data;
+:Use data for planning and analysis;
+
+stop
+@enduml
+----
+
+==== Economic Time Series Management
+
+[plantuml]
+----
+@startuml
+|System Manager|
+start
+:Configure time series parameters;
+:Define collection periods;
+
+|Data Provider|
+:Collect period economic data;
+:Submit period data;
+
+|System|
+:Store as new time period record;
+:Validate against previous periods;
+if (Anomalies Detected?) then (yes)
+  :Flag anomalies for review;
+  |Data Officer|
+  :Review flagged anomalies;
+  if (Valid Changes?) then (yes)
+    :Document change factors;
+    :Approve anomalies;
+  else (no)
+    :Correct erroneous data;
+  endif
+endif
+
+|System|
+:Calculate period-over-period changes;
+:Update economic trend analysis;
+:Generate change visualizations;
+
+|Data Officer|
+:Review trend analysis;
+:Add contextual annotations;
+:Publish time series update;
+
+|System|
+:Notify subscribed users;
+:Update economic dashboards;
+:Archive outdated projections;
+:Generate new economic projections;
+
+stop
+@enduml
+----
+
+==== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Economic entities are used in the system:
+
+include::economics/economic-summary.adoc[leveloffset=+1]
+include::economics/economically-active-population.adoc[leveloffset=+1]
+include::economics/occupation-distribution.adoc[leveloffset=+1]
+include::economics/household-income-source.adoc[leveloffset=+1]
+include::economics/remittance-expense-statistics.adoc[leveloffset=+1]
+include::economics/income-based-sustenance.adoc[leveloffset=+1]
+include::economics/loan-use-statistics.adoc[leveloffset=+1]
+include::economics/trained-population-statistics.adoc[leveloffset=+1]
+include::economics/skills-distribution.adoc[leveloffset=+1]
+include::economics/products-trade-statistics.adoc[leveloffset=+1]
+include::economics/economic-projections.adoc[leveloffset=+1]

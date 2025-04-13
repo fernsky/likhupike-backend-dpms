@@ -1,0 +1,797 @@
+===== Domain Events
+
+The DemographicProjection entity publishes and consumes domain events to facilitate integration with other system components and support event-driven workflows related to demographic planning.
+
+[plantuml]
+----
+@startuml
+class DemographicProjectionCreatedEvent {
+  +UUID projectionId
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +Integer baselineYear
+  +Integer projectionHorizon
+  +ProjectionMethod projectionMethod
+  +ConfidenceLevel confidenceLevel
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicProjectionUpdatedEvent {
+  +UUID projectionId
+  +UUID adminAreaId
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isMethodologyChange
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicProjectionStatusChangedEvent {
+  +UUID projectionId
+  +UUID adminAreaId
+  +ProjectionStatus previousStatus
+  +ProjectionStatus newStatus
+  +String statusChangeReason
+  +UUID approvedBy
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProjectionScenarioCreatedEvent {
+  +UUID scenarioId
+  +UUID projectionId
+  +UUID adminAreaId
+  +String scenarioName
+  +ScenarioType scenarioType
+  +Boolean isPrimaryScenario
+  +Double probabilityWeight
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProjectionScenarioUpdatedEvent {
+  +UUID scenarioId
+  +UUID projectionId
+  +UUID adminAreaId
+  +Map<String, Object> changedParameters
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProjectionValidationCompletedEvent {
+  +UUID validationId
+  +UUID projectionId
+  +UUID adminAreaId
+  +ValidationStatus validationStatus
+  +List<String> validationIssues
+  +String validationSummary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProjectionComparisonCompletedEvent {
+  +UUID comparisonId
+  +UUID baseProjectionId
+  +UUID comparisonProjectionId
+  +ComparisonType comparisonType
+  +Map<String, Object> keyDifferences
+  +String comparisonSummary
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class DemographicProjectionPublishedEvent {
+  +UUID projectionId
+  +UUID adminAreaId
+  +AdminAreaLevel adminAreaLevel
+  +ProjectionMethod projectionMethod
+  +String projectionTitle
+  +Integer baselineYear
+  +Integer projectionHorizon
+  +String accessUrl
+  +PublicationChannel publicationChannel
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProjectionImpactAssessedEvent {
+  +UUID impactId
+  +UUID projectionId
+  +UUID scenarioId
+  +UUID adminAreaId
+  +Sector sector
+  +ImpactType impactType
+  +String impactSummary
+  +Timeframe timeframe
+  +Urgency urgency
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class AgeDistributionProjectedEvent {
+  +UUID ageDistributionId
+  +UUID projectionId
+  +UUID scenarioId
+  +UUID adminAreaId
+  +Integer projectionYear
+  +Double dependencyRatio
+  +Double medianAge
+  +Map<String, Object> demographicIndicators
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SpatialDistributionProjectedEvent {
+  +UUID spatialDistributionId
+  +UUID projectionId
+  +UUID scenarioId
+  +UUID adminAreaId
+  +Integer projectionYear
+  +DistributionMethod distributionMethod
+  +Map<String, Object> densityMetrics
+  +List<String> growthHotspots
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProjectionReportGeneratedEvent {
+  +UUID reportId
+  +UUID projectionId
+  +UUID adminAreaId
+  +ReportFormat reportFormat
+  +String reportTitle
+  +String reportUrl
+  +Boolean includesVisualization
+  +List<UUID> includedScenarios
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class ProjectionAccuracyAssessedEvent {
+  +UUID assessmentId
+  +UUID projectionId
+  +UUID adminAreaId
+  +Integer assessmentYear
+  +Double accuracyScore
+  +String assessmentSummary
+  +Map<String, Object> deviationMetrics
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum ValidationStatus {
+  PASSED
+  PASSED_WITH_WARNINGS
+  FAILED
+  INCOMPLETE
+}
+
+enum ComparisonType {
+  SCENARIO
+  HISTORICAL
+  EXTERNAL_PROJECTION
+  PREVIOUS_VERSION
+  ALTERNATIVE_METHOD
+}
+
+enum PublicationChannel {
+  PLANNING_SYSTEM
+  OPEN_DATA_PORTAL
+  INTERNAL_DASHBOARD
+  PRINT_PUBLICATION
+  GIS_SYSTEM
+  SECTORAL_PLANNING_API
+}
+
+enum ProjectionStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  PUBLISHED
+  DEPRECATED
+  ARCHIVED
+}
+
+enum ScenarioType {
+  BASELINE
+  HIGH_GROWTH
+  LOW_GROWTH
+  HIGH_FERTILITY
+  LOW_FERTILITY
+  HIGH_MIGRATION
+  LOW_MIGRATION
+  POLICY_INTERVENTION
+  DISASTER_IMPACT
+  CUSTOM
+}
+
+enum AdminAreaLevel {
+  WARD
+  MUNICIPALITY
+  DISTRICT
+  PROVINCE
+  COUNTRY
+}
+
+enum DistributionMethod {
+  PROPORTIONAL
+  DENSITY_BASED
+  GROWTH_TREND
+  ACCESSIBILITY_WEIGHTED
+  POLICY_DRIVEN
+  HYBRID
+}
+
+enum ProjectionMethod {
+  COHORT_COMPONENT
+  EXPONENTIAL_GROWTH
+  LINEAR_TREND
+  LOGISTIC
+  RATIO_METHOD
+  STRUCTURAL_MODEL
+  BAYESIAN_PROBABILISTIC
+}
+
+enum Sector {
+  EDUCATION
+  HEALTHCARE
+  HOUSING
+  TRANSPORTATION
+  UTILITIES
+  EMPLOYMENT
+  SOCIAL_SERVICES
+  ENVIRONMENT
+  ECONOMY
+  FISCAL
+}
+
+enum ImpactType {
+  INFRASTRUCTURE_DEMAND
+  SERVICE_REQUIREMENT
+  ECONOMIC_IMPLICATION
+  SOCIAL_CONSEQUENCE
+  ENVIRONMENTAL_IMPACT
+  FISCAL_REQUIREMENT
+  HOUSING_NEED
+  LABOR_MARKET
+}
+
+enum Timeframe {
+  SHORT_TERM
+  MEDIUM_TERM
+  LONG_TERM
+}
+
+enum Urgency {
+  CRITICAL
+  HIGH
+  MODERATE
+  LOW
+}
+
+enum ReportFormat {
+  PDF
+  EXCEL
+  HTML
+  DASHBOARD
+  GIS_EXPORT
+  API_FEED
+}
+
+enum ConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MODERATE
+  LOW
+  VERY_LOW
+  EXPERIMENTAL
+}
+
+abstract class DomainEvent
+DomainEvent <|-- DemographicProjectionCreatedEvent
+DomainEvent <|-- DemographicProjectionUpdatedEvent
+DomainEvent <|-- DemographicProjectionStatusChangedEvent
+DomainEvent <|-- ProjectionScenarioCreatedEvent
+DomainEvent <|-- ProjectionScenarioUpdatedEvent
+DomainEvent <|-- ProjectionValidationCompletedEvent
+DomainEvent <|-- ProjectionComparisonCompletedEvent
+DomainEvent <|-- DemographicProjectionPublishedEvent
+DomainEvent <|-- ProjectionImpactAssessedEvent
+DomainEvent <|-- AgeDistributionProjectedEvent
+DomainEvent <|-- SpatialDistributionProjectedEvent
+DomainEvent <|-- ProjectionReportGeneratedEvent
+DomainEvent <|-- ProjectionAccuracyAssessedEvent
+
+ProjectionValidationCompletedEvent -- ValidationStatus
+ProjectionComparisonCompletedEvent -- ComparisonType
+DemographicProjectionPublishedEvent -- PublicationChannel
+DemographicProjectionStatusChangedEvent -- ProjectionStatus
+ProjectionScenarioCreatedEvent -- ScenarioType
+DemographicProjectionCreatedEvent -- AdminAreaLevel
+SpatialDistributionProjectedEvent -- DistributionMethod
+DemographicProjectionCreatedEvent -- ProjectionMethod
+ProjectionImpactAssessedEvent -- Sector
+ProjectionImpactAssessedEvent -- ImpactType
+ProjectionImpactAssessedEvent -- Timeframe
+ProjectionImpactAssessedEvent -- Urgency
+ProjectionReportGeneratedEvent -- ReportFormat
+DemographicProjectionCreatedEvent -- ConfidenceLevel
+@enduml
+----
+
+==== Core Domain Events
+
+===== DemographicProjectionCreatedEvent
+
+Triggered when a new demographic projection is created.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| projectionId | Unique identifier of the newly created projection
+| adminAreaId | Administrative area this projection covers
+| adminAreaLevel | Level of the administrative area (WARD, MUNICIPALITY, etc.)
+| baselineYear | Starting year for the projection
+| projectionHorizon | Number of years the projection extends into the future
+| projectionMethod | Methodology used for the projection
+| confidenceLevel | Initial confidence level assigned to the projection
+| timestamp | When the event occurred
+| actorId | User who created the projection
+|===
+
+*Business Impact:* This event initiates the projection lifecycle, potentially triggering validation processes, data linkage from baseline demographic sources, and notification of planning departments about a new projection in their area of interest.
+
+===== DemographicProjectionUpdatedEvent
+
+Triggered when changes are made to an existing projection.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| projectionId | Identifier of the updated projection
+| adminAreaId | Administrative area identifier
+| changedFields | Map of fields that were changed with their old and new values
+| updateType | Type of update (PARAMETER_ADJUSTMENT, ASSUMPTION_CHANGE, etc.)
+| isMethodologyChange | Whether the update changes the fundamental methodology
+| updateReason | Reason for the update
+| timestamp | When the event occurred
+| actorId | User who made the update
+|===
+
+*Business Impact:* Updates to projections may necessitate recalculation of derivative projections, re-evaluation of planning assumptions, or notification of stakeholders. This event ensures systems using projection data are aware of significant changes.
+
+===== DemographicProjectionStatusChangedEvent
+
+Triggered when a projection's status changes in its lifecycle.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| projectionId | Identifier of the projection
+| adminAreaId | Administrative area identifier
+| previousStatus | Status before the change
+| newStatus | Status after the change
+| statusChangeReason | Reason for the status change
+| approvedBy | Identifier of the approving authority (if applicable)
+| timestamp | When the event occurred
+| actorId | User who changed the status
+|===
+
+*Business Impact:* Status changes, particularly to APPROVED or PUBLISHED, signal that a projection is ready for official use in planning. This event triggers notifications to planning systems that the projection has reached the appropriate level of review for consumption.
+
+==== Specialized Domain Events
+
+===== ProjectionScenarioCreatedEvent
+
+Triggered when a new scenario is added to a projection.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| scenarioId | Identifier of the newly created scenario
+| projectionId | Identifier of the parent projection
+| adminAreaId | Administrative area identifier
+| scenarioName | Name of the scenario
+| scenarioType | Type of scenario (BASELINE, HIGH_GROWTH, etc.)
+| isPrimaryScenario | Whether this is the primary/baseline scenario
+| probabilityWeight | Probability weight assigned to this scenario
+| timestamp | When the event occurred
+| actorId | User who created the scenario
+|===
+
+*Business Impact:* New scenarios expand the range of future possibilities that planning systems can consider. This event allows planning departments to be notified of new demographic scenarios (e.g., a new "earthquake impact" scenario) that might require adjustments to existing plans.
+
+===== ProjectionValidationCompletedEvent
+
+Triggered when a validation check is completed on a projection.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| validationId | Identifier of the validation record
+| projectionId | Identifier of the validated projection
+| adminAreaId | Administrative area identifier
+| validationStatus | Result of the validation (PASSED, FAILED, etc.)
+| validationIssues | List of issues identified during validation
+| validationSummary | Summary of the validation findings
+| timestamp | When the event occurred
+| actorId | User or system that performed the validation
+|===
+
+*Business Impact:* Validation events affect the credibility and usability of projections. Failed validations may require immediate attention, while successful validations may trigger advancement in approval workflows.
+
+===== ProjectionComparisonCompletedEvent
+
+Triggered when a comparison between projections is completed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| comparisonId | Identifier of the comparison record
+| baseProjectionId | Identifier of the base projection
+| comparisonProjectionId | Identifier of the projection being compared
+| comparisonType | Type of comparison performed
+| keyDifferences | Key differences identified between projections
+| comparisonSummary | Summary of the comparison findings
+| timestamp | When the event occurred
+| actorId | User who performed the comparison
+|===
+
+*Business Impact:* Comparisons provide important context for interpreting projections. This event allows planning systems to understand how a new projection differs from previous versions or alternative methodologies.
+
+===== DemographicProjectionPublishedEvent
+
+Triggered when a projection is formally published for wider consumption.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| projectionId | Identifier of the published projection
+| adminAreaId | Administrative area identifier
+| adminAreaLevel | Level of the administrative area
+| projectionMethod | Methodology used for the projection
+| projectionTitle | Title of the projection
+| baselineYear | Starting year for the projection
+| projectionHorizon | How far into the future the projection extends
+| accessUrl | URL where the projection can be accessed
+| publicationChannel | Channel used for publication
+| timestamp | When the publication occurred
+| actorId | User who published the projection
+|===
+
+*Business Impact:* Publication events mark the transition of projections from internal working documents to official planning inputs. This triggers updates to planning dashboards, inclusion in official statistics, and potential press releases for significant projections.
+
+===== ProjectionImpactAssessedEvent
+
+Triggered when the impact of a demographic projection on a specific sector is assessed.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| impactId | Identifier of the impact assessment
+| projectionId | Identifier of the related projection
+| scenarioId | Identifier of the specific scenario
+| adminAreaId | Administrative area identifier
+| sector | Sector being assessed (EDUCATION, HEALTHCARE, etc.)
+| impactType | Type of impact being assessed
+| impactSummary | Summary of the projected impact
+| timeframe | When the impact is expected to manifest
+| urgency | How urgently the impact needs addressing
+| timestamp | When the assessment was completed
+| actorId | User who performed the assessment
+|===
+
+*Business Impact:* Impact assessments translate raw demographic projections into practical planning implications. This event allows sector-specific planning systems (education, healthcare, etc.) to be notified of demographic trends that will affect their resource needs.
+
+===== AgeDistributionProjectedEvent
+
+Triggered when an age distribution projection is created or significantly updated.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| ageDistributionId | Identifier of the age distribution projection
+| projectionId | Identifier of the parent projection
+| scenarioId | Identifier of the specific scenario
+| adminAreaId | Administrative area identifier
+| projectionYear | Year being projected
+| dependencyRatio | Projected dependency ratio
+| medianAge | Projected median age
+| demographicIndicators | Map of calculated demographic indicators
+| timestamp | When the event occurred
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Age distribution is particularly important for service planning. This event allows age-sensitive systems (education, pensions, healthcare) to update their planning assumptions based on the latest age projections.
+
+===== SpatialDistributionProjectedEvent
+
+Triggered when a spatial distribution projection is created or updated.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| spatialDistributionId | Identifier of the spatial distribution
+| projectionId | Identifier of the parent projection
+| scenarioId | Identifier of the specific scenario
+| adminAreaId | Administrative area identifier
+| projectionYear | Year being projected
+| distributionMethod | Method used for spatial distribution
+| densityMetrics | Map of density-related metrics
+| growthHotspots | List of identified growth hotspots
+| timestamp | When the event occurred
+| actorId | User or system that created the projection
+|===
+
+*Business Impact:* Spatial distribution is critical for infrastructure planning. This event notifies GIS and infrastructure planning systems about projected population changes in specific geographic areas, allowing for targeted infrastructure development.
+
+===== ProjectionReportGeneratedEvent
+
+Triggered when a formatted report is generated from projection data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| reportId | Identifier of the generated report
+| projectionId | Identifier of the underlying projection
+| adminAreaId | Administrative area covered
+| reportFormat | Format of the generated report
+| reportTitle | Title of the report
+| reportUrl | URL where the report can be accessed
+| includesVisualization | Whether the report includes visualizations
+| includedScenarios | List of scenarios included in the report
+| timestamp | When the report was generated
+| actorId | User who generated the report
+|===
+
+*Business Impact:* Reports make projection data accessible to broader audiences. This event facilitates knowledge distribution by alerting stakeholders that a new demographic report is available, which may be particularly important for non-technical stakeholders.
+
+===== ProjectionAccuracyAssessedEvent
+
+Triggered when a projection is retrospectively compared with actual demographic data.
+
+[cols="1,3", options="header"]
+|===
+| Attribute | Description
+| assessmentId | Identifier of the accuracy assessment
+| projectionId | Identifier of the assessed projection
+| adminAreaId | Administrative area identifier
+| assessmentYear | Year being assessed
+| accuracyScore | Quantified accuracy score
+| assessmentSummary | Summary of the accuracy assessment
+| deviationMetrics | Detailed metrics about projection deviations
+| timestamp | When the assessment was performed
+| actorId | User or system that performed the assessment
+|===
+
+*Business Impact:* Accuracy assessments improve future projections. This event allows methodological improvements based on observed accuracy, potentially triggering adjustments to current projections or methodology reviews.
+
+==== Event Handling Architecture
+
+[plantuml]
+----
+@startuml
+participant "PlanningDepartment" as Service
+participant "DemographicProjection" as Demo
+participant "EventPublisher" as Publisher
+participant "ValidationService" as Validation
+participant "NotificationService" as Notify
+participant "PlanningIntegrationService" as Planning
+participant "SpatialPlanningService" as Spatial
+participant "SectoralPlanningService" as Sectoral
+
+Service -> Demo: approveProjection(projectionId)
+activate Demo
+
+Demo -> Demo: changeStatus(APPROVED)
+activate Demo
+Demo -> Publisher: publishEvent(DemographicProjectionStatusChangedEvent)
+deactivate Demo
+
+activate Publisher
+Publisher -> Planning: notifyPlanningDepartments(event)
+activate Planning
+Planning -> Planning: updateProjectionRegistry()
+Planning -> Planning: refreshPlanningAssumptions()
+Publisher <-- Planning: notificationConfirmed
+deactivate Planning
+
+Publisher -> Notify: alertStakeholders(event)
+activate Notify
+Notify -> Notify: identifyInterestedStakeholders()
+Notify -> Notify: prepareDepartmentNotifications()
+Notify -> Notify: sendApprovalNotifications()
+Publisher <-- Notify: notificationsSent
+deactivate Notify
+
+Demo <-- Publisher: eventPublished
+deactivate Publisher
+
+Service <-- Demo: projectionApproved
+deactivate Demo
+
+Service -> Demo: createProjectionScenario(data)
+activate Demo
+Demo -> Demo: validateScenarioData()
+Demo -> Demo: saveScenario()
+Demo -> Publisher: publishEvent(ProjectionScenarioCreatedEvent)
+activate Publisher
+
+Publisher -> Sectoral: notifySectoralSystems(event)
+activate Sectoral
+Sectoral -> Sectoral: updateEducationProjections()
+Sectoral -> Sectoral: refreshHealthcareDemandModels()
+Sectoral -> Sectoral: recalculateInfrastructureNeeds()
+Publisher <-- Sectoral: sectoralUpdatesInitiated
+deactivate Sectoral
+
+Publisher -> Spatial: updateSpatialPlanning(event)
+activate Spatial
+Spatial -> Spatial: refreshDensityModels()
+Spatial -> Spatial: updateGrowthPatternAnalysis()
+Publisher <-- Spatial: spatialPlanningUpdated
+deactivate Spatial
+
+Publisher -> Validation: validateScenario(scenarioId)
+activate Validation
+Validation -> Validation: performConsistencyChecks()
+Validation -> Validation: validateAssumptions()
+Validation -> Publisher: publishEvent(ProjectionValidationCompletedEvent)
+Publisher <-- Validation: validationInitiated
+deactivate Validation
+
+Demo <-- Publisher: eventPublished
+deactivate Publisher
+
+Service <-- Demo: scenarioCreated
+deactivate Demo
+@enduml
+----
+
+The diagram above illustrates how events flow through the system when demographic projections are approved or new scenarios are created. The process demonstrates several key patterns:
+
+1. **Event-Driven Planning Updates**: Domain events trigger updates to planning systems, ensuring that planning decisions are based on the latest demographic projections.
+
+2. **Stakeholder Notification**: Events automatically generate notifications to relevant stakeholders based on the event type and administrative area.
+
+3. **Sectoral Planning Integration**: Specialized planning systems for different sectors (education, healthcare, etc.) receive targeted updates based on projection changes.
+
+4. **Validation Workflows**: Events trigger validation processes that ensure projection quality and consistency.
+
+5. **Spatial Planning Linkage**: Demographic projections directly inform spatial planning through event-based integration.
+
+==== Event Application Use Cases
+
+===== Municipal Development Planning
+
+When a new demographic projection is approved for a municipality:
+
+1. The `DemographicProjectionStatusChangedEvent` is published with newStatus = APPROVED.
+2. The Municipal Planning Department is notified of the approved projection.
+3. Urban planning systems update their population assumptions for infrastructure sizing.
+4. Land use planning tools incorporate the projections for zoning decisions.
+5. Municipal service capacity models are updated with new population forecasts.
+
+This process ensures that municipal development planning is based on officially approved demographic projections rather than outdated assumptions or unofficial estimates.
+
+===== Education Infrastructure Planning
+
+When age distribution projections are updated:
+
+1. The `AgeDistributionProjectedEvent` is published with updated school-age population projections.
+2. The Education Department's planning system receives this event automatically.
+3. School capacity models are updated with new enrollment projections.
+4. Teacher allocation systems adjust future staffing requirements.
+5. School construction planning tools identify areas needing new facilities.
+
+This event chain enables education infrastructure to anticipate demographic shifts rather than merely reacting to them, preventing both overcrowding and resource waste.
+
+===== Healthcare System Planning
+
+When multiple scenarios for demographic aging are created:
+
+1. The `ProjectionScenarioCreatedEvent` is published for several aging scenarios.
+2. The Healthcare Planning Department receives notifications about these scenarios.
+3. Healthcare demand models update based on the new elderly population projections.
+4. Facility planning tools identify areas needing expanded geriatric services.
+5. Healthcare workforce planning adjusts training requirements for elderly care.
+
+This use case demonstrates how scenario-based planning allows healthcare systems to prepare for different possible demographic futures rather than relying on a single projection.
+
+===== Transportation Infrastructure Sizing
+
+When spatial distribution projections are updated:
+
+1. The `SpatialDistributionProjectedEvent` is published with new population density patterns.
+2. The Transportation Department's planning systems receive this event.
+3. Traffic modeling tools update based on projected population distribution.
+4. Road capacity planning adjusts to anticipated demand changes.
+5. Public transportation route planning identifies new high-density corridors.
+
+This process ensures that transportation infrastructure planning is directly informed by projected spatial population patterns, supporting more efficient infrastructure investment.
+
+===== Social Service Alignment
+
+When projection impact assessments are completed:
+
+1. The `ProjectionImpactAssessedEvent` is published with social service implications.
+2. Social welfare departments receive notifications about projected vulnerability patterns.
+3. Social service planning tools adjust resource allocation based on projected needs.
+4. Program development focuses on areas with increasing vulnerability projections.
+5. Budget planning incorporates long-term demographic-driven service demands.
+
+This event chain ensures that social services anticipate changing demographic needs rather than simply responding to current demands.
+
+==== Integration with Nepal's Planning Ecosystem
+
+The Demographic Projection event system is specifically designed to integrate with Nepal's planning processes:
+
+===== National Planning Commission Integration
+
+1. Key projection events are automatically routed to the National Planning Commission's planning systems.
+2. Projections reaching APPROVED status trigger updates to national development planning assumptions.
+3. Scenario creation events allow the NPC to consider alternative demographic futures in policy formulation.
+
+===== Provincial Planning Integration
+
+1. Province-specific events are routed to provincial planning departments based on the adminAreaId.
+2. Provincial infrastructure planning systems receive spatial distribution events for their jurisdiction.
+3. Provincial development budgeting systems receive impact assessment events for resource allocation.
+
+===== Local Government Planning
+
+1. Municipality and ward-level projection events are routed to relevant local government systems.
+2. Local development planning tools receive population projections specific to their jurisdiction.
+3. Service delivery planning systems update based on local demographic forecasts.
+
+===== Sectoral Planning Integration
+
+1. Age distribution events route to education planning systems for school planning.
+2. Elderly population projections trigger updates to healthcare and social security systems.
+3. Working-age population projections inform employment and skills development planning.
+
+These integrations ensure that demographic projections flow seamlessly to all levels of Nepal's planning ecosystem, supporting evidence-based decision-making throughout the federal structure.
+
+==== Nepal-Specific Event Types
+
+Several event types are specifically designed for Nepal's demographic planning context:
+
+===== MigrationProjectionEvent
+
+Specialized for Nepal's high international migration context, tracking projections of:
+- Foreign labor migration patterns
+- Remittance flow projections
+- Return migration scenarios
+- Migration impact on household structures
+
+===== EarthquakeRecoveryProjectionEvent
+
+Given Nepal's earthquake vulnerability, this event communicates:
+- Population return projections for earthquake-affected areas
+- Reconstruction-driven population movements
+- Long-term displacement patterns
+- Vulnerability distribution for future events
+
+===== FederalRestructuringImpactEvent
+
+To address Nepal's ongoing federal transition:
+- Administrative center development impacts
+- Resource allocation effects on population distribution
+- Service access changes driving migration
+- New provincial capital development effects
+
+These Nepal-specific events ensure the system addresses the country's unique demographic planning needs, going beyond generic demographic event types.
+
+==== Security and Compliance Considerations
+
+All demographic projection events are subject to:
+
+1. **Access Control**: Events are only delivered to authorized subscribers with appropriate permissions.
+2. **Classification Levels**: Projections may be classified (e.g., DRAFT, INTERNAL, PUBLIC) with corresponding restrictions.
+3. **Audit Trail**: All projection events are logged for traceability and accountability.
+4. **Data Sensitivity**: Certain projection details may be filtered based on sensitivity levels.
+
+These controls ensure that demographic projections, which can have significant policy and planning implications, are shared securely and appropriately.

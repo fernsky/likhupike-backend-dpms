@@ -1,0 +1,823 @@
+==== Economic Summary
+
+Economic Summary represents comprehensive economic statistics for an administrative area, extending several core domain models.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class SpatialEntity
+interface HistoryViewable
+interface AccessControlled
+interface DataAggregatable
+interface FullTextSearchable
+interface Taggable
+
+' EconomicSummary implementation
+class EconomicSummary {
+  ' From SpatialEntity
+  +Geometry geometry
+  +Point centroid
+  +Double area
+  +Double perimeter
+  +SpatialDataType spatialDataType
+  +Integer spatialAccuracy
+  +SpatialReferenceSystem srs
+  +Set<SpatialRelationship> spatialRelationships
+  
+  ' Administrative context
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  +UUID parentAdminAreaId
+  
+  ' Core economic indicators
+  +Integer economicallyActivePopulation
+  +Double employmentRate
+  +Double unemploymentRate
+  +Double laborForceParticipationRate
+  +Double averageHouseholdIncome
+  +Double medianHouseholdIncome
+  +Double perCapitaIncome
+  +Double giniCoefficient
+  +Double povertyRate
+  +Integer businessEstablishments
+  +Double gdpEstimate
+  +String dominantEconomicSector
+  
+  ' Remittance data
+  +Double remittanceInflowAmount
+  +Integer remittanceRecipientHouseholds
+  +Double remittancePercentOfIncome
+  
+  ' Agriculture data
+  +Double agriculturalLandArea
+  +Integer farmingHouseholds
+  +Double agriculturalProductionValue
+  
+  ' Other economic data
+  +Integer loanedHouseholds
+  +Integer ownHouseHouseholds
+  +Integer landOwningHouseholds
+  +Integer trainedPopulation
+  
+  ' Metadata
+  +String dataSource
+  +Integer dataYear
+  +SummaryStatus status
+  +LocalDate lastUpdated
+  +UUID lastUpdatedBy
+  +String notes
+  +Integer confidenceLevel
+  +UUID currentVersionId
+  +Set<UUID> previousVersionIds
+}
+
+' Supporting classes
+class EconomicIndicators {
+  +UUID id
+  +UUID economicSummaryId
+  +Double gdpGrowthRate
+  +Double inflationRate
+  +Double unemploymentRate
+  +Double povertyHeadcountRatio
+  +Double consumptionPerCapita
+  +Double foodPovertyLine
+  +Double nonFoodPovertyLine
+  +Double incomeInequality
+  +Double laborProductivity
+}
+
+class SectorContribution {
+  +UUID id
+  +UUID economicSummaryId
+  +EconomicSector sector
+  +Double percentageContribution
+  +Double growthRate
+  +Integer employmentCount
+  +Double outputValue
+  +Currency valueCurrency
+  +LocalDate referenceDate
+}
+
+' Enumerations
+enum AdminAreaType {
+  PROVINCE
+  DISTRICT
+  MUNICIPALITY
+  WARD
+  SETTLEMENT
+  VDC
+  CUSTOM_AREA
+}
+
+enum SummaryStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  SUPERSEDED
+  UNDER_REVIEW
+}
+
+enum EconomicSector {
+  AGRICULTURE
+  MANUFACTURING
+  CONSTRUCTION
+  TRADE
+  TRANSPORTATION
+  ACCOMMODATION
+  INFORMATION_COMMUNICATION
+  FINANCE_INSURANCE
+  REAL_ESTATE
+  PROFESSIONAL_SERVICES
+  PUBLIC_ADMINISTRATION
+  EDUCATION
+  HEALTH
+  ARTS_ENTERTAINMENT
+  OTHER_SERVICES
+}
+
+' Inheritance relationships
+SpatialEntity <|-- EconomicSummary
+
+' Interface implementation
+EconomicSummary ..|> HistoryViewable
+EconomicSummary ..|> AccessControlled
+EconomicSummary ..|> DataAggregatable
+EconomicSummary ..|> FullTextSearchable
+EconomicSummary ..|> Taggable
+
+' Class relationships
+EconomicSummary "1" o-- "1" EconomicIndicators
+EconomicSummary "1" o-- "many" SectorContribution
+EconomicSummary -- AdminAreaType
+EconomicSummary -- SummaryStatus
+SectorContribution -- EconomicSector
+@enduml
+----
+
+===== Economic Summary Data Collection Process
+
+[plantuml]
+----
+@startuml
+|Planning Department|
+start
+:Design economic survey questionnaires;
+:Train field enumerators;
+:Configure data collection parameters;
+
+|Field Enumerators|
+:Conduct household surveys;
+:Collect business establishment data;
+:Document economic activities;
+:Submit collected data;
+
+|System|
+:Process raw economic data;
+:Validate data structure;
+if (Valid Structure?) then (yes)
+  :Create economic summary draft;
+else (no)
+  :Generate validation errors;
+  |Field Enumerators|
+  :Correct data issues;
+  note right
+    Return to validation
+  end note
+endif
+
+|Economic Analyst|
+:Review economic data;
+:Cross-reference with statistics bureau data;
+if (Data Accurate?) then (yes)
+  :Process economic indicators;
+else (no)
+  :Flag economic anomalies;
+  |Field Enumerators|
+  :Investigate and correct;
+  note right
+    Return to verification
+  end note
+endif
+
+|System|
+:Calculate derived economic metrics;
+:Generate economic sector breakdown;
+:Verify statistical consistency;
+if (Consistent?) then (yes)
+  :Finalize economic summary;
+else (no)
+  :Generate inconsistency report;
+  |Economic Analyst|
+  :Review statistical issues;
+  note right
+    Return to calculation
+  end note
+endif
+
+|Planning Division|
+:Perform final review;
+:Apply confidence levels;
+if (Approve?) then (yes)
+  :Approve for publication;
+else (no)
+  :Return with comments;
+  |Economic Analyst|
+  :Address comments;
+  note right
+    Return to review
+  end note
+endif
+
+|System|
+:Publish economic summary;
+:Update economic visualizations;
+:Index for search;
+:Trigger publication notifications;
+
+|Data Consumers|
+:Access economic data;
+:Use data for planning and analysis;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Economic Summaries are used in the system:
+
+====== Local Economic Development Planning
+
+*Scenario:* Using economic summary data for municipal development planning
+
+[plantuml]
+----
+@startuml
+actor "Municipal Planning\nDepartment" as Planning
+actor "Economic Development\nUnit" as EconDev
+participant "EconomicSummary" as EconSum
+participant "SectorAnalysisService" as Sector
+participant "PovertyMappingService" as Poverty
+participant "BusinessRegistryService" as Business
+participant "InvestmentPrioritizationService" as Investment
+
+Planning -> EconSum : Request municipal economic data
+activate EconSum
+EconSum -> EconSum : Retrieve ward-level economic summaries
+EconSum -> EconSum : Aggregate sector data
+EconSum -> EconSum : Calculate economic indicators
+Planning <-- EconSum : Municipal economic profile
+deactivate EconSum
+
+Planning -> Sector : Analyze sector performance
+activate Sector
+Sector -> Sector : Identify economic drivers
+Sector -> Sector : Calculate sector growth rates
+Sector -> Sector : Assess employment generation
+Planning <-- Sector : Sector performance analysis
+deactivate Sector
+
+Planning -> Poverty : Generate poverty mapping
+activate Poverty
+Poverty -> Poverty : Map poverty distribution
+Poverty -> Poverty : Identify poverty pockets
+Poverty -> Poverty : Correlate poverty with factors
+Planning <-- Poverty : Poverty distribution maps
+deactivate Poverty
+
+EconDev -> Business : Analyze business ecosystem
+activate Business
+Business -> Business : Map business distribution
+Business -> Business : Identify business clusters
+Business -> Business : Assess value chains
+EconDev <-- Business : Business ecosystem analysis
+deactivate Business
+
+EconDev -> Investment : Evaluate investment opportunities
+activate Investment
+Investment -> Investment : Calculate sector potential
+Investment -> Investment : Assess growth constraints
+Investment -> Investment : Estimate employment impact
+EconDev <-- Investment : Investment priorities
+deactivate Investment
+
+Planning -> EconDev : Share economic insights
+EconDev -> EconDev : Develop economic strategies
+activate EconDev
+EconDev -> EconDev : Identify strategic sectors
+EconDev -> EconDev : Design incentive programs
+EconDev -> EconDev : Create job creation initiatives
+deactivate EconDev
+
+Planning -> Planning : Finalize development plan
+activate Planning
+Planning -> Planning : Allocate resources
+Planning -> Planning : Define implementation timeline
+Planning -> Planning : Establish monitoring framework
+deactivate Planning
+@enduml
+----
+
+*Real-World Context:*
+Dhangadhi Sub-Metropolitan City in Sudurpashchim Province is developing its five-year economic development plan using the Digital Profile's economic summary data. As one of the rapidly growing urban centers in Far-Western Nepal, Dhangadhi faces both opportunities and challenges that require evidence-based planning.
+
+The EconomicSummary entity provides a comprehensive view of Dhangadhi's economy with its 19 wards showing varying economic patterns. The data reveals that while the overall unemployment rate is 12.3%, it varies significantly across wards - from 8.7% in central commercial wards to 18.5% in peripheral wards with recent rural migrants. The system's spatial capabilities enable these geographic disparities to be visualized, helping planners target interventions.
+
+The municipality's dominant economic sectors are trade and commerce (28%), agriculture (22%), and services (19%), with manufacturing notably underdeveloped at just
+7% despite the city's position as a regional hub. The sector analysis identifies trade with India as a key economic driver, with the nearby Trinagar-Gauriphanta border point generating significant economic activity.
+
+The poverty mapping functionality reveals that 21.7% of households live below the poverty line, with particularly high concentrations in wards 4, 12, and 16, which have large populations of landless agricultural laborers and recent migrants. The mapping shows a strong correlation between poverty and lack of skilled training, with poverty rates 38% higher in households without any members having vocational skills.
+
+The business ecosystem analysis identifies several distinctive features of Dhangadhi's economy:
+- A vibrant border trade ecosystem with approximately 1,400 small traders
+- A developing hospitality sector serving as a gateway to tourism destinations
+- A significant transportation and logistics sector connecting hill districts to markets
+- An emerging construction sector driven by rapid urbanization
+
+Using this comprehensive economic intelligence, the Municipal Planning Department develops targeted interventions:
+- Skills development programs focused on wards with highest unemployment
+- Market infrastructure development to support the dominant trading sector
+- Vocational training centers targeting sectors with growth potential (construction, hospitality)
+- Microenterprise development in high-poverty wards
+
+The planning process incorporates poverty reduction targets that are directly linked to the baseline statistics from the economic summary. The plan establishes specific goals to reduce overall poverty from 21.7% to 15% over five years, with more ambitious targets for the highest-poverty wards.
+
+For investment prioritization, the municipality uses the economic data to identify strategic growth sectors where public investment would leverage maximum private sector response. The analysis indicates that targeted infrastructure in the logistics sector would provide the highest return, as Dhangadhi serves as a gateway connecting hill districts to markets.
+
+The HistoryViewable capabilities of the EconomicSummary allow planners to analyze trends from previous years, revealing that wards with road improvement projects saw average 18% increases in business registrations within two years, providing evidence for transportation infrastructure as a catalyst for economic development.
+
+The AccessControlled interface ensures that sensitive economic data is available only to authorized officials, while aggregated summaries are made available to the public and potential investors through the municipality's official portal, using the SEOAttributes component to optimize discoverability by businesses and researchers.
+
+====== Remittance Impact Analysis
+
+*Scenario:* Analyzing how remittances shape local economic patterns
+
+[plantuml]
+----
+@startuml
+actor "Provincial Planning\nCommission" as Planning
+actor "Remittance Research\nTask Force" as Task
+participant "EconomicSummary" as EconSum
+participant "RemittanceAnalysisService" as Remittance
+participant "HouseholdExpenseService" as Expense
+participant "LaborMigrationService" as Labor
+participant "PolicySimulationService" as Policy
+
+Planning -> EconSum : Request remittance data
+activate EconSum
+EconSum -> EconSum : Aggregate remittance statistics
+EconSum -> EconSum : Calculate remittance indicators
+Planning <-- EconSum : Provincial remittance profile
+deactivate EconSum
+
+Planning -> Task : Establish research priorities
+Task -> Remittance : Analyze remittance patterns
+activate Remittance
+Remittance -> Remittance : Map distribution channels
+Remittance -> Remittance : Calculate dependency ratios
+Remittance -> Remittance : Identify seasonal patterns
+Task <-- Remittance : Remittance flow analysis
+deactivate Remittance
+
+Task -> Expense : Analyze spending patterns
+activate Expense
+Expense -> Expense : Categorize household expenses
+Expense -> Expense : Assess consumption vs. investment
+Expense -> Expense : Compare remittance vs. non-remittance households
+Task <-- Expense : Remittance utilization patterns
+deactivate Expense
+
+Task -> Labor : Analyze migration patterns
+activate Labor
+Labor -> Labor : Map destination countries
+Labor -> Labor : Calculate skill mismatches
+Labor -> Labor : Assess economic opportunity costs
+Task <-- Labor : Migration impact assessment
+deactivate Labor
+
+Task -> Policy : Simulate policy interventions
+activate Policy
+Policy -> Policy : Model remittance investment incentives
+Policy -> Policy : Simulate financial inclusion effects
+Policy -> Policy : Project return migration scenarios
+Task <-- Policy : Policy intervention outcomes
+deactivate Policy
+
+Task -> Task : Develop recommendations
+activate Task
+Task -> Task : Identify productive investment channels
+Task -> Task : Design financial literacy programs
+Task -> Task : Create migration management strategies
+deactivate Task
+
+Planning -> Planning : Integrate into economic strategy
+activate Planning
+Planning -> Planning : Define remittance policy framework
+Planning -> Planning : Establish implementation timeline
+Planning -> Planning : Create monitoring mechanisms
+deactivate Planning
+@enduml
+----
+
+*Real-World Context:*
+Baglung District in Gandaki Province is conducting an in-depth analysis of remittance impacts on its local economy. With over a third of households receiving remittances, primarily from workers in Gulf countries, Malaysia, and India, understanding this economic dynamic is crucial for planning.
+
+The EconomicSummary entity provides comprehensive remittance data showing that across Baglung's 10 municipalities, remittance inflows total approximately NPR 5.2 billion annually (about USD 43 million), representing 31% of the district's estimated GDP. The system's DataAggregatable interface enables analysis at multiple administrative levels, revealing significant variation in remittance dependency - from 19% of households in urban Baglung Municipality to 48% in remote Taman Rural Municipality.
+
+The RemittanceAnalysisService combines economic data with demographic data to reveal important patterns specific to Nepal's context:
+- Higher remittance flows correspond to lower local business establishment rates, suggesting remittances may substitute for entrepreneurship
+- Wards with higher remittance rates show lower agricultural productivity, as labor migration leaves farms with reduced workforce
+- Different remittance utilization patterns emerge based on source country, with Gulf remittances more likely to fund housing versus Indian remittances more likely to fund education
+
+The expense pattern analysis reveals that across the district, 42% of remittances go to daily consumption, 23% to housing construction or improvement, 18% to education, 8% to loan repayment, and only 9% to productive business investment. These patterns vary significantly by municipality, with more remote areas showing higher consumption shares.
+
+The labor migration analysis identifies concerning patterns:
+- Significant skill mismatch, with 37% of migrants having education or skills not utilized in destination jobs
+- Cyclical migration depleting prime working-age population in certain villages
+- Gender imbalance creating "remittance widows" - women managing households and finances while men work abroad
+- Increasing duration of foreign employment, with average stay extending from 3.7 years to 5.2 years over the past decade
+
+The system's HistoryViewable capability allows analysis of trends, showing that remittance dependency has increased by 12% over five years, while productive investment of remittances has decreased by 4% over the same period, suggesting worsening economic dynamics.
+
+Based on this comprehensive analysis, the Provincial Planning Commission develops targeted interventions:
+- Municipality-specific financial literacy programs targeting remittance-receiving households
+- Remittance-backed entrepreneurship programs with matching funds for productive investments
+- Specialized skills training programs for potential migrants to improve earning potential
+- Banking services expansion in high-remittance rural areas to improve financial access
+
+The policy simulation capabilities allow planners to test intervention effectiveness, showing that combining financial literacy with investment matching funds could potentially double the productive investment rate of remittances within three years.
+
+The FullTextSearchable interface enables planners to identify specific villages and communities with distinctive remittance patterns for targeted pilots, while the Taggable capability allows related economic activities to be linked for holistic analysis.
+
+Through this evidence-based approach, Baglung's planning authorities can transform remittances from a dependency mechanism into a development catalyst, addressing both economic and social dimensions of the remittance economy that defines much of rural Nepal.
+
+====== Small Business Development Strategy
+
+*Scenario:* Using economic data to design support for micro, small and medium enterprises (MSMEs)
+
+[plantuml]
+----
+@startuml
+actor "Department of\nSmall Industries" as DSI
+actor "Chamber of\nCommerce" as Chamber
+participant "EconomicSummary" as EconSum
+participant "BusinessMappingService" as Business
+participant "InformalSectorAnalysis" as Informal
+participant "FinancialAccessService" as Finance
+participant "SkillsGapAnalysis" as Skills
+
+DSI -> EconSum : Request MSME economic data
+activate EconSum
+EconSum -> EconSum : Compile business statistics
+EconSum -> EconSum : Aggregate sector performance
+EconSum -> EconSum : Calculate MSME indicators
+DSI <-- EconSum : MSME economic profile
+deactivate EconSum
+
+DSI -> Business : Map business ecosystem
+activate Business
+Business -> Business : Identify business concentrations
+Business -> Business : Map value chains
+Business -> Business : Analyze competition patterns
+DSI <-- Business : Business ecosystem mapping
+deactivate Business
+
+DSI -> Informal : Assess informal sector
+activate Informal
+Informal -> Informal : Estimate informal businesses
+Informal -> Informal : Identify formalization barriers
+Informal -> Informal : Analyze survival enterprises
+DSI <-- Informal : Informal sector assessment
+deactivate Informal
+
+Chamber -> Finance : Analyze financial constraints
+activate Finance
+Finance -> Finance : Map lending patterns
+Finance -> Finance : Identify financing gaps
+Finance -> Finance : Assess collateral constraints
+Chamber <-- Finance : Financial access report
+deactivate Finance
+
+Chamber -> Skills : Evaluate skills ecosystem
+activate Skills
+Skills -> Skills : Map available skills
+Skills -> Skills : Identify skills demands
+Skills -> Skills : Assess training capacity
+Chamber <-- Skills : Skills gap analysis
+deactivate Skills
+
+DSI -> Chamber : Coordinate support strategy
+DSI -> DSI : Design MSME development program
+activate DSI
+DSI -> DSI : Develop business registration simplification
+DSI -> DSI : Create targeted financing windows
+DSI -> DSI : Establish business development services
+deactivate DSI
+
+Chamber -> Chamber : Design private sector support
+activate Chamber
+Chamber -> Chamber : Establish mentorship networks
+Chamber -> Chamber : Create market linkage platforms
+Chamber -> Chamber : Design skills development programs
+deactivate Chamber
+@enduml
+----
+
+*Real-World Context:*
+Bharatpur Metropolitan City in Chitwan District is developing a comprehensive MSME support strategy to strengthen its local economy. As a rapidly growing urban center with significant economic potential, Bharatpur seeks to use evidence-based planning to foster entrepreneurship.
+
+The EconomicSummary entity provides detailed business data showing that the municipality has approximately 12,500 registered businesses, with 87% being micro or small enterprises. The system's spatial capabilities enable ward-level analysis, revealing business clusters around the medical city area, transportation hubs, and agricultural processing zones. Sector analysis shows services dominating at 41%, followed by trade at 32%, and manufacturing at only 14% despite the region's potential.
+
+The BusinessMappingService combines economic data with geospatial analysis to identify specific patterns crucial for planning:
+- A vibrant medical services ecosystem surrounding Bharatpur Hospital
+- An emerging agricultural processing cluster in the eastern wards
+- Transport and logistics businesses concentrated along the East-West Highway
+- Tourism-related businesses developing around river areas
+
+The analysis of the informal sector reveals approximately 8,400 unregistered businesses operating in the municipality, with specific barriers to formalization identified: complex registration procedures (cited by 47%), tax concerns (38%), and lack of perceived benefits (62%). The data shows informal businesses are concentrated in specific sectors - food processing, construction services, and retail trade.
+
+The financial access analysis identifies critical constraints on MSME growth:
+- Only 23% of micro-enterprises have access to formal credit
+- Women entrepreneurs face higher loan rejection rates (32% vs 18% for men)
+- Average loan processing time of 27 days discourages formalization
+- Collateral requirements averaging 175% of loan value create barriers
+
+The skills ecosystem assessment reveals both strengths and gaps:
+- Surplus of general business graduates but shortage of technical skills
+- Critical gaps in food technology, digital marketing, and machinery maintenance
+- Underutilized skilled workforce returning from foreign employment
+- Limited entrepreneurship training capacity in vocational institutions
+
+The system's DataAggregatable interface enables comparative analysis across wards, showing business registration rates vary from 28 per 1,000 population in central wards to just
+7 per 1,000 in peripheral areas, helping target interventions geographically.
+
+Based on this comprehensive analysis, Bharatpur designs targeted interventions:
+- One-window business registration system with ward-level service centers
+- Specialized financing products for women entrepreneurs with reduced collateral requirements
+- Skills development programs targeting identified technical gaps
+- Business incubation centers in three strategic locations based on business cluster analysis
+- Simplified tax regime for micro-enterprises transitioning from informal to formal
+
+The FullTextSearchable and Taggable capabilities allow program designers to identify specific business types for specialized interventions, while the AccessControlled interface ensures appropriate data sharing between government agencies and business associations while protecting sensitive economic information.
+
+The HistoryViewable interface enables trend analysis, showing growth rates by business type and location over time, which helps prioritize support toward sectors showing emerging momentum.
+
+This evidence-based approach allows Bharatpur to move beyond generic MSME support to tailored interventions that address specific constraints and leverage unique local economic advantages, resulting in more efficient use of limited development resources and more effective economic outcomes.
+
+===== DataAggregatable Implementation
+
+The EconomicSummary entity implements the DataAggregatable interface to support hierarchical data aggregation:
+
+[plantuml]
+----
+@startuml
+participant "PlanningService" as Service
+participant "EconomicSummary\nimplements DataAggregatable" as Summary
+participant "Repository" as Repo
+participant "AggregationEngine" as Engine
+participant "DataValidator" as Validator
+
+Service -> Summary : getAggregatedData(provinceId, "DISTRICT")
+activate Summary
+
+Summary -> Summary : validateAggregationRequest(provinceId, "DISTRICT")
+activate Summary
+Summary -> Summary : checkPermissions()
+Summary -> Summary : validateHierarchy()
+Summary <-- Summary : requestValid
+deactivate Summary
+
+Summary -> Repo : findChildSummaries(provinceId, "DISTRICT")
+activate Repo
+Summary <-- Repo : districtSummaries
+deactivate Repo
+
+Summary -> Engine : aggregateEconomicData(districtSummaries)
+activate Engine
+Engine -> Engine : calculateWeightedIndicators()
+Engine -> Engine : sumAbsoluteValues()
+Engine -> Engine : computeAverageRates()
+Engine -> Engine : aggregateSectorContributions()
+Summary <-- Engine : aggregatedEconomicData
+deactivate Engine
+
+Summary -> Validator : validateAggregate(aggregatedData, provinceId)
+activate Validator
+Validator -> Validator : checkTotals()
+Validator -> Validator : validateConsistency()
+Validator -> Validator : flagAnomalies()
+Summary <-- Validator : validationResults
+deactivate Validator
+
+Summary -> Summary : applyValidationAdjustments(validationResults)
+Summary -> Summary : buildAggregateResponse()
+
+Service <-- Summary : aggregatedEconomicData
+deactivate Summary
+
+Service -> Summary : drillDown(provinceId, "DISTRICT", districtId)
+activate Summary
+Summary -> Repo : findChildSummaries(districtId, "MUNICIPALITY")
+activate Repo
+Summary <-- Repo : municipalitySummaries
+deactivate Repo
+Summary -> Engine : aggregateEconomicData(municipalitySummaries)
+activate Engine
+Summary <-- Engine : aggregatedData
+deactivate Engine
+Service <-- Summary : districtDetailWithMunicipalities
+deactivate Summary
+@enduml
+----
+
+===== FullTextSearchable Implementation
+
+The EconomicSummary entity implements the FullTextSearchable interface for advanced search capabilities:
+
+[plantuml]
+----
+@startuml
+participant "SearchService" as Search
+participant "EconomicSummary\nimplements FullTextSearchable" as Summary
+participant "SearchRepository" as Repo
+participant "SearchIndexer" as Indexer
+participant "AdminAreaService" as AdminService
+
+Search -> Summary : indexForSearch()
+activate Summary
+
+Summary -> Summary : getSearchableContent()
+activate Summary
+Summary -> AdminService : getAdminAreaName(adminAreaId)
+activate AdminService
+Summary <-- AdminService : areaName
+deactivate AdminService
+Summary -> Summary : buildSearchableMap()
+Summary <-- Summary : searchContent = {
+  "adminAreaName": "Bharatpur Metropolitan City",
+  "adminAreaType": "MUNICIPALITY",
+  "adminAreaCode": "BMC",
+  "dataYear": "2022",
+  "economicallyActivePopulation": "135620",
+  "unemploymentRate": "12.3",
+  "dominantEconomicSector": "Services",
+  "remittanceInflowAmount": "2.3 billion NPR"
+}
+deactivate Summary
+
+Summary -> Summary : getSearchKeywords()
+activate Summary
+Summary <-- Summary : keywords = [
+  "Bharatpur",
+  "Metropolitan",
+  "Economy",
+  "Employment",
+  "Remittance",
+  "Services"
+]
+deactivate Summary
+
+Summary -> Indexer : updateSearchIndex(entityId, searchContent, keywords)
+activate Indexer
+Summary <-- Indexer : indexUpdateConfirmation
+deactivate Indexer
+
+Search <-- Summary : indexingComplete
+deactivate Summary
+
+Search -> Summary : getSearchBoostFactors()
+activate Summary
+Search <-- Summary : {
+  "adminAreaName": 5.0,
+  "adminAreaCode": 3.0,
+  "dataYear": 2.0,
+  "dominantEconomicSector": 4.0
+}
+deactivate Summary
+
+Search -> Repo : search("Bharatpur economy 2022")
+activate Repo
+Repo -> Repo : executeFullTextSearch()
+Repo -> Repo : applyBoostFactors()
+Repo -> Repo : sortByRelevance()
+Search <-- Repo : searchResults
+deactivate Repo
+@enduml
+----
+
+===== AccessControlled Implementation
+
+The EconomicSummary entity implements the AccessControlled interface to manage permissions:
+
+[plantuml]
+----
+@startuml
+participant "SecurityService" as Security
+participant "EconomicSummary\nimplements AccessControlled" as Summary
+participant "AccessControlRepository" as ACRepo
+participant "UserRepository" as Users
+participant "AdminAreaRepository" as Areas
+
+Security -> Summary : hasPermission(user, Permission.VIEW)
+activate Summary
+
+Summary -> Summary : getAccessControlList()
+activate Summary
+Summary -> ACRepo : findByEntityTypeAndEntityId("EconomicSummary", id)
+activate ACRepo
+Summary <-- ACRepo : accessControlEntries
+deactivate ACRepo
+Summary <-- Summary : entries
+deactivate Summary
+
+alt Direct permission exists
+  Summary -> Summary : checkDirectPermission(user, entries, Permission.VIEW)
+  Summary -> Summary : return true/false based on direct permission
+else Check administrative permissions
+  Summary -> Summary : getAdminAreaId()
+  Summary -> Users : getUserAdminAreas(userId)
+  activate Users
+  Summary <-- Users : userAdminAreas
+  deactivate Users
+  
+  Summary -> Areas : hasJurisdiction(userAdminAreas, adminAreaId)
+  activate Areas
+  Summary <-- Areas : hasJurisdiction
+  deactivate Areas
+  
+  alt User has jurisdiction
+    Summary -> Summary : return true (jurisdictional VIEW permission)
+  else User has no jurisdiction
+    Summary -> Summary : return false (no VIEW permission)
+  end
+end
+
+Security <-- Summary : permissionResult
+deactivate Summary
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+The EconomicSummary entity implements the HistoryViewable interface to track changes:
+
+[plantuml]
+----
+@startuml
+participant "EconomicAnalysisUI" as UI
+participant "EconomicHistory" as History
+participant "EconomicSummary\nimplements HistoryViewable" as Summary
+participant "VersionRepository" as Versions
+participant "ChangeRepository" as Changes
+
+UI -> History : getEconomicHistory(summaryId)
+activate History
+
+History -> Summary : getChangeHistory()
+activate Summary
+Summary -> Changes : findByEntityTypeAndEntityId("EconomicSummary", id)
+activate Changes
+Summary <-- Changes : changeRecords
+deactivate Changes
+History <-- Summary : changeHistory
+deactivate Summary
+
+History -> Summary : getHistorySnapshot(timestamp)
+activate Summary
+Summary -> Versions : findByEntityTypeAndEntityIdAndTimestamp("EconomicSummary", id, timestamp)
+activate Versions
+Summary <-- Versions : versionData
+deactivate Versions
+History <-- Summary : snapshotAtPointInTime
+deactivate Summary
+
+UI <- History : economicHistoryData
+deactivate History
+
+UI -> History : compareEconomicVersions(summaryId, 2018, 2022)
+activate History
+
+History -> Summary : getHistorySnapshot(2018)
+activate Summary
+History <-- Summary : snapshot2018
+deactivate Summary
+
+History -> Summary : getHistorySnapshot(2022)
+activate Summary
+History <-- Summary : snapshot2022
+deactivate Summary
+
+History -> History : compareEconomicData(snapshot2018, snapshot2022)
+History -> History : calculateGrowthRates()
+History -> History : identifySignificantChanges()
+
+UI <-- History : quadrennialComparisonResults
+deactivate History
+@enduml
+----
