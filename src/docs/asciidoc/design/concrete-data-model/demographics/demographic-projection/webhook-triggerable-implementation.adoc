@@ -1,0 +1,377 @@
+===== WebhookTriggerable Implementation
+
+The DemographicProjection entity implements the WebhookTriggerable interface to enable real-time notification of projection updates and scenario changes to external planning systems and stakeholders.
+
+[plantuml]
+----
+@startuml
+participant "PlanningDepartment" as Service
+participant "DemographicProjection\nimplements WebhookTriggerable" as Demo
+participant "WebhookManager" as Manager
+participant "PayloadGenerator" as Payload
+participant "WebhookRegistry" as Registry
+participant "ExternalSystem" as External
+participant "NotificationService" as Notification
+
+Service -> Demo: approveDemographicProjection(projectionId)
+activate Demo
+Demo -> Demo: updateProjectionStatus()
+activate Demo
+Demo <-- Demo: projectionApproved
+deactivate Demo
+
+Demo -> Demo: triggerWebhook("PROJECTION_APPROVED", projectionId)
+activate Demo
+
+Demo -> Registry: getRegisteredWebhooks(eventType, adminAreaId)
+activate Registry
+Registry -> Registry: filterByEventType()
+Registry -> Registry: filterByAdminArea()
+Registry -> Registry: filterByProjectionType()
+Registry -> Registry: applySubscriptionRules()
+Demo <-- Registry: relevantWebhooks
+deactivate Registry
+
+Demo -> Payload: generateWebhookPayload(projectionData, webhookConfig)
+activate Payload
+Payload -> Payload: assembleBasicPayload()
+Payload -> Payload: addDemographicProjectionDetails()
+Payload -> Payload: includeRelevantScenarios()
+Payload -> Payload: formatForRecipient()
+Demo <-- Payload: formattedPayload
+deactivate Payload
+
+Demo -> Manager: dispatchWebhooks(relevantWebhooks, payload)
+activate Manager
+
+Manager -> External: HTTP POST /urban-planning/projections
+activate External
+Manager <-- External: 200 OK
+deactivate External
+
+Manager -> External: HTTP POST /education-planning/population-forecast
+activate External
+Manager <-- External: 202 Accepted
+deactivate External
+
+Manager -> External: HTTP POST /infrastructure/demand-projections
+activate External
+Manager <-- External: 200 OK
+deactivate External
+
+Manager -> Notification: sendEmailNotifications(emailSubscribers, summary)
+activate Notification
+Manager <-- Notification: emailsQueued
+deactivate Notification
+
+Demo <-- Manager: dispatchResults
+deactivate Manager
+
+Service <-- Demo: webhooksTriggered
+deactivate Demo
+
+Service -> Demo: createNewScenario(projectionId, scenarioData)
+activate Demo
+Demo -> Demo: saveScenario()
+activate Demo
+Demo <-- Demo: scenarioCreated
+deactivate Demo
+
+Demo -> Demo: triggerWebhook("SCENARIO_CREATED", scenarioData)
+activate Demo
+
+Demo -> Registry: getRegisteredWebhooks(eventType, adminAreaId)
+activate Registry
+Demo <-- Registry: scenarioWebhooks
+deactivate Registry
+
+Demo -> Payload: generateWebhookPayload(scenarioData, webhookConfig)
+activate Payload
+Demo <-- Payload: scenarioPayload
+deactivate Payload
+
+Demo -> Manager: dispatchWebhooks(scenarioWebhooks, scenarioPayload)
+activate Manager
+Manager -> External: HTTP POST /planning-scenarios
+Manager <-- External: 200 OK
+Demo <-- Manager: scenarioWebhooksDispatched
+deactivate Manager
+
+Service <-- Demo: scenarioWebhooksTriggered
+deactivate Demo
+
+Service -> Demo: registerWebhook(newWebhook)
+activate Demo
+Demo -> Registry: addWebhook(webhook)
+activate Registry
+Registry -> Registry: validateWebhookConfig()
+Registry -> Registry: storeWebhookRegistration()
+Demo <-- Registry: webhookRegistered
+deactivate Registry
+Service <-- Demo: registrationConfirmed
+deactivate Demo
+
+Service -> Demo: getRegisteredWebhooks()
+activate Demo
+Demo -> Registry: retrieveWebhooks(filterCriteria)
+activate Registry
+Demo <-- Registry: webhookList
+deactivate Registry
+Service <-- Demo: webhooks
+deactivate Demo
+@enduml
+----
+
+The DemographicProjection entity leverages the WebhookTriggerable interface to establish a real-time integration system that alerts relevant planning departments, agencies, and information systems when demographic projections are created, updated, approved, or when significant scenario changes occur. This capability ensures that forward-looking demographic insights are immediately available to planning processes across Nepal's government ecosystem.
+
+===== Webhook Event Types
+
+The implementation defines several specialized demographic projection webhook event types:
+
+1. **PROJECTION_CREATED**: Triggered when a new demographic projection is initially created
+   - Enables planning systems to track projection development from inception
+   - Allows early preparation for forthcoming demographic scenarios
+
+2. **PROJECTION_UPDATED**: Fired when significant changes are made to an existing projection
+   - Notifies dependent systems of revised demographic assumptions
+   - Enables planning updates when baseline data or methodology changes
+
+3. **PROJECTION_APPROVED**: Triggered when a projection receives official approval
+   - Signals that the projection is now suitable for formal planning purposes
+   - Initiates official planning processes that depend on validated projections
+
+4. **SCENARIO_CREATED**: Fired when a new scenario is added to a projection
+   - Notifies systems of additional demographic futures to consider
+   - Enables comparison with existing planning scenarios
+
+5. **SCENARIO_UPDATED**: Triggered when an existing scenario is significantly modified
+   - Alerts dependent systems to reassess plans based on revised scenarios
+   - Provides details on what specific parameters changed
+
+Each event type has a specialized payload structure optimized for the specific projection context and purpose.
+
+===== Administrative Area Targeting
+
+A sophisticated targeting system ensures webhooks are triggered only for relevant administrative areas:
+
+1. **Hierarchical Subscription**: Planning systems can subscribe to projections for specific administrative levels
+   - Example: Provincial planning systems receiving notifications for all district-level projections within their province
+
+2. **Thematic Area Filtering**: Subscriptions can be filtered by projection purpose
+   - Example: Education departments receiving only projections relevant to school-age population
+
+3. **Geographic Focus Areas**: Planning systems can designate priority areas for enhanced notification
+   - Example: Disaster management systems receiving detailed notifications for high-risk districts
+
+4. **Time Horizon Filtering**: Subscriptions can specify projections with particular time horizons
+   - Example: Infrastructure systems focusing on 15+ year projections for major investments
+
+This targeting ensures that planning systems receive relevant projection information without being overwhelmed by updates for areas outside their jurisdiction or focus.
+
+===== Integration with Nepal's Planning Ecosystem
+
+The webhook implementation is specifically designed to integrate with Nepal's multi-level planning structure:
+
+1. **Federal Planning Commission Integration**: Webhooks formatted for the National Planning Commission's planning systems
+   - Supports integration with periodic plan development processes
+   - Provides demographic inputs for national strategy formulation
+   - Ensures consistency across sectoral planning
+
+2. **Provincial Planning Systems**: Province-specific webhooks for provincial planning departments
+   - Customized payload formats for different provincial systems
+   - Specialized demographic indicators relevant to provincial priorities
+   - Integration with provincial development strategy tools
+
+3. **Municipal Planning Integration**: Local government planning system connections
+   - Simplified payloads appropriate for municipal planning capacity
+   - Focus on practical indicators for local development planning
+   - Support for municipal spatial planning systems
+
+4. **Sectoral Planning Systems**: Specialized webhooks for key government sectors
+   - Education planning systems (school infrastructure planning)
+   - Health sector (facility and service planning)
+   - Transport and infrastructure (demand forecasting)
+   - Water and sanitation (service requirement projection)
+
+5. **Development Partner Systems**: Integration with international development agencies
+   - World Bank, ADB, and UN planning systems
+   - Support for Nepal-specific development programs
+   - Standardized formats for international coordination
+
+This ecosystem integration ensures demographic projections flow seamlessly to relevant planning systems at all levels of Nepal's governance structure.
+
+===== Customizable Payload Formatting
+
+The implementation provides extensive customization of webhook payloads:
+
+1. **Format Adaptation**: Support for multiple data formats based on recipient requirements
+   - JSON for modern APIs
+   - XML for legacy systems
+   - CSV for data interchange
+   - Specialized formats for specific planning applications
+
+2. **Projection Detail Levels**: Configurable depth of demographic details
+   - Summary level (key indicators only)
+   - Standard level (comprehensive projection results)
+   - Detailed level (including methodological details and assumptions)
+   - Raw data level (complete projection datasets)
+
+3. **Visualization Embedding**: Optional inclusion of visualization specifications
+   - Age pyramid definitions
+   - Trend line specifications
+   - Comparative scenario visualizations
+   - Spatial distribution maps
+
+4. **Language Support**: Multi-language capacity for payload text elements
+   - English and Nepali as primary languages
+   - Support for provincial languages for local planning systems
+   - Configurable terminology for technical vs. general audiences
+
+This customization ensures that webhook notifications provide immediately usable information tailored to recipient system capabilities and requirements.
+
+===== Security and Compliance Features
+
+The webhook implementation includes robust security and compliance features:
+
+1. **Authentication Options**: Multiple secure authentication mechanisms
+   - API key authentication
+   - JWT token support
+   - OAuth 2.0 integration for government systems
+   - IP whitelisting for secure environments
+
+2. **Permission Controls**: Fine-grained access controls
+   - Projection-level access restrictions
+   - Scenario visibility limitations
+   - Confidential projection handling
+   - Official vs. draft projection distinction
+
+3. **Data Classification Handling**: Support for Nepal's government data classification
+   - Public, internal, restricted, and confidential classification
+   - Appropriate handling of sensitive population projections
+   - Compliance with Nepal's statistical data regulations
+
+4. **Audit Trail**: Comprehensive tracking of webhook activities
+   - Delivery confirmation logging
+   - Recipient access recording
+   - Usage pattern monitoring
+   - Compliance verification
+
+These security features ensure that demographic projections are shared responsibly with appropriate protections based on data sensitivity and recipient authorization.
+
+===== Webhook Registration and Management
+
+The system provides sophisticated capabilities for managing webhook subscriptions:
+
+1. **Self-Service Portal**: Web interface for government departments to manage subscriptions
+   - Department-specific webhook configuration
+   - Geographic area subscription management
+   - Event type filtering
+   - Notification preference settings
+
+2. **Approval Workflow**: Managed process for webhook registration
+   - Request submission
+   - Administrative review
+   - Access level determination
+   - Credential issuance
+
+3. **Health Monitoring**: Continuous monitoring of webhook endpoints
+   - Availability checking
+   - Performance monitoring
+   - Error rate tracking
+   - Automatic suspension of problematic endpoints
+
+4. **Testing Environment**: Sandbox for webhooks development and testing
+   - Test projection datasets
+   - Simulated scenario creation
+   - Delivery confirmation
+   - Payload validation
+
+These management capabilities ensure reliable, secure operation of the webhook ecosystem connecting demographic projections to planning systems.
+
+===== Nepal-Specific Implementation Features
+
+The webhook implementation includes several features specific to Nepal's governance and planning context:
+
+1. **Federalism Support**: Features aligned with Nepal's transition to a federal structure
+   - Multi-level planning coordination
+   - Support for evolving institutional responsibilities
+   - Handling overlapping planning jurisdictions
+   - Coordination across federal, provincial, and local systems
+
+2. **Development Planning Cycle Integration**: Synchronization with Nepal's planning cycles
+   - Five-year periodic plan integration
+   - Annual planning process support
+   - Mid-term review coordination
+   - Plan formulation phase alerts
+
+3. **Disaster Recovery Considerations**: Special handling for disaster scenarios
+   - Priority delivery for disaster-zone projections
+   - Fallback mechanisms during connectivity disruptions
+   - Alternative delivery paths for critical information
+   - Emergency projection scenario flagging
+
+4. **Connectivity-Challenged Solutions**: Accommodations for Nepal's connectivity reality
+   - Compressed payloads for low-bandwidth areas
+   - Queued delivery for intermittently connected systems
+   - SMS fallback for critical notifications
+   - Batched delivery options for bandwidth conservation
+
+These Nepal-specific features ensure the webhook system functions effectively within Nepal's unique governance, infrastructure, and planning environment.
+
+===== Real-World Example: Urban Planning Integration
+
+When a new demographic projection is approved for Pokhara Metropolitan City:
+
+1. The `PROJECTION_APPROVED` webhook is triggered, notifying:
+   - Pokhara's Urban Planning Division with detailed spatial distribution data
+   - Gandaki Province Planning Commission with summary projection indicators
+   - National Urban Development Strategy monitoring system with growth metrics
+   - Local infrastructure planning system with population pressure points
+
+2. The webhook payload includes:
+   - 20-year population projections by ward
+   - Age-sex structure projections for 5-year intervals
+   - Household formation projections for housing planning
+   - School-age population projections for education infrastructure
+   - Different scenario results (baseline, high growth, low growth)
+
+3. Upon receipt, these systems automatically:
+   - Update urban expansion boundary models
+   - Recalculate infrastructure capacity requirements
+   - Adjust capital investment prioritization
+   - Revise zoning recommendations
+   - Update traffic demand models
+
+4. The Urban Planning Division receives an email notification with a summary of key changes from previous projections, highlighting areas requiring attention.
+
+This integration ensures urban planning decisions are based on the latest demographic projections, facilitating evidence-based planning that anticipates population changes rather than merely reacting to them.
+
+===== Integration with Specialized Planning Tools
+
+Beyond basic notifications, the webhook system enables sophisticated integration with specialized planning tools:
+
+1. **Spatial Planning Systems**: Direct integration with GIS and spatial planning tools
+   - Population density projections mapped to spatial units
+   - Growth corridor identification
+   - Service area population forecasts
+   - Settlement pattern projections
+
+2. **Infrastructure Sizing Tools**: Connection to infrastructure capacity planning
+   - Water system demand projections
+   - Electricity load forecasting
+   - Transportation network capacity planning
+   - Waste management facility sizing
+
+3. **Social Service Planning**: Integration with service delivery planning
+   - School capacity requirements
+   - Healthcare facility projections
+   - Social service coverage analysis
+   - Age-specific service demand forecasting
+
+4. **Budget Planning Systems**: Financial impact assessment
+   - Revenue projections based on population growth
+   - Capital investment requirement estimates
+   - Service cost projections
+   - Financial sustainability analysis
+
+These specialized integrations transform demographic projections from static reports into dynamic inputs for planning tools, significantly enhancing the practical utility of population forecasts in Nepal's development planning.

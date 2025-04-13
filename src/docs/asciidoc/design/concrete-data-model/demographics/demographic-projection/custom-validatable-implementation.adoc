@@ -1,0 +1,277 @@
+===== CustomValidatable Implementation
+
+The DemographicProjection entity implements the CustomValidatable interface to ensure projection data integrity and analytical soundness through sophisticated validation mechanisms.
+
+[plantuml]
+----
+@startuml
+participant "PlanningDepartment" as Service
+participant "DemographicProjection\nimplements CustomValidatable" as Demo
+participant "ValidationEngine" as Engine
+participant "MethodologyValidator" as Methodology
+participant "DemographicAssumptionValidator" as Assumption
+participant "ProjectionConsistencyValidator" as Consistency
+participant "ScenarioIntegrityValidator" as Scenario
+
+Service -> Demo: validate()
+activate Demo
+
+Demo -> Demo: prepareForValidation()
+activate Demo
+Demo -> Demo: gatherDemographicAssumptions()
+Demo -> Demo: collectScenarioParameters()
+Demo -> Demo: retrieveHistoricalDemographics()
+Demo -> Demo: assembleValidationContext()
+Demo <-- Demo: validationContext
+deactivate Demo
+
+Demo -> Engine: validateDemographicProjection(context)
+activate Engine
+
+Engine -> Methodology: validateMethodology(projection)
+activate Methodology
+Methodology -> Methodology: checkMethodologicalSoundness()
+Methodology -> Methodology: validateBaselineDataQuality()
+Methodology -> Methodology: assessTimeHorizonAppropriateness()
+Methodology -> Methodology: evaluateConfidenceLevelAssignment()
+Engine <-- Methodology: methodologyValidationResults
+deactivate Methodology
+
+Engine -> Assumption: validateDemographicAssumptions(projection)
+activate Assumption
+Assumption -> Assumption: checkFertilityAssumptions()
+Assumption -> Assumption: validateMortalityAssumptions()
+Assumption -> Assumption: assessMigrationAssumptions()
+Assumption -> Assumption: evaluateAssumptionConsistency()
+Engine <-- Assumption: assumptionValidationResults
+deactivate Assumption
+
+Engine -> Consistency: validateProjectionConsistency(projection)
+activate Consistency
+Consistency -> Consistency: checkDemographicBalanceEquations()
+Consistency -> Consistency: validateAgeStructureProgression()
+Consistency -> Consistency: assessTemporalContinuity()
+Consistency -> Consistency: verifyProjectionPoints()
+Engine <-- Consistency: consistencyValidationResults
+deactivate Consistency
+
+Engine -> Scenario: validateScenarioIntegrity(projection)
+activate Scenario
+Scenario -> Scenario: checkScenarioCompleteness()
+Scenario -> Scenario: validateInterScenarioConsistency()
+Scenario -> Scenario: assessScenarioDivergence()
+Scenario -> Scenario: evaluateProbabilityAssignments()
+Engine <-- Scenario: scenarioValidationResults
+deactivate Scenario
+
+Engine -> Engine: compileFinalValidationResult()
+activate Engine
+Engine -> Engine: aggregateValidationResults()
+Engine -> Engine: prioritizeValidationIssues()
+Engine -> Engine: generateRecommendations()
+Engine -> Engine: determineOverallValidity()
+Engine <-- Engine: finalValidationResult
+deactivate Engine
+
+Demo <-- Engine: validationResults
+deactivate Engine
+
+Demo -> Demo: handleValidationResults(results)
+activate Demo
+Demo -> Demo: updateValidationStatus()
+Demo -> Demo: storeValidationIssues()
+Demo -> Demo: applyCorrectionSuggestions()
+Demo -> Demo: logValidationProcess()
+Demo <-- Demo: processedResults
+deactivate Demo
+
+Service <-- Demo: validationResponse
+deactivate Demo
+
+Service -> Demo: registerValidator(customValidator)
+activate Demo
+Demo -> Demo: addToValidatorRegistry(customValidator)
+Service <-- Demo: validatorRegistered
+deactivate Demo
+
+Service -> Demo: getValidationRules()
+activate Demo
+Demo -> Demo: compileDemographicProjectionRules()
+Service <-- Demo: projectionValidationRules
+deactivate Demo
+@enduml
+----
+
+The DemographicProjection entity implements CustomValidatable to enforce rigorous validation rules for population projections, ensuring that demographic forecasts are methodologically sound, internally consistent, and plausible given both demographic theory and Nepal's specific context.
+
+===== Demographic-Specific Validation Rules
+
+The implementation includes specialized validation rules that address the unique characteristics of demographic projections:
+
+*Demographic Balance Equation Validation*
+
+Every demographic projection must satisfy fundamental demographic equations across time periods:
+
+```
+Population(t+n) = Population(t) + Births(t,t+n) - Deaths(t,t+n) + Immigration(t,t+n) - Emigration(t,t+n)
+```
+
+The validation engine checks these relationships across all projection points, ensuring mathematical consistency. For Nepal's context, this includes specialized handling for:
+
+1. **International Migration Validation**: Verifying that migration assumptions reflect realistic patterns for Nepal, particularly regarding labor migration to Gulf countries, Malaysia, and India
+
+2. **Age-Cohort Progression**: Ensuring that age cohorts progress logically over time, with appropriate survival rates applied
+
+3. **Fertility Pattern Validation**: Verifying that fertility assumptions produce plausible birth numbers given the female population of reproductive age
+
+*Projection Parameter Plausibility*
+
+The system validates that projection parameters fall within plausible ranges:
+
+1. **Fertility Bounds**: Total Fertility Rate projections must follow plausible trajectories based on demographic transition theory and Nepal's historical patterns
+   - Example: TFR typically doesn't increase significantly in post-transition societies unless due to specific policy interventions
+
+2. **Mortality Improvement Pacing**: Life expectancy improvements must follow realistic patterns
+   - Example: Life expectancy typically doesn't increase more than 0.5 years annually in Nepal's development context
+
+3. **Migration Rate Constraints**: Net migration rates must reflect realistic magnitudes
+   - Example: Net outmigration typically doesn't exceed 2% of working-age population annually in Nepal's context
+
+4. **Age-Specific Parameter Validation**: Age-specific rates (fertility, mortality, migration) must follow plausible age patterns
+   - Example: Age-specific fertility rates must follow a biologically plausible distribution
+
+*Methodological Validation*
+
+The system validates the methodological approaches used in projections:
+
+1. **Method-Horizon Alignment**: Ensuring that the projection methodology is appropriate for the selected time horizon
+   - Example: Simple growth rate methods are flagged as inappropriate for projections exceeding 10 years
+
+2. **Data Quality Assessment**: Validating that baseline data has sufficient quality for the chosen projection method
+   - Example: Cohort component methods require reliable age-sex structures, which may not be available for all administrative areas
+
+3. **Uncertainty Treatment**: Verifying that uncertainty is appropriately handled given the projection purpose
+   - Example: Long-range planning projections should include multiple scenarios or confidence intervals
+
+4. **Parameter Interdependency**: Checking that related demographic parameters are treated consistently
+   - Example: Fertility, mortality, and migration assumptions should reflect consistent socioeconomic development assumptions
+
+*Scenario Consistency Validation*
+
+For multi-scenario projections, the system performs specialized validations:
+
+1. **Scenario Completeness**: Ensuring all required scenarios (typically baseline, high, and low variants) are included
+
+2. **Parameter Consistency**: Verifying that parameter changes across scenarios are internally consistent
+   - Example: A "high growth" scenario should not combine high fertility with high outmigration
+
+3. **Sufficient Divergence**: Checking that scenarios are meaningfully different to support planning decisions
+   - Example: High and low variants should differ sufficiently to capture uncertainty ranges
+
+4. **Probability Assignment**: Validating that scenario probability weights (if used) sum to 100% and reflect reasonable assessments
+
+===== Nepal-Specific Validation Adaptations
+
+The validation implementation includes several adaptations specific to Nepal's demographic context:
+
+1. **Ecological Zone Validators**: Different validation rules for mountain, hill, and terai (plains) regions, which have distinct demographic patterns and data quality challenges
+
+2. **Migration Pattern Validation**: Specialized validation for international labor migration effects, a key demographic driver in Nepal
+   - Verification that working-age male outmigration assumptions align with district migration history
+   - Validation that female-headed household projections align with male outmigration assumptions
+
+3. **Urban Growth Constraints**: Nepal-specific urban growth validation that considers topographical constraints
+   - Example: Flagging implausible growth projections for municipalities in steep mountain areas with limited buildable land
+
+4. **Earthquake Recovery Validation**: Special validation rules for districts affected by the 2015 earthquake
+   - Verification that population rebuilding assumptions are consistent with reconstruction progress
+   - Validation that return migration patterns follow plausible recovery timelines
+
+5. **Federalism Transition Validation**: Validation specifically for projections spanning Nepal's 2017 federal restructuring
+   - Ensures historical data recalibration to match current administrative boundaries
+   - Validates assumptions about population redistribution to new administrative centers
+
+These Nepal-specific validations ensure that demographic projections reflect the country's unique demographic realities and avoid projections that might be plausible in other contexts but unrealistic in Nepal's specific geographic, social, and economic environment.
+
+===== Dynamic Validation Registration
+
+The CustomValidatable implementation allows for dynamic registration of specialized validators:
+
+1. **Purpose-Specific Validators**: Different validators for different projection purposes
+   - Education planning validators with specialized rules for school-age population projections
+   - Healthcare validators focused on age-specific healthcare utilization assumptions
+   - Infrastructure validators emphasizing household formation and settlement patterns
+
+2. **Administrative-Level Validators**: Validators customized to different administrative levels
+   - Province-level validators with rules appropriate for large areas and higher data quality
+   - Municipality-level validators with adjustments for smaller populations and potentially lower data quality
+
+3. **Scenario-Type Validators**: Validators specialized for different types of projection scenarios
+   - Disaster impact validators for emergency planning scenarios
+   - Climate change validators for long-term adaptation scenarios
+   - Economic development validators for investment planning scenarios
+
+4. **Temporal Validators**: Validators that apply different rules based on projection horizon
+   - Short-term validators emphasizing current trend extrapolation
+   - Medium-term validators focusing on cohort effects and policy impacts
+   - Long-term validators emphasizing demographic transition theory
+
+These dynamic validators can be registered at runtime, allowing the system to adapt validation to specific projection contexts while maintaining a consistent validation framework.
+
+===== Validation Response Handling
+
+The implementation provides sophisticated handling of validation results:
+
+1. **Tiered Severity Classification**: Validation issues are classified from "Critical" (mathematical impossibilities or fundamental demographic inconsistencies) to "Advisory" (unusual but possible patterns)
+
+2. **Contextual Recommendations**: Each validation issue includes specific recommendations for resolution, tailored to the type of demographic projection
+
+3. **Auto-Correction Suggestions**: Where appropriate, the system suggests specific corrections with demographic justification
+
+4. **Validation History**: Maintains a record of validation attempts, issues, and resolutions for audit purposes
+
+5. **Confidence Level Adjustment**: Automatically adjusts the confidence level of projections based on validation results
+
+This approach ensures that demographic projections maintain high quality standards while providing flexibility for Nepal's diverse demographic contexts.
+
+===== Integration with Projection Workflow
+
+The validation system integrates with the projection workflow through several mechanisms:
+
+1. **Interactive Validation**: During projection development, provides real-time feedback on parameter plausibility
+
+2. **Approval Workflow Integration**: Formal validation is a required step before projections can transition to "Approved" status
+
+3. **Revision Tracking**: When projections are revised, validation tracks which issues were addressed and which remain
+
+4. **Public Release Gating**: Only projections that pass critical validations can be marked for public release
+
+These integrations ensure that validation is an integral part of the projection process rather than an optional afterthought.
+
+===== Real-World Example: Validating Municipality Growth Projections
+
+When validating a demographic projection for Bharatpur Metropolitan City:
+
+1. The system checks whether the projected population growth rate (5.2% annually) is plausible given:
+   - Historical growth patterns (4.7% annually over the past decade)
+   - Regional migration patterns (strong in-migration from surrounding districts)
+   - Available buildable land within the municipality's boundaries
+   - Infrastructure capacity constraints
+
+2. The system validates that projected age structures follow plausible trajectories:
+   - Working-age population growth aligns with economic development patterns
+   - Child population reflects projected fertility and schooling migration
+   - Elderly population growth reflects improving life expectancy
+
+3. The system verifies scenario consistency:
+   - High growth scenario appropriately adjusts all relevant parameters
+   - Low growth scenario presents a coherent alternative demographic pathway
+   - Scenarios show sufficient divergence to be useful for planning
+
+4. Upon detecting that the original 25-year projection using simplified growth methods exceeds plausible ranges, the system:
+   - Flags this as a critical methodological issue
+   - Recommends limiting growth rate extrapolation to 10 years
+   - Suggests switching to a component method for longer horizons
+   - Provides specific guidelines for Nepal-appropriate long-term assumptions
+
+This real-world example demonstrates how the CustomValidatable implementation ensures that demographic projections used for municipal planning in Nepal are methodologically sound, internally consistent, and contextually appropriate.

@@ -1,0 +1,147 @@
+===== Education Capacity Planning
+
+*Scenario:* Using demographic projections to plan education infrastructure and resource allocation
+
+[plantuml]
+----
+@startuml
+actor "Ministry of Education\nPlanning Division" as Education
+actor "School Infrastructure\nCoordinator" as Coordinator
+participant "DemographicProjection" as Demo
+participant "StudentPopulation\nForecastService" as Student
+participant "TeacherRequirement\nService" as Teacher
+participant "FacilityPlanningService" as Facility
+participant "ResourceAllocationService" as Resource
+
+Education -> Demo: createEducationProjection(provinceId, 15)
+activate Demo
+Demo -> Demo: retrieveBaselineEducationDemographics()
+Demo -> Demo: calculatePopulationTrends()
+Demo -> Demo: analyzeMigrationImpact()
+Demo -> Demo: projectAgeCohorts()
+Education <-- Demo: educationDemographicProjection
+deactivate Demo
+
+Education -> Student: projectStudentEnrollment()
+activate Student
+Student -> Student: calculateSchoolAgePopulations()
+Student -> Student: analyzeEnrollmentRateTrends()
+Student -> Student: assessRetentionPatterns()
+Student -> Student: evaluateEducationPathways()
+Student -> Student: projectSpecialEducationNeeds()
+Education <-- Student: studentProjections
+deactivate Student
+
+Education -> Teacher: calculateTeacherRequirements()
+activate Teacher
+Teacher -> Teacher: analyzeStudentTeacherRatios()
+Teacher -> Teacher: projectTeacherRetirement()
+Teacher -> Teacher: assessSubjectSpecificNeeds()
+Teacher -> Teacher: calculateRecruitmentTargets()
+Teacher -> Teacher: projectTrainingRequirements()
+Education <-- Teacher: teacherNeedsAssessment
+deactivate Teacher
+
+Coordinator -> Facility: planFacilityRequirements()
+activate Facility
+Facility -> Facility: assessExistingCapacity()
+Facility -> Facility: calculateClassroomNeeds()
+Facility -> Facility: analyzeSpecialFacilityRequirements()
+Facility -> Facility: evaluateGeographicDistribution()
+Facility -> Facility: projectMaintenanceNeeds()
+Coordinator <-- Facility: facilityPlanningReport
+deactivate Facility
+
+Coordinator -> Resource: calculateResourceAllocations()
+activate Resource
+Resource -> Resource: estimateOperationalCosts()
+Resource -> Resource: projectCapitalRequirements()
+Resource -> Resource: analyzeBudgetSustainability()
+Resource -> Resource: calculatePerStudentExpenditures()
+Resource -> Resource: projectScholarshipRequirements()
+Coordinator <-- Resource: resourcePlan
+deactivate Resource
+
+Education -> Demo: analyzeAlternativeScenarios()
+activate Demo
+Demo -> Demo: modelHighEnrollmentScenario()
+Demo -> Demo: modelPrivateEducationShift()
+Demo -> Demo: modelDistrict-LevelChanges()
+Demo -> Demo: assessPolicyInterventionImpacts()
+Education <-- Demo: scenarioAnalysis
+deactivate Demo
+
+Coordinator -> Coordinator: developPhaseImplementationPlan()
+activate Coordinator
+Coordinator -> Coordinator: prioritizeCapacityInvestments()
+Coordinator -> Coordinator: sequenceTeacherRecruitment()
+Coordinator -> Coordinator: establishConstructionSchedule()
+Coordinator -> Coordinator: developMaintenanceStrategy()
+deactivate Coordinator
+
+Education -> Education: finalizeEducationCapacityPlan()
+activate Education
+Education -> Education: allocateFiveYearBudget()
+Education -> Education: establishMonitoringFramework()
+Education -> Education: createContingencyPlans()
+Education -> Education: approveImplementationStrategy()
+deactivate Education
+
+Education -> Coordinator: implementCapacityPlan()
+@enduml
+----
+
+*Real-World Context:*
+Gandaki Province's Education Planning Division is developing a 15-year education infrastructure plan to accommodate changing demographic patterns across its 11 districts. The province faces varied demographic challenges: urban areas experiencing rapid growth while remote mountain districts face population decline, creating a complex planning environment.
+
+The process begins with creating detailed student population projections. Baseline data shows the province currently has 742,000 school-age children (5-18 years), with substantial geographic variation in enrollment rates - from 96.8% in urban Kaski district to just 78.3% in remote Manang. Current demographic trends indicate ongoing rural-to-urban migration, particularly to the provincial capital Pokhara and surrounding areas.
+
+The demographic projection analyzes population trends across different age cohorts and geographies. The system projects that overall school-age population will experience modest growth of 8.3% over 15 years, reaching approximately 803,000 by 2037. However, this provincial average masks dramatic geographic disparities. Urban districts are projected to see school-age population increases of 17-22%, while remote mountain districts may experience declines of 12-18%. Migration impact analysis shows that approximately 62% of this redistribution is driven by family migration to urban areas, while 38% reflects urbanization of previously rural areas within districts.
+
+The Student Population Forecast Service translates these demographic projections into specific enrollment forecasts. Grade-specific projections show early grades (1-5) growing at a slower rate than secondary grades (9-12), reflecting both demographic shifts and increasing retention rates. The system projects secondary enrollment to grow 23.6% over the planning period - significantly above population growth - as dropout rates decline. Special education needs analysis projects a 42% increase in students requiring specialized services, driven both by population growth and improved identification systems.
+
+The Teacher Requirement Service calculates future staffing needs based on these student projections. Using target student-teacher ratios of 30:1 for primary and 25:1 for secondary, the province will need approximately 1,280 additional teachers over 15 years. However, retirement projections show that 2,840 existing teachers (41% of the workforce) will retire during this period, creating a total recruitment need of 4,120 teachers. Subject-specific analysis shows particularly acute needs in mathematics, science and English, where current shortages will be exacerbated by retirement patterns.
+
+The Facility Planning Service conducts a comprehensive assessment of infrastructure requirements. Classroom needs vary dramatically by location: urban districts require 1,840 new classrooms over 15 years, while remote districts show 420 excess classrooms. However, simple consolidation is complicated by geography - even declining-population areas need minimum viable schools within reasonable distance of communities. Geographic distribution analysis identifies 14 high-growth areas that will require entirely new school facilities, primarily in peri-urban areas around Pokhara and district headquarters. The condition assessment of existing facilities shows 36% of classrooms require significant renovation within the planning period.
+
+The Resource Allocation Service develops comprehensive financial projections. Operational costs are projected to increase by 47% in nominal terms, driven by both enrollment growth and quality improvements. Capital requirements for new construction and renovation are estimated at NPR 12.4 billion (approximately USD 103 million) over 15 years. Budget sustainability analysis reveals that provincial educational resources are projected to grow by only 32% during the same period, creating a significant funding gap that will require national support or alternative financing strategies.
+
+Based on this comprehensive analysis, the School Infrastructure Coordinator develops a phased implementation strategy:
+
+1. **Short-Term Priorities (1-5 Years)**:
+   - Address critical maintenance backlog in existing facilities
+   - Begin construction of 5 new schools in highest-growth areas
+   - Establish teacher training pipeline with university partners to address retirement wave
+   - Implement targeted early-grade interventions in low-enrollment districts
+
+2. **Medium-Term Developments (6-10 Years)**:
+   - Complete major expansion of secondary facilities in urban centers
+   - Begin strategic consolidation of facilities in declining-population districts
+   - Develop specialized facilities for vocational education streams
+   - Implement comprehensive teacher recruitment incentives for remote areas
+
+3. **Long-Term Investments (11-15 Years)**:
+   - Complete network optimization with final consolidations and new constructions
+   - Develop centers of excellence for specialized education streams
+   - Implement technology-enabled distance learning for small remote schools
+   - Establish infrastructure maintenance endowment for long-term sustainability
+
+The final Education Capacity Plan establishes clear implementation responsibilities across government levels: the provincial government will handle secondary school infrastructure and teacher training, while coordinating with local governments responsible for primary education. The plan incorporates flexibility mechanisms including demographic monitoring checkpoints every three years to adjust projections based on actual population changes, and contingency plans for unexpected migration shifts or policy changes.
+
+This evidence-based approach enables Gandaki Province to optimize education resources across a geographically diverse region, ensuring that infrastructure development anticipates rather than reacts to demographic shifts, while addressing the province's dual challenges of urban growth and rural decline.
+
+===== Special Considerations for Nepal's Education Context
+
+The education capacity planning application incorporates several considerations specific to Nepal's context:
+
+1. **Geographic Accessibility**: Planning that acknowledges Nepal's challenging topography, where walking distance to school is a critical factor in enrollment, particularly for young children and girls
+
+2. **Multilingual Needs**: Capacity planning that accommodates mother tongue-based multilingual education in early grades, as guaranteed in Nepal's constitution
+
+3. **Post-Earthquake Reconstruction**: Integration with ongoing reconstruction efforts following the 2015 earthquake, which damaged or destroyed over 7,000 school buildings
+
+4. **Climate Vulnerability**: Forward-looking facility design that addresses increased climate risks (landslides, floods) affecting schools in vulnerable areas
+
+5. **Gender-Specific Facilities**: Planning that includes separate sanitation facilities and other infrastructure elements critical for girls' participation, particularly at secondary level
+
+By incorporating these contextual factors, demographic projections become a powerful tool for education capacity planning that addresses Nepal's unique geographic, cultural, and developmental realities, leading to more equitable and sustainable education infrastructure.

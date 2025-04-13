@@ -1,0 +1,159 @@
+===== Retirement System Sustainability Analysis
+
+*Scenario:* Using demographic projections to assess long-term viability of pension systems and elderly support mechanisms
+
+[plantuml]
+----
+@startuml
+actor "National Social Security\nPlanning Department" as Security
+actor "Pension Reform\nTaskforce" as Taskforce
+participant "DemographicProjection" as Demo
+participant "AgeStructureService" as Age
+participant "PensionModelingService" as Pension
+participant "ContributionAnalysisService" as Contribution
+participant "ElderlyWelfareService" as Welfare
+
+Security -> Demo: createRetirementDemographicProjection(countryId, 30)
+activate Demo
+Demo -> Demo: retrieveBaselineDemographics()
+Demo -> Demo: projectPopulationAging()
+Demo -> Demo: analyzeLifeExpectancyTrends()
+Demo -> Demo: assessFormalSectorParticipation()
+Security <-- Demo: retirementDemographicProjection
+deactivate Demo
+
+Security -> Age: analyzeAgingDynamics()
+activate Age
+Age -> Age: calculateDependencyRatioProjections()
+Age -> Age: assessOldAgeSupportRatio()
+Age -> Age: analyzeDisabilityPrevalenceByAge()
+Age -> Age: evaluateGenderLongevityDifferentials()
+Age -> Age: projectExtendedFamilyStructures()
+Security <-- Age: agingAnalysis
+deactivate Age
+
+Security -> Pension: modelPensionSystemDynamics()
+activate Pension
+Pension -> Pension: calculateContributorBeneficiaryRatio()
+Pension -> Pension: projectFundingRequirements()
+Pension -> Pension: assessSystemDependencyRatio()
+Pension -> Pension: modelReplacementRates()
+Pension -> Pension: analyzeSystemSustainabilityGap()
+Security <-- Pension: pensionSystemModel
+deactivate Pension
+
+Taskforce -> Contribution: analyzeContributionBase()
+activate Contribution
+Contribution -> Contribution: assessPayrollCoverageProjections()
+Contribution -> Contribution: modelContributionSufficiency()
+Contribution -> Contribution: analyzeFormalSectorGrowth()
+Contribution -> Contribution: evaluateComplianceRates()
+Contribution -> Contribution: projectRevenueStreams()
+Taskforce <-- Contribution: contributionAnalysis
+deactivate Contribution
+
+Taskforce -> Welfare: assessNonContributoryNeeds()
+activate Welfare
+Welfare -> Welfare: estimateElderlyCoverageGap()
+Welfare -> Welfare: analyzePovertyPrevalenceInElderly()
+Welfare -> Welfare: assessTraditionalSupportErosion()
+Welfare -> Welfare: evaluateVulnerableElderlyDistribution()
+Welfare -> Welfare: projectWelfareCosts()
+Taskforce <-- Welfare: welfareNeedsAssessment
+deactivate Welfare
+
+Security -> Demo: modelPolicyInterventionScenarios()
+activate Demo
+Demo -> Demo: simulateRetirementAgeChange()
+Demo -> Demo: modelContributionRateAdjustments()
+Demo -> Demo: evaluateTieredBenefitStructures()
+Demo -> Demo: projectUniversalBasicPensionCosts()
+Security <-- Demo: policyScenarioOutcomes
+deactivate Demo
+
+Taskforce -> Taskforce: developPensionReformStrategy()
+activate Taskforce
+Taskforce -> Taskforce: designMultiPillarPensionStructure()
+Taskforce -> Taskforce: createFundingTransitionMechanism()
+Taskforce -> Taskforce: establishGovernanceFramework()
+Taskforce -> Taskforce: developImplementationRoadmap()
+deactivate Taskforce
+
+Security -> Security: finalizePensionReformPlan()
+activate Security
+Security -> Security: createLegislativeProposals()
+Security -> Security: establishFundingMechanisms()
+Security -> Security: developEducationCampaign()
+Security -> Security: createMonitoringFramework()
+deactivate Security
+
+Security -> Taskforce: implementPensionReforms()
+@enduml
+----
+
+*Real-World Context:*
+Nepal's Social Security Planning Department is conducting a comprehensive 30-year assessment of retirement system sustainability as the country develops its first comprehensive pension system while facing rapid demographic aging. The department must balance expanding coverage beyond the current limited formal sector schemes while ensuring long-term financial viability.
+
+The process begins with creating detailed demographic projections focusing on Nepal's aging trajectory. The baseline data shows that currently only 7.3% of Nepal's population is age 65 and above, but this belies a rapidly changing age structure resulting from dramatic fertility decline (from 4.6 children per woman in 2000 to 1.9 today). Life expectancy has improved significantly, reaching 71.9 years, up from 62.3 years in 2000, with further improvements anticipated. 
+
+The Demographic Projection system analyzes these trends to provide a 30-year outlook. The elderly population (65+) is projected to grow from the current 2.2 million to approximately 6.1 million by 2052, comprising 16.8% of the total population. More critically, the old-age dependency ratio (ratio of elderly to working-age population) is projected to more than triple from 12.5% to 37.8%, creating significant pressure on support systems. Female life expectancy exceeds male by 3.4 years, resulting in a gender imbalance at older ages that becomes more pronounced in later decades.
+
+The Age Structure Service analyzes the implications of these demographic shifts. The old-age support ratio (number of working-age adults per elderly person) is projected to decline from 8.0 currently to just 2.6 by 2052. Disability prevalence analysis shows that age-related disability is projected to increase 218% over the same period, with approximately 39% of those over 75 requiring significant care by 2052. Traditional family support structures are evolving rapidly, with projections showing multigenerational households declining from 68% to approximately 41% of elderly living arrangements.
+
+The Pension Modeling Service examines the implications for Nepal's emerging formal pension systems. The contributor-beneficiary ratio in the contributory Social Security Fund (SSF) is projected to decline from 9.2 contributors per beneficiary currently to just 2.1 by 2052 as the system matures and the workforce ages. Without reform, this would require contribution rates to rise from the current 31% of salary (combined employer-employee) to approximately 63% to maintain benefits, a level economically unsustainable. The system dependency ratio analysis shows the current design becoming financially unsustainable by approximately 2038 under current parameters.
+
+The Contribution Analysis Service examines the potential contributor base for an expanded pension system. Currently, only 18% of Nepal's workforce is in the formal sector and covered by mandatory pension schemes. While formal sector employment is projected to grow to approximately 32% by 2052, this still leaves the majority of workers uncovered. Compliance analysis shows collection rates at only 83% of formal sector workers, with significant evasion among smaller employers. Revenue projections under current parameters show the system facing cash flow deficits beginning around 2042.
+
+The Elderly Welfare Service assesses the needs of those outside formal pension systems. Coverage gap analysis shows that approximately 78% of current elderly receive no formal pension, with universal elderly allowance (currently NPR 4,000 monthly, approximately USD 33) providing the only social protection for most. Poverty analysis shows 25.8% of elderly currently living below the poverty line, with particularly high rates among elderly women in rural areas (38.4%). Traditional support erosion analysis confirms that migration, urbanization, and changing family structures are reducing traditional elderly support mechanisms, with remittance-dependent elderly particularly vulnerable to future shocks.
+
+Based on this comprehensive assessment, the Pension Reform Taskforce develops a multi-faceted strategy with several key components:
+
+1. **Multi-Pillar Pension Structure**: Creation of an integrated national system with:
+   - Pillar 0: Expanded universal basic pension for all elderly (poverty prevention)
+   - Pillar 1: Reformed mandatory contributory system for formal sector
+   - Pillar 2: Auto-enrollment matching contribution scheme for informal sector
+   - Pillar 3: Voluntary supplementary savings with tax incentives
+
+2. **Parametric Reforms**: Adjustments to ensure sustainability of the formal system:
+   - Gradual increase in retirement age from 60 to 65 years over a 15-year period
+   - Adjustment of benefit formulas to ensure actuarial fairness
+   - Introduction of partial indexation mechanism for benefits
+   - Implementation of progressive benefit structure favoring lower-income contributors
+
+3. **Expanded Coverage Mechanisms**: Programs to increase protection:
+   - Simplified contribution system for informal sector workers via mobile platforms
+   - Matching government contributions for low-income workers
+   - Integration with cooperatives and microfinance for rural areas
+   - Special provisions for categories like agricultural workers and self-employed
+
+4. **Care System Integration**: Recognition of elderly care needs:
+   - Disability supplements within the pension system
+   - Development of community-based care services
+   - Caregiver allowances for families supporting elderly
+   - Subsidized institutional care for elderly without family support
+
+5. **Funding Sustainability**: Measures to ensure financial viability:
+   - Creation of sovereign pension reserve fund with dedicated revenue streams
+   - Diversification of investment portfolio including infrastructure investments
+   - Introduction of social pension tax as dedicated funding source
+   - Explicit budget transfers to cover policy priorities like rural coverage
+
+The National Social Security Planning Department establishes clear timeline and targets: implement universal basic pension expansion within 3 years, complete parametric reforms of formal sector pensions within 5 years, achieve 50% pension coverage of informal sector within 10 years, and fully implement the integrated multi-pillar system within 15 years. The plan includes regular actuarial reviews every 3 years to make parametric adjustments as demographic and economic conditions evolve.
+
+This evidence-based approach enables Nepal to develop a pension system that balances immediate coverage needs with long-term sustainability, rather than implementing unsustainable promises or maintaining inadequate coverage as the population rapidly ages.
+
+===== Special Considerations for Nepal's Retirement Context
+
+The retirement system sustainability analysis incorporates several considerations specific to Nepal's context:
+
+1. **Migration and Remittance Effects**: Analysis of how large-scale labor migration affects both pension contributions (reduced domestic workforce) and elderly support (remittance-dependent elderly)
+
+2. **Rural-Urban Disparities**: Recognition of vastly different circumstances between urban formal workers and rural agricultural households requiring differentiated pension approaches
+
+3. **Gender Dimensions**: Special attention to women's pension challenges, including lower formal labor force participation, longer life expectancy, and higher old-age poverty rates
+
+4. **Limited Financial Infrastructure**: Adaptation of pension mechanisms to work in areas with minimal banking presence, including mobile solutions and local cooperative integration
+
+5. **Federalism Implementation**: Consideration of how Nepal's young federal structure affects pension administration, with provincial and local governments potentially playing roles in a national system
+
+By incorporating these contextual factors, demographic projections become a powerful tool for designing pension systems that address Nepal's unique social, economic and demographic realities, rather than simply importing models from countries with different circumstances.
