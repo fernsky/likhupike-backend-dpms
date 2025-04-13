@@ -4,168 +4,65 @@
     <meta charset="UTF-8" />
   </head>
   <body>
-    <footer th:fragment="footer" class="bg-dark text-white py-4 mt-auto">
+    <footer th:fragment="footer" class="bg-dark text-white py-5 mt-auto">
       <div class="container">
-        <div class="row g-4">
-          <div class="col-lg-4">
+        <div class="row g-4 justify-content-between">
+          <div class="col-lg-5">
             <div class="mb-4">
               <h5 class="text-white mb-3 d-flex align-items-center">
-                <i class="fas fa-id-card me-2"></i>
-                <span th:text="#{app.name}">Digital Profile System</span>
-              </h5>
-              <p class="text-white-50 mb-3">
-                A comprehensive digital identity and document management system
-                empowering citizens with secure, accessible, and efficient
-                government services.
-              </p>
-              <div class="social-links">
-                <a
-                  href="#"
-                  class="btn btn-outline-light btn-sm rounded-circle me-2"
+                <i class="fas fa-graduation-cap me-2"></i>
+                <span th:text="#{app.name}"
+                  >Intensive Study & Research Center</span
                 >
+              </h5>
+              <p class="text-white-50 mb-4">
+                Empowering minds through rigorous academic excellence and
+                innovative research methodologies. Creating tomorrow's leaders
+                through knowledge, insight, and discovery.
+              </p>
+              <div class="d-flex gap-3">
+                <a href="#" class="social-icon" aria-label="Facebook">
                   <i class="fab fa-facebook-f"></i>
                 </a>
-                <a
-                  href="#"
-                  class="btn btn-outline-light btn-sm rounded-circle me-2"
-                >
+                <a href="#" class="social-icon" aria-label="Twitter">
                   <i class="fab fa-twitter"></i>
                 </a>
-                <a
-                  href="#"
-                  class="btn btn-outline-light btn-sm rounded-circle me-2"
-                >
+                <a href="#" class="social-icon" aria-label="LinkedIn">
                   <i class="fab fa-linkedin-in"></i>
                 </a>
-                <a href="#" class="btn btn-outline-light btn-sm rounded-circle">
+                <a href="#" class="social-icon" aria-label="Instagram">
                   <i class="fab fa-instagram"></i>
                 </a>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-2 col-md-4">
-            <h6 class="text-uppercase text-white-50 mb-3">Quick Links</h6>
-            <ul class="list-unstyled">
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Home
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#features"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Features
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#contact"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Contact
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Privacy Policy
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Terms of Service
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="col-lg-3 col-md-4">
-            <h6 class="text-uppercase text-white-50 mb-3">
-              Government Services
-            </h6>
-            <ul class="list-unstyled">
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>ID Card Application
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Passport Services
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Business Registration
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Property Records
-                </a>
-              </li>
-              <li class="mb-2">
-                <a
-                  href="#"
-                  class="text-decoration-none text-white-50 hover-text-primary"
-                >
-                  <i class="fas fa-angle-right me-2"></i>Birth Certificate
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="col-lg-3 col-md-4">
+          <div class="col-lg-5">
             <h6 class="text-uppercase text-white-50 mb-3">Contact Info</h6>
             <ul class="list-unstyled">
               <li class="mb-3 d-flex">
                 <i class="fas fa-map-marker-alt text-primary me-3 mt-1"></i>
-                <span class="text-white-50"
-                  >123 Main Street, Kathmandu, Nepal</span
-                >
+                <span class="text-white-50"> Kathmandu, Nepal </span>
               </li>
               <li class="mb-3 d-flex">
                 <i class="fas fa-phone-alt text-primary me-3 mt-1"></i>
-                <span class="text-white-50">+977 1-4XXXXXX</span>
+                <span class="text-white-50">+977 1-XXXXXXX</span>
               </li>
               <li class="mb-3 d-flex">
                 <i class="fas fa-envelope text-primary me-3 mt-1"></i>
-                <span class="text-white-50">info@digitalprofile.gov.np</span>
+                <span class="text-white-50">info@intensivestudy.com.np</span>
               </li>
               <li class="mb-3 d-flex">
                 <i class="fas fa-clock text-primary me-3 mt-1"></i>
-                <span class="text-white-50"
-                  >9:00 AM - 5:00 PM, Sunday-Friday</span
-                >
+                <span class="text-white-50">
+                  9:00 AM - 5:00 PM, Sunday-Friday
+                </span>
               </li>
             </ul>
           </div>
         </div>
 
-        <hr class="my-4 border-secondary" />
+        <hr class="my-4 border-secondary opacity-25" />
 
         <div class="row align-items-center">
           <div class="col-md-6">
@@ -174,20 +71,18 @@
               <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}"
                 >2023</span
               >
-              <span th:text="#{app.name}">Digital Profile System</span>. All
-              Rights Reserved.
+              <span th:text="#{app.name}"
+                >Intensive Study & Research Center</span
+              >. All Rights Reserved.
             </p>
           </div>
           <div class="col-md-6 text-md-end">
             <p class="text-white-50 mb-0">
-              Designed with <i class="fas fa-heart text-danger"></i> for the
-              people of Nepal
+              Committed to academic excellence and research innovation
             </p>
           </div>
         </div>
       </div>
     </footer>
-
-    <style></style>
   </body>
 </html>
