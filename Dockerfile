@@ -2,7 +2,7 @@
 FROM gradle:8.6.0-jdk21 AS builder
 WORKDIR /app
 COPY . .
-RUN gradle build -x test -Pprofile=prod
+RUN gradle build -x test
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
