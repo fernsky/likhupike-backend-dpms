@@ -13,19 +13,18 @@ import org.thymeleaf.templatemode.TemplateMode
 import org.springframework.web.servlet.ViewResolver
 import org.thymeleaf.templateresolver.ITemplateResolver
 import org.thymeleaf.spring6.ISpringTemplateEngine
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.servlet.HandlerMapping
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.servlet.support.RequestContext
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+import org.springframework.web.servlet.HandlerInterceptor
+import org.springframework.web.servlet.ModelAndView
 import jakarta.servlet.http.HttpServletRequest
-import org.springframework.web.context.request.ServletRequestAttributes
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 
 /**
  * Thymeleaf configuration for UI templates.
  */
 @Configuration
-class ThymeleafConfig {
+class ThymeleafConfig : WebMvcConfigurer {
     
     @Bean
     @Description("Thymeleaf template resolver for UI templates")
@@ -54,9 +53,27 @@ class ThymeleafConfig {
         characterEncoding = "UTF-8"
         contentType = "text/html;charset=UTF-8"
         viewNames = arrayOf("*")
-        
-        // We can't use request objects directly in Thymeleaf 3.1+
-        // Instead, we'll add the active tab attribute in the controller methods
-        // and inject it into each view
+    }
+    
+    /**
+     * Add a request interceptor to add the canonical URL to the model
+     * since Thymeleaf 3.1+ doesn't automatically expose request objects.
+     */
+    override fun addInterceptors(registry: InterceptorRegistry) {
+        registry.addInterceptor(object : HandlerInterceptor {
+            override fun postHandle(
+                request: HttpServletRequest,
+                response: HttpServletResponse,
+                handler: Any,
+                modelAndView: ModelAndView?
+            ) {
+                if (modelAndView != null) {
+                    // Add canonical URL information to the model
+                    modelAndView.model["canonicalUrl"] = request.requestURL.toString()
+                    modelAndView.model["requestUri"] = request.requestURI
+                    modelAndView.model["contextPath"] = request.contextPath
+                }
+            }
+        })
     }
 }
