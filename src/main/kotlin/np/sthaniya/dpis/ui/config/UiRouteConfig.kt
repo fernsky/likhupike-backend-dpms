@@ -24,17 +24,17 @@ class UiRouteConfig(
             isPublic = true)
             
         // Register routes - Both GET and POST
-        routeRegistry.register("/ui/register", 
-            listOf(HttpMethod.GET, HttpMethod.POST), 
-            isPublic = true)
+        // routeRegistry.register("/ui/register", 
+        //     listOf(HttpMethod.GET, HttpMethod.POST), 
+        //     isPublic = true)
             
         // Password reset routes
-        routeRegistry.register("/ui/password-reset", 
-            listOf(HttpMethod.GET, HttpMethod.POST), 
-            isPublic = true)
-        routeRegistry.register("/ui/password-reset/confirm", 
-            listOf(HttpMethod.GET, HttpMethod.POST), 
-            isPublic = true)
+        // routeRegistry.register("/ui/password-reset", 
+        //     listOf(HttpMethod.GET, HttpMethod.POST), 
+        //     isPublic = true)
+        // routeRegistry.register("/ui/password-reset/confirm", 
+        //     listOf(HttpMethod.GET, HttpMethod.POST), 
+        //     isPublic = true)
             
         // Logout route
         routeRegistry.register("/ui/logout", HttpMethod.POST, isPublic = true)
