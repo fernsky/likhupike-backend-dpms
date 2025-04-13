@@ -1,0 +1,1354 @@
+==== Occupation Distribution
+
+Occupation Distribution represents data about the distribution of occupations within an administrative area, extending core domain models while providing specialized functionality for occupational analysis.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+
+' OccupationDistribution implementation
+class OccupationDistribution {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID economicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core data
+  +Integer totalEmployed
+  +Map<String, Integer> occupationCounts
+  +Map<OccupationCategory, Integer> categoryCounts
+  +Double occupationalDiversityIndex
+  +Map<String, Double> occupationGenderDistribution
+  +Map<String, Double> occupationEducationLevels
+  +Map<String, Double> occupationAgeDistribution
+  +String dominantOccupation
+  +String fastestGrowingOccupation
+  +String decliningOccupation
+  
+  ' Sectoral breakdown
+  +Map<EconomicSector, Map<String, Integer>> sectoralOccupations
+  +Map<String, Double> formalInformalDistribution
+  +Map<String, Double> occupationWageLevels
+  +Map<String, Double> occupationGrowthRates
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +LocalDate referenceDate
+  +EconomicDataConfidenceLevel confidenceLevel
+  +EconomicDataType dataType
+  +String methodologyNotes
+  +String occupationalClassification
+  +Boolean isProjected
+  +UUID surveyId
+  +Integer sampleSize
+}
+
+' Supporting classes
+class OccupationalTrends {
+  +UUID id
+  +UUID occupationDistributionId
+  +Integer baselineYear
+  +Integer comparisonYear
+  +Map<String, Double> occupationGrowthRates
+  +Map<String, String> growthClassifications
+  +List<String> emergingOccupations
+  +List<String> decliningOccupations
+  +Map<String, Double> wageChanges
+  +Map<String, Double> formalizationRates
+  +String trendSourceData
+}
+
+class SkillsRequirements {
+  +UUID id
+  +UUID occupationDistributionId
+  +Map<String, List<String>> occupationCoreSkills
+  +Map<String, List<String>> occupationTechnicalSkills
+  +Map<String, List<String>> emergingSkillDemands
+  +Map<String, EducationLevel> typicalEducationRequirements
+  +Map<String, Integer> experienceRequirements
+  +Map<String, List<String>> certificationRequirements
+  +Map<String, SkillGapLevel> reportedSkillGaps
+  +String skillsSourceData
+}
+
+' Enumerations
+enum AdminAreaType {
+  PROVINCE
+  DISTRICT
+  MUNICIPALITY
+  WARD
+  VDC
+  CUSTOM_AREA
+}
+
+enum OccupationCategory {
+  MANAGERS
+  PROFESSIONALS
+  TECHNICIANS
+  CLERICAL
+  SERVICE_WORKERS
+  AGRICULTURAL_WORKERS
+  CRAFT_WORKERS
+  MACHINE_OPERATORS
+  ELEMENTARY_OCCUPATIONS
+  ARMED_FORCES
+}
+
+enum EconomicSector {
+  AGRICULTURE
+  MANUFACTURING
+  CONSTRUCTION
+  MINING_QUARRYING
+  UTILITIES
+  WHOLESALE_RETAIL
+  TRANSPORTATION
+  ACCOMMODATION_FOOD
+  INFORMATION_COMMUNICATION
+  FINANCIAL_INSURANCE
+  REAL_ESTATE
+  PROFESSIONAL_SERVICES
+  ADMINISTRATIVE_SERVICES
+  PUBLIC_ADMINISTRATION
+  EDUCATION
+  HEALTH_SOCIAL_WORK
+  ARTS_ENTERTAINMENT
+  OTHER_SERVICES
+  HOUSEHOLDS_AS_EMPLOYERS
+  EXTRATERRITORIAL_ORGANIZATIONS
+}
+
+enum EducationLevel {
+  NO_FORMAL_EDUCATION
+  PRIMARY
+  LOWER_SECONDARY
+  SECONDARY
+  HIGHER_SECONDARY
+  TECHNICAL_VOCATIONAL
+  BACHELORS
+  MASTERS
+  DOCTORAL
+}
+
+enum SkillGapLevel {
+  CRITICAL
+  SIGNIFICANT
+  MODERATE
+  MINOR
+  NONE
+}
+
+enum EconomicDataConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+}
+
+enum EconomicDataType {
+  CENSUS
+  SURVEY
+  ADMINISTRATIVE
+  ESTIMATE
+  PROJECTION
+}
+
+' Inheritance relationships
+BaseEntity <|-- OccupationDistribution
+BaseEntity <|-- OccupationalTrends
+BaseEntity <|-- SkillsRequirements
+
+' Interface implementation
+OccupationDistribution ..|> DataAggregatable
+
+' Class relationships
+OccupationDistribution "1" o-- "0..1" OccupationalTrends
+OccupationDistribution "1" o-- "0..1" SkillsRequirements
+OccupationDistribution -- AdminAreaType
+OccupationDistribution -- EconomicDataConfidenceLevel
+OccupationDistribution -- EconomicDataType
+SkillsRequirements -- EducationLevel
+SkillsRequirements -- SkillGapLevel
+@enduml
+----
+
+===== Occupation Data Collection Process
+
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Design occupation survey;
+:Define occupational classification;
+:Develop detailed questionnaire;
+:Train enumerators on categorization;
+
+|Field Enumerators|
+:Conduct household occupation survey;
+:Document detailed occupations;
+:Record industry context;
+:Collect education requirements;
+:Document skill details;
+
+|Data Processing Team|
+:Process raw occupation data;
+:Apply standardized classifications;
+:Group into major categories;
+:Map to international standards;
+:Create cross-tabulations;
+
+|System|
+:Import occupation distribution data;
+:Validate classification consistency;
+:Calculate distribution metrics;
+:Identify statistical patterns;
+:Create occupational profiles;
+
+|Labor Statistician|
+:Review occupational patterns;
+:Validate against known trends;
+:Identify classification anomalies;
+:Apply contextual knowledge;
+:Document significant patterns;
+
+|Quality Assurance|
+:Verify data completeness;
+:Check classification accuracy;
+:Assess representativeness;
+:Document limitations;
+:Assign confidence levels;
+
+|System|
+:Publish occupation statistics;
+:Generate occupational visualizations;
+:Create comparative analyses;
+:Calculate diversity indices;
+:Produce analytical reports;
+
+|Data Consumer|
+:Access occupation distribution;
+:Analyze workforce composition;
+:Identify skill requirements;
+:Develop training strategies;
+:Plan economic development;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Occupation Distribution data is used in the system:
+
+====== Technical Education Planning
+
+*Scenario:* Using occupational data to design technical education programs aligned with labor market needs
+
+[plantuml]
+----
+@startuml
+actor "Provincial Technical\nEducation Authority" as PTEA
+actor "Technical Training\nCenter Director" as Director
+participant "OccupationDistribution" as Occupation
+participant "SkillsDemandAnalysis" as Skills
+participant "LaborProjectionService" as Projection
+participant "TrainingGapAnalysis" as Gap
+participant "CurriculumPlanning" as Curriculum
+
+PTEA -> Occupation : Request regional occupation data
+activate Occupation
+Occupation -> Occupation : RetrieveOccupationalDistribution()
+Occupation -> Occupation : AnalyzeTopOccupations()
+Occupation -> Occupation : IdentifyGrowthOccupations()
+Occupation -> Occupation : AssessEducationRequirements()
+PTEA <-- Occupation : Occupational profile
+deactivate Occupation
+
+PTEA -> Skills : Analyze skills requirements
+activate Skills
+Skills -> Skills : MapDetailedSkillsNeeds()
+Skills -> Skills : AssessIndustryRequirements()
+Skills -> Skills : IdentifyCommonSkillGaps()
+Skills -> Skills : EvaluateTechnicalSpecialties()
+PTEA <-- Skills : Skills requirements report
+deactivate Skills
+
+PTEA -> Projection : Project future demand
+activate Projection
+Projection -> Projection : ForecastOccupationalGrowth()
+Projection -> Projection : IdentifyEmergingOccupations()
+Projection -> Projection : EstimateReplacementNeeds()
+Projection -> Projection : ProjectAnnualDemand()
+PTEA <-- Projection : Labor demand forecast
+deactivate Projection
+
+Director -> Gap : Evaluate training provision
+activate Gap
+Gap -> Gap : MapExistingPrograms()
+Gap -> Gap : AssessGraduationCapacity()
+Gap -> Gap : AnalyzeQualityMetrics()
+Gap -> Gap : IdentifyUnaddressedNeeds()
+Director <-- Gap : Training gap assessment
+deactivate Gap
+
+Director -> Curriculum : Design responsive programs
+activate Curriculum
+Curriculum -> Curriculum : DevelopOccupationBasedCurricula()
+Curriculum -> Curriculum : CreateCompetencyFrameworks()
+Curriculum -> Curriculum : DesignPracticalTrainingModules()
+Curriculum -> Curriculum : EstablishIndustryPartnershipModels()
+Director <-- Curriculum : Technical program designs
+deactivate Curriculum
+
+PTEA -> PTEA : Allocate training resources
+activate PTEA
+PTEA -> PTEA : PrioritizeProgramInvestments()
+PTEA -> PTEA : AllocateFacilityResources()
+PTEA -> PTEA : AssignInstructorDevelopment()
+PTEA -> PTEA : DevelopEquipmentSpecifications()
+deactivate PTEA
+
+Director -> Director : Create implementation plan
+activate Director
+Director -> Director : EstablishRecruitmentStrategy()
+Director -> Director : DesignLearningEnvironments()
+Director -> Director : DevelopAssessmentFrameworks()
+Director -> Director : CreateEmployerConnectionSystems()
+deactivate Director
+
+PTEA -> Director : Launch aligned technical programs
+@enduml
+----
+
+*Real-World Context:*
+Bagmati Province's Technical Education Authority is restructuring its vocational training offerings to better align with labor market needs and address chronic skills gaps in growing sectors. While the province has 12 technical training centers, their programs were established years ago with limited labor market analysis, resulting in graduate unemployment alongside employer complaints about skills shortages.
+
+The process begins with retrieving comprehensive occupational distribution data. The statistics show that within the province's 1.8 million employed population, the fastest-growing occupations are in construction (17% annual growth), hospitality (12% growth), and information technology (23% growth). Construction occupations alone represent 14% of all employment, with particularly high demand for skilled masons (particularly earthquake-resistant construction specialists), electricians, and plumbers. The analysis also reveals that while manufacturing employs 16% of workers, its occupational composition is shifting rapidly from basic production operators toward specialized machine operators and maintenance technicians.
+
+The Skills Demand Analysis examines specific competency requirements. For construction occupations, employers report critical shortages of workers skilled in modern building codes and earthquake-resistant techniques, with 78% of firms reporting difficulty finding qualified masons. In the hospitality sector, food preparation workers with knowledge of international cuisines are in high demand, while front-office staff with English language proficiency command a 35% wage premium. The IT sector shows strong demand for network technicians and database administrators, with most positions requiring specific technical certifications rather than only general education.
+
+The Labor Projection Service forecasts demand over the next five years. Construction occupations are projected to require 14,500 new workers annually, with particular growth in specialized finishing trades and building services installation. Hospitality will need approximately 8,300 new workers annually, concentrated in and around Kathmandu and major tourist destinations. IT support roles are expected to grow at 18% annually, requiring about 3,200 new workers each year with particular growth in smaller cities as businesses across the province digitalize operations.
+
+The Training Gap Analysis reveals significant misalignments in the current technical education system. Only 3 of 12 centers offer construction programs, producing just 720 graduates annually against the needed 14,500. Hospitality programs have better coverage but outdated curricula focused on basic skills rather than the specialized knowledge increasingly demanded by employers. IT programs exist in 5 centers but focus predominantly on basic computer operation rather than the technical specializations in highest demand.
+
+Based on this comprehensive analysis, the Technical Training Center Director develops a responsive program strategy:
+
+1. **Construction Skills Expansion**: Establishment of specialized construction training in 8 centers, including:
+   - Earthquake-resistant construction techniques program (3-month certification)
+   - Building services program covering plumbing, electrical, and HVAC (6-month diploma)
+   - Construction finishing trades program (3-month modular certificates)
+   - Construction site supervision program (12-month advanced diploma)
+
+2. **Hospitality Modernization**: Transformation of existing hospitality programs to include:
+   - Specialized culinary tracks focusing on international cuisines in high demand
+   - Front office operations with enhanced language and customer service components
+   - Tourism experience design for adventure and cultural tourism businesses
+   - Food safety and quality management certification programs
+
+3. **IT Technical Specializations**: Creation of focused technical IT programs including:
+   - Network administration with industry certification preparation
+   - Database management with practical application projects
+   - IT support services with emphasis on business technologies
+   - Digital media production for growing content creation businesses
+
+4. **Industry Partnership Model**: Establishment of formal collaboration structures including:
+   - Sector skills committees to guide curriculum development
+   - Apprenticeship programs with 50% practical training in workplaces
+   - Equipment sharing arrangements with local employers
+   - Instructor industry attachment programs to maintain current knowledge
+
+The Provincial Technical Education Authority allocates resources based on projected demand, with the largest investments in construction training facilities and equipment. The implementation timeline prioritizes programs with the largest gaps between supply and demand, with the first modernized construction programs launching within six months, followed by IT and hospitality program transformations.
+
+This evidence-based approach ensures that technical education resources are directed toward occupations with demonstrated demand, and that training content directly addresses the specific skills and competencies valued by employers, rather than continuing to produce graduates for oversupplied or declining occupations.
+
+====== Agricultural Transformation Planning
+
+*Scenario:* Using occupational data to guide agricultural modernization initiatives
+
+[plantuml]
+----
+@startuml
+actor "Provincial Agriculture\nDevelopment Office" as PADO
+actor "Agricultural Extension\nProgram Manager" as Extension
+participant "OccupationDistribution" as Occupation
+participant "FarmingSystemsAnalysis" as Farming
+participant "AgriculturalValueChain" as ValueChain
+participant "SkillsModernization" as Skills
+participant "TechnologyAdoption" as Technology
+
+PADO -> Occupation : Analyze agricultural occupations
+activate Occupation
+Occupation -> Occupation : BreakdownAgriculturalOccupations()
+Occupation -> Occupation : AnalyzeSpecialization()
+Occupation -> Occupation : MapSkillDistribution()
+Occupation -> Occupation : IdentifyModernizationGaps()
+PADO <-- Occupation : Agricultural occupation profile
+deactivate Occupation
+
+PADO -> Farming : Assess farming systems
+activate Farming
+Farming -> Farming : ClassifyCurrentSystems()
+Farming -> Farming : EvaluateProductivity()
+Farming -> Farming : IdentifyConstraints()
+Farming -> Farming : AssessTechnologicalStatus()
+PADO <-- Farming : Farming systems assessment
+deactivate Farming
+
+PADO -> ValueChain : Analyze market opportunities
+activate ValueChain
+ValueChain -> ValueChain : MapExistingValueChains()
+ValueChain -> ValueChain : IdentifyBottlenecks()
+ValueChain -> ValueChain : AssessMarketDemand()
+ValueChain -> ValueChain : EvaluateExportPotential()
+PADO <-- ValueChain : Market opportunity analysis
+deactivate ValueChain
+
+Extension -> Skills : Evaluate skills modernization
+activate Skills
+Skills -> Skills : AssessTraditionalKnowledge()
+Skills -> Skills : IdentifyModernSkillGaps()
+Skills -> Skills : EvaluateExtensionCapacity()
+Skills -> Skills : DesignSkillsBuildingPrograms()
+Extension <-- Skills : Skills modernization plan
+deactivate Skills
+
+Extension -> Technology : Plan technology introduction
+activate Technology
+Technology -> Technology : IdentifyAppropriateTools()
+Technology -> Technology : AssessAffordability()
+Technology -> Technology : EvaluateAdoptionFactors()
+Technology -> Technology : DesignDemonstrationApproach()
+Extension <-- Technology : Technology introduction plan
+deactivate Technology
+
+PADO -> PADO : Develop agricultural transformation strategy
+activate PADO
+PADO -> PADO : DesignMarketOrientedProduction()
+PADO -> PADO : EstablishValueChainLinks()
+PADO -> PADO : CreateFinancingMechanisms()
+PADO -> PADO : DevelopInfrastructureSupport()
+deactivate PADO
+
+Extension -> Extension : Create implementation program
+activate Extension
+Extension -> Extension : EstablishFarmerGroups()
+Extension -> Extension : DesignDemonstrationFarms()
+Extension -> Extension : CreateTrainingCalendar()
+Extension -> Extension : DevelopMonitoringSystem()
+deactivate Extension
+
+PADO -> Extension : Launch agricultural modernization
+@enduml
+----
+
+*Real-World Context:*
+Province 1 in eastern Nepal is developing an agricultural transformation strategy to modernize its farming sector, increase farmer incomes, and create new agricultural occupations. Despite having significant agricultural potential with diverse agro-ecological zones, the province's agricultural productivity remains low with predominantly subsistence farming.
+
+The analysis begins with examining detailed agricultural occupation data. The statistics show that within the province's 620,000 agricultural workers, traditional generalist farmers represent 89%, with only 11% in specialized agricultural roles. Only 2.8% are engaged in commercial crop production, 1.7% in livestock specialties, 2.1% in agricultural processing, and 4.4% in other agricultural specializations. The data reveals that specialized agricultural occupations earn 62% more on average than general subsistence farming, yet specialized skillsets remain rare in rural communities. The educational profile shows 68% of agricultural workers have only basic education or less, with minimal formal agricultural training.
+
+The Farming Systems Analysis assesses current production approaches. Subsistence mixed farming dominates with average landholdings of 0.68 hectares. Only 14% of farms use improved seed varieties, 23% apply proper fertilization methods, and 19% employ modern pest management. Irrigation is available to only 26% of farmland, with most dependent on increasingly unpredictable rainfall. High-value crops represent only 7% of production despite suitable conditions for cardamom, ginger, tea, and various fruits and vegetables. Commercial livestock operations remain limited, with most households keeping small numbers of traditional breed animals with low productivity.
+
+The Value Chain Analysis identifies promising market opportunities. The nearby large markets of Siliguri (India) and demand from urban centers like Biratnagar and Dharan offer significant potential for high-value fruits, vegetables, and dairy products. The assessment identifies critical value chain gaps - particularly in post-harvest handling (42% loss rates for perishables), cold chain infrastructure (accessible to only 3% of producers), and market information systems. Export potential exists for orthodox tea, large cardamom, and ginger, but quality consistency and certification systems remain underdeveloped.
+
+Based on this comprehensive analysis, the Agricultural Extension Program Manager develops a transformation strategy targeting the creation of new agricultural occupations:
+
+1. **Commercial Farmer Development Program**:
+   - Identification and intensive support for 5,000 potential commercial farmers
+   - Technical training on high-value crop production (vegetables, fruits, spices)
+   - Farm business management skills development
+   - Group-based market access facilitation
+
+2. **Agricultural Specialization Initiative**:
+   - Development of 12 specialized training modules for emerging agricultural occupations:
+     - Nursery operators for high-value seedlings
+     - Integrated pest management specialists
+     - Micro-irrigation technicians
+     - Post-harvest handlers and processors
+     - Agricultural equipment operators and mechanics
+   - Creation of certification system for specialized agricultural occupations
+   - Establishment of skill-based premium pricing systems
+
+3. **Value-Chain Entrepreneurship Program**:
+   - Identification and support of entrepreneurs for critical value chain gaps:
+     - Collection center operators
+     - Cold chain service providers
+     - Quality testing and certification services
+     - Transport and logistics specialists
+     - Agricultural input suppliers
+   - Business development services and startup financing
+   - Market linkage facilitation with urban buyers and exporters
+
+4. **Youth Agricultural Career Development**:
+   - School-based agricultural career exposure program
+   - Youth-focused modern agricultural skills bootcamps
+   - Apprenticeship matching with successful commercial producers
+   - Young farmer startup packages (land access, equipment, mentoring)
+
+The Provincial Agriculture Development Office establishes clear targets: transition 12,000 traditional farmers to commercial production over five years, create 8,500 specialized agricultural occupations, develop 1,500 agricultural enterprises in value chain gaps, and increase average agricultural incomes by 70%. Implementation is designed around 15 agricultural pocket areas with favorable conditions and market access, with dedicated extension staff and demonstration sites in each area.
+
+This evidence-based approach addresses the specific occupational transformation needed in agriculture, moving beyond general agricultural development to target the creation of specific, market-relevant agricultural specializations and entrepreneurial opportunities that can transform the predominantly subsistence-oriented workforce.
+
+====== Tourism Workforce Development
+
+*Scenario:* Using occupational data to develop tourism human resources to support industry growth
+
+[plantuml]
+----
+@startuml
+actor "Tourism Development\nAuthority" as TDA
+actor "Tourism Sector\nSkills Committee" as Committee
+participant "OccupationDistribution" as Occupation
+participant "TourismSubsectorAnalysis" as Subsector
+participant "VisitorDemandProjection" as Demand
+participant "WorkforceGapAnalysis" as Gap
+participant "TrainingSystemDesign" as Training
+
+TDA -> Occupation : Analyze tourism occupations
+activate Occupation
+Occupation -> Occupation : BreakdownTourismOccupations()
+Occupation -> Occupation : AnalyzeSkillLevels()
+Occupation -> Occupation : MapOccupationalDistribution()
+Occupation -> Occupation : AssessQualityIndicators()
+TDA <-- Occupation : Tourism occupation profile
+deactivate Occupation
+
+TDA -> Subsector : Evaluate subsector needs
+activate Subsector
+Subsector -> Subsector : AnalyzeHospitalityOccupations()
+Subsector -> Subsector : MapAdventureGuiding()
+Subsector -> Subsector : AssessTransportServices()
+Subsector -> Subsector : EvaluateAttractionManagement()
+TDA <-- Subsector : Subsector requirements
+deactivate Subsector
+
+TDA -> Demand : Project visitor growth
+activate Demand
+Demand -> Demand : ForecastVisitorNumbers()
+Demand -> Demand : AnalyzeMarketSegments()
+Demand -> Demand : ProjectSeasonalDemand()
+Demand -> Demand : AssessServiceExpectations()
+TDA <-- Demand : Tourism demand projection
+deactivate Demand
+
+Committee -> Gap : Analyze workforce gaps
+activate Gap
+Gap -> Gap : CalculateOccupationalDemand()
+Gap -> Gap : AssessCurrentSupply()
+Gap -> Gap : IdentifyQualityGaps()
+Gap -> Gap : ProjectLanguageNeeds()
+Committee <-- Gap : Workforce gap analysis
+deactivate Gap
+
+Committee -> Training : Design training systems
+activate Training
+Training -> Training : DesignOccupationalStandards()
+Training -> Training : CreateTrainingPathways()
+Training -> Training : EstablishCertificationSystem()
+Training -> Training : DevelopWorkbasedLearning()
+Committee <-- Training : Tourism training system
+deactivate Training
+
+TDA -> TDA : Develop tourism human resource strategy
+activate TDA
+TDA -> TDA : EstablishCareerPromotionCampaign()
+TDA -> TDA : CreateQualityStandards()
+TDA -> TDA : DesignIncentiveMechanisms()
+TDA -> TDA : AllocateDevelopmentFunding()
+deactivate TDA
+
+Committee -> Committee : Design implementation program
+activate Committee
+Committee -> Committee : DevelopTrainingMaterials()
+Committee -> Committee : EstablishTrainingCenters()
+Committee -> Committee : CreateAssessmentPrograms()
+Committee -> Committee : BuildEmployerPartnerships()
+deactivate Committee
+
+TDA -> Committee : Launch tourism workforce programs
+@enduml
+----
+
+*Real-World Context:*
+Gandaki Province, home to some of Nepal's most popular tourism destinations including Pokhara and parts of the Annapurna Circuit, is developing a comprehensive tourism workforce development strategy. Despite tourism being a key economic driver, the sector faces persistent human resource challenges that limit service quality and industry growth.
+
+The analysis begins with comprehensive tourism occupation data. The statistics show that within the province's tourism sector (employing approximately 86,000 people), there are significant occupational imbalances and skills gaps. Hotel and restaurant workers comprise 48% of tourism employment, but specialized roles like certified mountain guides (2.3%), skilled chefs (3.1%), and tourism business managers with formal training (1.8%) remain underrepresented. Tour operation and adventure tourism, despite driving high-value tourism, employ only 9% of the workforce. The data reveals stark urban-rural disparities, with 72% of specialized tourism roles concentrated in Pokhara, while rural tourism destinations struggle with basic service quality.
+
+The Tourism Subsector Analysis examines specific occupational patterns within tourism segments. In adventure tourism, international certifications are held by only 22% of trekking guides and 35% of rafting guides, limiting marketability and safety standards. The hospitality subsector reveals that only 18% of hotel staff have formal hospitality education, with most trained through informal on-the-job experience. Cultural tourism sites report critical shortages of guides with both cultural knowledge and language skills, with only 24 guides in the entire province with Chinese language proficiency despite growing Chinese tourism.
+
+The Visitor Demand Projection forecasts significant changes in tourism patterns. International arrivals are projected to grow at 12% annually (post-COVID recovery), with Chinese visitors expected to increase by 18% annually and European visitors by 9%. The province's new focus on higher-value tourism predicts demand for more sophisticated tourism products, including luxury trekking, cultural immersion experiences, and wellness tourism—all requiring specialized skills not widely available in the current workforce. The projection also highlights increasing service quality expectations, with international tourists rating service quality as their top concern in visitor surveys.
+
+The Workforce Gap Analysis identifies critical shortages across the tourism value chain. The province requires approximately 1,200 new certified adventure guides annually, but current training programs produce only 270. Hospitality faces a shortage of 850 trained professionals annually, particularly in front office management and food service. The analysis reveals that 62% of tourism businesses cite workforce quality as their primary growth constraint, with language skills, professional service standards, and business management as the biggest gaps.
+
+Based on this comprehensive analysis, the Tourism Sector Skills Committee develops a strategic workforce development plan:
+
+1. **Tourism Vocational Excellence Centers**:
+   - Establishment of three tourism training hubs in Pokhara, Gorkha, and Baglung
+   - Specialized training tracks in hospitality, adventure tourism, eco-tourism, and cultural tourism
+   - Modern facilities with simulation environments (mock hotel setups, guiding practice areas)
+   - Direct partnerships with 50+ tourism businesses for practical training
+
+2. **International Certification Initiative**:
+   - Program to bring international certifications to Nepal for adventure tourism
+   - Training and certification for local trainers to become authorized certification providers
+   - Subsidized certification programs for existing workers
+   - Recognition of prior learning program for experienced guides without formal qualifications
+
+3. **Tourism Language Academy**:
+   - Specialized tourism language program focusing on Chinese, French, German, and Spanish
+   - Tourism-specific language modules (hospitality terms, guiding vocabulary, emergency communication)
+   - Native speaker partnerships for conversational practice
+   - Digital language learning tools for remote areas
+
+4. **Rural Tourism Skills Network**:
+   - Mobile training units serving rural tourism destinations
+   - Community-based tourism training focusing on homestay management and local guiding
+   - Indigenous knowledge documentation and tourism application
+   - Micro-credential system for rural tourism providers
+
+5. **Tourism Management Acceleration**:
+   - Mid-career management training for tourism supervisors
+   - Business skills development for small tourism enterprise owners
+   - Digital marketing and online booking management training
+   - Financial management and investment planning for tourism businesses
+
+The Tourism Development Authority establishes a three-tiered implementation approach:
+
+1. **Immediate Gap Filling** (Year 1): Targeted short courses addressing critical skills shortages, especially in adventure guiding and hospitality supervision
+   
+2. **Capacity Building** (Years 2-3): Establishment of training infrastructure and certification systems
+
+3. **Quality Advancement** (Years 4-5): Advanced programs focusing on tourism service excellence and innovation
+
+The implementation includes clear targets: certify 3,500 tourism professionals in the first two years, establish all three excellence centers by year three, achieve 50% international certification coverage in adventure tourism by year four, and improve average tourist satisfaction scores by 25% within five years.
+
+This evidence-based approach addresses the specific occupational needs of Nepal's tourism sector, recognizing both current gaps and emerging opportunities in a sector vital to the country's economic development.
+
+====== Informal Sector Formalization
+
+*Scenario:* Using occupational data to develop strategies for formalizing informal sector occupations
+
+[plantuml]
+----
+@startuml
+actor "Ministry of Labour\nand Employment" as MOLE
+actor "Informal Sector\nTransformation Unit" as ISTU
+participant "OccupationDistribution" as Occupation
+participant "InformalSectorMapping" as Informal
+participant "FormalizationBarrierAnalysis" as Barriers
+participant "SkillsRecognitionService" as Skills
+participant "FormalizationPathwayDesign" as Pathways
+
+MOLE -> Occupation : Analyze informal occupations
+activate Occupation
+Occupation -> Occupation : IdentifyInformalOccupations()
+Occupation -> Occupation : CalculateInformalSectorSize()
+Occupation -> Occupation : AnalyzeOccupationalDistribution()
+Occupation -> Occupation : AssessIncomePatterns()
+MOLE <-- Occupation : Informal occupation profile
+deactivate Occupation
+
+MOLE -> Informal : Map informal sector
+activate Informal
+Informal -> Informal : SurveyInformalBusinesses()
+Informal -> Informal : AnalyzeGeographicClusters()
+Informal -> Informal : DocumentSupplyChainParticipation()
+Informal -> Informal : AssessGrowthPotential()
+MOLE <-- Informal : Informal sector mapping
+deactivate Informal
+
+ISTU -> Barriers : Identify formalization barriers
+activate Barriers
+Barriers -> Barriers : AnalyzeRegulatoryObstacles()
+Barriers -> Barriers : AssessCostConstraints()
+Barriers -> Barriers : EvaluateKnowledgeGaps()
+Barriers -> Barriers : IdentifyMarketLimitations()
+ISTU <-- Barriers : Barrier analysis
+deactivate Barriers
+
+ISTU -> Skills : Evaluate skills recognition options
+activate Skills
+Skills -> Skills : AssessInformalSkillLevels()
+Skills -> Skills : IdentifyRecognitionMechanisms()
+Skills -> Skills : DevelopCompetencyFrameworks()
+Skills -> Skills : CreateAssessmentTools()
+ISTU <-- Skills : Skills recognition plan
+deactivate Skills
+
+MOLE -> Pathways : Design formalization approaches
+activate Pathways
+Pathways -> Pathways : CreateGraduatedFormalizationSteps()
+Pathways -> Pathways : DevelopIncentivePackages()
+Pathways -> Pathways : EstablishSupportMechanisms()
+Pathways -> Pathways : DesignMonitoringFramework()
+MOLE <-- Pathways : Formalization pathways
+deactivate Pathways
+
+ISTU -> ISTU : Develop sector-specific strategies
+activate ISTU
+ISTU -> ISTU : CreateConstructionSectorStrategy()
+ISTU -> ISTU : DevelopRetailFormalizationPlan()
+ISTU -> ISTU : DesignManufacturingApproach()
+ISTU -> ISTU : EstablishServicesFormalizationPath()
+deactivate ISTU
+
+MOLE -> MOLE : Develop policy framework
+activate MOLE
+MOLE -> MOLE : CreateRegulatorySimplifications()
+MOLE -> MOLE : EstablishTaxIncentives()
+MOLE -> MOLE : AllocateImplementationResources()
+MOLE -> MOLE : DesignMonitoringMechanisms()
+deactivate MOLE
+
+MOLE -> ISTU : Implement formalization program
+@enduml
+----
+
+*Real-World Context:*
+The Ministry of Labour and Employment is developing a comprehensive strategy to formalize informal occupations in Nepal's rapidly urbanizing Kathmandu Valley. Despite being the country's most developed region, the valley has a substantial informal sector comprising approximately 62% of total employment, with particularly high concentrations in construction, retail trade, and small-scale manufacturing.
+
+The analysis begins with examining detailed occupational data on informal employment. The statistics show that of the valley's estimated 485,000 informal workers, construction workers represent the largest group (22%), followed by retail trade (18%), transport (11%), food services (9%), and small-scale manufacturing (8%). The gender distribution varies significantly by occupation—women dominate informal food services (72%) and certain retail categories (68%), while men predominate in construction (89%) and transport (94%). Educational attainment among informal workers is notably low, with 47% having only primary education or less, though this varies substantially by occupation and age group.
+
+The Informal Sector Mapping service conducts detailed spatial and operational analysis. The mapping identifies 37 major informal business clusters across the valley, with notable concentrations in specific areas: construction workers gather at 14 key labor points (particularly Kalanki and Koteshwor), informal manufacturing clusters in the Balaju and Patan industrial corridors, and informal retail concentrates in areas surrounding formal markets (particularly Asan, Indrachowk, and Ratnapark). The mapping also identifies significant variations in business sophistication—while 68% of informal enterprises operate at pure subsistence level, about 22% show growth potential with quasi-formal operations, and 10% are "transitional businesses" already partially connected to formal systems through supply chains or customer base.
+
+The Formalization Barrier Analysis identifies the specific obstacles preventing integration into the formal economy. Regulatory complexity ranks as the primary barrier, with informal businesses required to navigate an average of 11 different agencies and 23 forms to become fully formalized. Cost constraints are equally significant—formalization expenses (registration fees, compliance costs, tax deposits) average 4.3 months of business income for small enterprises. Knowledge gaps are substantial, with 76% of informal operators lacking clear understanding of formalization processes. The analysis also reveals that 43% of informal businesses fear immediate taxation would make their operations unviable without a transitional period.
+
+The Skills Recognition Service assesses the capabilities present in the informal sector that could be leveraged for formalization. Many informal construction workers possess significant skills despite lacking formal credentials—82% have over five years of practical experience, yet only 4% hold any form of certification. The assessment identifies potential for recognition of prior learning (RPL) programs in 12 occupational categories, which could provide formal credentials based on demonstrated competency rather than formal education. The service also identifies key skill gaps that limit growth potential, particularly business management, financial literacy, and technical standardization knowledge.
+
+Based on this comprehensive analysis, the Ministry develops a graduated formalization strategy with several key components:
+
+1. **Simplified Registration System**:
+   - One-window service centers specifically for informal enterprise registration
+   - Streamlined process reducing required documents from 23 to 7
+   - Mobile registration units visiting informal business clusters
+   - Digital registration option with assisted service in community centers
+
+2. **Graduated Formalization Pathway**:
+   - Three-tier formalization process with progressively increasing benefits and requirements:
+     - Tier 1: Basic registration with minimal requirements and limited benefits
+     - Tier 2: Intermediate formalization with basic tax incorporation and expanded benefits
+     - Tier 3: Full formalization with complete regulatory compliance
+   - 3-year transition timeline allowing businesses to progressively formalize
+
+3. **Skills Recognition Program**:
+   - Competency-based assessment centers for 12 key informal occupations
+   - Recognition of prior learning certification for experienced workers
+   - Skill upgrading modules to address specific gaps
+   - Links between certification and wage standards
+
+4. **Sector-Specific Approaches**:
+   - Construction: Contractor registration system with dedicated support unit
+   - Retail: Market-based collective formalization with shared facilities
+   - Manufacturing: Production standard certification linked to market access
+   - Food services: Hygiene certification program with stepped compliance
+
+5. **Incentive Package**:
+   - Initial tax holidays scaled to business size (1-3 years)
+   - Access to microfinance at preferential rates
+   - Business development services including accounting support
+   - Market linkage programs connecting to formal supply chains
+
+The Informal Sector Transformation Unit establishes clear targets: register at least 30% of informal businesses in tier 1 within the first year, achieve 20% advancement to tier 2 by year two, formalize at least 15% of businesses completely by year three, and increase average incomes of newly formalized businesses by at least 25% within three years of formalization.
+
+This evidence-based approach provides a realistic pathway to formalization that acknowledges the diverse nature of Nepal's informal economy and the legitimate constraints that have kept businesses outside the formal system, while creating tangible incentives for formalization that benefit both workers and the broader economy.
+
+===== DataAggregatable Implementation
+
+The OccupationDistribution entity implements the DataAggregatable interface to support hierarchical data aggregation:
+
+[plantuml]
+----
+@startuml
+participant "LaborMinistry" as Service
+participant "OccupationDistribution\nimplements DataAggregatable" as Occupation
+participant "Repository" as Repo
+participant "AggregationEngine" as Engine
+participant "DataValidator" as Validator
+
+Service -> Occupation : getAggregatedData(provinceId, "DISTRICT")
+activate Occupation
+
+Occupation -> Occupation : validateAggregationRequest(provinceId, "DISTRICT")
+activate Occupation
+Occupation -> Occupation : checkPermissions()
+Occupation -> Occupation : validateHierarchy()
+Occupation <-- Occupation : requestValid
+deactivate Occupation
+
+Occupation -> Repo : findChildAreas(provinceId, "DISTRICT")
+activate Repo
+Occupation <-- Repo : districtOccupations
+deactivate Repo
+
+Occupation -> Engine : aggregateOccupationalData(districtOccupations)
+activate Engine
+Engine -> Engine : sumOccupationCounts()
+Engine -> Engine : aggregateCategoryDistribution()
+Engine -> Engine : mergeOccupationLists()
+Engine -> Engine : calculateWeightedIndices()
+Engine -> Engine : aggregateSectoralBreakdowns()
+Engine -> Engine : deriveOccupationalTrends()
+Occupation <-- Engine : aggregatedOccupationData
+deactivate Engine
+
+Occupation -> Validator : validateAggregate(aggregatedData, provinceId)
+activate Validator
+Validator -> Validator : checkTotals()
+Validator -> Validator : validateCategoryConsistency()
+Validator -> Validator : verifyFormalInformalSums()
+Validator -> Validator : checkStatisticalAnomalies()
+Occupation <-- Validator : validationResults
+deactivate Validator
+
+Occupation -> Occupation : applyValidationAdjustments(validationResults)
+Occupation -> Occupation : buildAggregateResponse()
+
+Service <-- Occupation : aggregatedOccupationData
+deactivate Occupation
+
+Service -> Occupation : drillDown(provinceId, "DISTRICT", districtId)
+activate Occupation
+Occupation -> Repo : findChildAreas(districtId, "MUNICIPALITY")
+activate Repo
+Occupation <-- Repo : municipalityOccupations
+deactivate Repo
+Occupation -> Engine : aggregateOccupationData(municipalityOccupations)
+activate Engine
+Occupation <-- Engine : aggregatedData
+deactivate Engine
+Service <-- Occupation : districtDetailWithMunicipalities
+deactivate Occupation
+@enduml
+----
+
+The OccupationDistribution entity's implementation of DataAggregatable provides powerful capabilities for occupational analysis across different administrative levels and economic sectors. This is particularly important in Nepal's context, where occupational patterns vary significantly across geographic regions, urban-rural divides, and ecological zones.
+
+The aggregation process applies specialized methods for occupational data:
+
+1. **Occupation Categorization Preservation**: Maintains detailed occupational categories during aggregation while also providing standard ISCO (International Standard Classification of Occupations) groupings for international comparability
+
+2. **Weighted Skill Analysis**: Uses employment numbers to weight skill requirements and educational levels when aggregating across areas
+
+3. **Sectoral Distribution Maintenance**: Preserves the connection between occupations and economic sectors during aggregation to enable sector-based analysis
+
+4. **Formal-Informal Balance**: Carefully manages the aggregation of formal and informal employment statistics to ensure accurate representation at higher administrative levels
+
+5. **Gender Distribution Preservation**: Maintains gender distribution data during aggregation to support gender-based occupational analysis
+
+Special considerations for Nepal's context include:
+
+1. **Seasonal Occupation Handling**: Adjusts for seasonal occupations, particularly important in agricultural areas where the occupational mix changes significantly between planting, harvesting, and off-seasons
+
+2. **Migration Effect Normalization**: Accounts for labor migration effects, particularly important in regions with high outmigration where present occupation patterns may not reflect resident worker skills
+
+3. **Urban-Rural Distinction**: Maintains separation between urban and rural occupation distributions when aggregating to higher levels, as these represent functionally different labor markets in Nepal
+
+4. **Traditional Occupation Categorization**: Includes special handling for traditional occupations specific to Nepal that may not fit standard international classifications
+
+The implementation includes specialized aggregation methods:
+
+1. **Geographic Aggregation**: Combining occupation data from lower administrative levels (ward, municipality) to higher levels (district, province)
+
+2. **Sectoral Aggregation**: Grouping and analyzing occupations across economic sectors
+
+3. **Temporal Aggregation**: Comparing occupational distributions across time periods to identify trends
+
+4. **Categorical Aggregation**: Consolidating detailed occupations into major groups for higher-level analysis
+
+These capabilities support sophisticated labor market analysis and workforce planning at multiple administrative levels, enabling more effective allocation of training resources and economic development initiatives.
+
+===== OccupationDistribution Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+
+' Main classes
+class OccupationDistribution {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID economicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core data
+  +Integer totalEmployed
+  +Map<String, Integer> occupationCounts
+  +Map<OccupationCategory, Integer> categoryCounts
+  +Double occupationalDiversityIndex
+  +Map<String, Double> occupationGenderDistribution
+  +Map<String, Double> occupationEducationLevels
+  +Map<String, Double> occupationAgeDistribution
+  +String dominantOccupation
+  +String fastestGrowingOccupation
+  +String decliningOccupation
+  
+  ' Sectoral breakdown
+  +Map<EconomicSector, Map<String, Integer>> sectoralOccupations
+  +Map<String, Double> formalInformalDistribution
+  +Map<String, Double> occupationWageLevels
+  +Map<String, Double> occupationGrowthRates
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +LocalDate referenceDate
+  +EconomicDataConfidenceLevel confidenceLevel
+  +EconomicDataType dataType
+  +String methodologyNotes
+  +String occupationalClassification
+  +Boolean isProjected
+  +UUID surveyId
+  +Integer sampleSize
+  
+  ' Methods
+  +Map<String, Integer> getTopOccupations(int count)
+  +Map<OccupationCategory, Double> getCategoryPercentages()
+  +List<String> getGrowingOccupations(double threshold)
+  +List<String> getDecliningOccupations(double threshold)
+  +Map<String, Double> getGenderParityIndices()
+  +Double getOccupationalSegregationIndex()
+  +Map<EconomicSector, Double> getSectorEmploymentShares()
+  +Double getFormalSectorPercentage()
+  +Map<String, Double> getWageDistribution()
+  +Double calculateOccupationalMismatchIndex()
+  +Map<String, Object> generateLaborMarketIndicators()
+  +OccupationalTrends getOccupationalTrends(Integer baselineYear)
+  +SkillsRequirements getSkillsRequirements()
+  +Map<String, Double> compareWithNationalAverage()
+  +Double calculateSpecializationIndex()
+  +Map<EconomicSector, Double> calculateLocationQuotients()
+}
+
+class OccupationalTrends {
+  +UUID id
+  +UUID occupationDistributionId
+  +Integer baselineYear
+  +Integer comparisonYear
+  +Map<String, Double> occupationGrowthRates
+  +Map<String, String> growthClassifications
+  +List<String> emergingOccupations
+  +List<String> decliningOccupations
+  +Map<String, Double> wageChanges
+  +Map<String, Double> formalizationRates
+  +String trendSourceData
+  
+  ' Methods
+  +List<String> getFastestGrowingOccupations(int count)
+  +List<String> getFastestDecliningOccupations(int count)
+  +Map<String, Double> getWageGrowthRates()
+  +Double getAverageOccupationalGrowthRate()
+  +Double getOccupationalChurnRate()
+  +List<String> getStructuralChangeIndicators()
+  +Map<OccupationCategory, Double> getCategoryShiftRates()
+  +Boolean hasSignificantStructuralChange()
+  +Map<String, Object> getKeyTrendStatistics()
+  +List<String> getOccupationsAboveThreshold(double growthRate)
+}
+
+class SkillsRequirements {
+  +UUID id
+  +UUID occupationDistributionId
+  +Map<String, List<String>> occupationCoreSkills
+  +Map<String, List<String>> occupationTechnicalSkills
+  +Map<String, List<String>> emergingSkillDemands
+  +Map<String, EducationLevel> typicalEducationRequirements
+  +Map<String, Integer> experienceRequirements
+  +Map<String, List<String>> certificationRequirements
+  +Map<String, SkillGapLevel> reportedSkillGaps
+  +String skillsSourceData
+  
+  ' Methods
+  +List<String> getMostCommonSkills(int count)
+  +List<String> getMostInDemandSkills()
+  +Map<EducationLevel, Double> getEducationDistribution()
+  +List<String> getHighGapSkills()
+  +List<String> getSkillsCrossCuttingMultipleOccupations()
+  +Map<String, Integer> getOccupationsByExperienceLevel()
+  +Map<String, List<String>> getRequiredCertifications()
+  +Double getAverageSkillsPerOccupation()
+  +List<String> getEmergingSkillsReport()
+  +Map<SkillGapLevel, Integer> getSkillGapDistribution()
+}
+
+enum AdminAreaType {
+  PROVINCE
+  DISTRICT
+  MUNICIPALITY
+  WARD
+  VDC
+  CUSTOM_AREA
+}
+
+enum OccupationCategory {
+  MANAGERS
+  PROFESSIONALS
+  TECHNICIANS
+  CLERICAL
+  SERVICE_WORKERS
+  AGRICULTURAL_WORKERS
+  CRAFT_WORKERS
+  MACHINE_OPERATORS
+  ELEMENTARY_OCCUPATIONS
+  ARMED_FORCES
+}
+
+enum EconomicSector {
+  AGRICULTURE
+  MANUFACTURING
+  CONSTRUCTION
+  MINING_QUARRYING
+  UTILITIES
+  WHOLESALE_RETAIL
+  TRANSPORTATION
+  ACCOMMODATION_FOOD
+  INFORMATION_COMMUNICATION
+  FINANCIAL_INSURANCE
+  REAL_ESTATE
+  PROFESSIONAL_SERVICES
+  ADMINISTRATIVE_SERVICES
+  PUBLIC_ADMINISTRATION
+  EDUCATION
+  HEALTH_SOCIAL_WORK
+  ARTS_ENTERTAINMENT
+  OTHER_SERVICES
+  HOUSEHOLDS_AS_EMPLOYERS
+  EXTRATERRITORIAL_ORGANIZATIONS
+}
+
+enum EducationLevel {
+  NO_FORMAL_EDUCATION
+  PRIMARY
+  LOWER_SECONDARY
+  SECONDARY
+  HIGHER_SECONDARY
+  TECHNICAL_VOCATIONAL
+  BACHELORS
+  MASTERS
+  DOCTORAL
+}
+
+enum SkillGapLevel {
+  CRITICAL
+  SIGNIFICANT
+  MODERATE
+  MINOR
+  NONE
+}
+
+enum EconomicDataConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+}
+
+enum EconomicDataType {
+  CENSUS
+  SURVEY
+  ADMINISTRATIVE
+  ESTIMATE
+  PROJECTION
+}
+
+' Inheritance relationships
+BaseEntity <|-- OccupationDistribution
+BaseEntity <|-- OccupationalTrends
+BaseEntity <|-- SkillsRequirements
+
+' Interface implementation
+OccupationDistribution ..|> DataAggregatable
+
+' Class relationships
+OccupationDistribution "1" o-- "0..1" OccupationalTrends
+OccupationDistribution "1" o-- "0..1" SkillsRequirements
+OccupationDistribution -- AdminAreaType
+OccupationDistribution -- EconomicDataConfidenceLevel
+OccupationDistribution -- EconomicDataType
+SkillsRequirements -- EducationLevel
+SkillsRequirements -- SkillGapLevel
+@enduml
+----
+
+===== Events
+
+[plantuml]
+----
+@startuml
+class OccupationDistributionCreatedEvent {
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +AdminAreaType adminAreaType
+  +Integer totalEmployed
+  +String dominantOccupation
+  +Integer yearOfData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class OccupationDistributionUpdatedEvent {
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class OccupationalTrendsAnalyzedEvent {
+  +UUID trendsId
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +Integer comparisonPeriodYears
+  +List<String> fastestGrowingOccupations
+  +List<String> fastestDecliningOccupations
+  +Map<String, Double> keyGrowthIndicators
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class StructuralChangeDetectedEvent {
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +String changeType
+  +String dominantShift
+  +Map<String, Object> keyIndicators
+  +Double changeMagnitude
+  +String likelyCauses
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class SkillsGapIdentifiedEvent {
+  +UUID skillsRequirementsId
+  +UUID adminAreaId
+  +List<String> criticalSkillGaps
+  +Map<String, SkillGapLevel> skillGapRatings
+  +Integer estimatedShortfall
+  +String recommendedInterventions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class EmergingOccupationsDetectedEvent {
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +List<String> emergingOccupations
+  +Map<String, Double> growthRates
+  +Map<String, List<String>> requiredSkills
+  +Map<String, EducationLevel> educationRequirements
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class InformalSectorAnalyzedEvent {
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +Double informalSectorPercentage
+  +Map<String, Double> informalOccupationBreakdown
+  +Map<String, Double> formalInformalWageGap
+  +String formalizationPotential
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class OccupationalMismatchIdentifiedEvent {
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +Double mismatchIndex
+  +Map<String, Double> overqualificationRates
+  +Map<String, Double> underqualificationRates
+  +Map<String, Double> horizontalMismatchRates
+  +String mismatchAnalysis
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderOccupationalSegregationAnalyzedEvent {
+  +UUID occupationDistributionId
+  +UUID adminAreaId
+  +Double segregationIndex
+  +List<String> maleDominatedOccupations
+  +List<String> femaleDominatedOccupations
+  +Map<String, Double> genderWageGaps
+  +String segregationAnalysis
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class OccupationalProjectionCreatedEvent {
+  +UUID projectionId
+  +UUID baselineDistributionId
+  +UUID adminAreaId
+  +Integer projectionYear
+  +String projectionMethod
+  +Map<String, Object> keyProjections
+  +String scenarioDescription
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- OccupationDistributionCreatedEvent
+DomainEvent <|-- OccupationDistributionUpdatedEvent
+DomainEvent <|-- OccupationalTrendsAnalyzedEvent
+DomainEvent <|-- StructuralChangeDetectedEvent
+DomainEvent <|-- SkillsGapIdentifiedEvent
+DomainEvent <|-- EmergingOccupationsDetectedEvent
+DomainEvent <|-- InformalSectorAnalyzedEvent
+DomainEvent <|-- OccupationalMismatchIdentifiedEvent
+DomainEvent <|-- GenderOccupationalSegregationAnalyzedEvent
+DomainEvent <|-- OccupationalProjectionCreatedEvent
+@enduml
+----
+
+These events enable the system to notify relevant services and stakeholders about important changes and insights related to occupational distributions. For example, the SkillsGapIdentifiedEvent might trigger notifications to technical education authorities, while the EmergingOccupationsDetectedEvent could alert workforce development agencies about new training priorities.
+
+===== Visual Representation
+
+The OccupationDistribution entity supports various visual representations for analysis:
+
+[plantuml]
+----
+@startuml
+participant "VisualizationService" as Service
+participant "OccupationDistribution" as Occupation
+participant "VisualizationEngine" as Visualization
+participant "DataTransformer" as Transformer
+participant "ChartGenerator" as Charts
+
+Service -> Occupation : getOccupationalVisualization(adminAreaId, visualizationType)
+activate Occupation
+
+Occupation -> Occupation : retrieveDistributionData()
+activate Occupation
+Occupation <-- Occupation : occupationData
+deactivate Occupation
+
+Occupation -> Transformer : prepareDataForVisualization(occupationData, visualizationType)
+activate Transformer
+
+alt visualizationType == CATEGORY_BREAKDOWN
+  Transformer -> Transformer : prepareCategoryDistribution()
+else visualizationType == SECTORAL_BREAKDOWN
+  Transformer -> Transformer : prepareSectoralDistribution()
+else visualizationType == GENDER_COMPARISON
+  Transformer -> Transformer : prepareGenderAnalysis()
+else visualizationType == FORMAL_INFORMAL
+  Transformer -> Transformer : prepareFormalInformalComparison()
+else visualizationType == WAGE_DISTRIBUTION
+  Transformer -> Transformer : prepareWageAnalysis()
+else visualizationType == TRENDS_OVER_TIME
+  Transformer -> Transformer : prepareTemporalAnalysis()
+end
+
+Occupation <-- Transformer : formattedData
+deactivate Transformer
+
+Occupation -> Charts : generateVisualization(formattedData, visualizationType)
+activate Charts
+
+alt visualizationType == CATEGORY_BREAKDOWN
+  Charts -> Charts : createOccupationalPieChart()
+else visualizationType == SECTORAL_BREAKDOWN
+  Charts -> Charts : createSectorStackedBarChart()
+else visualizationType == GENDER_COMPARISON
+  Charts -> Charts : createGenderComparisonChart()
+else visualizationType == FORMAL_INFORMAL
+  Charts -> Charts : createFormalInformalChart()
+else visualizationType == WAGE_DISTRIBUTION
+  Charts -> Charts : createWageDistributionChart()
+else visualizationType == TRENDS_OVER_TIME
+  Charts -> Charts : createTrendLineChart()
+end
+
+Occupation <-- Charts : visualizationObject
+deactivate Charts
+
+Service <-- Occupation : occupationalVisualization
+deactivate Occupation
+@enduml
+----
+
+===== Nepal-Specific Occupation Categories
+
+The OccupationDistribution entity incorporates Nepal-specific occupational categories that may not be well-represented in international classification systems:
+
+1. **Traditional Artisans**: Categories for Nepal's traditional crafts with specific skill sets:
+   - Thanka painters
+   - Metal craftsmen (particularly copper, brass, and silver work)
+   - Traditional woodcarvers
+   - Handloom weavers
+
+2. **Mountain-Specific Occupations**: Specialized roles unique to mountain regions:
+   - High-altitude agriculture specialists
+   - Mountain guides and porters (with subcategories by certification level)
+   - Yak herders
+   - Alpine medicinal plant collectors
+
+3. **Religious Occupations**: Nepal's religious diversity creates unique occupational categories:
+   - Buddhist monks and nuns (with different roles and responsibilities)
+   - Hindu priests and temple caretakers
+   - Shamans and traditional healers
+   - Religious artisans (mask makers, statue carvers, etc.)
+
+4. **Post-Disaster Reconstruction**: Following Nepal's 2015 earthquake, new occupational categories emerged:
+   - Earthquake-resistant construction specialists
+   - Damage assessment technicians
+   - Heritage reconstruction artisans
+   - Disaster-resistant retrofit specialists
+
+5. **Traditional Medicine Practitioners**: Practitioners of traditional medical systems:
+   - Ayurvedic practitioners
+   - Tibetan medicine specialists
+   - Traditional birth attendants
+   - Medicinal herb specialists
+
+The system handles these Nepal-specific occupations while maintaining compatibility with international standards through mapping relationships to the nearest International Standard Classification of Occupations (ISCO) categories, allowing both local relevance and international comparability.
+
+===== Integration with Other Economic Entities
+
+The OccupationDistribution entity has important relationships with other economic entities:
+
+1. **EconomicallyActivePopulation**: Provides the demographic context for occupation distribution data
+
+2. **SkillsDistribution**: Details the specific skills present in the workforce across occupations
+
+3. **TrainedPopulationStatistics**: Provides data on formal training and certification in relation to occupations
+
+4. **RemittanceExpenseStatistics**: Connects to occupation distribution to analyze how remittance patterns relate to occupational choices
+
+5. **HouseholdIncomeSource**: Links household income sources to occupational categories
+
+These integrations allow comprehensive analysis of how occupational patterns relate to other economic indicators, supporting holistic economic development planning.

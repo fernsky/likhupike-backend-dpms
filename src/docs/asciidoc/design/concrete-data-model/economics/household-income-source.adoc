@@ -1,0 +1,1389 @@
+==== Household Income Source
+
+Household Income Source represents data about the various sources of income for households within an administrative area, extending core domain models while providing specialized functionality for income analysis.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface HistoryViewable
+interface DataAggregatable
+
+' HouseholdIncomeSource implementation
+class HouseholdIncomeSource {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID economicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core data
+  +Integer totalHouseholds
+  +Map<IncomeSourceType, Integer> householdsByPrimarySource
+  +Map<IncomeSourceType, Double> percentagesBySource
+  +Map<IncomeSourceType, MonetaryAmount> averageIncomeBySource
+  +Map<IncomeSourceType, Double> medianIncomeBySource
+  +String dominantIncomeSource
+  +Double diversityIndex
+  +Double giniCoefficient
+  +Double averageSourcesPerHousehold
+  +Map<Integer, Integer> householdsBySourceCount
+  
+  ' Remittance specific data
+  +Integer remittanceReceivingHouseholds
+  +Double percentRemittanceReceiving
+  +MonetaryAmount averageRemittanceAmount
+  +Map<RemittanceFrequency, Integer> remittanceFrequencyDistribution
+  +Map<RemittanceCountry, Integer> remittanceCountryDistribution
+  
+  ' Agricultural income
+  +Integer agriculturalIncomeHouseholds
+  +Double percentAgriculturalIncome
+  +Map<CropType, Integer> householdsByCropType
+  +Map<LivestockType, Integer> householdsByLivestockType
+  
+  ' Wage/Salary income
+  +Integer wageIncomeHouseholds
+  +Double percentWageIncome
+  +Map<EmploymentSector, Integer> householdsByEmploymentSector
+  +Map<EmploymentType, Integer> householdsByEmploymentType
+  
+  ' Business income
+  +Integer businessIncomeHouseholds
+  +Double percentBusinessIncome
+  +Map<BusinessType, Integer> householdsByBusinessType
+  +Map<BusinessSize, Integer> householdsByBusinessSize
+  
+  ' Other income sources
+  +Integer pensionIncomeHouseholds
+  +Integer rentalIncomeHouseholds
+  +Integer governmentAssistanceHouseholds
+  +Integer investmentIncomeHouseholds
+  
+  ' Income stability
+  +Map<IncomeStability, Integer> householdsByIncomeStability
+  +Map<SeasonalityPattern, Integer> householdsBySeasonality
+  +Map<IncomeChangePattern, Integer> householdsByIncomeChange
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +LocalDate referenceDate
+  +EconomicDataConfidenceLevel confidenceLevel
+  +EconomicDataType dataType
+  +String methodologyNotes
+  +Boolean isProjected
+  +UUID surveyId
+  +Integer sampleSize
+}
+
+' Supporting classes
+class IncomeDistribution {
+  +UUID id
+  +UUID householdIncomeSourceId
+  +Map<IncomeQuintile, Integer> householdsByQuintile
+  +Map<IncomeQuintile, MonetaryAmount> quintileBoundaries
+  +Map<IncomeDecile, Integer> householdsByDecile
+  +Map<IncomeDecile, MonetaryAmount> decileBoundaries
+  +MonetaryAmount povertyLine
+  +Integer householdsBelowPovertyLine
+  +Double percentBelowPovertyLine
+  +MonetaryAmount meanIncome
+  +MonetaryAmount medianIncome
+  +String distributionNotes
+}
+
+class IncomeSourceDynamics {
+  +UUID id
+  +UUID householdIncomeSourceId
+  +Map<IncomeSourceType, IncomeSourceTrend> sourceTypeTrends
+  +Map<IncomeSourceType, String> trendExplanations
+  +Map<IncomeSourceType, Double> sourceTypeGrowthRates
+  +List<IncomeSourceType> emergingSources
+  +List<IncomeSourceType> decliningSource
+  +Integer baselineYear
+  +Integer comparisonYear
+  +String dynamicsNotes
+}
+
+' Value objects
+class MonetaryAmount {
+  +BigDecimal amount
+  +Currency currency
+  +LocalDate exchangeRateDate
+  +String formatWithSymbol()
+  +MonetaryAmount convertTo(Currency)
+  +MonetaryAmount adjustForInflation(Year, Year)
+}
+
+' Enumerations
+enum AdminAreaType {
+  PROVINCE
+  DISTRICT
+  MUNICIPALITY
+  WARD
+  VDC
+  CUSTOM_AREA
+}
+
+enum IncomeSourceType {
+  AGRICULTURE_CROPS
+  AGRICULTURE_LIVESTOCK
+  WAGE_EMPLOYMENT_FORMAL
+  WAGE_EMPLOYMENT_INFORMAL
+  SELF_EMPLOYMENT_REGISTERED
+  SELF_EMPLOYMENT_UNREGISTERED
+  REMITTANCE_INTERNATIONAL
+  REMITTANCE_DOMESTIC
+  RENTAL_INCOME
+  PENSION
+  GOVERNMENT_ASSISTANCE
+  INVESTMENT_INCOME
+  FOREST_PRODUCTS
+  ARTISANAL_PRODUCTS
+  DAILY_LABOR
+  OTHER
+}
+
+enum RemittanceFrequency {
+  MONTHLY
+  QUARTERLY
+  BIANNUAL
+  ANNUAL
+  IRREGULAR
+}
+
+enum RemittanceCountry {
+  INDIA
+  QATAR
+  UAE
+  SAUDI_ARABIA
+  KUWAIT
+  MALAYSIA
+  SOUTH_KOREA
+  JAPAN
+  USA
+  UK
+  AUSTRALIA
+  OTHER
+}
+
+enum EmploymentSector {
+  AGRICULTURE
+  MANUFACTURING
+  CONSTRUCTION
+  EDUCATION
+  HEALTH
+  HOSPITALITY
+  RETAIL
+  TRANSPORTATION
+  GOVERNMENT
+  BANKING_FINANCE
+  IT_COMMUNICATIONS
+  SECURITY
+  OTHER_SERVICES
+}
+
+enum EmploymentType {
+  PERMANENT
+  TEMPORARY
+  SEASONAL
+  DAILY_WAGE
+  CONTRACT_BASED
+}
+
+enum BusinessType {
+  RETAIL
+  WHOLESALE
+  MANUFACTURING
+  SERVICES
+  AGRICULTURE_RELATED
+  HOSPITALITY
+  CONSTRUCTION
+  TRANSPORTATION
+  TECHNICAL_PROFESSIONAL
+  ARTISANAL
+  OTHER
+}
+
+enum BusinessSize {
+  MICRO
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum IncomeStability {
+  VERY_STABLE
+  STABLE
+  MODERATELY_STABLE
+  UNSTABLE
+  HIGHLY_UNSTABLE
+}
+
+enum SeasonalityPattern {
+  CONSISTENT_YEAR_ROUND
+  AGRICULTURAL_SEASONALITY
+  TOURISM_SEASONALITY
+  CONSTRUCTION_SEASONALITY
+  FESTIVAL_SEASONALITY
+  IRREGULAR
+}
+
+enum IncomeChangePattern {
+  INCREASING
+  STABLE
+  FLUCTUATING
+  DECREASING
+  RAPIDLY_DECREASING
+}
+
+enum IncomeSourceTrend {
+  RAPIDLY_GROWING
+  GROWING
+  STABLE
+  DECLINING
+  RAPIDLY_DECLINING
+}
+
+enum IncomeQuintile {
+  LOWEST
+  SECOND
+  THIRD
+  FOURTH
+  HIGHEST
+}
+
+enum IncomeDecile {
+  FIRST
+  SECOND
+  THIRD
+  FOURTH
+  FIFTH
+  SIXTH
+  SEVENTH
+  EIGHTH
+  NINTH
+  TENTH
+}
+
+enum CropType {
+  RICE
+  WHEAT
+  MAIZE
+  MILLET
+  PULSES
+  VEGETABLES
+  FRUITS
+  CASH_CROPS
+  SPICES
+  OTHER
+}
+
+enum LivestockType {
+  CATTLE
+  BUFFALO
+  GOATS
+  SHEEP
+  POULTRY
+  PIGS
+  FISH
+  OTHER
+}
+
+enum EconomicDataConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+}
+
+enum EconomicDataType {
+  CENSUS
+  SURVEY
+  ADMINISTRATIVE
+  ESTIMATE
+  PROJECTION
+}
+
+' Inheritance relationships
+BaseEntity <|-- HouseholdIncomeSource
+BaseEntity <|-- IncomeDistribution
+BaseEntity <|-- IncomeSourceDynamics
+
+' Interface implementation
+HouseholdIncomeSource ..|> HistoryViewable
+HouseholdIncomeSource ..|> DataAggregatable
+
+' Class relationships
+HouseholdIncomeSource "1" o-- "0..1" IncomeDistribution
+HouseholdIncomeSource "1" o-- "0..1" IncomeSourceDynamics
+HouseholdIncomeSource -- AdminAreaType
+HouseholdIncomeSource -- EconomicDataConfidenceLevel
+HouseholdIncomeSource -- EconomicDataType
+@enduml
+----
+
+===== Income Source Data Collection Process
+
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Design household income survey;
+:Develop income source questionnaire;
+:Train enumerators on income assessment;
+
+|Field Enumerators|
+:Conduct household interviews;
+:Document income sources;
+:Record income amounts;
+:Assess income stability;
+:Document seasonality patterns;
+note right
+  Nepal-specific challenges:
+  - Multiple income sources common
+  - Seasonal income fluctuations
+  - Non-cash income valuation
+  - Remittance flow monitoring
+  - Informal economy dominance
+end note
+
+|Data Processing Team|
+:Process raw income data;
+:Convert non-monetary income;
+:Normalize remittance values;
+:Calculate income proportions;
+:Identify primary sources;
+note right
+  Processing considerations:
+  - Currency standardization
+  - Urban-rural income differences
+  - Remittance exchange rates
+  - In-kind income valuation
+  - Seasonal income normalization
+end note
+
+|System|
+:Import validated income data;
+:Calculate income distributions;
+:Compute source diversification;
+:Identify dominant sources;
+:Generate income inequality metrics;
+
+|Economic Analyst|
+:Analyze income patterns;
+:Compare with baseline periods;
+:Assess remittance dependencies;
+:Evaluate regional variations;
+:Document income transition patterns;
+
+|Quality Assurance|
+:Review data completeness;
+:Validate income statistics;
+:Check for statistical anomalies;
+:Compare with external indicators;
+:Assign confidence levels;
+
+|Economics Statistics Division|
+:Finalize income source statistics;
+:Prepare analytical summaries;
+:Generate comparative indicators;
+:Document methodology limitations;
+:Classify data quality levels;
+
+|Data Users|
+:Access income source data;
+:Use in poverty analysis;
+:Analyze economic vulnerability;
+:Develop targeted interventions;
+:Monitor economic transitions;
+
+stop
+@enduml
+----
+
+===== Income Source Trend Analysis
+
+[plantuml]
+----
+@startuml
+|Economic Research Division|
+start
+:Define income trend parameters;
+:Select baseline years;
+:Specify income source categories;
+
+|System|
+:Retrieve historical income data;
+:Link time-series datasets;
+:Apply income normalization;
+
+|Economic Analyst|
+:Review longitudinal trends;
+:Identify emerging income sources;
+:Analyze declining sectors;
+:Document transition patterns;
+:Assess remittance evolution;
+
+|System|
+:Calculate transition matrices;
+:Generate trend visualizations;
+:Compute diversification changes;
+:Model income stability trends;
+
+|Economic Planning Unit|
+:Interpret economic transitions;
+:Identify vulnerability factors;
+:Document market integration;
+:Assess modernization patterns;
+:Prepare planning recommendations;
+
+|System|
+:Publish trend analysis;
+:Update economic dashboards;
+:Generate trend alerts;
+:Archive analytical results;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Household Income Source data is used in the system:
+
+====== Remittance Dependency Analysis
+
+*Scenario:* Using income source data to analyze remittance dependency and develop economic diversification strategies
+
+[plantuml]
+----
+@startuml
+actor "Provincial Planning\nCommission" as PPC
+actor "Economic Resilience\nTask Force" as ERTF
+participant "HouseholdIncomeSource" as Income
+participant "RemittanceAnalysis" as Remittance
+participant "EconomicVulnerability" as Vulnerability
+participant "LaborMarketAnalysis" as Labor
+participant "DiversificationStrategy" as Strategy
+
+PPC -> Income : Request remittance dependency data
+activate Income
+Income -> Income : FilterHighRemittanceAreas()
+Income -> Income : CalculateRemittanceDependencyRatios()
+Income -> Income : IdentifySourceConcentrations()
+Income -> Income : MapGeographicDependencies()
+PPC <-- Income : Remittance dependency profile
+deactivate Income
+
+PPC -> Remittance : Analyze remittance patterns
+activate Remittance
+Remittance -> Remittance : AnalyzeDestinationCountries()
+Remittance -> Remittance : CalculateRemittanceStability()
+Remittance -> Remittance : AssessRemittanceUtilization()
+Remittance -> Remittance : ProjectRemittanceTrends()
+PPC <-- Remittance : Remittance pattern analysis
+deactivate Remittance
+
+PPC -> Vulnerability : Assess economic vulnerabilities
+activate Vulnerability
+Vulnerability -> Vulnerability : CalculateExternalShockSensitivity()
+Vulnerability -> Vulnerability : ModelRemittanceDisruptionImpact()
+Vulnerability -> Vulnerability : IdentifyHighRiskCommunities()
+Vulnerability -> Vulnerability : AssessHouseholdResilienceFactors()
+PPC <-- Vulnerability : Vulnerability assessment
+deactivate Vulnerability
+
+ERTF -> Labor : Analyze local labor markets
+activate Labor
+Labor -> Labor : MapExistingSkillSets()
+Labor -> Labor : AssessEmploymentOpportunities()
+Labor -> Labor : IdentifySkillGaps()
+Labor -> Labor : EvaluateWageDifferentials()
+ERTF <-- Labor : Labor market analysis
+deactivate Labor
+
+ERTF -> Strategy : Develop diversification strategies
+activate Strategy
+Strategy -> Strategy : IdentifyViableEconomicSectors()
+Strategy -> Strategy : DesignLocalValueChains()
+Strategy -> Strategy : CreateSkillDevelopmentPrograms()
+Strategy -> Strategy : EstablishMarketLinkages()
+ERTF <-- Strategy : Diversification recommendations
+deactivate Strategy
+
+PPC -> PPC : Formulate policy framework
+activate PPC
+PPC -> PPC : DesignInvestmentIncentives()
+PPC -> PPC : EstablishSkillsInitiatives()
+PPC -> PPC : CreateRiskMitigationMechanisms()
+PPC -> PPC : DevelopImplementationRoadmap()
+deactivate PPC
+
+ERTF -> ERTF : Create implementation plan
+activate ERTF
+ERTF -> ERTF : PrioritizeInterventionAreas()
+ERTF -> ERTF : AllocateResourcesByRegion()
+ERTF -> ERTF : EstablishMonitoringFramework()
+ERTF -> ERTF : CreateTimelinedActions()
+deactivate ERTF
+
+PPC -> ERTF : Implement economic diversification program
+@enduml
+----
+
+*Real-World Context:*
+Sudurpaschim Province in far-western Nepal is developing an economic diversification strategy to reduce its extreme dependence on remittances. The household income source data reveals a stark reality: remittances constitute the primary income source for 47% of households province-wide, rising to 72% in certain hill districts like Baitadi and Dadeldhura.
+
+The process begins with a comprehensive remittance dependency analysis. The data shows that 82% of remittances come from just three countries (India, Qatar, and UAE), creating significant vulnerability to economic or policy changes in these nations. Remittance receiving households derive, on average, 68% of their total income from these transfers. The geographical analysis reveals concerning patterns - in certain municipalities, over 85% of households rely on remittances for survival, with virtually no working-age males present during most of the year.
+
+The Remittance Analysis examines specific patterns. Unlike other provinces where Gulf and Malaysia migration dominates, Sudurpaschim has a high proportion of India-bound migrants (63%), typically earning lower remittances than those going to Gulf countries. The assessment of remittance utilization reveals that only 11% of remittance income is invested in productive assets or businesses, with consumption (61%), housing (17%), and education (13%) being the primary uses. This limited productive investment perpetuates dependency cycles.
+
+The Economic Vulnerability assessment models potential shock scenarios. A 20% decrease in remittance flows (a realistic possibility given India's economic fluctuations or Gulf nations' indigenization policies) would push an estimated 14.2% of the province's population below the poverty line. The assessment identifies 37 wards across 16 municipalities as "critically vulnerable" due to their combination of high remittance dependency, low skill levels in the remaining population, and limited existing economic alternatives.
+
+Based on this comprehensive analysis, the Economic Resilience Task Force develops a multi-faceted economic diversification strategy:
+
+1. **Agriculture Commercialization Focus**: 
+   - Identification of 6 high-potential agricultural value chains suited to the province's ecology (apples, walnuts, off-season vegetables, medicinal herbs, goat farming, and honey)
+   - Development of production clusters in 28 strategic locations across the province
+   - Creation of collection centers and cold storage facilities at 12 strategic transportation nodes
+   - Establishment of processing facilities for value addition before market transport
+
+2. **Tourism Infrastructure Development**:
+   - Investment in infrastructure for emerging tourism routes connecting Rara Lake to India-border regions
+   - Development of homestay networks in 34 villages with cultural significance or natural beauty
+   - Creation of tourism skills training programs targeting remittance-dependent households
+   - Marketing support for community-based tourism initiatives
+
+3. **Small Enterprise Ecosystem**:
+   - Establishment of business incubation centers in 4 strategic urban hubs
+   - Development of a specialized "Returnee Entrepreneur Program" with technical and financial support
+   - Creation of market linkages to major urban centers and India border markets
+   - Formation of product aggregation cooperatives for enhanced market access
+
+4. **Skills Development Initiative**:
+   - Establishment of 8 technical training centers focusing on construction, hospitality, and agro-processing
+   - Creation of mobile training units to reach remote communities
+   - Development of a "Spouse Economic Empowerment Program" targeting left-behind family members
+   - Implementation of specialized training for returned migrants to leverage their experience
+
+The Provincial Planning Commission establishes clear targets: reduce the proportion of households with remittances as primary income from 47% to 35% within 5 years, increase the share of remittances invested in productive assets to 25%, and create 45,000 new jobs within the province to absorb returning migrants. The implementation timeline prioritizes "critically vulnerable" areas for immediate intervention, with phased expansion to moderate-risk areas over years 2-3.
+
+This evidence-based approach ensures that economic diversification initiatives target both the most dependent regions and the most feasible alternative livelihoods, creating realistic pathways to reduce the province's extreme remittance dependency.
+
+====== Poverty Reduction Planning
+
+*Scenario:* Using income source data to design targeted poverty reduction interventions
+
+[plantuml]
+----
+@startuml
+actor "District Poverty\nReduction Committee" as DPRC
+actor "Livelihood Program\nManager" as Program
+participant "HouseholdIncomeSource" as Income
+participant "PovertyAnalysis" as Poverty
+participant "LivelihoodMapping" as Livelihood
+participant "MarketAnalysis" as Market
+participant "InterventionDesign" as Design
+
+DPRC -> Income : Request poverty-related income data
+activate Income
+Income -> Income : FilterByIncomeQuantiles()
+Income -> Income : AnalyzeIncomeSourcesByPovertyStatus()
+Income -> Income : MapGeographicConcentrations()
+Income -> Income : AssessIncomeSustainability()
+DPRC <-- Income : Income poverty profile
+deactivate Income
+
+DPRC -> Poverty : Analyze poverty characteristics
+activate Poverty
+Poverty -> Poverty : IdentifyChronicTransientPoverty()
+Poverty -> Poverty : AnalyzeVulnerabilityFactors()
+Poverty -> Poverty : AssessPovertyDynamics()
+Poverty -> Poverty : CalculatePovertyGaps()
+DPRC <-- Poverty : Poverty dynamics analysis
+deactivate Poverty
+
+DPRC -> Livelihood : Map livelihood opportunities
+activate Livelihood
+Livelihood -> Livelihood : IdentifyExistingCapabilities()
+Livelihood -> Livelihood : AssessLocalResources()
+Livelihood -> Livelihood : EvaluateSuccessfulModels()
+Livelihood -> Livelihood : MapInfrastructureAccess()
+DPRC <-- Livelihood : Livelihood opportunity map
+deactivate Livelihood
+
+Program -> Market : Analyze market systems
+activate Market
+Market -> Market : IdentifyGrowthSectors()
+Market -> Market : AssessValueChains()
+Market -> Market : EvaluateMarketAccess()
+Market -> Market : AnalyzePriceStability()
+Program <-- Market : Market systems analysis
+deactivate Market
+
+Program -> Design : Design poverty interventions
+activate Design
+Design -> Design : DevelopLivelihoodModels()
+Design -> Design : CreateMarketLinkages()
+Design -> Design : DesignSkillsInterventions()
+Design -> Design : EstablishFinancialInclusion()
+Program <-- Design : Intervention designs
+deactivate Design
+
+DPRC -> DPRC : Prioritize intervention areas
+activate DPRC
+DPRC -> DPRC : RankByPovertyIntensity()
+DPRC -> DPRC : AssessInterventionViability()
+DPRC -> DPRC : CalculateResourceRequirements()
+DPRC -> DPRC : EstablishTargetingCriteria()
+deactivate DPRC
+
+Program -> Program : Develop implementation plan
+activate Program
+Program -> Program : CreateLivelihoodPackages()
+Program -> Program : DesignTargetingMechanisms()
+Program -> Program : EstablishMonitoringFramework()
+Program -> Program : DevelopPhasingStrategy()
+deactivate Program
+
+DPRC -> Program : Implement poverty reduction program
+@enduml
+----
+
+*Real-World Context:*
+Karnali Province, Nepal's most remote and economically challenged province, is developing a targeted poverty reduction program using household income source data. The province has a poverty rate of 28.9% compared to the national average of 18.7%, with extreme variations across districts and municipalities.
+
+The analysis begins with detailed household income source data. The statistics reveal that among the poorest quintile, subsistence agriculture is the primary income source for 72% of households, but it provides only enough food for an average of 5.8 months per year. Wage labor (primarily seasonal and unreliable) is the second most common income source at 18%. Analysis shows minimal income diversification among poor households, with 68% relying on a single income source and 27% having just two sources. Income sustainability assessment reveals that 73% of households in the bottom quintile experience severe seasonal income gaps lasting 3+ months annually.
+
+The Poverty Analysis examines poverty dynamics in detail. Chronic poverty (households poor for 5+ years) affects 62% of the poor population, while 38% experience transient poverty linked to shocks like illness, drought, or market disruptions. Geographic analysis reveals extreme concentration in specific wards - 41% of the province's poor households are located in just 18% of its wards, primarily in remote mountain areas of Humla, Mugu, and Dolpa districts. The poverty gap (how far below the poverty line households fall) averages 31% for the province, but exceeds 45% in the most vulnerable mountain communities.
+
+The Livelihood Mapping service identifies existing capabilities and opportunities. Despite extreme poverty, the analysis identifies valuable skills in traditional crafts (woodworking, textile weaving), specialized high-altitude agriculture knowledge, and non-timber forest product collection techniques. Local resources with economic potential include medicinal and aromatic plants, high-value fruits adapted to mountain conditions, tourism potential in pristine landscapes, and distinctive cultural traditions. The mapping also reveals severe infrastructure limitations, with 43% of poor communities requiring more than 4 hours walking to reach motorable roads.
+
+Based on this comprehensive analysis, the Livelihood Program Manager develops a multi-faceted poverty reduction strategy:
+
+1. **High-Value Agriculture Initiative**:
+   - Introduction of climate-resilient crop varieties suited to high altitudes
+   - Development of seed banks for traditional crop varieties with market potential
+   - Technical training on improved agricultural techniques for marginal lands
+   - Formation of producer groups for aggregation and market access
+   - Specialized focus on off-season vegetables for premium pricing
+
+2. **Non-Timber Forest Product Value Chain**:
+   - Sustainable harvesting training for medicinal plants, herbs, and mushrooms
+   - Processing facilities at strategic locations to increase value before transport
+   - Certification programs for organic and sustainable collection
+   - Market connections to Kathmandu processors and exporters
+   - Community forest management strengthening
+
+3. **Rural Enterprise Development**:
+   - Identification and support for micro-enterprises requiring minimal infrastructure
+   - Development of artisanal crafts with tourism and export market potential
+   - Training in food processing techniques for seasonal production
+   - Formation of savings groups to fund micro-enterprise development
+   - Mobile technical support teams for remote communities
+
+4. **Market Access Enhancement**:
+   - Establishment of collection centers at strategic locations
+   - Creation of porter/mule transport networks from remote areas to road heads
+   - Development of digital market information systems accessible by basic phones
+   - Formation of marketing cooperatives for collective bargaining
+   - Weather-protected periodic markets in mountain areas
+
+The program design includes specialized components for the most vulnerable:
+
+1. **Ultra-Poor Graduation Approach**:
+   - Asset transfers (livestock or equipment) to the poorest households
+   - Consumption support during enterprise development phase
+   - Intensive coaching and technical support
+   - Savings group participation
+   - Health and education linkages
+
+2. **Women's Economic Empowerment**:
+   - Female-specific livelihood options compatible with caregiving responsibilities
+   - Women's savings and credit groups with social components
+   - Literacy and numeracy integrated with economic activities
+   - Leadership development within economic groups
+   - Gender-based violence prevention integrated with economic activities
+
+The District Poverty Reduction Committee establishes clear targets: reduce the provincial poverty rate from 28.9% to 22% within 5 years, decrease the poverty gap from 31% to 20%, and increase income source diversification so that at least 60% of poor households have 3+ income sources. The implementation timeline prioritizes the poorest wards first, with phased expansion based on poverty severity and intervention viability.
+
+This evidence-based approach ensures that poverty reduction initiatives address both immediate needs and systemic barriers, while building on existing capabilities and resources rather than imposing external solutions disconnected from local realities.
+
+====== Value Chain Development
+
+*Scenario:* Using household income source data to design agricultural value chain interventions
+
+[plantuml]
+----
+@startuml
+actor "Agricultural\nDevelopment Bank" as ADB
+actor "Value Chain\nSpecialist" as VCS
+participant "HouseholdIncomeSource" as Income
+participant "AgriculturalPatternAnalysis" as Agriculture
+participant "MarketSystemsMapping" as Market
+participant "ValueChainAnalysis" as ValueChain
+participant "FinancialServicesDesign" as Financial
+
+ADB -> Income : Analyze agricultural income sources
+activate Income
+Income -> Income : FilterByAgriculturalHouseholds()
+Income -> Income : AnalyzeCropTypeDistribution()
+Income -> Income : AssessIncomeSustainability()
+Income -> Income : IdentifyCommercialPotential()
+ADB <-- Income : Agricultural income profile
+deactivate Income
+
+ADB -> Agriculture : Map agricultural patterns
+activate Agriculture
+Agriculture -> Agriculture : MapProductionClusters()
+Agriculture -> Agriculture : AnalyzeProductionVolumes()
+Agriculture -> Agriculture : AssessProductivityLevels()
+Agriculture -> Agriculture : IdentifyConstraints()
+ADB <-- Agriculture : Agricultural system analysis
+deactivate Agriculture
+
+VCS -> Market : Analyze market systems
+activate Market
+Market -> Market : MapLocalMarkets()
+Market -> Market : IdentifyIntermediaries()
+Market -> Market : AnalyzePriceFormation()
+Market -> Market : AssessMarketInfrastructure()
+VCS <-- Market : Market systems mapping
+deactivate Market
+
+VCS -> ValueChain : Conduct value chain assessment
+activate ValueChain
+ValueChain -> ValueChain : IdentifyKeyActors()
+ValueChain -> ValueChain : MapValueAddition()
+ValueChain -> ValueChain : AnalyzeMarginDistribution()
+ValueChain -> ValueChain : IdentifyUpgradePoints()
+VCS <-- ValueChain : Value chain assessment
+deactivate ValueChain
+
+ADB -> Financial : Design financial services
+activate Financial
+Financial -> Financial : DesignSeasonalCreditProducts()
+Financial -> Financial : CreateInvestmentLoans()
+Financial -> Financial : DevelopRiskMitigationTools()
+Financial -> Financial : EstablishCollectionBasedLending()
+ADB <-- Financial : Financial services design
+deactivate Financial
+
+VCS -> VCS : Develop value chain interventions
+activate VCS
+VCS -> VCS : DesignProducerCollectives()
+VCS -> VCS : CreateProcessingUpgrades()
+VCS -> VCS : DevelopMarketLinkages()
+VCS -> VCS : EstablishQualityStandards()
+deactivate VCS
+
+ADB -> ADB : Design financing program
+activate ADB
+ADB -> ADB : CreateValueChainFinanceProducts()
+ADB -> ADB : EstablishRiskProtocols()
+ADB -> ADB : DevelopCollectionCenterModel()
+ADB -> ADB : DefineImplementationTimeline()
+deactivate ADB
+
+ADB -> VCS : Implement value chain program
+@enduml
+----
+
+*Real-World Context:*
+The Agricultural Development Bank of Nepal, in collaboration with the Province 1 government, is designing a comprehensive value chain development program for eastern Nepal's ginger sector. Despite having ideal growing conditions, farmers receive minimal returns from ginger production due to poor market integration and value chain inefficiencies.
+
+The analysis begins with household income source data for the target districts of Ilam, Panchthar, and Taplejung. The statistics reveal that 38% of agricultural households grow ginger, but it contributes only 14% of their income on average due to low prices and post-harvest losses. Most ginger-growing households (72%) sell unprocessed ginger to local collectors at harvest time, receiving just 22-28% of the final market value. Income sustainability assessment shows ginger provides income for only 3-4 months per year during harvest season, forcing households to rely on other often precarious income sources for the remaining months.
+
+The Agricultural Pattern Analysis examines production systems in detail. The analysis identifies several production clusters with suitable agro-ecological conditions, particularly in mid-hill regions between 800-1500m elevation. Production volumes average 8.7 metric tons per hectare, well below the achievable yield of 15-18 metric tons with improved practices. Key production constraints include limited access to quality planting materials, disease management challenges (particularly rhizome rot), and minimal application of good agricultural practices. The seasonal production pattern creates market gluts during harvest months (November-January), driving prices down significantly.
+
+The Market Systems Mapping reveals complex intermediation patterns. Most farmers sell to village-level collectors who consolidate small volumes from 20-30 farmers before selling to larger traders. These traders then transport ginger to either the Indian border or Kathmandu markets. Price analysis shows that farmers receive NPR 25-35 per kg for fresh ginger, while the same ginger sells for NPR 110-130 per kg in Kathmandu retail markets. Market infrastructure assessment identifies key gaps - limited storage facilities result in 23% post-harvest losses, and only 4 of 27 collection points have proper weighing, grading, and storage facilities.
+
+Based on this comprehensive analysis, the Value Chain Specialist designs a multi-faceted intervention strategy:
+
+1. **Production Enhancement**:
+   - Establishment of community-based seed multiplication systems for disease-free planting material
+   - Farmer field schools focusing on good agricultural practices and disease management
+   - Introduction of organic certification processes for premium market access
+   - Development of intercropping systems to maximize land productivity
+
+2. **Post-Harvest Management**:
+   - Construction of 12 improved collection centers with washing, grading, and temporary storage facilities
+   - Introduction of simple processing equipment for cleaning and sorting at collection points
+   - Training in improved harvesting and handling practices to reduce damage
+   - Development of fiber bags and improved packaging to extend shelf life
+
+3. **Processing and Value Addition**:
+   - Establishment of 3 ginger processing centers for producing dried ginger, ginger powder, and oil
+   - Technical training for micro-entrepreneurs in processing technologies
+   - Product development support for creating higher-value products like candy and preserves
+   - Packaging and branding support for processed products
+
+4. **Market Development**:
+   - Formation of marketing cooperatives linking 3,500+ farmers
+   - Development of direct market linkages to national supermarket chains and exporters
+   - Creation of digital market information platform accessible via SMS
+   - Facilitation of contract farming arrangements with processors
+
+The Agricultural Development Bank designs specialized financial products to support this value chain:
+
+1. **Seasonal Production Financing**:
+   - Short-term loans aligned with ginger production cycle
+   - Group-based lending through farmer cooperatives
+   - Flexible repayment scheduling based on harvest timing
+   - Built-in weather index insurance for risk mitigation
+
+2. **Collection Center Financing**:
+   - Medium-term loans for collection center establishment
+   - Cooperative-based ownership model
+   - Partial guarantee mechanism to reduce collateral requirements
+   - Technical assistance component tied to financing
+
+3. **Processing Enterprise Financing**:
+   - Long-term investment loans for processing equipment
+   - Grace periods aligned with business development timeline
+   - Reduced interest rates for women-led enterprises
+   - Linkage to business development services
+
+4. **Value Chain Liquidity Facility**:
+   - Short-term financing for traders linked to collection centers
+   - Inventory-based lending using stored ginger as collateral
+   - Digital transaction platform to improve transparency
+   - Price stabilization mechanism during market gluts
+
+The program sets clear targets: increase farmer income from ginger by 75%, reduce post-harvest losses from 23% to below 10%, increase the proportion of ginger that undergoes value addition from 8% to 30%, and establish at least 5 sustainable market linkages to national and export markets. The implementation timeline spans three years, beginning with production improvements in year one, followed by collection center development, and culminating in processing and market linkages.
+
+This evidence-based approach addresses bottlenecks throughout the value chain, increasing both the volume and value of ginger production while ensuring that smallholder farmers capture a greater share of the final value.
+
+===== DataAggregatable Implementation
+
+The HouseholdIncomeSource entity implements the DataAggregatable interface to support hierarchical data aggregation:
+
+[plantuml]
+----
+@startuml
+participant "EconomicPlanning" as Service
+participant "HouseholdIncomeSource\nimplements DataAggregatable" as Income
+participant "Repository" as Repo
+participant "AggregationEngine" as Engine
+participant "DataValidator" as Validator
+
+Service -> Income : getAggregatedData(provinceId, "DISTRICT")
+activate Income
+
+Income -> Income : validateAggregationRequest(provinceId, "DISTRICT")
+activate Income
+Income -> Income : checkPermissions()
+Income -> Income : validateHierarchy()
+Income <-- Income : requestValid
+deactivate Income
+
+Income -> Repo : findChildAreas(provinceId, "DISTRICT")
+activate Repo
+Income <-- Repo : districtIncomeData
+deactivate Repo
+
+Income -> Engine : aggregateIncomeData(districtIncomeData)
+activate Engine
+Engine -> Engine : aggregateIncomeSources()
+Engine -> Engine : calculateWeightedAverages()
+Engine -> Engine : combineSourceDistributions()
+Engine -> Engine : aggregateRemittanceData()
+Income <-- Engine : aggregatedIncomeData
+deactivate Engine
+
+Income -> Validator : validateAggregate(aggregatedData, provinceId)
+activate Validator
+Validator -> Validator : checkTotalConsistency()
+Validator -> Validator : verifyPercentages()
+Validator -> Validator : flagStatisticalAnomalies()
+Income <-- Validator : validationResults
+deactivate Validator
+
+Income -> Income : applyValidationAdjustments(validationResults)
+Income -> Income : buildAggregateResponse()
+
+Service <-- Income : aggregatedIncomeData
+deactivate Income
+
+Service -> Income : drillDown(provinceId, "DISTRICT", districtId)
+activate Income
+Income -> Repo : findChildAreas(districtId, "MUNICIPALITY")
+activate Repo
+Income <-- Repo : municipalityIncomeData
+deactivate Repo
+Income -> Engine : aggregateIncomeData(municipalityIncomeData)
+activate Engine
+Income <-- Engine : aggregatedData
+deactivate Engine
+Service <-- Income : districtDetailWithMunicipalities
+deactivate Income
+@enduml
+----
+
+The HouseholdIncomeSource entity's implementation of DataAggregatable provides powerful capabilities for income analysis across different administrative levels and income source categories.
+
+The aggregation process applies specialized methods for income data:
+
+1. **Weighted Income Aggregation**: Household counts and income amounts are weighted appropriately when aggregating to higher administrative levels
+
+2. **Source Category Preservation**: The distribution across income source types is preserved during aggregation to maintain analytical value
+
+3. **Remittance-Specific Handling**: Special handling for remittance data ensures source countries and frequencies are accurately represented in aggregated data
+
+4. **Income Distribution Maintenance**: Income quintile and decile distributions are carefully aggregated to maintain accurate inequality measures
+
+5. **Zero-Value Handling**: Proper handling of areas with zero households for specific income sources to avoid mathematical errors
+
+Special considerations for Nepal's context include:
+
+1. **Seasonal Income Normalization**: Adjustments for seasonal variations in income sources, particularly important in agricultural regions
+
+2. **Remittance Exchange Rate Standardization**: Handling of multiple currencies for remittance income with standardized exchange rates
+
+3. **In-Kind Income Valuation**: Consistent valuation of non-monetary income, particularly agricultural production for self-consumption
+
+4. **Urban-Rural Distinction**: Maintenance of separation between urban and rural income patterns when aggregating to higher levels
+
+===== HistoryViewable Implementation
+
+The HouseholdIncomeSource entity implements the HistoryViewable interface to track changes in income patterns over time:
+
+[plantuml]
+----
+@startuml
+participant "EconomicAnalysis" as Service
+participant "HouseholdIncomeSource\nimplements HistoryViewable" as Income
+participant "VersionRepository" as Versions
+participant "ChangeAnalysis" as Analysis
+
+Service -> Income : getChangeHistory(adminAreaId)
+activate Income
+
+Income -> Versions : findByEntityTypeAndEntityId("HouseholdIncomeSource", adminAreaId)
+activate Versions
+Income <-- Versions : versionHistory
+deactivate Versions
+
+Service <-- Income : incomeSourceHistory
+deactivate Income
+
+Service -> Income : compareVersions(adminAreaId, 2015, 2022)
+activate Income
+
+Income -> Versions : findByEntityIdAndYear(adminAreaId, 2015)
+activate Versions
+Income <-- Versions : data2015
+deactivate Versions
+
+Income -> Versions : findByEntityIdAndYear(adminAreaId, 2022)
+activate Versions
+Income <-- Versions : data2022
+deactivate Versions
+
+Income -> Analysis : analyzeIncomeSourceChanges(data2015, data2022)
+activate Analysis
+Analysis -> Analysis : calculateSourceTransitions()
+Analysis -> Analysis : detectEmergingSources()
+Analysis -> Analysis : identifyDecliningSource()
+Analysis -> Analysis : assessDiversificationChanges()
+Income <-- Analysis : changeAnalysis
+deactivate Analysis
+
+Service <-- Income : incomeSourceComparison
+deactivate Income
+
+Service -> Income : getSourceTransitionMatrix(adminAreaId, 2015, 2022)
+activate Income
+Income -> Analysis : generateTransitionMatrix(data2015, data2022)
+activate Analysis
+Income <-- Analysis : transitionMatrix
+deactivate Analysis
+Service <-- Income : incomeTransitionMatrix
+deactivate Income
+@enduml
+----
+
+===== HouseholdIncomeSource Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface HistoryViewable
+interface DataAggregatable
+
+' Main classes
+class HouseholdIncomeSource {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID economicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core data
+  +Integer totalHouseholds
+  +Map<IncomeSourceType, Integer> householdsByPrimarySource
+  +Map<IncomeSourceType, Double> percentagesBySource
+  +Map<IncomeSourceType, MonetaryAmount> averageIncomeBySource
+  +Map<IncomeSourceType, Double> medianIncomeBySource
+  +String dominantIncomeSource
+  +Double diversityIndex
+  +Double giniCoefficient
+  +Double averageSourcesPerHousehold
+  +Map<Integer, Integer> householdsBySourceCount
+  
+  ' Remittance specific data
+  +Integer remittanceReceivingHouseholds
+  +Double percentRemittanceReceiving
+  +MonetaryAmount averageRemittanceAmount
+  +Map<RemittanceFrequency, Integer> remittanceFrequencyDistribution
+  +Map<RemittanceCountry, Integer> remittanceCountryDistribution
+  
+  ' Agricultural income
+  +Integer agriculturalIncomeHouseholds
+  +Double percentAgriculturalIncome
+  +Map<CropType, Integer> householdsByCropType
+  +Map<LivestockType, Integer> householdsByLivestockType
+  
+  ' Wage/Salary income
+  +Integer wageIncomeHouseholds
+  +Double percentWageIncome
+  +Map<EmploymentSector, Integer> householdsByEmploymentSector
+  +Map<EmploymentType, Integer> householdsByEmploymentType
+  
+  ' Business income
+  +Integer businessIncomeHouseholds
+  +Double percentBusinessIncome
+  +Map<BusinessType, Integer> householdsByBusinessType
+  +Map<BusinessSize, Integer> householdsByBusinessSize
+  
+  ' Other income sources
+  +Integer pensionIncomeHouseholds
+  +Integer rentalIncomeHouseholds
+  +Integer governmentAssistanceHouseholds
+  +Integer investmentIncomeHouseholds
+  
+  ' Income stability
+  +Map<IncomeStability, Integer> householdsByIncomeStability
+  +Map<SeasonalityPattern, Integer> householdsBySeasonality
+  +Map<IncomeChangePattern, Integer> householdsByIncomeChange
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +LocalDate referenceDate
+  +EconomicDataConfidenceLevel confidenceLevel
+  +EconomicDataType dataType
+  +String methodologyNotes
+  +Boolean isProjected
+  +UUID surveyId
+  +Integer sampleSize
+  
+  ' Methods
+  +Map<IncomeSourceType, Double> getIncomeSourceDistribution()
+  +Double calculateIncomeSourceDiversity()
+  +Map<IncomeSourceType, Double> getSourceShareTrend(years)
+  +Boolean isDependentOnSingleSource(threshold)
+  +List<IncomeSourceType> getTopIncomeSources(count)
+  +Map<String, Object> getRemittanceStatistics()
+  +Double getRemittanceDependencyRatio()
+  +Boolean isHighRemittanceArea(threshold)
+  +Double calculateAverageSources()
+  +IncomeDistribution getIncomeDistribution()
+  +RemittanceCountry getDominantRemittanceCountry()
+  +Boolean isAgriculturallyDominated()
+  +IncomeStability getDominantStabilityPattern()
+  +Boolean isHighlyUnstable()
+  +IncomeSourceDynamics getSourceDynamics(baseYear, comparisonYear)
+  +String getDiversificationCategory()
+  +Double getVulnerabilityIndex()
+}
+
+class IncomeDistribution {
+  +UUID id
+  +UUID householdIncomeSourceId
+  +Map<IncomeQuintile, Integer> householdsByQuintile
+  +Map<IncomeQuintile, MonetaryAmount> quintileBoundaries
+  +Map<IncomeDecile, Integer> householdsByDecile
+  +Map<IncomeDecile, MonetaryAmount> decileBoundaries
+  +MonetaryAmount povertyLine
+  +Integer householdsBelowPovertyLine
+  +Double percentBelowPovertyLine
+  +MonetaryAmount meanIncome
+  +MonetaryAmount medianIncome
+  +String distributionNotes
+  
+  ' Methods
+  +Double calculateGiniCoefficient()
+  +Double calculatePovertyGap()
+  +Double calculateIncomeShareRatio(topPercent, bottomPercent)
+  +Boolean isHighInequality()
+  +Map<String, Double> getInequalityIndicators()
+  +IncomeQuintile getPopulationConcentration()
+  +Double getMiddleClassShare()
+}
+
+class IncomeSourceDynamics {
+  +UUID id
+  +UUID householdIncomeSourceId
+  +Map<IncomeSourceType, IncomeSourceTrend> sourceTypeTrends
+  +Map<IncomeSourceType, String> trendExplanations
+  +Map<IncomeSourceType, Double> sourceTypeGrowthRates
+  +List<IncomeSourceType> emergingSources
+  +List<IncomeSourceType> decliningSource
+  +Integer baselineYear
+  +Integer comparisonYear
+  +String dynamicsNotes
+  
+  ' Methods
+  +IncomeSourceType getFastestGrowingSource()
+  +IncomeSourceType getFastestDecliningSource()
+  +Map<IncomeSourceType, IncomeSourceType> getTransitionMatrix()
+  +Boolean isUndergoingTransition(threshold)
+  +String getDominantTrend()
+  +Double getOverallTransitionRate()
+}
+
+' Inheritance relationships
+BaseEntity <|-- HouseholdIncomeSource
+BaseEntity <|-- IncomeDistribution
+BaseEntity <|-- IncomeSourceDynamics
+
+' Interface implementation
+HouseholdIncomeSource ..|> HistoryViewable
+HouseholdIncomeSource ..|> DataAggregatable
+
+' Class relationships
+HouseholdIncomeSource "1" o-- "0..1" IncomeDistribution
+HouseholdIncomeSource "1" o-- "0..1" IncomeSourceDynamics
+@enduml
+----
+
+===== Events
+
+[plantuml]
+----
+@startuml
+class HouseholdIncomeSourceCreatedEvent {
+  +UUID incomeSourceId
+  +UUID adminAreaId
+  +AdminAreaType adminAreaType
+  +Integer totalHouseholds
+  +String dominantIncomeSource
+  +Double remittancePercentage
+  +Integer yearOfData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class HouseholdIncomeSourceUpdatedEvent {
+  +UUID incomeSourceId
+  +UUID adminAreaId
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class IncomeSourceDiversityAnalyzedEvent {
+  +UUID incomeSourceId
+  +UUID adminAreaId
+  +Double diversityIndex
+  +Double averageSourceCount
+  +Map<Integer, Double> sourceCountDistribution
+  +String diversificationCategory
+  +String recommendedActions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class RemittanceDependencyDetectedEvent {
+  +UUID incomeSourceId
+  +UUID adminAreaId
+  +Double remittanceDependencyRatio
+  +RemittanceCountry primarySourceCountry
+  +RemittanceDependencyLevel dependencyLevel
+  +List<String> vulnerabilityFactors
+  +String recommendedActions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class IncomeDiversificationOpportunityEvent {
+  +UUID incomeSourceId
+  +UUID adminAreaId
+  +List<IncomeSourceType> recommendedSources
+  +Map<IncomeSourceType, String> justifications
+  +Map<IncomeSourceType, Double> potentialImpact
+  +String diversificationStrategy
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class IncomeSourceTransitionDetectedEvent {
+  +UUID incomeSourceId
+  +UUID adminAreaId
+  +IncomeSourceType decliningSource
+  +IncomeSourceType emergingSource
+  +Double transitionRate
+  +String transitionDrivers
+  +String implicationsForPlanning
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class IncomeInequalityAnalyzedEvent {
+  +UUID incomeDistributionId
+  +UUID adminAreaId
+  +Double giniCoefficient
+  +Double topBottomRatio
+  +Double middleClassShare
+  +String inequalityCategory
+  +String inequalityDrivers
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class IncomePovertyAssessedEvent {
+  +UUID incomeDistributionId
+  +UUID adminAreaId
+  +Double povertyRate
+  +Double povertyGap
+  +MonetaryAmount povertyLine
+  +Map<IncomeSourceType, Double> povertyByIncomeSource
+  +String povertyCharacteristics
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class HouseholdIncomeProjectedEvent {
+  +UUID baseIncomeSourceId
+  +UUID projectedIncomeSourceId
+  +UUID adminAreaId
+  +Integer projectionYear
+  +String projectionMethod
+  +Map<IncomeSourceType, Double> projectedDistribution
+  +Double projectedDiversityIndex
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class VulnerableIncomePatternDetectedEvent {
+  +UUID incomeSourceId
+  +UUID adminAreaId
+  +String vulnerabilityType
+  +Double vulnerabilityScore
+  +List<String> riskFactors
+  +String mitigationStrategy
+  +Map<String, Object> vulnerabilityIndicators
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+enum RemittanceDependencyLevel {
+  CRITICAL
+  HIGH
+  MODERATE
+  LOW
+  MINIMAL
+}
+
+abstract class DomainEvent
+DomainEvent <|-- HouseholdIncomeSourceCreatedEvent
+DomainEvent <|-- HouseholdIncomeSourceUpdatedEvent
+DomainEvent <|-- IncomeSourceDiversityAnalyzedEvent
+DomainEvent <|-- RemittanceDependencyDetectedEvent
+DomainEvent <|-- IncomeDiversificationOpportunityEvent
+DomainEvent <|-- IncomeSourceTransitionDetectedEvent
+DomainEvent <|-- IncomeInequalityAnalyzedEvent
+DomainEvent <|-- IncomePovertyAssessedEvent
+DomainEvent <|-- HouseholdIncomeProjectedEvent
+DomainEvent <|-- VulnerableIncomePatternDetectedEvent
+
+RemittanceDependencyDetectedEvent -- RemittanceDependencyLevel
+@enduml
+----
+
+These events enable integration with other systems and trigger appropriate workflows based on income source patterns. For example, high remittance dependency might trigger economic diversification programs, while certain vulnerability patterns might initiate targeted social protection measures.
+
+===== Nepal-Specific Income Source Categories
+
+The HouseholdIncomeSource entity incorporates Nepal-specific income sources that may not be well-represented in international classifications:
+
+1. **Migration-Related Income**: Detailed categorization of remittance sources by destination country, reflecting Nepal's complex migration patterns:
+   - India (primarily from western Nepal)
+   - Gulf Countries (Qatar, UAE, Saudi Arabia, Kuwait)
+   - Malaysia
+   - South Korea
+   - Japan
+   - Other destinations
+
+2. **Forest-Based Livelihoods**: Income sources unique to Nepal's diverse forest ecosystems:
+   - Non-timber forest products collection (medicinal plants, mushrooms)
+   - Yarshagumba (cordyceps) collection in high mountain regions
+   - Community forestry dividends
+   - Forest-based enterprises
+
+3. **Tourism-Related Income**: Categories reflecting Nepal's tourism economy:
+   - Trekking guide/porter services
+   - Homestay operations
+   - Handicraft production for tourists
+   - Cultural performance income
+
+4. **Post-Disaster Support**: Special income categories following Nepal's 2015 earthquake:
+   - Reconstruction grants
+   - Housing subsidies
+   - Livelihood recovery support
+   - NGO cash-for-work programs
+
+5. **Traditional Occupational Income**: Income from caste-associated traditional occupations:
+   - Traditional metalwork (blacksmiths)
+   - Tailoring and leatherwork
+   - Musical performance
+   - Religious services
+
+The system handles these Nepal-specific income sources while maintaining compatibility with international standards through mapping relationships, allowing both local relevance and international comparability.
+
+===== Integration with Other Economic Entities
+
+The HouseholdIncomeSource entity has important relationships with other economic entities:
+
+1. **EconomicallyActivePopulation**: Connects income sources to employment patterns
+
+2. **RemittanceExpenseStatistics**: Links how remittance income is utilized by households
+
+3. **LoanUseStatistics**: Shows relationship between income sources and borrowing patterns
+
+4. **LandPossessionStatistics**: Relates agricultural income to land ownership patterns
+
+5. **TrainedPopulationStatistics**: Connects skills development to income generation
+
+These integrations allow comprehensive analysis of how income patterns relate to other economic indicators, supporting holistic economic development planning.

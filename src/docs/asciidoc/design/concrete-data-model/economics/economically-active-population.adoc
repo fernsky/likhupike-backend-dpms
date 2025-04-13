@@ -1,0 +1,990 @@
+==== Economically Active Population
+
+Economically Active Population represents data about residents participating in economic activities within an administrative area, extending core domain models while providing specialized functionality for labor force analysis.
+
+===== Core Model Integration
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+
+' EconomicallyActivePopulation implementation
+class EconomicallyActivePopulation {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID economicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core data
+  +Integer totalPopulation
+  +Integer economicallyActivePopulation
+  +Integer economicallyActivePopulationMale
+  +Integer economicallyActivePopulationFemale
+  +Integer employedPopulation
+  +Integer underemployedPopulation
+  +Integer unemployedPopulation
+  +Double laborForceParticipationRate
+  +Double employmentRate
+  +Double unemploymentRate
+  +Double underemploymentRate
+  
+  ' Age breakdown
+  +Integer activePopulationAge15To24
+  +Integer activePopulationAge25To39
+  +Integer activePopulationAge40To59
+  +Integer activePopulationAge60Plus
+  
+  ' Sector breakdown
+  +Integer activeInAgriculture
+  +Integer activeInIndustry
+  +Integer activeInServices
+  +Integer activeInFormalSector
+  +Integer activeInInformalSector
+  
+  ' Employment status
+  +Integer regularWageEmployment
+  +Integer casualWageEmployment
+  +Integer selfEmployed
+  +Integer ownAccountWorkers
+  +Integer unpaidFamilyWorkers
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +LocalDate referenceDate
+  +EconomicDataConfidenceLevel confidenceLevel
+  +EconomicDataType dataType
+  +String methodologyNotes
+  +Boolean isProjected
+  +UUID surveyId
+  +Integer sampleSize
+}
+
+' Supporting classes
+class LaborMarketIndicators {
+  +UUID id
+  +UUID economicallyActivePopulationId
+  +Double productivityRate
+  +Double youthUnemploymentRate
+  +Double wageGrowthRate
+  +Double laborShareInGDP
+  +Double labourCostIndex
+  +Double workingPovertyRate
+  +Double informalEmploymentRate
+  +Double wageGap
+  +Double genderEmploymentGap
+  +Double underutilizationRate
+}
+
+class WorkforceComposition {
+  +UUID id
+  +UUID economicallyActivePopulationId
+  +Double selfEmploymentRate
+  +Double contributingFamilyWorkersRate
+  +Double vulnerableEmploymentRate
+  +Double partTimeEmploymentRate
+  +Map<String, Double> employmentByEducation
+  +Map<String, Double> employmentByOccupation
+  +Double averageWorkHours
+  +Double excessiveHoursRate
+  +Double multipleJobHoldingRate
+}
+
+' Enumerations
+enum AdminAreaType {
+  PROVINCE
+  DISTRICT
+  MUNICIPALITY
+  WARD
+  VDC
+  CUSTOM_AREA
+}
+
+enum EconomicDataConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+}
+
+enum EconomicDataType {
+  CENSUS
+  SURVEY
+  ADMINISTRATIVE
+  ESTIMATE
+  PROJECTION
+}
+
+' Inheritance relationships
+BaseEntity <|-- EconomicallyActivePopulation
+BaseEntity <|-- LaborMarketIndicators
+BaseEntity <|-- WorkforceComposition
+
+' Interface implementation
+EconomicallyActivePopulation ..|> DataAggregatable
+EconomicallyActivePopulation ..|> HistoryViewable
+
+' Class relationships
+EconomicallyActivePopulation "1" o-- "1" LaborMarketIndicators
+EconomicallyActivePopulation "1" o-- "1" WorkforceComposition
+EconomicallyActivePopulation -- AdminAreaType
+EconomicallyActivePopulation -- EconomicDataConfidenceLevel
+EconomicallyActivePopulation -- EconomicDataType
+@enduml
+----
+
+===== Labor Force Data Collection Process
+
+[plantuml]
+----
+@startuml
+|Central Bureau of Statistics|
+start
+:Design labor force survey;
+:Define economic activity criteria;
+:Develop questionnaire;
+:Train enumerators;
+
+|Field Enumerators|
+:Conduct household surveys;
+:Identify economically active members;
+:Record employment characteristics;
+:Collect work history;
+:Document economic activities;
+
+|Data Processing Team|
+:Process raw labor force data;
+:Apply ILO activity definitions;
+:Calculate employment indicators;
+:Verify data consistency;
+:Apply weighting factors;
+
+|System|
+:Import structured labor data;
+:Perform cross-validation;
+:Calculate derived indicators;
+:Check for statistical anomalies;
+
+|Economic Analyst|
+:Review labor force metrics;
+:Validate against known patterns;
+:Identify concerning discrepancies;
+:Apply contextual knowledge;
+:Annotate significant findings;
+
+|Quality Assurance|
+:Verify data completeness;
+:Confirm methodology application;
+:Assign confidence levels;
+:Document limitations;
+:Approve for publication;
+
+|System|
+:Publish labor force statistics;
+:Generate data visualizations;
+:Calculate time-series comparisons;
+:Create labor market profiles;
+
+|Data Consumer|
+:Access employment statistics;
+:Analyze workforce participation;
+:Evaluate economic trends;
+:Develop policy recommendations;
+
+stop
+@enduml
+----
+
+===== Contextual Use Cases
+
+Here are specific real-world scenarios demonstrating how Economically Active Population data is used in the system:
+
+====== Workforce Development Planning
+
+*Scenario:* Using economic activity data to design workforce development programs for a district
+
+[plantuml]
+----
+@startuml
+actor "District Employment\nCoordination Committee" as DECC
+actor "Workforce Development\nSpecialist" as WDS
+participant "EconomicallyActivePopulation" as EAP
+participant "SkillsGapAnalysis" as Skills
+participant "LaborMarketInformation" as LMI
+participant "TrainingResourceMapping" as Training
+participant "EmploymentProjection" as Projection
+
+DECC -> EAP : Request district labor force data
+activate EAP
+EAP -> EAP : RetrieveEmploymentStatistics()
+EAP -> EAP : CalculateParticipationRates()
+EAP -> EAP : AnalyzeSectoralDistribution()
+EAP -> EAP : IdentifyVulnerableGroups()
+DECC <-- EAP : District employment profile
+deactivate EAP
+
+DECC -> Skills : Analyze skills mismatch
+activate Skills
+Skills -> Skills : MapEmployerDemand()
+Skills -> Skills : AssessWorkforceCapabilities()
+Skills -> Skills : IdentifySkillsGaps()
+Skills -> Skills : AnalyzeEducationAlignment()
+DECC <-- Skills : Skills gap assessment
+deactivate Skills
+
+WDS -> LMI : Research labor market trends
+activate LMI
+LMI -> LMI : AnalyzeJobVacancies()
+LMI -> LMI : TrackWagePatterns()
+LMI -> LMI : IdentifyGrowthSectors()
+LMI -> LMI : AssessEmploymentQuality()
+WDS <-- LMI : Labor market analysis
+deactivate LMI
+
+WDS -> Training : Map training resources
+activate Training
+Training -> Training : IdentifyTrainingProviders()
+Training -> Training : AssessTrainingCapacity()
+Training -> Training : EvaluateProgramQuality()
+Training -> Training : AnalyzeOutcomeData()
+WDS <-- Training : Training ecosystem map
+deactivate Training
+
+DECC -> Projection : Project employment needs
+activate Projection
+Projection -> Projection : ForecastSectoralGrowth()
+Projection -> Projection : EstimateReplacementDemand()
+Projection -> Projection : ProjectOccupationalNeeds()
+Projection -> Projection : CalculateTrainingRequirements()
+DECC <-- Projection : Employment projections
+deactivate Projection
+
+WDS -> WDS : Design workforce programs
+activate WDS
+WDS -> WDS : DesignSkillsTrainingInitiatives()
+WDS -> WDS : CreateEmployerPartnershipModel()
+WDS -> WDS : DevelopYouthEmploymentStrategy()
+WDS -> WDS : EstablishVulnerableGroupSupport()
+deactivate WDS
+
+DECC -> DECC : Allocate resources
+activate DECC
+DECC -> DECC : PrioritizeInterventions()
+DECC -> DECC : BudgetTrainingResources()
+DECC -> DECC : EstablishImplementationTimeline()
+DECC -> DECC : CreateMonitoringFramework()
+deactivate DECC
+
+DECC -> WDS : Implement workforce strategy
+@enduml
+----
+
+*Real-World Context:*
+Dhading District, located in Bagmati Province near Kathmandu, is developing a comprehensive workforce development strategy to address employment challenges and support economic growth. Despite its proximity to the capital, Dhading faces significant employment challenges with unemployment at 14.2% and underemployment affecting 31% of workers.
+
+The process begins with analyzing detailed data on economically active populations. The data shows a total working-age population of 167,500 with 72% labor force participation (121,400 economically active). The statistics reveal significant disparities: male labor force participation is 81% compared to female participation of 64%, with particularly low female participation in northern rural areas (below 50%). Sectoral distribution shows 58% of workers in agriculture, 12% in construction, 18% in services, and only 7% in manufacturing. Formal sector employment accounts for just 26% of jobs, with 74% in the informal economy. The youth unemployment rate is especially concerning at 22%, significantly higher than the overall rate.
+
+The Skills Gap Analysis identifies critical mismatches between worker skills and employer needs. Construction employers report that 68% of hires lack required technical skills. The hospitality sector, growing due to tourism potential in northern Dhading, finds 74% of job applicants lack basic customer service and language skills. Agricultural workers predominantly practice traditional methods, with only 12% trained in modern techniques despite market demand. The analysis reveals that only 8% of unemployed youth have received formal vocational training.
+
+The Labor Market Information service analyzes trends showing emerging opportunities, particularly in eco-tourism, commercial agriculture (especially coffee and vegetables for Kathmandu markets), and light manufacturing along the Prithvi Highway corridor. Wage analysis shows significant premiums (35-60% higher wages) for workers with technical certifications. Job quality assessment reveals high seasonality in employment, with 42% of workers experiencing periods of inactivity during agricultural off-seasons.
+
+The Training Resource Mapping service identifies existing training infrastructure and gaps. The district has three technical training centers, but they are all concentrated near the district headquarters, leaving remote areas underserved. Training capacity analysis shows these centers can train only 520 people annually against an estimated need for 2,100 trained workers per year. Program quality evaluation finds that only 41% of training graduates secure related employment within six months, indicating quality concerns.
+
+Based on this comprehensive analysis, the Workforce Development Specialist designs a multi-faceted workforce strategy:
+
+1. **Decentralized Training Model**: Establishment of five mobile training units that rotate through remote VDCs, focusing on construction and agricultural skills most needed in those areas
+
+2. **Sector-Focused Partnerships**: Development of industry-led training programs for three priority sectors:
+   - Construction training with contractor associations, focusing on earthquake-resilient building techniques
+   - Hospitality skills program with tourism businesses, emphasizing homestay management for remote areas
+   - Commercial agriculture initiative targeting high-value crops for Kathmandu markets
+
+3. **Informal Apprenticeship Formalization**: Structure to recognize traditional apprenticeships in construction, handicrafts, and repair services, with added theoretical components and certification
+
+4. **Youth Employment Accelerator**: Youth-specific program combining soft skills, digital literacy, entrepreneurship, and technical training with placement services and startup support
+
+5. **Women's Economic Empowerment**: Targeted interventions to increase female participation in non-traditional sectors, including women-only training cohorts with childcare support
+
+The District Employment Coordination Committee allocates resources strategically, prioritizing initiatives based on employment impact potential, vulnerability of target groups, and alignment with district economic development plans. The implementation timeline spans three years with quarterly progress reviews and annual impact assessments measuring actual employment outcomes against projections.
+
+This evidence-based approach ensures that workforce development resources are directed toward the most promising sectors and the most needed skills based on actual labor market data, rather than generic training programs disconnected from economic realities.
+
+====== Informal Sector Integration
+
+*Scenario:* Using economic activity data to develop policies for informal sector workers
+
+[plantuml]
+----
+@startuml
+actor "Provincial Economic\nPlanning Commission" as PEPC
+actor "Informal Economy\nTask Force" as IETF
+participant "EconomicallyActivePopulation" as EAP
+participant "InformalSectorAnalysis" as Informal
+participant "SocialProtectionService" as Social
+participant "BusinessFormalizationService" as Formalization
+participant "ProductivityEnhancementService" as Productivity
+
+PEPC -> EAP : Request informal sector data
+activate EAP
+EAP -> EAP : CalculateInformalSectorSize()
+EAP -> EAP : AnalyzeInformalActivities()
+EAP -> EAP : ProfileInformalWorkers()
+EAP -> EAP : MapGeographicDistribution()
+PEPC <-- EAP : Informal economy profile
+deactivate EAP
+
+PEPC -> Informal : Conduct detailed analysis
+activate Informal
+Informal -> Informal : AssessRevenuePatterns()
+Informal -> Informal : IdentifyFormalizationBarriers()
+Informal -> Informal : EvaluateWorkingConditions()
+Informal -> Informal : AnalyzeValueChains()
+PEPC <-- Informal : Informal sector assessment
+deactivate Informal
+
+IETF -> Social : Analyze protection gaps
+activate Social
+Social -> Social : EvaluateHealthcareAccess()
+Social -> Social : AssessRetirementSecurity()
+Social -> Social : AnalyzeWorkplaceProtections()
+Social -> Social : IdentifyVulnerableGroups()
+IETF <-- Social : Social protection gaps
+deactivate Social
+
+IETF -> Formalization : Develop formalization pathways
+activate Formalization
+Formalization -> Formalization : DesignSimplifiedRegistration()
+Formalization -> Formalization : CreateTaxIncentives()
+Formalization -> Formalization : DevelopComplianceSteps()
+Formalization -> Formalization : EstablishSupportServices()
+IETF <-- Formalization : Formalization strategy
+deactivate Formalization
+
+IETF -> Productivity : Design productivity interventions
+activate Productivity
+Productivity -> Productivity : IdentifyTechnologyGaps()
+Productivity -> Productivity : AssessSkillsNeeds()
+Productivity -> Productivity : AnalyzeMarketAccess()
+Productivity -> Productivity : EvaluateCapitalConstraints()
+IETF <-- Productivity : Productivity enhancement plan
+deactivate Productivity
+
+PEPC -> PEPC : Develop comprehensive policy
+activate PEPC
+PEPC -> PEPC : IntegrateFormalizationPathways()
+PEPC -> PEPC : ExpandSocialProtection()
+PEPC -> PEPC : EstablishProductivitySupports()
+PEPC -> PEPC : CreateImplementationMechanisms()
+deactivate PEPC
+
+IETF -> IETF : Design implementation plan
+activate IETF
+IETF -> IETF : EstablishOutreachPrograms()
+IETF -> IETF : DevelopIncentiveStructures()
+IETF -> IETF : CreateMonitoringSystems()
+IETF -> IETF : CoordinateAgencyResponsibilities()
+deactivate IETF
+
+PEPC -> IETF : Implement informal sector strategy
+@enduml
+----
+
+*Real-World Context:*
+Lumbini Province in western Nepal is developing a comprehensive informal sector strategy to support the large population of workers outside the formal economy. As a predominantly rural province with significant agricultural activity and growing urban centers, Lumbini faces challenges integrating its substantial informal workforce into broader economic development.
+
+The analysis begins with detailed economic activity data. The statistics show that of the province's 1.2 million economically active workers, approximately 840,000 (70%) work in the informal sector. The data reveals important patterns: informal employment is highest in agriculture (86% of agricultural workers), construction (78%), and retail trade (72%). Women are overrepresented in the informal economy at 76% compared to 65% for men. Geographically, informality ranges from 62% in urban Butwal to over 90% in remote rural districts. Income analysis shows that informal workers earn on average 42% less than their formal counterparts in similar occupations.
+
+The Informal Sector Analysis service conducts detailed examination of specific characteristics. Revenue pattern assessment shows high seasonality and volatility in income, with average informal enterprises experiencing revenue fluctuations of 35-60% throughout the year. The analysis identifies key formalization barriers: complex registration procedures cited by 68% of informal entrepreneurs, high tax burden concerns (57%), lack of perceived benefits (72%), and limited awareness of formalization processes (64%). Working conditions assessment finds significant decent work deficits, with 83% lacking written contracts, 91% without pension coverage, and 76% working without health and safety protection.
+
+The Social Protection service analyzes critical gaps affecting informal workers. Healthcare access evaluation shows only 22% of informal workers have health insurance compared to 76% of formal sector workers. Employment injury protection is virtually non-existent, with less than 3% having any coverage despite high-risk occupations like construction and transportation. The assessment identifies particularly vulnerable segments, including home-based women workers, elderly informal workers, and migrant laborers from neighboring districts.
+
+Based on this comprehensive analysis, the Task Force develops a multi-faceted informal sector strategy:
+
+1. **Graduated Formalization Pathway**: Creation of a step-by-step formalization process with:
+   - Simple initial registration requiring minimal documentation
+   - Progressive compliance requirements phased in over 3 years
+   - Sector-specific guidelines recognizing different business realities
+   - One-window service centers in all districts for registration assistance
+
+2. **Social Protection Extension**: Expansion of social security to informal workers through:
+   - Subsidized voluntary contribution scheme for health insurance
+   - Matching contribution program for retirement savings
+   - Group-based accident insurance for high-risk occupations
+   - Maternity benefit program for informal women workers
+
+3. **Productivity Enhancement**: Programs to improve informal business performance through:
+   - Mobile skills training units serving rural informal clusters
+   - Technology upgrade subsidies for informal manufacturing
+   - Market linkage platforms connecting producers to formal buyers
+   - Business development services adapted to informal enterprise needs
+
+4. **Local Economic Formalization Zones**: Pilot areas in four municipalities with:
+   - Simplified business environment for informal enterprises
+   - Targeted infrastructure (markets, workshops, storage)
+   - Integrated support services (financial, technical, marketing)
+   - Adjusted local regulations to recognize informal activities
+
+The Provincial Economic Planning Commission establishes clear targets: increase formal sector participation by 15 percentage points over 5 years, extend social protection coverage to at least 50% of informal workers, increase informal sector productivity by 30%, and reduce the income gap between formal and informal workers. The implementation plan includes phased roll-out with initial focus on urban informal clusters before extending to rural areas.
+
+This evidence-based approach ensures that informal sector interventions address the actual needs and constraints of Lumbini's informal workers rather than imposing inappropriate formalization models that ignore economic realities.
+
+====== Youth Employment Crisis Response
+
+*Scenario:* Using economic activity data to address youth unemployment in post-COVID recovery
+
+[plantuml]
+----
+@startuml
+actor "Provincial Employment\nAuthority" as PEA
+actor "Youth Employment\nTask Force" as YETF
+participant "EconomicallyActivePopulation" as EAP
+participant "YouthLaborService" as Youth
+participant "EducationSystemAnalysis" as Education
+participant "EmergingSectorService" as Emerging
+participant "EmploymentProgramService" as Programs
+
+PEA -> EAP : Analyze youth employment crisis
+activate EAP
+EAP -> EAP : CalculateYouthUnemploymentRate()
+EAP -> EAP : AnalyzeEducationEmploymentGap()
+EAP -> EAP : AssessGenderDisparities()
+EAP -> EAP : MapGeographicDistribution()
+PEA <-- EAP : Youth employment analysis
+deactivate EAP
+
+PEA -> Youth : Conduct detailed youth assessment
+activate Youth
+Youth -> Youth : ProfileUnemployedYouth()
+Youth -> Youth : IdentifySkillsGaps()
+Youth -> Youth : AssessJobSearchMethods()
+Youth -> Youth : EvaluateBarriersToEmployment()
+PEA <-- Youth : Youth labor market assessment
+deactivate Youth
+
+YETF -> Education : Analyze education-employment linkage
+activate Education
+Education -> Education : EvaluateCurriculumRelevance()
+Education -> Education : AssessWorkExposureOpportunities()
+Education -> Education : AnalyzeCareerGuidanceServices()
+Education -> Education : MeasureEmployerEngagement()
+YETF <-- Education : Education system analysis
+deactivate Education
+
+YETF -> Emerging : Identify growth opportunities
+activate Emerging
+Emerging -> Emerging : IdentifyPostCOVIDGrowthSectors()
+Emerging -> Emerging : AnalyzeDigitalEconomyPotential()
+Emerging -> Emerging : AssessGreenEconomyJobs()
+Emerging -> Emerging : EvaluateEntrepreneurshipOpportunities()
+YETF <-- Emerging : Growth sector analysis
+deactivate Emerging
+
+PEA -> Programs : Review intervention options
+activate Programs
+Programs -> Programs : EvaluateJobSubsidyPrograms()
+Programs -> Programs : AssessApprenticeshipModels()
+Programs -> Programs : AnalyzeEnterpriseSupport()
+Programs -> Programs : ReviewPublicEmploymentSchemes()
+PEA <-- Programs : Program effectiveness review
+deactivate Programs
+
+YETF -> YETF : Design youth employment strategy
+activate YETF
+YETF -> YETF : CreateSkillsReskillingSystems()
+YETF -> YETF : DesignEmployerEngagementMechanisms()
+YETF -> YETF : DevelopDigitalWorksOpportunities()
+YETF -> YETF : EstablishEntrepreneurshipEcosystem()
+deactivate YETF
+
+PEA -> PEA : Allocate resources and coordinate
+activate PEA
+PEA -> PEA : PrioritizeInterventionsByImpact()
+PEA -> PEA : AllocateCrisisResponseFunding()
+PEA -> PEA : CoordinateWithStakeholders()
+PEA -> PEA : EstablishMonitoringFramework()
+deactivate PEA
+
+PEA -> YETF : Implement youth recovery program
+@enduml
+----
+
+*Real-World Context:*
+Sudurpaschim Province in far-western Nepal is facing an acute youth employment crisis exacerbated by the COVID-19 pandemic. With returning migrants from India and the Gulf, tourism collapse, and overall economic contraction, youth unemployment has reached crisis levels requiring coordinated response.
+
+The analysis begins with examining economically active population data. The statistics show youth unemployment (ages 15-24) has spiked to 38.2% compared to the pre-pandemic rate of 21.3%. Gender analysis reveals young women face even higher unemployment at 43.7%. Educational disparities show an unexpected pattern - unemployment is highest among those with intermediate education (42.1%) compared to those with basic education (29.8%) or higher education (34.2%), indicating a serious mismatch between education and employment. Geographically, urban centers like Dhangadhi show 44.6% youth unemployment due to migration inflows, while even rural areas exceed 32%.
+
+The Youth Labor Service conducts detailed youth profiling. The assessment identifies several distinct youth segments requiring different interventions: returned migrants with work experience but little formal certification (estimated 18,400 youth), recent graduates with credentials but no experience (approximately 12,700), and youth with incomplete education who previously worked in the informal sector (about 22,300). Skills gap analysis shows that while 72% of unemployed youth use smartphones, only 24% have basic digital work skills. Job search methods remain predominantly informal, with 83% relying on personal networks rather than formal employment services.
+
+The Education System Analysis evaluates how educational institutions are responding to the crisis. Curriculum relevance assessment finds limited alignment with emerging economic opportunities, with 76% of programs showing no substantive updates in the past five years. Work-based learning opportunities like internships and apprenticeships reach only 12% of students. Career services are severely limited, with only two institutions having dedicated career counselors. Employer engagement in curriculum design is virtually non-existent, with only one technical institute having an active employer advisory committee.
+
+The Emerging Sectors analysis identifies post-COVID growth opportunities specific to Sudurpaschim. Digital economy assessment shows potential in remote work, with an estimated 3,800 potential jobs in data services, customer support, and digital content if connectivity and skills gaps are addressed. Agricultural value chain modernization offers approximately 5,200 potential jobs in processing, packaging, and marketing of local products like herbs, apples, and off-season vegetables. Tourism recovery, while slower, presents opportunities in adventure and eco-tourism with estimated 2,400 jobs as the sector rebuilds with more sustainability focus.
+
+Based on this comprehensive analysis, the Youth Employment Task Force develops a multi-faceted strategy:
+
+1. **Digital Skills Fast-Track**: Rapid training program focusing on:
+   - Basic digital literacy for all participants
+   - Specialized tracks in data entry, social media marketing, and e-commerce
+   - Online freelancing preparation and platform onboarding
+   - Connectivity hubs in each district with reliable internet and workspaces
+
+2. **Returned Migrant Reintegration**: Program specifically for youth returning from foreign employment:
+   - Skills certification for competencies gained abroad
+   - Entrepreneurship support targeting businesses using migrant-acquired skills
+   - Seed capital matching grants for enterprise startup
+   - Mental health and reintegration support services
+
+3. **Agricultural Entrepreneurship Initiative**: Program to modernize the province's agricultural sector:
+   - Value-chain focused training in production, processing, and marketing
+   - Collective enterprise models for youth groups
+   - Technology integration (greenhouse, irrigation, storage)
+   - Market linkage platforms to urban centers and India
+
+4. **Public Works Plus**: Emergency employment with skill development component:
+   - Community infrastructure rehabilitation projects
+   - Integrated technical training during employment
+   - Certification of competencies gained
+   - Transition support to longer-term employment
+
+The Provincial Employment Authority allocates NPR 860 million (approximately USD 7.2 million) for the first phase of implementation, with clear targets: provide immediate income-generating activities for 15,000 youth, deliver skills development to 25,000 youth, and achieve at least 60% transition to sustainable employment or self-employment within one year. The implementation uses a graduated approach, with rapid deployment of emergency measures while building longer-term systems for sustainable youth employment.
+
+This evidence-based response addresses both immediate crisis needs and longer-term structural challenges in the youth labor market, creating pathways that acknowledge the actual profile of unemployed youth rather than generic programs disconnected from market realities.
+
+===== DataAggregatable Implementation
+
+The EconomicallyActivePopulation entity implements the DataAggregatable interface to support hierarchical data aggregation:
+
+[plantuml]
+----
+@startuml
+participant "LaborMinistry" as Service
+participant "EconomicallyActivePopulation\nimplements DataAggregatable" as EAP
+participant "Repository" as Repo
+participant "AggregationEngine" as Engine
+participant "DataValidator" as Validator
+
+Service -> EAP : getAggregatedData(provinceId, "DISTRICT")
+activate EAP
+
+EAP -> EAP : validateAggregationRequest(provinceId, "DISTRICT")
+activate EAP
+EAP -> EAP : checkPermissions()
+EAP -> EAP : validateHierarchy()
+EAP <-- EAP : requestValid
+deactivate EAP
+
+EAP -> Repo : findChildAreas(provinceId, "DISTRICT")
+activate Repo
+EAP <-- Repo : districtEAPs
+deactivate Repo
+
+EAP -> Engine : aggregateEmploymentData(districtEAPs)
+activate Engine
+Engine -> Engine : sumAbsolutePopulations()
+Engine -> Engine : calculateWeightedRates()
+Engine -> Engine : aggregateSectorDistribution()
+Engine -> Engine : deriveLaborIndicators()
+EAP <-- Engine : aggregatedEmploymentData
+deactivate Engine
+
+EAP -> Validator : validateAggregate(aggregatedData, provinceId)
+activate Validator
+Validator -> Validator : checkPopulationTotals()
+Validator -> Validator : validateRateConsistency()
+Validator -> Validator : flagStatisticalAnomalies()
+EAP <-- Validator : validationResults
+deactivate Validator
+
+EAP -> EAP : applyValidationAdjustments(validationResults)
+EAP -> EAP : buildAggregateResponse()
+
+Service <-- EAP : aggregatedEmploymentData
+deactivate EAP
+
+Service -> EAP : drillDown(provinceId, "DISTRICT", districtId)
+activate EAP
+EAP -> Repo : findChildAreas(districtId, "MUNICIPALITY")
+activate Repo
+EAP <-- Repo : municipalityEAPs
+deactivate Repo
+EAP -> Engine : aggregateEmploymentData(municipalityEAPs)
+activate Engine
+EAP <-- Engine : aggregatedData
+deactivate Engine
+Service <-- EAP : districtDetailWithMunicipalities
+deactivate EAP
+@enduml
+----
+
+===== HistoryViewable Implementation
+
+The EconomicallyActivePopulation entity implements the HistoryViewable interface to track changes over time:
+
+[plantuml]
+----
+@startuml
+participant "LaborAnalyticsService" as Service
+participant "EconomicallyActivePopulation\nimplements HistoryViewable" as EAP
+participant "VersionRepository" as Versions
+participant "ChangeAnalysis" as Analysis
+
+Service -> EAP : getChangeHistory(adminAreaId)
+activate EAP
+
+EAP -> Versions : findByEntityTypeAndEntityId("EconomicallyActivePopulation", adminAreaId)
+activate Versions
+EAP <-- Versions : versionHistory
+deactivate Versions
+
+Service <-- EAP : employmentHistory
+deactivate EAP
+
+Service -> EAP : compareVersions(adminAreaId, 2018, 2022)
+activate EAP
+
+EAP -> Versions : findByEntityIdAndYear(adminAreaId, 2018)
+activate Versions
+EAP <-- Versions : data2018
+deactivate Versions
+
+EAP -> Versions : findByEntityIdAndYear(adminAreaId, 2022)
+activate Versions
+EAP <-- Versions : data2022
+deactivate Versions
+
+EAP -> Analysis : analyzeEmploymentChanges(data2018, data2022)
+activate Analysis
+Analysis -> Analysis : calculateRateChanges()
+Analysis -> Analysis : analyzeSectorShifts()
+Analysis -> Analysis : assessStructuralTransitions()
+Analysis -> Analysis : identifySignificantChanges()
+EAP <-- Analysis : changeAnalysis
+deactivate Analysis
+
+Service <-- EAP : employmentComparison
+deactivate EAP
+
+Service -> EAP : getHistoricalTrend(adminAreaId, "unemploymentRate", 2015, 2022)
+activate EAP
+EAP -> Versions : findDataPointsByYearRange(adminAreaId, "unemploymentRate", 2015, 2022)
+activate Versions
+EAP <-- Versions : unemploymentTimeSeries
+deactivate Versions
+EAP -> Analysis : analyzeTrend(unemploymentTimeSeries)
+activate Analysis
+EAP <-- Analysis : trendAnalysis
+deactivate Analysis
+Service <-- EAP : unemploymentRateTrend
+deactivate EAP
+@enduml
+----
+
+===== EconomicallyActivePopulation Data Model
+
+[plantuml]
+----
+@startuml
+' Core models
+abstract class BaseEntity
+interface DataAggregatable
+interface HistoryViewable
+
+' Main classes
+class EconomicallyActivePopulation {
+  ' From BaseEntity
+  +UUID id
+  +LocalDateTime createdAt
+  +UUID createdBy
+  +LocalDateTime lastModifiedAt
+  +UUID lastModifiedBy
+  
+  ' Administrative context
+  +UUID economicSummaryId
+  +UUID adminAreaId
+  +String adminAreaCode
+  +AdminAreaType adminAreaType
+  +String adminAreaName
+  +Integer adminLevel
+  
+  ' Core data
+  +Integer totalPopulation
+  +Integer economicallyActivePopulation
+  +Integer economicallyActivePopulationMale
+  +Integer economicallyActivePopulationFemale
+  +Integer employedPopulation
+  +Integer underemployedPopulation
+  +Integer unemployedPopulation
+  +Double laborForceParticipationRate
+  +Double employmentRate
+  +Double unemploymentRate
+  +Double underemploymentRate
+  
+  ' Age breakdown
+  +Integer activePopulationAge15To24
+  +Integer activePopulationAge25To39
+  +Integer activePopulationAge40To59
+  +Integer activePopulationAge60Plus
+  
+  ' Sector breakdown
+  +Integer activeInAgriculture
+  +Integer activeInIndustry
+  +Integer activeInServices
+  +Integer activeInFormalSector
+  +Integer activeInInformalSector
+  
+  ' Employment status
+  +Integer regularWageEmployment
+  +Integer casualWageEmployment
+  +Integer selfEmployed
+  +Integer ownAccountWorkers
+  +Integer unpaidFamilyWorkers
+  
+  ' Metadata
+  +String dataSource
+  +Integer yearOfData
+  +LocalDate referenceDate
+  +EconomicDataConfidenceLevel confidenceLevel
+  +EconomicDataType dataType
+  +String methodologyNotes
+  +Boolean isProjected
+  +UUID surveyId
+  +Integer sampleSize
+  
+  ' Methods
+  +Double calculateDependencyRatio()
+  +Map<String, Integer> getSectorDistribution()
+  +Double getYouthUnemploymentRate()
+  +Map<String, Double> getEmploymentStatusDistribution()
+  +Boolean hasSignificantInfomalSector()
+  +Double calculateLaborProductivity(gdpData)
+  +Map<AgeGroup, Double> getParticipationRateByAge()
+  +Map<Gender, Double> getParticipationRateByGender()
+  +Double getEmploymentGap()
+  +Boolean isHighUnemployment()
+  +String getEmploymentClassification()
+  +LaborMarketIndicators getDerivedIndicators()
+  +Double estimateLaborUnderutilization()
+  +List<EconomicallyActivePopulation> getHistoricalData(years)
+}
+
+class LaborMarketIndicators {
+  +UUID id
+  +UUID economicallyActivePopulationId
+  +Double productivityRate
+  +Double youthUnemploymentRate
+  +Double wageGrowthRate
+  +Double laborShareInGDP
+  +Double labourCostIndex
+  +Double workingPovertyRate
+  +Double informalEmploymentRate
+  +Double wageGap
+  +Double genderEmploymentGap
+  +Double underutilizationRate
+  
+  ' Methods
+  +Boolean isHighProductivity()
+  +Boolean hasSignificantWageGap()
+  +LaborMarketClassification classifyMarket()
+  +Map<String, Double> getLaborIndicators()
+  +Double getCompositeEmploymentQualityIndex()
+  +String getMarketTightness()
+}
+
+class WorkforceComposition {
+  +UUID id
+  +UUID economicallyActivePopulationId
+  +Double selfEmploymentRate
+  +Double contributingFamilyWorkersRate
+  +Double vulnerableEmploymentRate
+  +Double partTimeEmploymentRate
+  +Map<String, Double> employmentByEducation
+  +Map<String, Double> employmentByOccupation
+  +Double averageWorkHours
+  +Double excessiveHoursRate
+  +Double multipleJobHoldingRate
+  
+  ' Methods
+  +Double calculateVulnerabilityIndex()
+  +Map<String, Double> getOccupationalDistribution()
+  +Boolean hasEducationEmploymentMatch()
+  +String getWorkingTimeClassification()
+  +Boolean hasExcessiveWorkingHours()
+  +Double getPrecariousWorkIndex()
+}
+
+enum AdminAreaType {
+  PROVINCE
+  DISTRICT
+  MUNICIPALITY
+  WARD
+  VDC
+  CUSTOM_AREA
+}
+
+enum EconomicDataConfidenceLevel {
+  VERY_HIGH
+  HIGH
+  MEDIUM
+  LOW
+  VERY_LOW
+}
+
+enum EconomicDataType {
+  CENSUS
+  SURVEY
+  ADMINISTRATIVE
+  ESTIMATE
+  PROJECTION
+}
+
+enum AgeGroup {
+  AGE_15_24
+  AGE_25_39
+  AGE_40_59
+  AGE_60_PLUS
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum LaborMarketClassification {
+  TIGHT
+  BALANCED
+  SLACK
+  DISTRESSED
+  EMERGING
+  TRANSITIONING
+}
+
+' Inheritance relationships
+BaseEntity <|-- EconomicallyActivePopulation
+BaseEntity <|-- LaborMarketIndicators
+BaseEntity <|-- WorkforceComposition
+
+' Interface implementation
+EconomicallyActivePopulation ..|> DataAggregatable
+EconomicallyActivePopulation ..|> HistoryViewable
+
+' Class relationships
+EconomicallyActivePopulation "1" o-- "1" LaborMarketIndicators
+EconomicallyActivePopulation "1" o-- "1" WorkforceComposition
+EconomicallyActivePopulation -- AdminAreaType
+EconomicallyActivePopulation -- EconomicDataConfidenceLevel
+EconomicallyActivePopulation -- EconomicDataType
+LaborMarketIndicators -- LaborMarketClassification
+@enduml
+----
+
+===== Events
+
+[plantuml]
+----
+@startuml
+class EconomicallyActivePopulationCreatedEvent {
+  +UUID eapId
+  +UUID adminAreaId
+  +AdminAreaType adminAreaType
+  +Integer economicallyActivePopulation
+  +Double laborForceParticipationRate
+  +Double unemploymentRate
+  +Integer yearOfData
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class EconomicallyActivePopulationUpdatedEvent {
+  +UUID eapId
+  +UUID adminAreaId
+  +Map<String, Object> changedFields
+  +String updateType
+  +Boolean isRevision
+  +String updateReason
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class EmploymentCrisisDetectedEvent {
+  +UUID eapId
+  +UUID adminAreaId
+  +String crisisType
+  +Double currentUnemploymentRate
+  +Double baselineUnemploymentRate
+  +String affectedSectors
+  +Map<String, Object> impactMeasures
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class LaborMarketTransitionDetectedEvent {
+  +UUID eapId
+  +UUID adminAreaId
+  +String transitionType
+  +Map<String, Double> sectoralShifts
+  +Double formalSectorChange
+  +String likelyDrivers
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class YouthEmploymentAlertEvent {
+  +UUID eapId
+  +UUID adminAreaId
+  +Double youthUnemploymentRate
+  +Double changeFromPrevious
+  +Boolean isIncreasing
+  +String contributingFactors
+  +String recommendedInterventions
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class GenderEmploymentGapChangedEvent {
+  +UUID eapId
+  +UUID adminAreaId
+  +Double currentGenderGap
+  +Double previousGenderGap
+  +String changeDirection
+  +String affectedSectors
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+class EconomicallyActiveProjectionCreatedEvent {
+  +UUID projectionId
+  +UUID baselineEapId
+  +UUID adminAreaId
+  +Integer projectionYear
+  +String projectionMethod
+  +Map<String, Object> keyIndicators
+  +String scenarioDescription
+  +LocalDateTime timestamp
+  +UUID actorId
+}
+
+abstract class DomainEvent
+DomainEvent <|-- EconomicallyActivePopulationCreatedEvent
+DomainEvent <|-- EconomicallyActivePopulationUpdatedEvent
+DomainEvent <|-- EmploymentCrisisDetectedEvent
+DomainEvent <|-- LaborMarketTransitionDetectedEvent
+DomainEvent <|-- YouthEmploymentAlertEvent
+DomainEvent <|-- GenderEmploymentGapChangedEvent
+DomainEvent <|-- EconomicallyActiveProjectionCreatedEvent
+@enduml
+----
