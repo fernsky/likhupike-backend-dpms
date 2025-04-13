@@ -42,6 +42,7 @@ class UiAuthController(
         error?.let { model.addAttribute("errorMessage", i18nMessageService.getMessage("auth.error.AUTH_010")) }
         logout?.let { model.addAttribute("logoutMessage", i18nMessageService.getMessage("auth.logout.success")) }
         model.addAttribute("loginRequest", LoginRequest("", ""))
+        model.addAttribute("activeTab", "login")
         return "auth/login"
     }
 
@@ -50,7 +51,9 @@ class UiAuthController(
      */
     @GetMapping("/register")
     fun registerPage(model: Model): String {
-        model.addAttribute("registerRequest", RegisterRequest("", "", "", ""))
+        // Create RegisterRequest with default values including the required boolean value
+        model.addAttribute("registerRequest", RegisterRequest("", "", "", false))
+        model.addAttribute("activeTab", "register")
         return "auth/register"
     }
 
@@ -78,6 +81,7 @@ class UiAuthController(
     @GetMapping("/password-reset")
     fun passwordResetRequestPage(model: Model): String {
         model.addAttribute("passwordResetRequest", RequestPasswordResetRequest(""))
+        model.addAttribute("activeTab", "none")
         return "auth/password-reset-request"
     }
 
@@ -118,6 +122,7 @@ class UiAuthController(
         model.addAttribute("email", email)
         // Initialize with empty values but pre-fill the email
         model.addAttribute("resetPasswordRequest", ResetPasswordRequest(email, "", "", ""))
+        model.addAttribute("activeTab", "none")
         return "auth/password-reset-confirm"
     }
 
@@ -152,7 +157,8 @@ class UiAuthController(
      * Renders the home/landing page.
      */
     @GetMapping(value = ["", "/"])
-    fun homePage(): String {
+    fun homePage(model: Model): String {
+        model.addAttribute("activeTab", "home")
         return "auth/home"
     }
     
@@ -160,7 +166,8 @@ class UiAuthController(
      * Renders the access denied page.
      */
     @GetMapping("/access-denied")
-    fun accessDeniedPage(): String {
+    fun accessDeniedPage(model: Model): String {
+        model.addAttribute("activeTab", "none")
         return "error/access-denied"
     }
 }

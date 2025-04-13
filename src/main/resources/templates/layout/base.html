@@ -28,8 +28,10 @@
     <th:block layout:fragment="css"></th:block>
   </head>
   <body class="d-flex flex-column min-vh-100">
-    <!-- Header -->
-    <header th:replace="~{fragments/header :: header}"></header>
+    <!-- Header - Pass the activeTab parameter from child template -->
+    <header
+      th:replace="~{fragments/header :: header(${activeTab != null ? activeTab : 'none'})}"
+    ></header>
 
     <!-- Main Content -->
     <main class="flex-grow-1 py-4">

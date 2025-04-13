@@ -5,6 +5,7 @@ import np.sthaniya.dpis.auth.config.JwtAuthenticationFilter
 import np.sthaniya.dpis.common.config.RouteRegistry
 import np.sthaniya.dpis.citizen.config.CitizenRouteRegistry
 import np.sthaniya.dpis.common.filter.RateLimitFilter
+import  np.sthaniya.dpis.ui.config.UiRouteConfig
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary

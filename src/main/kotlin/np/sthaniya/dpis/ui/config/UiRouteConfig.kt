@@ -17,13 +17,20 @@ class UiRouteConfig(
     routeRegistry: RouteRegistry,
 ) {
     init {
-        // Public UI routes
+        // Public UI routes - GET
         routeRegistry.register("/ui", HttpMethod.GET, isPublic = true)
         routeRegistry.register("/ui/", HttpMethod.GET, isPublic = true)
         routeRegistry.register("/ui/login", HttpMethod.GET, isPublic = true)
         routeRegistry.register("/ui/register", HttpMethod.GET, isPublic = true)
         routeRegistry.register("/ui/password-reset", HttpMethod.GET, isPublic = true)
         routeRegistry.register("/ui/password-reset/confirm", HttpMethod.GET, isPublic = true)
+        
+        // Public UI routes - POST (for form submissions)
+        routeRegistry.register("/ui/login", HttpMethod.POST, isPublic = true)
+        routeRegistry.register("/ui/register", HttpMethod.POST, isPublic = true)
+        routeRegistry.register("/ui/password-reset", HttpMethod.POST, isPublic = true)
+        routeRegistry.register("/ui/password-reset/confirm", HttpMethod.POST, isPublic = true)
+        routeRegistry.register("/ui/logout", HttpMethod.POST, isPublic = true)
         
         // Static resources
         routeRegistry.register("/webjars/**", HttpMethod.GET, isPublic = true)
