@@ -10,6 +10,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine
 import org.thymeleaf.spring6.view.ThymeleafViewResolver
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
 import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect
+import org.thymeleaf.templatemode.TemplateMode
 
 /**
  * Thymeleaf configuration for UI templates.
@@ -22,7 +23,7 @@ class ThymeleafConfig {
     fun templateResolver() = ClassLoaderTemplateResolver().apply {
         prefix = "templates/"
         suffix = ".html"
-        templateMode = "HTML"
+        templateMode = TemplateMode.HTML
         characterEncoding = "UTF-8"
         setCacheable(false) // Disable caching for development
     }

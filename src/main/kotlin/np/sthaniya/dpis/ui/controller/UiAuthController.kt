@@ -72,7 +72,8 @@ class UiAuthController(
     }
 
     /**
-     * Renders the password reset request page.
+     * Renders the password reset request page (Step 1).
+     * This is the first step where user enters their email to receive an OTP.
      */
     @GetMapping("/password-reset")
     fun passwordResetRequestPage(model: Model): String {
@@ -81,7 +82,8 @@ class UiAuthController(
     }
 
     /**
-     * Handles the password reset request form submission.
+     * Handles the password reset request form submission (Step 1).
+     * This sends an OTP to the user's email.
      */
     @PostMapping("/password-reset")
     fun passwordResetRequest(
@@ -92,7 +94,8 @@ class UiAuthController(
             authService.requestPasswordReset(passwordResetRequest)
             redirectAttributes.addFlashAttribute("successMessage", 
                 i18nMessageService.getMessage("auth.password.reset.request.success"))
-            return "redirect:/ui/login"
+            // Redirect to the OTP confirmation page, passing the email
+            return "redirect:/ui/password-reset/confirm?email=" + passwordResetRequest.email
         } catch (e: Exception) {
             redirectAttributes.addFlashAttribute("errorMessage", e.message)
             return "redirect:/ui/password-reset"
@@ -100,24 +103,27 @@ class UiAuthController(
     }
 
     /**
-     * Renders the password reset confirmation page.
+     * Renders the password reset confirmation page (Step 2).
+     * This is where the user enters the OTP and new password.
      */
     @GetMapping("/password-reset/confirm")
     fun passwordResetConfirmPage(
-        @RequestParam token: String?,
+        @RequestParam email: String?,
         model: Model
     ): String {
-        if (token.isNullOrEmpty()) {
+        if (email.isNullOrEmpty()) {
             return "redirect:/ui/password-reset"
         }
         
-        model.addAttribute("token", token)
-        model.addAttribute("resetPasswordRequest", ResetPasswordRequest("", "", ""))
+        model.addAttribute("email", email)
+        // Initialize with empty values but pre-fill the email
+        model.addAttribute("resetPasswordRequest", ResetPasswordRequest(email, "", "", ""))
         return "auth/password-reset-confirm"
     }
 
     /**
-     * Handles the password reset confirmation form submission.
+     * Handles the password reset confirmation form submission (Step 2).
+     * This validates the OTP and resets the password.
      */
     @PostMapping("/password-reset/confirm")
     fun passwordResetConfirm(
@@ -125,14 +131,20 @@ class UiAuthController(
         redirectAttributes: RedirectAttributes
     ): String {
         try {
+            // Ensure passwords match (this might already be validated in the DTO)
+            if (resetPasswordRequest.newPassword != resetPasswordRequest.confirmPassword) {
+                throw IllegalArgumentException(i18nMessageService.getMessage("auth.error.AUTH_016"))
+            }
+            
             authService.resetPassword(resetPasswordRequest)
             redirectAttributes.addFlashAttribute("successMessage", 
                 i18nMessageService.getMessage("auth.password.reset.success"))
             return "redirect:/ui/login"
         } catch (e: Exception) {
             redirectAttributes.addFlashAttribute("errorMessage", e.message)
-            redirectAttributes.addFlashAttribute("token", resetPasswordRequest.token)
-            return "redirect:/ui/password-reset/confirm?token=${resetPasswordRequest.token}"
+            redirectAttributes.addFlashAttribute("email", resetPasswordRequest.email)
+            // Keep the email when redirecting back to the form
+            return "redirect:/ui/password-reset/confirm?email=${resetPasswordRequest.email}"
         }
     }
     

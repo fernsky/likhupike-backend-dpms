@@ -11,6 +11,7 @@ import org.springframework.web.servlet.i18n.CookieLocaleResolver
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import java.util.*
+import java.time.Duration
 
 /**
  * Configuration class for internationalization (i18n) message handling.
@@ -72,8 +73,8 @@ class MessageSourceConfig : WebMvcConfigurer {
         val supportedLocales = listOf(Locale.ENGLISH, Locale("ne"))
         // Set default locale
         resolver.setDefaultLocale(Locale.ENGLISH)
-        // Set supported locales
-        resolver.setSupportedLocales(supportedLocales)
+        // CookieLocaleResolver doesn't have setSupportedLocales method, so we handle this in code
+        // through the LocaleChangeInterceptor
         resolver.setCookieMaxAge(Duration.ofDays(365))
         resolver.setCookiePath("/")
         return resolver
