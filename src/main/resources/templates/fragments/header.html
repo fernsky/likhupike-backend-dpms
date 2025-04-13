@@ -11,7 +11,7 @@
     <header th:fragment="header(activeTab)" class="bg-primary text-white">
       <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-          <a class="navbar-brand" th:href="@{/ui/}">
+          <a class="navbar-brand" th:href="@{/}">
             <i class="fas fa-id-card me-2"></i>
             <span th:text="#{app.name}">Digital Profile System</span>
           </a>
@@ -33,66 +33,29 @@
               <li class="nav-item">
                 <a
                   class="nav-link"
-                  th:href="@{/ui/}"
+                  th:href="@{/}"
                   th:classappend="${activeTab == 'home' ? 'active' : ''}"
                 >
                   <i class="fas fa-home me-1"></i>
                   <span th:text="#{nav.home}">Home</span>
                 </a>
               </li>
-
-              <!-- Only show these links for authenticated users -->
-              <li class="nav-item" sec:authorize="isAuthenticated()">
-                <a
-                  class="nav-link"
-                  th:href="@{/ui/dashboard}"
-                  th:classappend="${activeTab == 'dashboard' ? 'active' : ''}"
-                >
-                  <i class="fas fa-tachometer-alt me-1"></i>
-                  <span th:text="#{nav.dashboard}">Dashboard</span>
+              <li class="nav-item">
+                <a class="nav-link" href="#features">
+                  <i class="fas fa-info-circle me-1"></i>
+                  <span>Features</span>
                 </a>
               </li>
-              <li class="nav-item" sec:authorize="isAuthenticated()">
-                <a
-                  class="nav-link"
-                  th:href="@{/ui/profile}"
-                  th:classappend="${activeTab == 'profile' ? 'active' : ''}"
-                >
-                  <i class="fas fa-user me-1"></i>
-                  <span th:text="#{nav.profile}">Profile</span>
+              <li class="nav-item">
+                <a class="nav-link" href="#contact">
+                  <i class="fas fa-envelope me-1"></i>
+                  <span>Contact</span>
                 </a>
-              </li>
-
-              <!-- Admin menu -->
-              <li
-                class="nav-item dropdown"
-                sec:authorize="hasPermission(null, 'VIEW_USER')"
-              >
-                <a
-                  class="nav-link dropdown-toggle"
-                  href="#"
-                  id="adminDropdown"
-                  role="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                  th:classappend="${activeTab == 'admin' ? 'active' : ''}"
-                >
-                  <i class="fas fa-shield-alt me-1"></i>
-                  <span th:text="#{nav.admin}">Admin</span>
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                  <li>
-                    <a class="dropdown-item" th:href="@{/ui/users}">
-                      <i class="fas fa-users me-1"></i>
-                      <span th:text="#{nav.users}">Users</span>
-                    </a>
-                  </li>
-                </ul>
               </li>
             </ul>
 
             <!-- Language Selector -->
-            <div class="me-3">
+            <div>
               <div class="dropdown">
                 <button
                   class="btn btn-outline-light dropdown-toggle"
@@ -119,57 +82,6 @@
                   </li>
                 </ul>
               </div>
-            </div>
-
-            <!-- User Menu or Login/Register Buttons -->
-            <div sec:authorize="!isAuthenticated()">
-              <a th:href="@{/ui/login}" class="btn btn-outline-light me-2">
-                <i class="fas fa-sign-in-alt me-1"></i>
-                <span th:text="#{auth.login}">Login</span>
-              </a>
-              <a th:href="@{/ui/register}" class="btn btn-light">
-                <i class="fas fa-user-plus me-1"></i>
-                <span th:text="#{auth.register}">Register</span>
-              </a>
-            </div>
-
-            <div sec:authorize="isAuthenticated()" class="dropdown">
-              <button
-                class="btn btn-outline-light dropdown-toggle"
-                type="button"
-                id="userDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <i class="fas fa-user me-1"></i>
-                <span sec:authentication="name">Username</span>
-              </button>
-              <ul
-                class="dropdown-menu dropdown-menu-end"
-                aria-labelledby="userDropdown"
-              >
-                <li>
-                  <a class="dropdown-item" th:href="@{/ui/profile}">
-                    <i class="fas fa-user-circle me-1"></i>
-                    <span th:text="#{nav.profile}">Profile</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item" th:href="@{/ui/settings}">
-                    <i class="fas fa-cog me-1"></i>
-                    <span th:text="#{nav.settings}">Settings</span>
-                  </a>
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <form th:action="@{/ui/logout}" method="post">
-                    <button type="submit" class="dropdown-item text-danger">
-                      <i class="fas fa-sign-out-alt me-1"></i>
-                      <span th:text="#{auth.logout}">Logout</span>
-                    </button>
-                  </form>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
