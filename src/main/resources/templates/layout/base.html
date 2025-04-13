@@ -9,16 +9,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0d47a1" />
+    <meta name="theme-color" content="#4338ca" />
     <title
       layout:title-pattern="$CONTENT_TITLE | $LAYOUT_TITLE"
-      th:text="${pageTitle ?: 'Digital Profile System'}"
+      th:text="${pageTitle ?: 'Intensive Study & Research Center'}"
     >
-      Digital Profile System
+      Intensive Study & Research Center
     </title>
 
     <!-- Base Meta Tags -->
-    <meta name="author" content="Digital Profile System" />
+    <meta name="author" content="Intensive Study & Research Center" />
     <meta name="robots" content="index, follow" />
 
     <!-- Preconnects for fonts -->
@@ -44,7 +44,10 @@
     <th:block layout:fragment="css"></th:block>
 
     <!-- Canonical URL - Using the explicitly added canonicalUrl or requestUri model attribute -->
-    <link rel="canonical" th:href="${canonicalUrl ?: '/'}" />
+    <link
+      rel="canonical"
+      th:href="${canonicalUrl ?: 'https://intensivestudy.com.np/'}"
+    />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" th:href="@{/images/favicon.png}" />
@@ -65,7 +68,7 @@
       >
         <div
           th:if="${successMessage}"
-          class="alert alert-success alert-dismissible fade show"
+          class="alert alert-success alert-dismissible fade show glass-card border-0"
           role="alert"
         >
           <i class="fas fa-check-circle me-2"></i>
@@ -79,7 +82,7 @@
         </div>
         <div
           th:if="${errorMessage}"
-          class="alert alert-danger alert-dismissible fade show"
+          class="alert alert-danger alert-dismissible fade show glass-card border-0"
           role="alert"
         >
           <i class="fas fa-exclamation-circle me-2"></i>
@@ -123,19 +126,23 @@
         document.documentElement.setAttribute("lang", currentLang);
 
         // Initialize Bootstrap tooltips and popovers
-        const tooltipTriggerList = [].slice.call(
-          document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        );
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+        try {
+          const tooltipTriggerList = [].slice.call(
+            document.querySelectorAll('[data-bs-toggle="tooltip"]')
+          );
+          tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+          });
 
-        const popoverTriggerList = [].slice.call(
-          document.querySelectorAll('[data-bs-toggle="popover"]')
-        );
-        popoverTriggerList.map(function (popoverTriggerEl) {
-          return new bootstrap.Popover(popoverTriggerEl);
-        });
+          const popoverTriggerList = [].slice.call(
+            document.querySelectorAll('[data-bs-toggle="popover"]')
+          );
+          popoverTriggerList.map(function (popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl);
+          });
+        } catch (e) {
+          console.log("Bootstrap components not fully initialized");
+        }
       });
     </script>
 

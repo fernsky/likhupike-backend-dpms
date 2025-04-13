@@ -5,36 +5,36 @@
   layout:decorate="~{layout/base}"
 >
   <head>
-    <title th:text="${pageTitle ?: 'Digital Profile System'}">Digital Profile System</title>
+    <title th:text="${pageTitle ?: 'Intensive Study & Research Center'}">Intensive Study & Research Center</title>
     <meta name="description" th:content="#{meta.home.description}">
     <meta name="keywords" th:content="#{meta.home.keywords}">
-    <link rel="canonical" href="https://digitalprofile.gov.np/" />
+    <link rel="canonical" href="https://intensivestudy.com.np/" />
     
     <!-- Open Graph / Social Media Tags -->
     <meta property="og:title" th:content="#{meta.home.title}">
     <meta property="og:description" th:content="#{meta.home.description}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://digitalprofile.gov.np/">
-    <meta property="og:image" content="https://digitalprofile.gov.np/images/digital-profile-og.jpg">
+    <meta property="og:url" content="https://intensivestudy.com.np/">
+    <meta property="og:image" content="https://intensivestudy.com.np/images/intensive-study-og.jpg">
     
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" th:content="#{meta.home.title}">
     <meta name="twitter:description" th:content="#{meta.home.description}">
-    <meta name="twitter:image" content="https://digitalprofile.gov.np/images/digital-profile-og.jpg">
+    <meta name="twitter:image" content="https://intensivestudy.com.np/images/intensive-study-og.jpg">
     
     <!-- Structured Data - JSON-LD -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "GovernmentOrganization",
-      "name": "Digital Profile System",
-      "url": "https://digitalprofile.gov.np",
-      "logo": "https://digitalprofile.gov.np/images/logo.png",
-      "description": "A comprehensive digital identity and document management system empowering citizens with secure, accessible, and efficient government services.",
+      "@type": "EducationalOrganization",
+      "name": "Intensive Study & Research Center",
+      "url": "https://intensivestudy.com.np",
+      "logo": "https://intensivestudy.com.np/images/logo.png",
+      "description": "A premier institution focused on academic excellence and breakthrough research, empowering students with knowledge and skills for success.",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "123 Main Street",
+        "streetAddress": "Research Boulevard",
         "addressLocality": "Kathmandu",
         "addressRegion": "Bagmati",
         "postalCode": "44600",
@@ -42,15 +42,15 @@
       },
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+977-1-4XXXXXX",
-        "contactType": "Customer Service",
-        "email": "info@digitalprofile.gov.np",
+        "telephone": "+977-1-XXXXXXX",
+        "contactType": "Admissions Office",
+        "email": "info@intensivestudy.com.np",
         "availableLanguage": ["en", "ne"]
       },
       "sameAs": [
-        "https://facebook.com/digitalprofilenepal",
-        "https://twitter.com/digitalprofilenepal",
-        "https://linkedin.com/company/digitalprofilenepal"
+        "https://facebook.com/intensivestudy",
+        "https://twitter.com/intensivestudy",
+        "https://linkedin.com/company/intensivestudy"
       ]
     }
     </script>
@@ -69,13 +69,13 @@
           <div class="container hero-content">
             <div class="row align-items-center">
               <div class="col-lg-7 fade-in">
-                <h1 class="hero-title" th:text="#{home.title}">Digital Profile System</h1>
+                <h1 class="hero-title" th:text="#{home.title}">Intensive Study & Research Center</h1>
                 <p class="hero-subtitle" th:text="#{home.subtitle}">
-                  A comprehensive digital identity and document management system empowering citizens with secure, accessible, and efficient government services.
+                  Empowering minds through rigorous academic excellence, innovative research methodologies, and a commitment to creating tomorrow's leaders.
                 </p>
                 <div class="d-flex gap-3">
-                  <a href="#features" class="btn btn-light btn-lg px-4">
-                    <i class="fas fa-info-circle me-2"></i><span th:text="#{btn.learn.more}">Learn More</span>
+                  <a href="#programs" class="btn btn-light btn-lg px-4">
+                    <i class="fas fa-book me-2"></i><span th:text="#{btn.explore.programs}">Explore Programs</span>
                   </a>
                   <a href="#contact" class="btn btn-outline-light btn-lg px-4">
                     <i class="fas fa-paper-plane me-2"></i><span th:text="#{btn.contact.us}">Contact Us</span>
@@ -84,22 +84,22 @@
               </div>
               <div class="col-lg-5 d-none d-lg-block fade-in">
                 <img
-                  th:src="@{/images/digital-profile-hero.svg}"
+                  th:src="@{/images/study-research-hero.svg}"
                   class="img-fluid rounded-3 shadow-lg"
-                  alt="Digital Profile System"
+                  alt="Intensive Study & Research Center"
                 />
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Features Section -->
-        <section id="features" class="py-5">
+        <!-- Programs Section -->
+        <section id="programs" class="section-dark my-5">
           <div class="container">
             <div class="text-center mb-5 fade-in">
-              <h2 class="display-5 fw-bold text-white" th:text="#{features.title}">Key Features</h2>
-              <p class="lead text-white-50" th:text="#{features.subtitle}">
-                Transforming citizen services through digital innovation
+              <h2 class="display-5 fw-bold text-white" th:text="#{programs.title}">Academic Programs</h2>
+              <p class="lead text-white-50" th:text="#{programs.subtitle}">
+                Comprehensive programs designed for academic excellence and professional development
               </p>
             </div>
 
@@ -107,12 +107,11 @@
               <div class="col-md-6 col-lg-4" style="--animation-order: 0">
                 <div class="feature-card fade-in">
                   <div class="feature-icon">
-                    <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-flask"></i>
                   </div>
-                  <h3 class="feature-title" th:text="#{feature.security.title}">Secure Digital Identity</h3>
-                  <p th:text="#{feature.security.description}">
-                    State-of-the-art encryption and biometric verification ensure
-                    your digital identity remains protected and tamper-proof.
+                  <h3 class="feature-title" th:text="#{program.research.title}">Research Methodology</h3>
+                  <p class="text-white-50" th:text="#{program.research.description}">
+                    Comprehensive training in qualitative and quantitative research methods, data analysis, and academic writing.
                   </p>
                 </div>
               </div>
@@ -120,25 +119,23 @@
               <div class="col-md-6 col-lg-4" style="--animation-order: 1">
                 <div class="feature-card fade-in">
                   <div class="feature-icon">
-                    <i class="fas fa-file-alt"></i>
+                    <i class="fas fa-chart-bar"></i>
                   </div>
-                  <h3 class="feature-title" th:text="#{feature.documents.title}">Document Management</h3>
-                  <p th:text="#{feature.documents.description}">
-                    Store, access, and share government-issued documents securely
-                    from anywhere, eliminating the need for physical paperwork.
+                  <h3 class="feature-title" th:text="#{program.data.title}">Data Science & Analytics</h3>
+                  <p class="text-white-50" th:text="#{program.data.description}">
+                    Mastering statistical analysis, machine learning techniques, and data visualization for real-world applications.
                   </p>
                 </div>
               </div>
 
               <div class="col-md-6 col-lg-4" style="--animation-order: 2">
-                <div class="feature-card fade-in">
+                <div class="feature-card fade-in"></div>
                   <div class="feature-icon">
-                    <i class="fas fa-building"></i>
+                    <i class="fas fa-microscope"></i>
                   </div>
-                  <h3 class="feature-title" th:text="#{feature.municipal.title}">Municipal Services</h3>
-                  <p th:text="#{feature.municipal.description}">
-                    Apply for municipal services, track applications, and receive
-                    updates without visiting government offices.
+                  <h3 class="feature-title" th:text="#{program.advanced.title}">Advanced Scientific Studies</h3>
+                  <p class="text-white-50" th:text="#{program.advanced.description}">
+                    Specialized research in biology, physics, and chemistry with state-of-the-art laboratory facilities.
                   </p>
                 </div>
               </div>
@@ -146,12 +143,11 @@
               <div class="col-md-6 col-lg-4" style="--animation-order: 3">
                 <div class="feature-card fade-in">
                   <div class="feature-icon">
-                    <i class="fas fa-mobile-alt"></i>
+                    <i class="fas fa-brain"></i>
                   </div>
-                  <h3 class="feature-title" th:text="#{feature.mobile.title}">Mobile Accessibility</h3>
-                  <p th:text="#{feature.mobile.description}">
-                    Access all services through our mobile-responsive platform,
-                    ensuring convenience regardless of your device.
+                  <h3 class="feature-title" th:text="#{program.cognitive.title}">Cognitive Science</h3>
+                  <p class="text-white-50" th:text="#{program.cognitive.description}">
+                    Interdisciplinary study of mind and intelligence, combining psychology, neuroscience, and computational models.
                   </p>
                 </div>
               </div>
@@ -159,12 +155,11 @@
               <div class="col-md-6 col-lg-4" style="--animation-order: 4">
                 <div class="feature-card fade-in">
                   <div class="feature-icon">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-globe-asia"></i>
                   </div>
-                  <h3 class="feature-title" th:text="#{feature.analytics.title}">Data Analytics</h3>
-                  <p th:text="#{feature.analytics.description}">
-                    Advanced analytics provide insights to improve service
-                    delivery and inform policy decisions.
+                  <h3 class="feature-title" th:text="#{program.environmental.title}">Environmental Research</h3>
+                  <p class="text-white-50" th:text="#{program.environmental.description}">
+                    Studies focused on sustainability, climate change, biodiversity conservation, and ecological systems.
                   </p>
                 </div>
               </div>
@@ -172,13 +167,11 @@
               <div class="col-md-6 col-lg-4" style="--animation-order: 5">
                 <div class="feature-card fade-in">
                   <div class="feature-icon">
-                    <i class="fas fa-language"></i>
+                    <i class="fas fa-laptop-code"></i>
                   </div>
-                  <h3 class="feature-title" th:text="#{feature.language.title}">Multi-language Support</h3>
-                  <p th:text="#{feature.language.description}">
-                    Fully localized in both English and Nepali, ensuring
-                    accessibility for all citizens regardless of language
-                    preference.
+                  <h3 class="feature-title" th:text="#{program.technology.title}">Technology Innovation</h3>
+                  <p class="text-white-50" th:text="#{program.technology.description}">
+                    Cutting-edge research in artificial intelligence, blockchain, IoT, and other emerging technologies.
                   </p>
                 </div>
               </div>
@@ -192,61 +185,59 @@
             <div class="row g-4">
               <div class="col-md-3">
                 <div class="stat-item fade-in">
-                  <div class="stat-number">2M+</div>
-                  <div class="stat-text" th:text="#{stats.citizens}">Citizens Registered</div>
+                  <div class="stat-number">25+</div>
+                  <div class="stat-text" th:text="#{stats.years}">Years of Excellence</div>
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <div class="stat-item fade-in">
+                  <div class="stat-number">200+</</div>
+                  <div class="stat-text" th:text="#{stats.publications}">Research Publications</div>
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <div class="stat-item fade-in">
+                  <div class="stat-number">98%</div>
+                  <div class="stat-text" th:text="#{stats.placement}">Student Placement</div>
                 </div>
               </div>
 
               <div class="col-md-3">
                 <div class="stat-item fade-in">
                   <div class="stat-number">50+</div>
-                  <div class="stat-text" th:text="#{stats.services}">Government Services</div>
-                </div>
-              </div>
-
-              <div class="col-md-3">
-                <div class="stat-item fade-in">
-                  <div class="stat-number">95%</</div>
-                  <div class="stat-text" th:text="#{stats.satisfaction}">Customer Satisfaction</div>
-                </div>
-              </div>
-
-              <div class="col-md-3">
-                <div class="stat-item fade-in">
-                  <div class="stat-number">24/7</div>
-                  <div class="stat-text" th:text="#{stats.availability}">System Availability</div>
+                  <div class="stat-text" th:text="#{stats.faculty}">Expert Faculty</div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Testimonials Section -->
-        <section class="py-5">
+        <!-- Research Section -->
+        <section id="research" class="section-dark my-5">
           <div class="container">
             <div class="text-center mb-5 fade-in">
-              <h2 class="display-5 fw-bold text-white" th:text="#{testimonials.title}">What People Say</h2>
-              <p class="lead text-white-50" th:text="#{testimonials.subtitle}">
-                Hear from our users about their experience
+              <h2 class="display-5 fw-bold text-white" th:text="#{research.title}">Our Research Initiatives</h2>
+              <p class="lead text-white-50" th:text="#{research.subtitle}">
+                Pioneering studies that address real-world challenges and advance human knowledge
               </p>
             </div>
 
             <div class="row g-4">
               <div class="col-md-6 mb-4">
                 <div class="testimonial-card fade-in">
-                  <p class="testimonial-quote" th:text="#{testimonial.1.quote}">
-                    "The Digital Profile System has transformed how I interact
-                    with government services. What used to take days now takes
-                    minutes, and I can do it all from my phone!"
+                  <p class="testimonial-quote" th:text="#{research.project1.description}">
+                    "Our climate change adaptation research has developed innovative models for predicting environmental impacts in vulnerable regions, helping communities prepare for and mitigate future challenges."
                   </p>
-                  <div class="testimonial-author">
+                  <div class="testimonial-author"></div>
                     <div class="testimonial-author-avatar">
-                      <i class="fas fa-user"></i>
+                      <i class="fas fa-leaf"></i>
                     </div>
                     <div>
-                      <div class="testimonial-author-name" th:text="#{testimonial.1.name}">Ramesh Sharma</div>
-                      <div class="testimonial-author-title" th:text="#{testimonial.1.title}">
-                        Kathmandu Resident
+                      <div class="testimonial-author-name" th:text="#{research.project1.name}">Sustainable Futures Initiative</div>
+                      <div class="testimonial-author-title" th:text="#{research.project1.leader}">
+                        Led by Dr. Anjana Sharma
                       </div>
                     </div>
                   </div>
@@ -255,19 +246,17 @@
 
               <div class="col-md-6 mb-4">
                 <div class="testimonial-card fade-in">
-                  <p class="testimonial-quote" th:text="#{testimonial.2.quote}">
-                    "As a business owner, I've seen dramatic improvements in
-                    processing times for licenses and permits. The transparency
-                    and efficiency are remarkable."
+                  <p class="testimonial-quote" th:text="#{research.project2.description}">
+                    "By combining artificial intelligence with traditional medical knowledge, our research team has developed new diagnostic tools that can detect early signs of chronic diseases with remarkable accuracy."
                   </p>
                   <div class="testimonial-author">
                     <div class="testimonial-author-avatar">
-                      <i class="fas fa-user"></i>
+                      <i class="fas fa-heartbeat"></i>
                     </div>
                     <div>
-                      <div class="testimonial-author-name" th:text="#{testimonial.2.name}">Sunita Thapa</div>
-                      <div class="testimonial-author-title" th:text="#{testimonial.2.title}">
-                        Local Entrepreneur
+                      <div class="testimonial-author-name" th:text="#{research.project2.name}">Healthcare AI Project</div>
+                      <div class="testimonial-author-title" th:text="#{research.project2.leader}">
+                        Led by Dr. Rajesh Patel
                       </div>
                     </div>
                   </div>
@@ -276,19 +265,17 @@
 
               <div class="col-md-6 mb-4">
                 <div class="testimonial-card fade-in">
-                  <p class="testimonial-quote" th:text="#{testimonial.3.quote}">
-                    "The multilingual support makes this system truly inclusive.
-                    My elderly parents can navigate it in Nepali, while I use the
-                    English interface."
+                  <p class="testimonial-quote" th:text="#{research.project3.description}">
+                    "Our computational linguistics team is breaking new ground in natural language processing for Nepali and other South Asian languages, developing tools that bridge cultural and linguistic divides."
                   </p>
                   <div class="testimonial-author">
                     <div class="testimonial-author-avatar">
-                      <i class="fas fa-user"></i>
+                      <i class="fas fa-language"></i>
                     </div>
                     <div>
-                      <div class="testimonial-author-name" th:text="#{testimonial.3.name}">Anil Gurung</div>
-                      <div class="testimonial-author-title" th:text="#{testimonial.3.title}">
-                        Software Engineer
+                      <div class="testimonial-author-name" th:text="#{research.project3.name}">Language Technologies Research</div>
+                      <div class="testimonial-author-title" th:text="#{research.project3.leader}">
+                        Led by Dr. Sunita Gurung
                       </div>
                     </div>
                   </div>
@@ -297,19 +284,17 @@
 
               <div class="col-md-6 mb-4">
                 <div class="testimonial-card fade-in">
-                  <p class="testimonial-quote" th:text="#{testimonial.4.quote}">
-                    "As a municipal officer, I've witnessed how this system has
-                    reduced our paperwork by 70% and allows us to serve citizens
-                    more efficiently."
+                  <p class="testimonial-quote" th:text="#{research.project4.description}">
+                    "The Urban Development Research Group is redefining smart city concepts for developing nations, creating sustainable, technology-enhanced infrastructure models adaptable to local contexts."
                   </p>
                   <div class="testimonial-author">
                     <div class="testimonial-author-avatar">
-                      <i class="fas fa-user"></i>
+                      <i class="fas fa-city"></i>
                     </div>
                     <div>
-                      <div class="testimonial-author-name" th:text="#{testimonial.4.name}">Nirjala KC</div>
-                      <div class="testimonial-author-title" th:text="#{testimonial.4.title}">
-                        Government Official
+                      <div class="testimonial-author-name" th:text="#{research.project4.name}">Smart Cities Initiative</div>
+                      <div class="testimonial-author-title" th:text="#{research.project4.leader}">
+                        Led by Prof. Kiran Thapa
                       </div>
                     </div>
                   </div>
@@ -322,11 +307,10 @@
         <!-- CTA Section -->
         <section class="cta-section">
           <div class="container cta-content">
-            <h2 class="cta-title" th:text="#{cta.title}">Ready to Experience Digital Transformation?</h2>
+            <h2 class="cta-title" th:text="#{cta.title}">Ready to Begin Your Research Journey?</h2>
             <p class="cta-description" th:text="#{cta.description}">
-              Join the Digital Profile System and enjoy streamlined government
-              services, secure document management, and a smoother citizen
-              experience.
+              Join the Intensive Study & Research Center to explore cutting-edge programs, 
+              work with world-class faculty, and make significant contributions to your field.
             </p>
             <a href="#contact" class="btn btn-light btn-lg px-5">
               <i class="fas fa-paper-plane me-2"></i><span th:text="#{btn.contact.us}">Contact Us</span>
@@ -335,64 +319,64 @@
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="py-5">
+        <section id="contact" class="section-dark my-5">
           <div class="container">
             <div class="text-center mb-5 fade-in">
               <h2 class="display-5 fw-bold text-white" th:text="#{contact.title}">Get in Touch</h2>
               <p class="lead text-white-50" th:text="#{contact.subtitle}">
-                We're here to help with any questions you may have
+                Connect with our admissions team to learn more about our programs and research opportunities
               </p>
             </div>
 
             <div class="row g-4 justify-content-center">
               <div class="col-md-5">
                 <div class="contact-card p-4 fade-in">
-                  <h3 class="h4 mb-4" th:text="#{contact.info.title}">Contact Information</h3>
+                  <h3 class="h4 mb-4 text-light" th:text="#{contact.info.title}">Contact Information</h3>
                   <ul class="list-unstyled">
-                    <li class="mb-3">
+                    <li class="mb-3 d-flex">
                       <i class="fas fa-map-marker-alt me-2 contact-icon"></i>
-                      <span th:text="#{contact.address}">123 Main Street, Kathmandu, Nepal</span>
+                      <span class="text-white-50" th:text="#{contact.address}">Kathmandu, Nepal</span>
                     </li>
-                    <li class="mb-3">
+                    <li class="mb-3 d-flex">
                       <i class="fas fa-phone me-2 contact-icon"></i>
-                      <span th:text="#{contact.phone}">+977 1-4XXXXXX</span>
+                      <span class="text-white-50" th:text="#{contact.phone}">+977 1-XXXXXXX</span>
                     </li>
-                    <li class="mb-3">
+                    <li class="mb-3 d-flex">
                       <i class="fas fa-envelope me-2 contact-icon"></i>
-                      <span th:text="#{contact.email}">info@digitalprofile.gov.np</span>
+                      <span class="text-white-50" th:text="#{contact.email}">info@intensivestudy.com.np</span>
                     </li>
-                    <li class="mb-3">
+                    <li class="mb-3 d-flex">
                       <i class="fas fa-clock me-2 contact-icon"></i>
-                      <span th:text="#{contact.hours}">9:00 AM - 5:00 PM, Sunday-Friday</span>
+                      <span class="text-white-50" th:text="#{contact.hours}">9:00 AM - 5:00 PM, Sunday-Friday</span>
                     </li>
                   </ul>
 
-                  <h4 class="h5 mt-4 mb-3" th:text="#{contact.follow}">Follow Us</h4>
+                  <h4 class="h5 mt-4 mb-3 text-light" th:text="#{contact.follow}">Follow Us</h4>
                   <div class="d-flex gap-3">
                     <a
                       href="#"
-                      class="btn btn-outline-primary btn-sm rounded-circle"
+                      class="social-icon"
                       aria-label="Facebook"
                     >
                       <i class="fab fa-facebook-f"></i>
                     </a>
                     <a
                       href="#"
-                      class="btn btn-outline-primary btn-sm rounded-circle"
+                      class="social-icon"
                       aria-label="Twitter"
                     >
                       <i class="fab fa-twitter"></i>
                     </a>
                     <a
                       href="#"
-                      class="btn btn-outline-primary btn-sm rounded-circle"
+                      class="social-icon"
                       aria-label="LinkedIn"
                     >
                       <i class="fab fa-linkedin-in"></i>
                     </a>
                     <a
                       href="#"
-                      class="btn btn-outline-primary btn-sm rounded-circle"
+                      class="social-icon"
                       aria-label="Instagram"
                     >
                       <i class="fab fa-instagram"></i>
@@ -403,7 +387,7 @@
 
               <div class="col-md-7">
                 <div class="contact-card p-4 h-100 fade-in">
-                  <h3 class="h4 mb-4" th:text="#{contact.form.title}">Send us a Message</h3>
+                  <h3 class="h4 mb-4 text-light" th:text="#{contact.form.title}">Send us a Message</h3>
                   <form id="contactForm">
                     <div class="row g-3">
                       <div class="col-md-6">
@@ -416,7 +400,7 @@
                         />
                       </div>
 
-                      <div class="col-md-6">
+                      <div class="col-md-6"></div>
                         <label for="email" class="form-label" th:text="#{contact.form.email}">Email Address</label>
                         <input
                           type="email"
@@ -472,7 +456,8 @@
             (entries) => {
               entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                  entry.target.style.animation = "fadeIn 0.6s ease-out forwards";
+                  const delay = entry.target.style.getPropertyValue('--animation-order') || 0;
+                  entry.target.style.animation = `fadeIn 0.6s ${delay * 0.15}s ease-out forwards`;
                   observer.unobserve(entry.target);
                 }
               });
@@ -494,7 +479,7 @@
             contactForm.addEventListener('submit', function(e) {
               e.preventDefault();
               // Here you would normally send the form data to the server
-              alert('Thank you for your message! We will get back to you soon.');
+              alert('Thank you for your message! Our admissions team will get back to you soon.');
               contactForm.reset();
             });
           }
