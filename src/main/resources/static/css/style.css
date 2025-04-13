@@ -10,9 +10,25 @@
   --dark: #212529;
 }
 
+/* Font imports */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap");
+
+/* Default font for English */
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f5f7fa;
+}
+
+/* Font for Nepali language */
+:lang(ne) body {
+  font-family: "Noto Sans Devanagari", sans-serif;
+}
+
+/* Alternative approach - apply directly when language class is used */
+.lang-ne,
+html[lang="ne"] body {
+  font-family: "Noto Sans Devanagari", sans-serif;
 }
 
 /* Card Styles */

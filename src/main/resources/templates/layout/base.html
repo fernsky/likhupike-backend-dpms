@@ -3,6 +3,7 @@
   xmlns:th="http://www.thymeleaf.org"
   xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
   xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+  th:lang="${#locale.language}"
 >
   <head>
     <meta charset="UTF-8" />
@@ -26,6 +27,14 @@
 
     <!-- Additional CSS -->
     <th:block layout:fragment="css"></th:block>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans+Devanagari:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body class="d-flex flex-column min-vh-100">
     <!-- Header - Pass the activeTab parameter from child template -->
