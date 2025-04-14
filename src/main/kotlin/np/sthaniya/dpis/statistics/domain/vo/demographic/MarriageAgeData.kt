@@ -3,7 +3,6 @@ package np.sthaniya.dpis.statistics.domain.vo.demographic
 import java.io.Serializable
 import java.math.BigDecimal
 import java.math.RoundingMode
-import np.sthaniya.dpis.statistics.domain.vo.Gender
 
 /**
  * Enumeration of age group categories at which marriage occurred.

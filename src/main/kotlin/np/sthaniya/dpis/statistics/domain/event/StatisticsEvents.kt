@@ -22,10 +22,10 @@ import np.sthaniya.dpis.statistics.domain.event.institutions.InstitutionalStatsU
  * 
  * See:
  * - StatisticsEvent.kt - Base interface
- * - core/* - Core statistics events
- * - demographics/* - Demographic statistics events
- * - economics/* - Economic statistics events
- * - education/* - Education statistics events
- * - agriculture/* - Agricultural statistics events
- * - institutions/* - Institutional statistics events
+ * - core/ - Core statistics events
+ * - demographics/ - Demographic statistics events
+ * - economics/ - Economic statistics events
+ * - education/ - Education statistics events
+ * - agriculture/ - Agricultural statistics events
+ * - institutions/ - Institutional statistics events
  */

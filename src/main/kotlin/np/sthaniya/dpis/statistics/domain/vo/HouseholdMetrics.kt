@@ -1,5 +1,6 @@
 package np.sthaniya.dpis.statistics.domain.vo
 
+import np.sthaniya.dpis.statistics.domain.vo.demographic.Gender
 import java.io.Serializable
 import java.math.BigDecimal
 import java.math.RoundingMode
