@@ -322,6 +322,36 @@ Statistics on educational attainment of absentee population by ward.
 | `population`       | Number of absentee people with this educational level
 |===
 
+==== `EducationalLevelType`
+Enumeration of educational level categories used for demographic analysis.
+
+[cols="1,3", options="header"]
+|===
+| Value                    | Description
+| `CHILD_DEVELOPMENT_CENTER` | Child Development Center / Montessori (बालविकास केन्द्र / मंटेस्वोरी)
+| `NURSERY`                | Nursery/Kindergarten (नर्सरी/केजी)
+| `CLASS_1`                | Class 1 (कक्षा १)
+| `CLASS_2`                | Class 2 (कक्षा २)
+| `CLASS_3`                | Class 3 (कक्षा ३)
+| `CLASS_4`                | Class 4 (कक्षा ४)
+| `CLASS_5`                | Class 5 (कक्षा ५)
+| `CLASS_6`                | Class 6 (कक्षा ६)
+| `CLASS_7`                | Class 7 (कक्षा ७)
+| `CLASS_8`                | Class 8 (कक्षा ८)
+| `CLASS_9`                | Class 9 (कक्षा ९)
+| `CLASS_10`               | Class 10 (कक्षा १०)
+| `SLC_LEVEL`              | SEE/SLC or equivalent (एसईई/एसएलसी/सो सरह)
+| `CLASS_12_LEVEL`         | Class 12 or PCL or equivalent (कक्षा १२ वा PCL वा सो सरह)
+| `BACHELOR_LEVEL`         | Bachelor's degree or equivalent (स्नातक वा सो सरह)
+| `MASTERS_LEVEL`          | Master's degree or equivalent (स्नातकोत्तर वा सो सरह)
+| `PHD_LEVEL`              | PhD or equivalent (पीएचडी वा सो सरह)
+| `OTHER`                  | Other educational qualifications (अन्य)
+| `INFORMAL_EDUCATION`     | Informal education (अनौपचारिक शिक्षा)
+| `EDUCATED`               | Literate (साक्षर)
+| `UNKNOWN`                | Unknown (थाहा नभएको)
+|===
+
+
 ==== `WardWiseAbsenteeAbsenceReason`
 Statistics on reasons for absence by ward.
 
