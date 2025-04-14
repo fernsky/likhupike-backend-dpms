@@ -76,7 +76,7 @@ interface WardStatisticsRepository<T : WardStatistics> : StatisticsRepository<T>
      * @param geoCriteria Map of geographic attributes to filter by
      * @return List of ward statistics matching the geographic criteria
      */
-    fun findByGeographicCriteria(geoCriteria: Map<String, Any>): List<T>
+    // fun findByGeographicCriteria(geoCriteria: Map<String, Any>): List<T>
     
     /**
      * Calculate aggregated statistics across multiple wards

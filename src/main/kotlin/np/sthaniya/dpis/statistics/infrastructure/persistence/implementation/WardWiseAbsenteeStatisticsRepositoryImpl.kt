@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.util.UUID
 import jakarta.annotation.PostConstruct
@@ -49,7 +50,7 @@ class WardWiseAbsenteeStatisticsRepositoryImpl(
     override fun findById(id: UUID): WardWiseAbsenteeStatistics? {
         // Try cache first
         val cacheKey = "absentee_stats:${id}"
-        val cachedValue = cacheService.get<WardWiseAbsenteeStatistics>(cacheKey)
+        val cachedValue = cacheService.get(cacheKey, WardWiseAbsenteeStatistics::class.java)
         if (cachedValue != null) {
             return cachedValue
         }
@@ -154,9 +155,6 @@ class WardWiseAbsenteeStatisticsRepositoryImpl(
         // Save to database
         val savedEntity = jpaRepository.save(persistenceEntity)
         
-        // Update domain object with any generated values
-        entity.id = savedEntity.id
-        
         // Invalidate cache
         if (entity.id != null) {
             cacheService.evict("absentee_stats:${entity.id}")
@@ -242,11 +240,11 @@ class WardWiseAbsenteeStatisticsRepositoryImpl(
         
         return auditEntries.map { entry ->
             mapOf(
-                "id" to entry.id,
-                "timestamp" to entry.timestamp,
-                "action" to entry.action,
-                "userId" to entry.userId,
-                "details" to entry.details
+                "id" to (entry.id as Any),
+                "timestamp" to (entry.timestamp as Any),
+                "action" to (entry.action as Any),
+                "userId" to (entry.userId as Any),
+                "details" to (entry.details as Any)
             )
         }
     }
@@ -500,12 +498,12 @@ class WardWiseAbsenteeStatisticsRepositoryImpl(
             .sortedBy { it.calculationDate }
             .map {
                 mapOf(
-                    "date" to it.calculationDate,
-                    "totalAbsenteePopulation" to it.totalAbsenteePopulation,
-                    "absenteePercentage" to it.absenteePercentage,
-                    "foreignAbsenteePercentage" to it.foreignAbsenteePercentage,
-                    "maleAbsenteeCount" to it.maleAbsenteeCount,
-                    "femaleAbsenteeCount" to it.femaleAbsenteeCount
+                    "date" to (it.calculationDate as Any),
+                    "totalAbsenteePopulation" to (it.totalAbsenteePopulation as Any),
+                    "absenteePercentage" to (it.absenteePercentage as Any),
+                    "foreignAbsenteePercentage" to (it.foreignAbsenteePercentage as Any),
+                    "maleAbsenteeCount" to (it.maleAbsenteeCount as Any),
+                    "femaleAbsenteeCount" to (it.femaleAbsenteeCount as Any)
                 )
             }
     }
@@ -618,12 +616,270 @@ class WardWiseAbsenteeStatisticsRepositoryImpl(
     }
     
     /**
+     * Get statistics for wards with population greater than the specified threshold
+     *
+     * @param populationThreshold The minimum population
+     * @return List of ward statistics for wards exceeding the population threshold
+     */
+    override fun findByPopulationGreaterThan(populationThreshold: Int): List<WardWiseAbsenteeStatistics> {
+        // Retrieve all entities with valid applicablePopulation > threshold
+        val entities = jpaRepository.findAll().filter { 
+            it.isValid && 
+            it.applicablePopulation != null && 
+            it.applicablePopulation!! > populationThreshold 
+        }
+        
+        // Convert entities to domain objects
+        return entities.map { mapToDomainObject(it) }
+    }
+    
+    /**
+     * Calculate aggregated statistics across multiple wards
+     *
+     * @param wardIds The IDs of the wards to include in the aggregation
+     * @return Aggregated statistics result
+     */
+    override fun calculateAggregateForWards(wardIds: List<UUID>): Map<String, Any> {
+        // Get all valid statistics for the requested wards
+        val wardStats = wardIds.mapNotNull { wardId ->
+            val stats = jpaRepository.findByWardIdAndIsValidTrue(wardId)
+            stats.maxByOrNull { it.calculationDate }
+        }.map { mapToDomainObject(it) }
+        
+        if (wardStats.isEmpty()) {
+            return mapOf(
+                "wardsIncluded" to 0,
+                "totalAbsenteePopulation" to 0,
+                "averageAbsenteePercentage" to BigDecimal.ZERO,
+                "aggregationDate" to LocalDateTime.now()
+            )
+        }
+        
+        // Calculate aggregated totals
+        val totalAbsenteePopulation = wardStats.sumOf { it.absenteeData.totalAbsenteePopulation }
+        
+        // Calculate average percentages
+        val avgAbsenteePercentage = wardStats
+            .map { it.absenteePercentage }
+            .reduce { acc, value -> acc.add(value) }
+            .divide(BigDecimal(wardStats.size), 2, RoundingMode.HALF_UP)
+            
+        val avgForeignAbsenteePercentage = wardStats
+            .map { it.foreignAbsenteePercentage }
+            .reduce { acc, value -> acc.add(value) }
+            .divide(BigDecimal(wardStats.size), 2, RoundingMode.HALF_UP)
+            
+        // Aggregate gender distribution
+        val maleTotal = wardStats.sumOf { 
+            it.absenteeData.getGenderDistribution()[Gender.MALE] ?: 0 
+        }
+        val femaleTotal = wardStats.sumOf { 
+            it.absenteeData.getGenderDistribution()[Gender.FEMALE] ?: 0 
+        }
+        val otherTotal = wardStats.sumOf { 
+            it.absenteeData.getGenderDistribution()[Gender.OTHER] ?: 0 
+        }
+        
+        // Calculate gender percentages
+        val genderTotal = maleTotal + femaleTotal + otherTotal
+        val genderPercentages = if (genderTotal > 0) {
+            mapOf(
+                "MALE" to BigDecimal((maleTotal.toDouble() / genderTotal) * 100)
+                    .setScale(2, RoundingMode.HALF_UP),
+                "FEMALE" to BigDecimal((femaleTotal.toDouble() / genderTotal) * 100)
+                    .setScale(2, RoundingMode.HALF_UP),
+                "OTHER" to BigDecimal((otherTotal.toDouble() / genderTotal) * 100)
+                    .setScale(2, RoundingMode.HALF_UP)
+            )
+        } else {
+            mapOf("MALE" to BigDecimal.ZERO, "FEMALE" to BigDecimal.ZERO, "OTHER" to BigDecimal.ZERO)
+        }
+        
+        // Aggregate reason distribution
+        val reasonDistribution = mutableMapOf<AbsenceReason, Int>()
+        wardStats.forEach { stats ->
+            stats.absenteeData.reasonDistribution.forEach { (reason, count) ->
+                reasonDistribution[reason] = (reasonDistribution[reason] ?: 0) + count
+            }
+        }
+        
+        // Calculate primary reason
+        val primaryReason = reasonDistribution.maxByOrNull { it.value }?.key
+        
+        // Aggregate location distribution
+        val locationDistribution = mutableMapOf<AbsenteeLocationType, Int>()
+        wardStats.forEach { stats ->
+            stats.absenteeData.locationDistribution.forEach { (location, count) ->
+                locationDistribution[location] = (locationDistribution[location] ?: 0) + count
+            }
+        }
+        
+        // Aggregate destination countries
+        val destinationCountries = mutableMapOf<String, Int>()
+        wardStats.forEach { stats ->
+            stats.absenteeData.destinationCountryDistribution.forEach { (country, count) ->
+                destinationCountries[country] = (destinationCountries[country] ?: 0) + count
+            }
+        }
+        
+        // Get top destination countries
+        val topDestinations = destinationCountries.entries
+            .sortedByDescending { it.value }
+            .take(5)
+            .map { it.key to it.value }
+        
+        // Calculate aggregated literacy rate
+        val literacyRates = wardStats.mapNotNull { stats ->
+            val rate = stats.absenteeData.getLiteracyRate()
+            if (rate > BigDecimal.ZERO) rate else null
+        }
+        
+        val avgLiteracyRate = if (literacyRates.isNotEmpty()) {
+            literacyRates.reduce { acc, rate -> acc.add(rate) }
+                .divide(BigDecimal(literacyRates.size), 2, RoundingMode.HALF_UP)
+        } else BigDecimal.ZERO
+        
+        // Return aggregated results
+        return mapOf(
+            "wardsIncluded" to wardStats.size,
+            "wardIds" to wardIds,
+            "totalAbsenteePopulation" to totalAbsenteePopulation,
+            "maleAbsenteeCount" to maleTotal,
+            "femaleAbsenteeCount" to femaleTotal,
+            "otherAbsenteeCount" to otherTotal,
+            "genderPercentages" to genderPercentages,
+            "averageAbsenteePercentage" to avgAbsenteePercentage,
+            "averageForeignAbsenteePercentage" to avgForeignAbsenteePercentage,
+            "primaryAbsenceReason" to (primaryReason?.name ?: "UNKNOWN"),
+            "topDestinationCountries" to topDestinations,
+            "averageLiteracyRate" to avgLiteracyRate,
+            "aggregationDate" to LocalDateTime.now()
+        )
+    }
+    
+    /**
+     * Compare statistics between two wards
+     *
+     * @param wardId1 First ward ID
+     * @param wardId2 Second ward ID
+     * @return Comparison result with key metrics
+     */
+    override fun compareWards(wardId1: UUID, wardId2: UUID): Map<String, Any> {
+        // Get most recent valid statistics for each ward
+        val stats1 = findByWardId(wardId1)
+        val stats2 = findByWardId(wardId2)
+        
+        // If either ward stats are missing, return partial or empty comparison
+        if (stats1 == null && stats2 == null) {
+            return mapOf(
+                "error" to "No valid statistics found for either ward",
+                "comparisonDate" to LocalDateTime.now()
+            )
+        }
+        
+        if (stats1 == null) {
+            return mapOf(
+                "error" to "No valid statistics found for ward ID: $wardId1",
+                "ward2" to stats2!!.getKeyMetrics(),
+                "comparisonDate" to LocalDateTime.now()
+            )
+        }
+        
+        if (stats2 == null) {
+            return mapOf(
+                "error" to "No valid statistics found for ward ID: $wardId2",
+                "ward1" to stats1.getKeyMetrics(),
+                "comparisonDate" to LocalDateTime.now()
+            )
+        }
+        
+        // Calculate key metric differences
+        val absenteePopDiff = stats1.absenteeData.totalAbsenteePopulation - stats2.absenteeData.totalAbsenteePopulation
+        val absenteePercentDiff = stats1.absenteePercentage.subtract(stats2.absenteePercentage)
+        val foreignAbsenteePercentDiff = stats1.foreignAbsenteePercentage.subtract(stats2.foreignAbsenteePercentage)
+        
+        // Compare gender distributions
+        val gender1 = stats1.absenteeData.getGenderDistribution()
+        val gender2 = stats2.absenteeData.getGenderDistribution()
+        
+        val maleDiff = (gender1[Gender.MALE] ?: 0) - (gender2[Gender.MALE] ?: 0)
+        val femaleDiff = (gender1[Gender.FEMALE] ?: 0) - (gender2[Gender.FEMALE] ?: 0)
+        val otherDiff = (gender1[Gender.OTHER] ?: 0) - (gender2[Gender.OTHER] ?: 0)
+        
+        // Compare reason distributions
+        val reasonComparison = mutableMapOf<String, Map<String, Any>>()
+        val reasonTypes = AbsenceReason.values()
+        
+        for (reason in reasonTypes) {
+            val count1 = stats1.absenteeData.reasonDistribution[reason] ?: 0
+            val count2 = stats2.absenteeData.reasonDistribution[reason] ?: 0
+            val diff = count1 - count2
+            
+            reasonComparison[reason.name] = mapOf(
+                "ward1" to count1,
+                "ward2" to count2,
+                "difference" to diff
+            )
+        }
+        
+        // Compare education levels
+        val literacy1 = stats1.absenteeData.getLiteracyRate()
+        val literacy2 = stats2.absenteeData.getLiteracyRate()
+        val literacyDiff = literacy1.subtract(literacy2)
+        
+        val higherEd1 = stats1.absenteeData.getHigherEducationRate()
+        val higherEd2 = stats2.absenteeData.getHigherEducationRate()
+        val higherEdDiff = higherEd1.subtract(higherEd2)
+        
+        // Return comparison results
+        return mapOf(
+            "ward1" to mapOf(
+                "wardId" to stats1.wardId,
+                "wardNumber" to stats1.wardNumber,
+                "absenteePopulation" to stats1.absenteeData.totalAbsenteePopulation,
+                "absenteePercentage" to stats1.absenteePercentage,
+                "foreignAbsenteePercentage" to stats1.foreignAbsenteePercentage,
+                "primaryReason" to (stats1.primaryAbsenceReason?.name ?: "UNKNOWN"),
+                "topDestination" to (stats1.topDestinationCountry ?: "UNKNOWN"),
+                "maleCount" to (gender1[Gender.MALE] ?: 0),
+                "femaleCount" to (gender1[Gender.FEMALE] ?: 0),
+                "literacyRate" to literacy1,
+                "higherEducationRate" to higherEd1
+            ),
+            "ward2" to mapOf(
+                "wardId" to stats2.wardId,
+                "wardNumber" to stats2.wardNumber,
+                "absenteePopulation" to stats2.absenteeData.totalAbsenteePopulation,
+                "absenteePercentage" to stats2.absenteePercentage,
+                "foreignAbsenteePercentage" to stats2.foreignAbsenteePercentage,
+                "primaryReason" to (stats2.primaryAbsenceReason?.name ?: "UNKNOWN"),
+                "topDestination" to (stats2.topDestinationCountry ?: "UNKNOWN"),
+                "maleCount" to (gender2[Gender.MALE] ?: 0),
+                "femaleCount" to (gender2[Gender.FEMALE] ?: 0),
+                "literacyRate" to literacy2,
+                "higherEducationRate" to higherEd2
+            ),
+            "differences" to mapOf(
+                "absenteePopulation" to absenteePopDiff,
+                "absenteePercentage" to absenteePercentDiff,
+                "foreignAbsenteePercentage" to foreignAbsenteePercentDiff,
+                "maleCount" to maleDiff,
+                "femaleCount" to femaleDiff,
+                "otherCount" to otherDiff,
+                "literacyRate" to literacyDiff,
+                "higherEducationRate" to higherEdDiff
+            ),
+            "reasonComparison" to reasonComparison,
+            "comparisonDate" to LocalDateTime.now()
+        )
+    }
+    
+    /**
      * Map a JPA entity to a domain object
      */
     private fun mapToDomainObject(entity: WardWiseAbsenteeStatisticsEntity): WardWiseAbsenteeStatistics {
         return WardWiseAbsenteeStatistics().apply {
             // Map base entity fields
-            this.id = entity.id
             this.statisticalGroup = entity.statisticalGroup
             this.statisticalCategory = entity.statisticalCategory
             this.referenceDate = entity.referenceDate

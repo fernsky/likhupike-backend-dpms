@@ -53,6 +53,9 @@ interface JpaWardWiseAbsenteeStatisticsRepository : JpaRepository<WardWiseAbsent
     
     @Query("SELECT e FROM WardWiseAbsenteeStatisticsEntity e WHERE e.wardId = :wardId AND e.calculationDate <= :asOfDate AND e.isValid = true ORDER BY e.calculationDate DESC")
     fun findByWardIdAsOf(wardId: UUID, asOfDate: LocalDateTime, pageable: Pageable): Page<WardWiseAbsenteeStatisticsEntity>
+
+    @Query("SELECT e FROM WardWiseAbsenteeStatisticsEntity e WHERE e.applicablePopulation > :threshold AND e.isValid = true")
+    fun findByApplicablePopulationGreaterThanAndIsValidTrue(threshold: Int): List<WardWiseAbsenteeStatisticsEntity>
     
     @Query("SELECT COUNT(e) FROM WardWiseAbsenteeStatisticsEntity e WHERE e.wardId = :wardId AND e.isValid = true")
     fun countByWardId(wardId: UUID): Long
