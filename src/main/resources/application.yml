@@ -9,6 +9,32 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
+  # Redis configuration for caching
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:Redis@123}
+      timeout: 2000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+  # Cache configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000
+      cache-null-values: false
+    cache-names:
+      - ward_statistics
+      - demographic_statistics
+      - education_statistics
+      - economic_statistics
+      - frequently_accessed
+      - rarely_updated
   mail:
     host: ${MAIL_HOST:smtp.example.com}
     port: ${MAIL_PORT:465}
