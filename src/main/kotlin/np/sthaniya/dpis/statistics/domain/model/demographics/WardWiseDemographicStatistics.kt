@@ -1,8 +1,8 @@
 package np.sthaniya.dpis.statistics.domain.model.demographics
 
 import np.sthaniya.dpis.statistics.domain.model.WardStatistics
-import np.sthaniya.dpis.statistics.domain.vo.Gender
-import np.sthaniya.dpis.statistics.domain.vo.PopulationBreakdown
+import np.sthaniya.dpis.statistics.domain.vo.demographic.Gender
+import np.sthaniya.dpis.statistics.domain.vo.demographic.PopulationBreakdown
 import np.sthaniya.dpis.statistics.domain.vo.HouseholdMetrics
 import np.sthaniya.dpis.statistics.domain.event.demographics.DemographicStatsUpdatedEvent
 import java.math.BigDecimal
