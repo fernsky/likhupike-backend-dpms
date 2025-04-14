@@ -118,13 +118,9 @@ class WardWiseMaritalStatusStatistics : WardStatistics() {
     private fun estimateSingleParentPercentage() {
         // For now, we'll use a simple estimation based on widowed, divorced and separated
         // individuals who are in prime parenting age groups
-        val parentingAgeGroups = listOf(
-            MaritalStatusAgeGroup.AGE_25_29,
-            MaritalStatusAgeGroup.AGE_30_34,
-            MaritalStatusAgeGroup.AGE_35_39,
-            MaritalStatusAgeGroup.AGE_40_44,
-            MaritalStatusAgeGroup.AGE_45_49
-        )
+        val parentingAgeGroups = MaritalStatusAgeGroup.values().filter { ageGroup ->
+            ageGroup.minAge >= 25 && (ageGroup.maxAge == null || ageGroup.maxAge <= 49)
+        }
         
         val singleParentStatuses = listOf(
             MaritalStatus.WIDOWED,
