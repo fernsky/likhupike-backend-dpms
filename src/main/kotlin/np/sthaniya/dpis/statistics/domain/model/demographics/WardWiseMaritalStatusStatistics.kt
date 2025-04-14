@@ -1,7 +1,7 @@
 package np.sthaniya.dpis.statistics.domain.model.demographics
 
 import np.sthaniya.dpis.statistics.domain.model.WardStatistics
-import np.sthaniya.dpis.statistics.domain.vo.Gender
+import np.sthaniya.dpis.statistics.domain.vo.demographic.Gender
 import np.sthaniya.dpis.statistics.domain.vo.demographic.MaritalStatus
 import np.sthaniya.dpis.statistics.domain.vo.demographic.MaritalStatusAgeGroup
 import np.sthaniya.dpis.statistics.domain.vo.demographic.MaritalStatusDistribution

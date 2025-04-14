@@ -40,14 +40,8 @@ enum class MaritalStatusAgeGroup(val minAge: Int, val maxAge: Int?) {
     AGE_25_29(25, 29),
     AGE_30_34(30, 34),
     AGE_35_39(35, 39),
-    AGE_40_44(40, 44),
-    AGE_45_49(45, 49),
-    AGE_50_54(50, 54),
-    AGE_55_59(55, 59),
-    AGE_60_64(60, 64),
-    AGE_65_69(65, 69),
-    AGE_70_74(70, 74),
-    AGE_75_AND_ABOVE(75, null);
+    AGE_40_AND_ABOVE(40, null);
+    
     
     companion object {
         /**
@@ -56,7 +50,7 @@ enum class MaritalStatusAgeGroup(val minAge: Int, val maxAge: Int?) {
         fun fromAge(age: Int): MaritalStatusAgeGroup {
             return values().find { ageGroup -> 
                 age >= ageGroup.minAge && (ageGroup.maxAge == null || age <= ageGroup.maxAge)
-            } ?: AGE_75_AND_ABOVE
+            } ?: AGE_40_AND_ABOVE
         }
         
         /**
@@ -64,10 +58,9 @@ enum class MaritalStatusAgeGroup(val minAge: Int, val maxAge: Int?) {
          */
         fun getAgeCategories(): Map<String, List<MaritalStatusAgeGroup>> {
             return mapOf(
-                "YOUTH" to listOf(AGE_BELOW_15, AGE_15_19, AGE_20_24),
-                "YOUNG_ADULT" to listOf(AGE_25_29, AGE_30_34, AGE_35_39),
-                "MIDDLE_AGE" to listOf(AGE_40_44, AGE_45_49, AGE_50_54, AGE_55_59),
-                "SENIOR" to listOf(AGE_60_64, AGE_65_69, AGE_70_74, AGE_75_AND_ABOVE)
+            "YOUTH" to listOf(AGE_BELOW_15, AGE_15_19, AGE_20_24),
+            "YOUNG_ADULT" to listOf(AGE_25_29, AGE_30_34, AGE_35_39),
+            "MIDDLE_AGE_AND_SENIOR" to listOf(AGE_40_AND_ABOVE)
             )
         }
     }
