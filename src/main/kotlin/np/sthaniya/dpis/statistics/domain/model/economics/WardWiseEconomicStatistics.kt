@@ -2,7 +2,7 @@ package np.sthaniya.dpis.statistics.domain.model.economics
 
 import np.sthaniya.dpis.statistics.domain.model.WardStatistics
 import np.sthaniya.dpis.statistics.domain.vo.StatisticalComparison
-import np.sthaniya.dpis.statistics.domain.event.EconomicStatsUpdatedEvent
+import np.sthaniya.dpis.statistics.domain.event.economics.EconomicStatsUpdatedEvent
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -119,6 +119,11 @@ class WardWiseEconomicStatistics : WardStatistics() {
         // This should be implemented to access the demographic repository
         // For now, return a placeholder
         return applicablePopulation ?: 0
+    }
+
+    override fun getTotalWardHouseholds(): Int {
+        // Not directly relevant for economics statistics, return 0 as fallback
+        return 0
     }
     
     override fun getKeyMetrics(): Map<String, Any> {

@@ -4,7 +4,7 @@ import np.sthaniya.dpis.statistics.domain.model.WardStatistics
 import np.sthaniya.dpis.statistics.domain.vo.Gender
 import np.sthaniya.dpis.statistics.domain.vo.PopulationBreakdown
 import np.sthaniya.dpis.statistics.domain.vo.HouseholdMetrics
-import np.sthaniya.dpis.statistics.domain.event.DemographicStatsUpdatedEvent
+import np.sthaniya.dpis.statistics.domain.event.demographics.DemographicStatsUpdatedEvent
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -107,6 +107,11 @@ class WardWiseDemographicStatistics : WardStatistics() {
 
     override fun getTotalWardPopulation(): Int {
         return totalPopulation
+    }
+
+    override fun getTotalWardHouseholds(): Int {
+        // Not directly relevant for demographics statistics, return 0 as fallback
+        return 0
     }
 
     override fun getKeyMetrics(): Map<String, Any> {
