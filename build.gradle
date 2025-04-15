@@ -279,7 +279,7 @@ bootRun {
     jvmArgs = [
         '-Dspring.profiles.active=dev',
         '-Dspring.output.ansi.enabled=always',
-        '-Djava.io.tmpdir=./tmp'  // Set temporary directory to ./tmp
+        '-Djava.io.tmpdir=./build/tmp'  // Set temporary directory to ./tmp
     ]
     
     // Explicit configuration of environment variables to ensure they are used
@@ -291,12 +291,12 @@ bootRun {
         "redis.port": envProps.getProperty('REDIS_PORT'), 
         "redis.password": envProps.getProperty('REDIS_PASSWORD'),
         // Add a system property for the server temp directory
-        "server.tomcat.basedir": "./tmp/tomcat-dpis"
+        "server.tomcat.basedir": "./build/tmp/tomcat-dpis"
     ]
     
     // Ensure the temp directory exists before the run
     doFirst {
-        mkdir "./tmp"
-        mkdir "./tmp/tomcat-dpis"
+        mkdir "./build/tmp"
+        mkdir "./build/tmp/tomcat-dpis"
     }
 }
