@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager as SpringCacheManager
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -40,6 +41,8 @@ class CacheService(
         put("misses", 0L)
         put("evictions", 0L)
         put("puts", 0L)
+        put("localHits", 0L)
+        put("distributedHits", 0L)
     }
     
     /**
@@ -59,6 +62,8 @@ class CacheService(
                 // Also store in Spring's local cache manager if appropriate
                 val cacheName = determineCacheRegion(key)
                 localCacheManager.getCache(cacheName)?.put(key, value)
+                
+                logger.debug("Stored item in LOCAL cache with key: {}, TTL: {} seconds", key, ttlSeconds)
             }
             
             if (level == CacheLevel.DISTRIBUTED || level == CacheLevel.ALL) {
@@ -68,6 +73,8 @@ class CacheService(
                 // Also store in Spring's Redis cache manager if appropriate
                 val cacheName = determineCacheRegion(key)
                 redisCacheManager.getCache(cacheName)?.put(key, value)
+                
+                logger.debug("Stored item in DISTRIBUTED cache with key: {}, TTL: {} seconds", key, ttlSeconds)
             }
             
             // Update statistics
@@ -75,8 +82,6 @@ class CacheService(
             
             // Notify listeners
             notifyListeners { it.onUpdate(key) }
-            
-            logger.debug("Cached item with key: {}, TTL: {} seconds", key, ttlSeconds)
         } catch (e: Exception) {
             logger.error("Error caching item with key: {}", key, e)
         }
@@ -87,17 +92,26 @@ class CacheService(
      */
     override fun put(entity: Cacheable, level: CacheLevel) {
         if (!entity.isCacheable()) {
+            logger.debug("Entity is not cacheable: {}", entity.javaClass.simpleName)
             return
         }
         
         val key = entity.getCacheKey()
         val ttl = entity.cacheTTLSeconds
+        val region = entity.getCacheRegion()
+        
+        logger.debug("Caching entity {} in region {} with TTL {} seconds at level {}", 
+                    entity.javaClass.simpleName, region, ttl, level)
         
         // Update the last cached timestamp on the entity
         entity.updateCacheTimestamp()
         
-        // Cache the entity
-        put(key, entity, ttl, level)
+        // Generate cache content and store it
+        val cacheContent = entity.generateCacheContent()
+        put(key, cacheContent, ttl, level)
+        
+        // Store the actual entity if needed
+        put("entity:$key", entity, ttl, level)
     }
     
     /**
@@ -116,6 +130,8 @@ class CacheService(
                 val localEntry = localCache[key]
                 if (localEntry != null && !localEntry.isExpired()) {
                     incrementStat("hits")
+                    incrementStat("localHits")
+                    logger.debug("Cache HIT (LOCAL): {}", key)
                     return localEntry.value as? T
                 }
                 
@@ -124,12 +140,24 @@ class CacheService(
                 val cacheValue = localCacheManager.getCache(cacheName)?.get(key)?.get()
                 
                 if (cacheValue != null && type.isInstance(cacheValue)) {
+                    // Update our local cache too for consistency
+                    localCache[key] = CacheEntry(cacheValue, 3600) // 1 hour default
+                    
                     incrementStat("hits")
+                    incrementStat("localHits")
+                    logger.debug("Cache HIT (SPRING LOCAL): {}", key)
                     return cacheValue as T
+                }
+                
+                // If we're only checking LOCAL and didn't find it, record a miss
+                if (level == CacheLevel.LOCAL) {
+                    incrementStat("misses")
+                    logger.debug("Cache MISS (LOCAL): {}", key)
+                    return null
                 }
             }
             
-            // Then try distributed cache
+            // Then try distributed cache if requested
             if (level == CacheLevel.DISTRIBUTED || level == CacheLevel.ALL) {
                 // Try Spring's Redis cache manager first
                 val cacheName = determineCacheRegion(key)
@@ -142,6 +170,8 @@ class CacheService(
                     }
                     
                     incrementStat("hits")
+                    incrementStat("distributedHits")
+                    logger.debug("Cache HIT (SPRING REDIS): {}", key)
                     return redisCacheValue as T
                 }
                 
@@ -157,12 +187,17 @@ class CacheService(
                     }
                     
                     incrementStat("hits")
+                    incrementStat("distributedHits")
+                    logger.debug("Cache HIT (REDIS): {}", key)
                     return distributedValue as T
                 }
             }
             
+            // If we get here, it's a cache miss
             incrementStat("misses")
+            logger.debug("Cache MISS for key: {} at level {}", key, level)
             return null
+            
         } catch (e: Exception) {
             logger.error("Error retrieving cached item with key: {}", key, e)
             incrementStat("misses")
@@ -186,6 +221,11 @@ class CacheService(
                 val cacheName = determineCacheRegion(key)
                 if (localCacheManager.getCache(cacheName)?.get(key) != null) {
                     return true
+                }
+                
+                // If only checking local, return false here
+                if (level == CacheLevel.LOCAL) {
+                    return false
                 }
             }
             
@@ -217,6 +257,7 @@ class CacheService(
                 // Remove from local cache
                 localCache.remove(key)?.let {
                     incrementStat("evictions")
+                    logger.debug("Evicted from LOCAL cache: {}", key)
                 }
                 
                 // Remove from Spring's local cache
@@ -231,12 +272,11 @@ class CacheService(
                 
                 // Remove from direct Redis access
                 redisTemplate.delete(key)
+                logger.debug("Evicted from DISTRIBUTED cache: {}", key)
             }
             
             // Notify listeners
             notifyListeners { it.onEviction(key, "Explicit eviction") }
-            
-            logger.debug("Evicted cache item with key: {}", key)
         } catch (e: Exception) {
             logger.error("Error evicting cache item with key: {}", key, e)
         }
@@ -255,8 +295,12 @@ class CacheService(
                 // Update statistics
                 incrementStat("evictions", keysToRemove.size.toLong())
                 
-                // No easy way to evict by prefix from Spring's local cache
-                // We'd need to implement this manually if needed
+                logger.debug("Evicted {} items with prefix {} from LOCAL cache", keysToRemove.size, keyPrefix)
+                
+                // For Spring's local cache, we need to clear entire regions
+                // This is inefficient but necessary due to Spring Cache API limitations
+                val cacheName = determineCacheRegion("$keyPrefix:dummy")
+                localCacheManager.getCache(cacheName)?.clear()
             }
             
             // For Redis, use scan and delete pattern
@@ -265,13 +309,13 @@ class CacheService(
                 val keys = redisTemplate.keys(redisKeyPattern)
                 if (!keys.isNullOrEmpty()) {
                     redisTemplate.delete(keys)
+                    logger.debug("Evicted {} items with prefix {} from DISTRIBUTED cache", keys.size, keyPrefix)
                 }
                 
-                // Spring Redis cache doesn't support easy prefix-based eviction
-                // We'd need to implement this manually if needed
+                // For Spring's Redis cache, we need to clear entire regions
+                val cacheName = determineCacheRegion("$keyPrefix:dummy")
+                redisCacheManager.getCache(cacheName)?.clear()
             }
-            
-            logger.debug("Evicted cache items with prefix: {}", keyPrefix)
         } catch (e: Exception) {
             logger.error("Error evicting cache items with prefix: {}", keyPrefix, e)
         }
@@ -288,7 +332,7 @@ class CacheService(
             // Evict by prefix
             evictByPrefix(keyPrefix, level)
             
-            logger.debug("Invalidated cache for entity type: {}, id: {}", entityType, entityId)
+            logger.debug("Invalidated cache for entity type: {}, id: {} at level {}", entityType, entityId, level)
         } catch (e: Exception) {
             logger.error("Error invalidating cache for entity: {}", entityId, e)
         }
@@ -305,7 +349,7 @@ class CacheService(
             // Evict by prefix
             evictByPrefix(keyPrefix, level)
             
-            logger.debug("Invalidated cache for entity type: {}", entityType)
+            logger.debug("Invalidated cache for entity type: {} at level {}", entityType, level)
         } catch (e: Exception) {
             logger.error("Error invalidating cache for entity type: {}", entityType, e)
         }
@@ -322,7 +366,7 @@ class CacheService(
             // Evict by prefix
             evictByPrefix(keyPrefix, level)
             
-            logger.debug("Invalidated cache for ward: {}", wardId)
+            logger.debug("Invalidated cache for ward: {} at level {}", wardId, level)
         } catch (e: Exception) {
             logger.error("Error invalidating cache for ward: {}", wardId, e)
         }
@@ -345,6 +389,8 @@ class CacheService(
                 localCacheManager.cacheNames.forEach { cacheName ->
                     localCacheManager.getCache(cacheName)?.clear()
                 }
+                
+                logger.info("Cleared LOCAL cache - {} entries removed", count)
             }
             
             if (level == CacheLevel.DISTRIBUTED || level == CacheLevel.ALL) {
@@ -358,12 +404,34 @@ class CacheService(
                 val keys = redisTemplate.keys("$appPrefix*")
                 if (!keys.isNullOrEmpty()) {
                     redisTemplate.delete(keys)
+                    logger.info("Cleared DISTRIBUTED cache - {} entries removed", keys.size)
                 }
             }
-            
-            logger.info("Cleared all caches at level: {}", level)
         } catch (e: Exception) {
             logger.error("Error clearing all caches", e)
+        }
+    }
+    
+    /**
+     * Clean up expired entries from the cache
+     * This is particularly important for local cache that doesn't have auto-expiry
+     */
+    fun cleanupExpiredEntries() {
+        try {
+            // For local cache, we need to manually check expiration
+            val now = LocalDateTime.now()
+            val expiredKeys = localCache.entries
+                .filter { it.value.isExpired(now) }
+                .map { it.key }
+                
+            if (expiredKeys.isNotEmpty()) {
+                expiredKeys.forEach { localCache.remove(it) }
+                logger.debug("Removed {} expired entries from local cache", expiredKeys.size)
+            }
+            
+            // Redis handles expiration automatically
+        } catch (e: Exception) {
+            logger.error("Error cleaning up expired cache entries", e)
         }
     }
     
@@ -376,10 +444,24 @@ class CacheService(
         // Add additional statistics
         stats["localCacheSize"] = localCache.size
         stats["hitRatio"] = calculateHitRatio()
+        stats["localHitRatio"] = calculateLocalHitRatio()
         
         // Add Spring cache manager statistics if available
         stats["springLocalCaches"] = localCacheManager.cacheNames.toList()
         stats["springRedisCaches"] = redisCacheManager.cacheNames.toList()
+        
+        // Add cache level distribution
+        val localHits = cacheStats["localHits"] ?: 0
+        val distributedHits = cacheStats["distributedHits"] ?: 0
+        val total = localHits + distributedHits
+        
+        if (total > 0) {
+            stats["localHitPercentage"] = (localHits.toDouble() / total.toDouble()) * 100
+            stats["distributedHitPercentage"] = (distributedHits.toDouble() / total.toDouble()) * 100
+        } else {
+            stats["localHitPercentage"] = 0.0
+            stats["distributedHitPercentage"] = 0.0
+        }
         
         return stats
     }
@@ -400,17 +482,17 @@ class CacheService(
             // Update cache
             put(key, freshData, ttlSeconds, level)
             
+            logger.debug("Refreshed cache for key: {} at level {}", key, level)
             return freshData
         } catch (e: Exception) {
             logger.error("Error refreshing cache for key: {}", key, e)
             
             // If refresh fails, try to return existing data
             @Suppress("UNCHECKED_CAST")
-            if (level == CacheLevel.LOCAL || level == CacheLevel.ALL) {
-                val localEntry = localCache[key]
-                if (localEntry != null && !localEntry.isExpired()) {
-                    return localEntry.value as T
-                }
+            val existingData = get(key, Any::class.java, level)
+            if (existingData != null) {
+                logger.debug("Refresh failed, returning existing cached data for key: {}", key)
+                return existingData as T
             }
             
             throw e
@@ -430,7 +512,7 @@ class CacheService(
                 put(key, value, ttlSeconds, level)
             }
             
-            logger.info("Pre-warmed cache with {} items", items.size)
+            logger.info("Pre-warmed cache with {} items at level {}", items.size, level)
         } catch (e: Exception) {
             logger.error("Error pre-warming cache", e)
         }
@@ -441,6 +523,7 @@ class CacheService(
      */
     override fun registerCacheEventListener(listener: CacheManager.CacheEventListener) {
         eventListeners.add(listener)
+        logger.debug("Registered new cache event listener: {}", listener.javaClass.simpleName)
     }
     
     /**
@@ -460,6 +543,18 @@ class CacheService(
         
         return if (total > 0) {
             hits.toDouble() / total.toDouble()
+        } else 0.0
+    }
+    
+    /**
+     * Calculate local cache hit ratio
+     */
+    private fun calculateLocalHitRatio(): Double {
+        val localHits = cacheStats["localHits"] ?: 0
+        val hits = cacheStats["hits"] ?: 0
+        
+        return if (hits > 0) {
+            localHits.toDouble() / hits.toDouble()
         } else 0.0
     }
     
@@ -501,8 +596,16 @@ class CacheService(
         private val creationTime: LocalDateTime = LocalDateTime.now()
         private val expirationTime: LocalDateTime = creationTime.plusSeconds(ttlSeconds)
         
-        fun isExpired(): Boolean {
-            return LocalDateTime.now().isAfter(expirationTime)
+        fun isExpired(now: LocalDateTime = LocalDateTime.now()): Boolean {
+            return now.isAfter(expirationTime)
+        }
+        
+        fun timeToLive(now: LocalDateTime = LocalDateTime.now()): Duration {
+            return if (isExpired(now)) {
+                Duration.ZERO
+            } else {
+                Duration.between(now, expirationTime)
+            }
         }
     }
 }

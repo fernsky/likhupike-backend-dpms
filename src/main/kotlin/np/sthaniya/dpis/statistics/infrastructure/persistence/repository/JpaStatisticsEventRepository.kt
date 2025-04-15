@@ -1,6 +1,6 @@
 package np.sthaniya.dpis.statistics.infrastructure.persistence.repository
 
-import np.sthaniya.dpis.statistics.infrastructure.persistence.event.StatisticsEventEntity
+import np.sthaniya.dpis.statistics.infrastructure.persistence.entity.StatisticsEventEntity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -33,8 +33,23 @@ interface JpaStatisticsEventRepository : JpaRepository<StatisticsEventEntity, UU
     @Query("SELECT COUNT(e) FROM StatisticsEventEntity e WHERE e.entityId = :entityId")
     fun countByEntityId(entityId: UUID): Long
     
+    /**
+     * Find the last sequence number for an entity
+     */
     @Query("SELECT MAX(e.sequenceNumber) FROM StatisticsEventEntity e WHERE e.entityId = :entityId")
-    fun findMaxSequenceNumberForEntity(entityId: UUID): Long?
+    fun findLastSequenceNumber(entityId: UUID): Long?
+    
+    /**
+     * Find events for an entity with sequence number greater than or equal to the given value
+     */
+    @Query("SELECT e FROM StatisticsEventEntity e WHERE e.entityId = :entityId AND e.sequenceNumber >= :fromSequence ORDER BY e.sequenceNumber ASC")
+    fun findByEntityIdAndSequenceNumberGreaterThanEqualOrderBySequenceNumberAsc(entityId: UUID, fromSequence: Long): List<StatisticsEventEntity>
+    
+    /**
+     * Find events for an entity with sequence number between the given range
+     */
+    @Query("SELECT e FROM StatisticsEventEntity e WHERE e.entityId = :entityId AND e.sequenceNumber >= :fromSequence AND e.sequenceNumber <= :toSequence ORDER BY e.sequenceNumber ASC")
+    fun findByEntityIdAndSequenceNumberBetweenOrderBySequenceNumberAsc(entityId: UUID, fromSequence: Long, toSequence: Long): List<StatisticsEventEntity>
     
     @Query("SELECT e FROM StatisticsEventEntity e WHERE e.createdBy = :userId ORDER BY e.createdAt DESC")
     fun findByCreatedBy(userId: UUID, pageable: Pageable): Page<StatisticsEventEntity>

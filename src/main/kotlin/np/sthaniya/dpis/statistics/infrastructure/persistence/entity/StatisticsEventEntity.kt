@@ -1,4 +1,4 @@
-package np.sthaniya.dpis.statistics.infrastructure.persistence.event
+package np.sthaniya.dpis.statistics.infrastructure.persistence.entity
 
 import jakarta.persistence.*
 import java.time.LocalDateTime
@@ -11,42 +11,42 @@ import java.util.UUID
 @Entity
 @Table(name = "statistics_events", indexes = [
     Index(name = "idx_entity_id", columnList = "entityId"),
+    Index(name = "idx_entity_id_seq", columnList = "entityId,sequenceNumber"),
     Index(name = "idx_event_type", columnList = "eventType"),
     Index(name = "idx_created_at", columnList = "createdAt")
 ])
-class StatisticsEventEntity {
-    
+data class StatisticsEventEntity(
     @Id
     @Column(name = "id")
-    var id: UUID = UUID.randomUUID()
+    var id: UUID = UUID.randomUUID(),
     
     @Column(name = "entity_id", nullable = false)
-    var entityId: UUID? = null
+    var entityId: UUID? = null,
     
     @Column(name = "entity_type", nullable = false)
-    var entityType: String = ""
+    var entityType: String = "",
     
     @Column(name = "event_type", nullable = false)
-    var eventType: String = ""
+    var eventType: String = "",
     
     @Column(name = "sequence_number", nullable = false)
-    var sequenceNumber: Long = 0
+    var sequenceNumber: Long = 0,
     
-    @Column(name = "event_data", columnDefinition = "jsonb", nullable = false)
-    var eventData: String = "{}"
+    @Column(name = "event_data", columnDefinition = "text", nullable = false)
+    var eventData: String = "{}",
     
     @Column(name = "created_at", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now()
+    var createdAt: LocalDateTime = LocalDateTime.now(),
     
     @Column(name = "created_by")
-    var createdBy: UUID? = null
+    var createdBy: UUID? = null,
     
-    @Column(name = "metadata", columnDefinition = "jsonb")
-    var metadata: String = "{}"
+    @Column(name = "metadata", columnDefinition = "text")
+    var metadata: String = "{}",
     
     @Column(name = "is_processed", nullable = false)
-    var isProcessed: Boolean = false
+    var isProcessed: Boolean = false,
     
     @Column(name = "processed_at")
     var processedAt: LocalDateTime? = null
-}
+)
