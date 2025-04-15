@@ -45,3 +45,6 @@ out/
 .env.development
 .env.test
 .env.production
+
+# Temporary directories
+.tmp/
