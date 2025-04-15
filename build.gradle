@@ -123,6 +123,9 @@ dependencies {
     implementation 'org.webjars:font-awesome:6.7.2'
     implementation 'org.webjars.npm:htmx.org:1.9.5'
     implementation 'org.webjars.npm:alpinejs:3.13.0'
+	
+	// Add dotenv dependency for .env file processing
+    implementation 'io.github.cdimascio:dotenv-kotlin:6.4.1'
 }
 
 ext {
@@ -262,4 +265,38 @@ tasks.dokkaHtml.configure {
 task generateDocs(dependsOn: ['test', 'asciidoctor', 'asciidoctorPdf']) {
 	description = 'Generates complete API and database documentation in HTML and PDF formats'
 	group = 'Documentation'
+}
+
+// Read environment variables from .env file for bootRun task
+def envProps = new Properties()
+file('.env').withInputStream { envProps.load(it) }
+
+bootRun {
+    // Configure environment variables for bootRun task
+    environment = envProps
+    
+    // Additional JVM arguments if needed
+    jvmArgs = [
+        '-Dspring.profiles.active=dev',
+        '-Dspring.output.ansi.enabled=always',
+        '-Djava.io.tmpdir=./tmp'  // Set temporary directory to ./tmp
+    ]
+    
+    // Explicit configuration of environment variables to ensure they are used
+    systemProperties = [
+        "spring.datasource.url": envProps.getProperty('SPRING_DATASOURCE_URL'),
+        "spring.datasource.username": envProps.getProperty('SPRING_DATASOURCE_USERNAME'),
+        "spring.datasource.password": envProps.getProperty('SPRING_DATASOURCE_PASSWORD'),
+        "redis.host": envProps.getProperty('REDIS_HOST'),
+        "redis.port": envProps.getProperty('REDIS_PORT'), 
+        "redis.password": envProps.getProperty('REDIS_PASSWORD'),
+        // Add a system property for the server temp directory
+        "server.tomcat.basedir": "./tmp/tomcat-dpis"
+    ]
+    
+    // Ensure the temp directory exists before the run
+    doFirst {
+        mkdir "./tmp"
+        mkdir "./tmp/tomcat-dpis"
+    }
 }

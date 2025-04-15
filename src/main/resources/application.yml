@@ -78,6 +78,18 @@ spring:
     #     format_sql: true
     #     show_sql: false
 
+server:
+  # Add server configuration
+  tomcat:
+    basedir: ${java.io.tmpdir}/tomcat-dpis
+    # Configure access log directory if needed
+    accesslog:
+      directory: logs
+      enabled: true
+      prefix: access_log
+      suffix: .log
+      pattern: common
+
 app:
   admin:
     email: ${ADMIN_EMAIL:admin@likhupike.gov.np}
