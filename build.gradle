@@ -153,8 +153,8 @@ asciidoctor {
 	configurations 'asciidoctorExt'
 	inputs.dir snippetsDir
 
-	// Don't depend on test to avoid running during build
-	// dependsOn test
+	// Add explicit dependency on test
+	dependsOn test
 	
 	sources {
 		include '*.adoc'
