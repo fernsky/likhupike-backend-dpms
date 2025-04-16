@@ -1,6 +1,5 @@
 package np.sthaniya.dpis.profile.location.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.math.BigDecimal
 import java.util.*
 import np.sthaniya.dpis.auth.controller.base.BaseRestDocsTest
@@ -27,8 +26,6 @@ class ProfileWardControllerTest : BaseRestDocsTest() {
     @Autowired private lateinit var wardService: ProfileWardService
 
     @Autowired private lateinit var municipalityService: ProfileMunicipalityService
-
-    @Autowired private lateinit var objectMapper: ObjectMapper
 
     private lateinit var municipalityId: UUID
 

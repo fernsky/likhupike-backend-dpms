@@ -1,6 +1,5 @@
 package np.sthaniya.dpis.profile.location.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.math.BigDecimal
 import np.sthaniya.dpis.auth.controller.base.BaseRestDocsTest
 import np.sthaniya.dpis.profile.location.dto.MunicipalityCreateRequest
@@ -21,8 +20,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 class ProfileMunicipalityControllerTest : BaseRestDocsTest() {
 
     @Autowired private lateinit var municipalityService: ProfileMunicipalityService
-
-    @Autowired private lateinit var objectMapper: ObjectMapper
 
     @Test
     @WithMockUser(authorities = ["PERMISSION_MANAGE_PROFILE"])

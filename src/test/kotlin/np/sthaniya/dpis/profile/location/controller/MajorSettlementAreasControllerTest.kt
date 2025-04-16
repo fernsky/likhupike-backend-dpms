@@ -1,6 +1,5 @@
 package np.sthaniya.dpis.profile.location.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.math.BigDecimal
 import java.util.*
 import np.sthaniya.dpis.auth.controller.base.BaseRestDocsTest
@@ -28,8 +27,6 @@ class MajorSettlementAreasControllerTest : BaseRestDocsTest() {
     @Autowired private lateinit var wardService: ProfileWardService
 
     @Autowired private lateinit var municipalityService: ProfileMunicipalityService
-
-    @Autowired private lateinit var objectMapper: ObjectMapper
 
     private lateinit var testWardId: UUID
 
@@ -280,7 +277,8 @@ class MajorSettlementAreasControllerTest : BaseRestDocsTest() {
                         document(
                                 "settlement-search-by-name",
                                 preprocessResponse(prettyPrint()),
-                                requestParameters(
+                                queryParameters( // Changed from requestParameters to
+                                        // queryParameters
                                         parameterWithName("name")
                                                 .description(
                                                         "Search term for settlement area names"
