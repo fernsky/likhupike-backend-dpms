@@ -7,12 +7,12 @@ import java.math.BigDecimal
 import java.util.UUID
 
 data class WardResponse(
-    val id: UUID?,
-    val number: Int,
-    val area: BigDecimal,
-    val formingLocalBodies: Array<String>,
-    val formingConstituentWards: Array<String>,
-    val settlementCount: Int
+        val id: UUID?,
+        val number: Int,
+        val area: BigDecimal,
+        val formingLocalBodies: Array<String>,
+        val formingConstituentWards: Array<String>,
+        val settlementCount: Int
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -42,17 +42,14 @@ data class WardResponse(
 }
 
 data class WardCreateRequest(
-    @field:NotNull(message = "Ward number is required")
-    @field:Min(value = 1, message = "Ward number must be at least 1")
-    val number: Int,
-    
-    @field:NotNull(message = "Area is required")
-    @field:PositiveOrZero(message = "Area must be positive or zero")
-    val area: BigDecimal,
-    
-    val formingLocalBodies: Array<String> = arrayOf(),
-    
-    val formingConstituentWards: Array<String> = arrayOf()
+        @field:NotNull(message = "Ward number is required")
+        @field:Min(value = 1, message = "Ward number must be at least 1")
+        val number: Int,
+        @field:NotNull(message = "Area is required")
+        @field:PositiveOrZero(message = "Area must be positive or zero")
+        val area: BigDecimal,
+        val formingLocalBodies: Array<String> = arrayOf(),
+        val formingConstituentWards: Array<String> = arrayOf()
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -78,13 +75,11 @@ data class WardCreateRequest(
 }
 
 data class WardUpdateRequest(
-    @field:NotNull(message = "Area is required")
-    @field:PositiveOrZero(message = "Area must be positive or zero")
-    val area: BigDecimal,
-    
-    val formingLocalBodies: Array<String> = arrayOf(),
-    
-    val formingConstituentWards: Array<String> = arrayOf()
+        @field:NotNull(message = "Area is required")
+        @field:PositiveOrZero(message = "Area must be positive or zero")
+        val area: BigDecimal,
+        val formingLocalBodies: Array<String> = arrayOf(),
+        val formingConstituentWards: Array<String> = arrayOf()
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
