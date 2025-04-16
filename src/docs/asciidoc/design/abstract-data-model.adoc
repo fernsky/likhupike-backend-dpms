@@ -9,7 +9,7 @@ include::abstract-data-model/location.adoc[]
 
 include::abstract-data-model/land.adoc[]
 
-include::abstract-data-model/demographics.adoc[]
+include::abstract-data-model/demographics/index.adoc[]
 
 include::abstract-data-model/economics.adoc[]
 

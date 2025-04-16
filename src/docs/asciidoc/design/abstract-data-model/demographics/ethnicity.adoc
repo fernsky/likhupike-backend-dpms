@@ -1,0 +1,89 @@
+=== Ethnicity and Cultural Demographics
+
+==== `WardWiseCastePopulation`
+Population statistics for a ward broken down by caste or ethnicity.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `casteType`  | Caste or ethnic group (reference to CasteType)
+| `population` | Number of people belonging to the specified caste in the ward
+|===
+
+==== `CasteType`
+Enumeration of caste and ethnic groups for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `CHETTRI`       | Chhetri ethnic group
+| `BRAHMAN_HILL`  | Hill Brahman ethnic group
+| `LIMBU`         | Limbu ethnic group
+| `SHERPA`        | Sherpa ethnic group
+| `TAMANG`        | Tamang ethnic group
+| `RAI`           | Rai ethnic group
+| `MAGAR`         | Magar ethnic group
+| `THARU`         | Tharu ethnic group
+| `NEWAR`         | Newar ethnic group
+| `KAMI`          | Kami ethnic group
+| [various others]| Other castes and ethnic groups as per Nepal's demographic classification
+|===
+
+==== `WardWiseMotherTongue`
+Population statistics for a ward broken down by primary language spoken.
+
+[cols="1,3", options="header"]
+|===
+| Field         | Description
+| `ward`        | Reference to the ward entity
+| `languageType`| Language category (reference to LanguageType)
+| `population`  | Number of people speaking the specified language in the ward
+|===
+
+==== `LanguageType`
+Enumeration of language categories used for linguistic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value      | Description
+| `NEPALI`   | Nepali language
+| `LIMBU`    | Limbu language
+| `RAI`      | Rai language
+| `HINDI`    | Hindi language
+| `NEWARI`   | Newari language
+| `SHERPA`   | Sherpa language
+| `TAMANG`   | Tamang language
+| `MAITHILI` | Maithili language
+| [various others] | Other languages spoken in Nepal
+|===
+
+==== `WardWiseReligion`
+Population statistics for a ward broken down by religious affiliation.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `ward`         | Reference to the ward entity
+| `religionType` | Religion category (reference to ReligionType)
+| `population`   | Number of people practicing the specified religion in the ward
+|===
+
+==== `ReligionType`
+Enumeration of religion categories used for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value      | Description
+| `HINDU`    | Hindu religion
+| `BUDDHIST` | Buddhist religion
+| `KIRANT`   | Kirant religion
+| `CHRISTIAN`| Christian religion
+| `ISLAM`    | Islam religion
+| `NATURE`   | Nature worship
+| `BON`      | Bon religion
+| `JAIN`     | Jain religion
+| `BAHAI`    | Baha'i religion
+| `SIKH`     | Sikh religion
+| `OTHER`    | Other religions
+|===

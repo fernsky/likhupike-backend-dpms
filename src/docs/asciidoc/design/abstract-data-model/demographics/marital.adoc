@@ -1,0 +1,76 @@
+=== Marital Demographics
+
+==== `AgeWiseMaritalStatus`
+Population statistics broken down by age group and marital status.
+
+[cols="1,3", options="header"]
+|===
+| Field           | Description
+| `ageGroup`      | Age group category (reference to MaritalStatusAgeGroup)
+| `maritalStatus` | Marital status category (reference to MaritalStatus)
+| `population`    | Number of people in this age group with this marital status
+|===
+
+==== `MaritalStatusAgeGroup`
+Enumeration of age group categories used for marital status analysis.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `AGE_BELOW_15`     | Ages below 15 years
+| `AGE_15_19`        | Ages 15 to 19 years
+| `AGE_20_24`        | Ages 20 to 24 years
+| `AGE_25_29`        | Ages 25 to 29 years
+| `AGE_30_34`        | Ages 30 to 34 years
+| `AGE_35_39`        | Ages 35 to 39 years
+| `AGE_40_44`        | Ages 40 to 44 years
+| `AGE_45_49`        | Ages 45 to 49 years
+| `AGE_50_54`        | Ages 50 to 54 years
+| `AGE_55_59`        | Ages 55 to 59 years
+| `AGE_60_64`        | Ages 60 to 64 years
+| `AGE_65_69`        | Ages 65 to 69 years
+| `AGE_70_74`        | Ages 70 to 74 years
+| `AGE_75_AND_ABOVE` | Ages 75 years and above
+|===
+
+==== `MaritalStatus`
+Enumeration of marital status categories used for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `UNMARRIED`     | Unmarried/single (विवाह नभएको)
+| `ONE_MARRIAGE`  | Married once (एक विवाह)
+| `MULTI_MARRIAGE`| Multiple marriages (बहुविवाह)
+| `REMARRIAGE`    | Remarried (पुनर्विवाह)
+| `WIDOWED`       | Widowed (विधुर/विधवा)
+| `DIVORCED`      | Divorced (पारपाचुके)
+| `SEPARATED`     | Separated (छुट्टिएको)
+|===
+
+==== `WardAgeGenderWiseMarriedAge`
+Statistics on the age at which people got married, broken down by ward, current age group, and gender.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | Reference to the ward entity
+| `ageGroup`   | Age group category at which marriage occurred (reference to MarriedAgeGroup)
+| `gender`     | Gender category (reference to Gender)
+| `population` | Number of people in this demographic category
+|===
+
+==== `MarriedAgeGroup`
+Enumeration of age group categories at which marriage occurred.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `AGE_BELOW_15`     | Married before age 15
+| `AGE_15_19`        | Married between ages 15-19
+| `AGE_20_24`        | Married between ages 20-24
+| `AGE_25_29`        | Married between ages 25-29
+| `AGE_30_34`        | Married between ages 30-34
+| `AGE_35_39`        | Married between ages 35-39
+| `AGE_40_AND_ABOVE` | Married at age 40 or above
+|===

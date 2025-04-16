@@ -1,0 +1,13 @@
+== Demographics Domain
+
+This section describes the demographic data model components organized by specific domains.
+
+include::general.adoc[]
+
+include::age.adoc[]
+
+include::ethnicity.adoc[]
+
+include::marital.adoc[]
+
+include::absentee.adoc[]
