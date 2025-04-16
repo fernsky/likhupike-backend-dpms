@@ -8,7 +8,7 @@ import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
 import np.sthaniya.dpis.profile.location.model.Ward
 import np.sthaniya.dpis.profile.location.repository.MunicipalityRepository
 import np.sthaniya.dpis.profile.location.repository.WardRepository
-import np.sthaniya.dpis.profile.location.service.WardService
+import np.sthaniya.dpis.profile.location.service.ProfileWardService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional
 class ProfileWardServiceImpl(
         private val wardRepository: WardRepository,
         private val municipalityRepository: MunicipalityRepository
-) : WardService {
+) : ProfileWardService {
 
     @Transactional
     override fun createWard(request: WardCreateRequest): WardResponse {
