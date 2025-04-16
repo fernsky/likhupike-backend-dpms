@@ -1,0 +1,121 @@
+= Ward Management
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[wards]]
+== Ward Management
+
+These endpoints allow for the creation and management of wards within the municipality.
+
+[[ward-create]]
+=== Create Ward
+
+This endpoint creates a new ward in the municipality.
+
+.HTTP Request
+include::{snippets}/ward-create/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/ward-create/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-create/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-create/response-fields.adoc[]
+
+[[ward-get-all]]
+=== Get All Wards
+
+This endpoint retrieves all wards in the municipality.
+
+.HTTP Request
+include::{snippets}/ward-get-all/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-get-all/response-fields.adoc[]
+
+[[ward-get-by-id]]
+=== Get Ward by ID
+
+This endpoint retrieves a specific ward by its unique ID.
+
+.HTTP Request
+include::{snippets}/ward-get-by-id/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/ward-get-by-id/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-get-by-id/response-fields.adoc[]
+
+[[ward-get-by-number]]
+=== Get Ward by Number
+
+This endpoint retrieves a specific ward by its ward number.
+
+.HTTP Request
+include::{snippets}/ward-get-by-number/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/ward-get-by-number/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-get-by-number/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-get-by-number/response-fields.adoc[]
+
+[[ward-update]]
+=== Update Ward
+
+This endpoint updates the information of an existing ward.
+
+.HTTP Request
+include::{snippets}/ward-update/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/ward-update/path-parameters.adoc[]
+
+.Request Fields
+include::{snippets}/ward-update/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-update/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-update/response-fields.adoc[]
+
+[[ward-delete]]
+=== Delete Ward
+
+This endpoint deletes a ward and all associated settlement areas.
+
+.HTTP Request
+include::{snippets}/ward-delete/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/ward-delete/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-delete/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-delete/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Ward numbers must be unique within a municipality
+* Deleting a ward also deletes all settlement areas within that ward
+* Ward information includes references to former local bodies and constituent wards
+* Area is measured in square kilometers

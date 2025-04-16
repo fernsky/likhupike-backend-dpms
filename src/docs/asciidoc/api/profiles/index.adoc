@@ -1,0 +1,43 @@
+= Digital Profile API
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[profile-overview]]
+== Overview
+
+The Digital Profile API provides endpoints for managing municipality information, wards, and settlement areas
+within a digital municipality profile system.
+
+[[profile-flow]]
+== Profile Management Flow
+
+The standard profile management flow is as follows:
+
+1. Create/Update municipality information
+2. Create wards within the municipality
+3. Add major settlement areas to wards
+
+include::municipality.adoc[leveloffset=+1]
+include::wards.adoc[leveloffset=+1]
+include::settlements.adoc[leveloffset=+1]
+
+[[profile-error-codes]]
+== Error Codes
+
+[cols="1,1,3"]
+|===
+|Code |HTTP Status |Description
+
+|PROFILE_001 |404 |Municipality not found
+|PROFILE_002 |404 |Ward not found
+|PROFILE_003 |404 |Settlement area not found
+|PROFILE_004 |409 |Ward number already exists in this municipality
+|PROFILE_005 |400 |Invalid ward number
+|PROFILE_006 |400 |Invalid geo-coordinates
+|PROFILE_007 |400 |Invalid area value
+|PROFILE_008 |403 |Insufficient permissions
+|===

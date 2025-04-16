@@ -1,5 +1,4 @@
-The Digital Profile Information System provides a RESTful API for managing user authentication,
-user management, and digital profiles.
+The Digital Profile Information System provides a RESTful API for managing user authentication, user management, and digital profiles.
 
 === API Structure
 
@@ -7,7 +6,7 @@ The API is organized into the following domains:
 
 * Authentication API - User registration, login, token refresh, password management
 * User Management API - Admin operations for user accounts
-* Profile API - Digital profile management
+* Profile API - Digital profile management for municipality, wards, and settlements
 
 === Response Format
 
@@ -44,5 +43,6 @@ Error responses include detailed information:
 ----
 
 include::authentication/index.adoc[leveloffset=+1]
+include::profiles/index.adoc[leveloffset=+1]
 // include::user-management/index.adoc[leveloffset=+1]
-// include::profiles/index.adoc[leveloffset=+1]
+

@@ -1,0 +1,138 @@
+= Settlement Areas Management
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[settlements]]
+== Settlement Areas Management
+
+These endpoints allow for the creation and management of major settlement areas within wards.
+
+[[settlement-create]]
+=== Create Settlement Area
+
+This endpoint creates a new major settlement area within a ward.
+
+.HTTP Request
+include::{snippets}/settlement-create/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/settlement-create/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/settlement-create/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/settlement-create/response-fields.adoc[]
+
+[[settlement-get-all]]
+=== Get All Settlement Areas
+
+This endpoint retrieves all major settlement areas across all wards.
+
+.HTTP Request
+include::{snippets}/settlement-get-all/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/settlement-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/settlement-get-all/response-fields.adoc[]
+
+[[settlement-get-by-id]]
+=== Get Settlement Area by ID
+
+This endpoint retrieves a specific settlement area by its unique ID.
+
+.HTTP Request
+include::{snippets}/settlement-get-by-id/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/settlement-get-by-id/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/settlement-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/settlement-get-by-id/response-fields.adoc[]
+
+[[settlement-get-by-ward]]
+=== Get Settlement Areas by Ward
+
+This endpoint retrieves all settlement areas within a specific ward.
+
+.HTTP Request
+include::{snippets}/settlement-get-by-ward/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/settlement-get-by-ward/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/settlement-get-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/settlement-get-by-ward/response-fields.adoc[]
+
+[[settlement-search]]
+=== Search Settlement Areas by Name
+
+This endpoint searches for settlement areas containing the specified name.
+
+.HTTP Request
+include::{snippets}/settlement-search-by-name/http-request.adoc[]
+
+.Request Parameters
+include::{snippets}/settlement-search-by-name/request-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/settlement-search-by-name/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/settlement-search-by-name/response-fields.adoc[]
+
+[[settlement-update]]
+=== Update Settlement Area
+
+This endpoint updates a settlement area's information.
+
+.HTTP Request
+include::{snippets}/settlement-update/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/settlement-update/path-parameters.adoc[]
+
+.Request Fields
+include::{snippets}/settlement-update/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/settlement-update/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/settlement-update/response-fields.adoc[]
+
+[[settlement-delete]]
+=== Delete Settlement Area
+
+This endpoint deletes a settlement area.
+
+.HTTP Request
+include::{snippets}/settlement-delete/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/settlement-delete/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/settlement-delete/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/settlement-delete/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Settlement areas must be associated with a valid ward
+* Search functionality supports partial name matching
+* Name search is case-insensitive
+* Settlement areas are the lowest level in the location hierarchy

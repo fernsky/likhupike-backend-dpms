@@ -1,0 +1,85 @@
+= Municipality Management
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[municipality]]
+== Municipality Management
+
+These endpoints allow for the creation and management of the municipality profile.
+
+[[municipality-create]]
+=== Create Municipality
+
+This endpoint creates a new municipality profile or returns the existing one.
+
+.HTTP Request
+include::{snippets}/municipality-create/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/municipality-create/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/municipality-create/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/municipality-create/response-fields.adoc[]
+
+[[municipality-get]]
+=== Get Municipality Information
+
+This endpoint retrieves the current municipality profile information.
+
+.HTTP Request
+include::{snippets}/municipality-get/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/municipality-get/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/municipality-get/response-fields.adoc[]
+
+[[municipality-update-info]]
+=== Update Municipality Basic Information
+
+This endpoint updates the basic information (name, province, district) of the municipality.
+
+.HTTP Request
+include::{snippets}/municipality-update-info/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/municipality-update-info/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/municipality-update-info/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/municipality-update-info/response-fields.adoc[]
+
+[[municipality-update-geo]]
+=== Update Municipality Geo-Location
+
+This endpoint updates the geographical coordinates and area information of the municipality.
+
+.HTTP Request
+include::{snippets}/municipality-update-geo-location/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/municipality-update-geo-location/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/municipality-update-geo-location/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/municipality-update-geo-location/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Only one municipality profile can exist in the system
+* Municipality is the top-level entity in the location hierarchy
+* All wards belong to the municipality
+* Geographical coordinates use decimal degrees format
+* Area is measured in square kilometers
