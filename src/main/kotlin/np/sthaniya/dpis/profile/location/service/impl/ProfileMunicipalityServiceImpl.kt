@@ -7,7 +7,7 @@ import np.sthaniya.dpis.profile.location.dto.MunicipalityGeoLocationUpdateReques
 import np.sthaniya.dpis.profile.location.dto.MunicipalityResponse
 import np.sthaniya.dpis.profile.location.dto.MunicipalityUpdateRequest
 import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
-import np.sthaniya.dpis.profile.location.model.Municipality
+import np.sthaniya.dpis.profile.location.model.ProfileMunicipality
 import np.sthaniya.dpis.profile.location.repository.MunicipalityRepository
 import np.sthaniya.dpis.profile.location.service.ProfileMunicipalityService
 import org.springframework.stereotype.Service
@@ -25,7 +25,7 @@ class ProfileMunicipalityServiceImpl(private val municipalityRepository: Municip
         // If it exists, return it; otherwise create a new one
         val municipality =
                 existingMunicipality
-                        ?: Municipality(
+                        ?: ProfileMunicipality(
                                         name = request.name,
                                         province = request.province,
                                         district = request.district,
@@ -99,12 +99,12 @@ class ProfileMunicipalityServiceImpl(private val municipalityRepository: Municip
         return mapToResponse(getMunicipality())
     }
 
-    private fun getMunicipality(): Municipality {
+    private fun getMunicipality(): ProfileMunicipality {
         return municipalityRepository.findFirstByOrderByCreatedAtAsc()
                 ?: throw ProfileLocationException.MunicipalityNotFoundException()
     }
 
-    private fun mapToResponse(municipality: Municipality): MunicipalityResponse {
+    private fun mapToResponse(municipality: ProfileMunicipality): MunicipalityResponse {
         return MunicipalityResponse(
                 id = municipality.id,
                 name = municipality.name,
