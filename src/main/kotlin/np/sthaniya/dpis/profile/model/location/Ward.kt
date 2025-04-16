@@ -13,11 +13,11 @@ class Ward(
     @Column(nullable = false)
     var area: BigDecimal,
     
-    @Column(nullable = true)
-    var formingLocalBody: String? = null,
+    @Column(name = "forming_local_bodies", nullable = true)
+    var formingLocalBodies: Array<String> = arrayOf(),
     
-    @Column(nullable = true)
-    var formingConstituentWards: String? = null,
+    @Column(name = "forming_constituent_wards", nullable = true)
+    var formingConstituentWards: Array<String> = arrayOf(),
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "municipality_id", nullable = false)
