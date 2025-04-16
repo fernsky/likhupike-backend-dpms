@@ -3,6 +3,7 @@ package np.sthaniya.dpis.profile.location.service.impl
 import np.sthaniya.dpis.profile.location.dto.WardCreateRequest
 import np.sthaniya.dpis.profile.location.dto.WardResponse
 import np.sthaniya.dpis.profile.location.dto.WardUpdateRequest
+import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
 import np.sthaniya.dpis.profile.location.model.Ward
 import np.sthaniya.dpis.profile.location.repository.MunicipalityRepository
 import np.sthaniya.dpis.profile.location.repository.WardRepository
@@ -20,11 +21,11 @@ class WardServiceImpl(
     @Transactional
     override fun createWard(request: WardCreateRequest): WardResponse {
         val municipality = municipalityRepository.findFirstByOrderByCreatedAtAsc()
-            ?: throw IllegalStateException("Municipality not found. Please create a municipality first.")
+            ?: throw ProfileLocationException.MunicipalityRequiredException()
             
         // Check if a ward with the same number already exists
         wardRepository.findByNumberAndMunicipality(request.number, municipality)?.let {
-            throw IllegalStateException("Ward with number ${request.number} already exists.")
+            throw ProfileLocationException.DuplicateWardNumberException(request.number)
         }
         
         val ward = Ward(
@@ -72,17 +73,17 @@ class WardServiceImpl(
     @Transactional(readOnly = true)
     override fun getWardByNumber(number: Int): WardResponse {
         val municipality = municipalityRepository.findFirstByOrderByCreatedAtAsc()
-            ?: throw IllegalStateException("Municipality not found.")
+            ?: throw ProfileLocationException.MunicipalityNotFoundException()
             
         val ward = wardRepository.findByNumberAndMunicipality(number, municipality)
-            ?: throw NoSuchElementException("Ward with number $number not found.")
+            ?: throw ProfileLocationException.WardNotFoundByNumberException(number)
             
         return mapToResponse(ward)
     }
     
     private fun getWardEntityById(wardId: UUID): Ward {
         return wardRepository.findById(wardId)
-            .orElseThrow { NoSuchElementException("Ward with ID $wardId not found.") }
+            .orElseThrow { ProfileLocationException.WardNotFoundException(wardId) }
     }
     
     private fun mapToResponse(ward: Ward): WardResponse {

@@ -3,6 +3,7 @@ package np.sthaniya.dpis.profile.location.service.impl
 import np.sthaniya.dpis.profile.location.dto.MajorSettlementAreasCreateRequest
 import np.sthaniya.dpis.profile.location.dto.MajorSettlementAreasResponse
 import np.sthaniya.dpis.profile.location.dto.MajorSettlementAreasUpdateRequest
+import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
 import np.sthaniya.dpis.profile.location.model.MajorSettlementAreas
 import np.sthaniya.dpis.profile.location.repository.MajorSettlementAreasRepository
 import np.sthaniya.dpis.profile.location.repository.WardRepository
@@ -20,7 +21,17 @@ class MajorSettlementAreasServiceImpl(
     @Transactional
     override fun createSettlement(request: MajorSettlementAreasCreateRequest): MajorSettlementAreasResponse {
         val ward = wardRepository.findById(request.wardId)
-            .orElseThrow { NoSuchElementException("Ward with ID ${request.wardId} not found.") }
+            .orElseThrow { ProfileLocationException.WardNotFoundException(request.wardId) }
+            
+        // Check if a settlement with the same name already exists in this ward
+        majorSettlementAreasRepository.findByWard(ward)
+            .find { it.name.equals(request.name, ignoreCase = true) }
+            ?.let {
+                throw ProfileLocationException.DuplicateSettlementNameException(
+                    wardNumber = ward.number,
+                    settlementName = request.name
+                )
+            }
             
         val settlement = MajorSettlementAreas(
             name = request.name,
@@ -34,6 +45,18 @@ class MajorSettlementAreasServiceImpl(
     @Transactional
     override fun updateSettlement(id: UUID, request: MajorSettlementAreasUpdateRequest): MajorSettlementAreasResponse {
         val settlement = getSettlementEntityById(id)
+        
+        // Check if the new name would create a duplicate in the same ward
+        if (!settlement.name.equals(request.name, ignoreCase = true)) {
+            majorSettlementAreasRepository.findByWard(settlement.ward)
+                .find { it.name.equals(request.name, ignoreCase = true) && it.id != id }
+                ?.let {
+                    throw ProfileLocationException.DuplicateSettlementNameException(
+                        wardNumber = settlement.ward.number,
+                        settlementName = request.name
+                    )
+                }
+        }
         
         settlement.name = request.name
         
@@ -53,7 +76,7 @@ class MajorSettlementAreasServiceImpl(
     @Transactional(readOnly = true)
     override fun getSettlementsByWardId(wardId: UUID): List<MajorSettlementAreasResponse> {
         val ward = wardRepository.findById(wardId)
-            .orElseThrow { NoSuchElementException("Ward with ID $wardId not found.") }
+            .orElseThrow { ProfileLocationException.WardNotFoundException(wardId) }
             
         return majorSettlementAreasRepository.findByWard(ward).map { mapToResponse(it) }
     }
@@ -71,7 +94,7 @@ class MajorSettlementAreasServiceImpl(
     
     private fun getSettlementEntityById(id: UUID): MajorSettlementAreas {
         return majorSettlementAreasRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Settlement with ID $id not found.") }
+            .orElseThrow { ProfileLocationException.SettlementNotFoundException(id) }
     }
     
     private fun mapToResponse(settlement: MajorSettlementAreas): MajorSettlementAreasResponse {

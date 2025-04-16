@@ -4,12 +4,14 @@ import np.sthaniya.dpis.profile.location.dto.MunicipalityCreateRequest
 import np.sthaniya.dpis.profile.location.dto.MunicipalityGeoLocationUpdateRequest
 import np.sthaniya.dpis.profile.location.dto.MunicipalityResponse
 import np.sthaniya.dpis.profile.location.dto.MunicipalityUpdateRequest
+import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
 import np.sthaniya.dpis.profile.location.model.Municipality
 import np.sthaniya.dpis.profile.location.repository.MunicipalityRepository
 import np.sthaniya.dpis.profile.location.service.MunicipalityService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+import java.math.BigDecimal
 
 @Service
 class MunicipalityServiceImpl(
@@ -55,6 +57,23 @@ class MunicipalityServiceImpl(
     override fun updateMunicipalityGeoLocation(request: MunicipalityGeoLocationUpdateRequest): MunicipalityResponse {
         val municipality = getMunicipality()
         
+        // Validate geo-location data
+        if (request.rightmostLatitude < request.leftmostLatitude || 
+            request.topmostLongitude < request.bottommostLongitude) {
+            throw ProfileLocationException.InvalidGeolocationDataException("Invalid geo-location boundaries provided.")
+        }
+        
+        // Check altitude if both are provided
+        if (request.highestAltitude != null && request.lowestAltitude != null) {
+            if (request.highestAltitude < request.lowestAltitude) {
+                throw ProfileLocationException.InvalidGeolocationDataException("Highest altitude must be greater than or equal to lowest altitude.")
+            }
+        }
+        
+        if (request.areaInSquareKilometers <= BigDecimal.ZERO) {
+            throw ProfileLocationException.InvalidGeolocationDataException("Area must be greater than zero.")
+        }
+        
         municipality.rightmostLatitude = request.rightmostLatitude
         municipality.leftmostLatitude = request.leftmostLatitude
         municipality.bottommostLongitude = request.bottommostLongitude
@@ -73,7 +92,7 @@ class MunicipalityServiceImpl(
     
     private fun getMunicipality(): Municipality {
         return municipalityRepository.findFirstByOrderByCreatedAtAsc()
-            ?: throw IllegalStateException("Municipality not found. Please create one first.")
+            ?: throw ProfileLocationException.MunicipalityNotFoundException()
     }
     
     private fun mapToResponse(municipality: Municipality): MunicipalityResponse {
