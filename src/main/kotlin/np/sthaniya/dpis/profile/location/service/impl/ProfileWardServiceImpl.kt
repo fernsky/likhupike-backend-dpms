@@ -5,7 +5,7 @@ import np.sthaniya.dpis.profile.location.dto.WardCreateRequest
 import np.sthaniya.dpis.profile.location.dto.WardResponse
 import np.sthaniya.dpis.profile.location.dto.WardUpdateRequest
 import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
-import np.sthaniya.dpis.profile.location.model.Ward
+import np.sthaniya.dpis.profile.location.model.ProfileWard
 import np.sthaniya.dpis.profile.location.repository.MunicipalityRepository
 import np.sthaniya.dpis.profile.location.repository.WardRepository
 import np.sthaniya.dpis.profile.location.service.ProfileWardService
@@ -30,7 +30,7 @@ class ProfileWardServiceImpl(
         }
 
         val ward =
-                Ward(
+                ProfileWard(
                         number = request.number,
                         area = request.area,
                         formingLocalBodies = request.formingLocalBodies,
@@ -85,13 +85,13 @@ class ProfileWardServiceImpl(
         return mapToResponse(ward)
     }
 
-    private fun getWardEntityById(wardId: UUID): Ward {
+    private fun getWardEntityById(wardId: UUID): ProfileWard {
         return wardRepository.findById(wardId).orElseThrow {
             ProfileLocationException.WardNotFoundException(wardId)
         }
     }
 
-    private fun mapToResponse(ward: Ward): WardResponse {
+    private fun mapToResponse(ward: ProfileWard): WardResponse {
         return WardResponse(
                 id = ward.id,
                 number = ward.number,

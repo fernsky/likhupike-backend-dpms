@@ -5,7 +5,7 @@ import java.math.BigDecimal
 import np.sthaniya.dpis.common.entity.UuidBaseEntity
 
 @Entity
-@Table(name = "municipality")
+@Table(name = "profile_municipality")
 class ProfileMunicipality(
         @Column(nullable = false) var province: String,
         @Column(nullable = false) var district: String,
@@ -17,6 +17,10 @@ class ProfileMunicipality(
         @Column(nullable = true) var highestAltitude: BigDecimal? = null,
         @Column(nullable = false) var areaInSquareKilometers: BigDecimal,
         @Column(nullable = false) var name: String,
-        @OneToMany(mappedBy = "municipality", cascade = [CascadeType.ALL], orphanRemoval = true)
-        val wards: MutableSet<Ward> = mutableSetOf()
+        @OneToMany(
+                mappedBy = "profile_municipality",
+                cascade = [CascadeType.ALL],
+                orphanRemoval = true
+        )
+        val wards: MutableSet<ProfileWard> = mutableSetOf()
 ) : UuidBaseEntity()
