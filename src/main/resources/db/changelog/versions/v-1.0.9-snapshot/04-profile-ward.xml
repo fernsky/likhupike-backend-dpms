@@ -1,0 +1,60 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="dpis" id="04-profile-ward-table">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="profile_municipality"/>
+                <not>
+                    <tableExists tableName="profile_ward"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Create profile ward table</comment>
+        <createTable tableName="profile_ward">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="profile_ward_pkey"/>
+            </column>
+            <column name="number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="area" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="forming_local_bodies" type="VARCHAR(255) ARRAY">
+                <constraints nullable="true"/>
+            </column>
+            <column name="forming_constituent_wards" type="VARCHAR(255) ARRAY">
+                <constraints nullable="true"/>
+            </column>
+            <column name="profile_municipality_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_ward_municipality" referencedTableName="profile_municipality" referencedColumnNames="id"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Separate changeset for adding the unique constraint -->
+    <changeSet author="dpis" id="04-profile-ward-unique-constraint">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="profile_ward"/>
+                <not>
+                    <uniqueConstraintExists tableName="profile_ward" constraintName="uk_ward_number_municipality"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add unique constraint for ward number within a municipality</comment>
+        <addUniqueConstraint tableName="profile_ward" columnNames="number,profile_municipality_id" constraintName="uk_ward_number_municipality"/>
+    </changeSet>
+</databaseChangeLog>

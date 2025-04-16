@@ -4,8 +4,13 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <!-- New profile permission changelogs -->
+    <!-- Profile permissions -->
     <include file="01-manage-profile-permission-data.xml" relativeToChangelogFile="true"/>
     <include file="02-system-administrator-with-manage-profile.xml" relativeToChangelogFile="true"/>
+
+    <!-- Profile location tables -->
+    <include file="03-profile-municipality.xml" relativeToChangelogFile="true"/>
+    <include file="04-profile-ward.xml" relativeToChangelogFile="true"/>
+    <include file="05-major-settlement-areas.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
