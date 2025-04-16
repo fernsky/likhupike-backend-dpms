@@ -267,33 +267,39 @@ task generateDocs(dependsOn: ['test', 'asciidoctor', 'asciidoctorPdf']) {
 	group = 'Documentation'
 }
 
-// Read environment variables from .env file for bootRun task
+// Conditionally load environment variables from .env file only for bootRun task
+// and only if the file exists
 def envProps = new Properties()
-file('.env').withInputStream { envProps.load(it) }
+def envFile = file('.env')
+if (envFile.exists()) {
+    envFile.withInputStream { envProps.load(it) }
+}
 
 bootRun {
-    // Configure environment variables for bootRun task
-    environment = envProps
-    
-    // Additional JVM arguments if needed
+    // Configure environment variables for bootRun task only if .env exists
+    if (envFile.exists()) {
+        environment = envProps
+        
+        // Explicit configuration of environment variables to ensure they are used
+        systemProperties = [
+            "spring.datasource.url": envProps.getProperty('SPRING_DATASOURCE_URL'),
+            "spring.datasource.username": envProps.getProperty('SPRING_DATASOURCE_USERNAME'),
+            "spring.datasource.password": envProps.getProperty('SPRING_DATASOURCE_PASSWORD'),
+            "redis.host": envProps.getProperty('REDIS_HOST'),
+            "redis.port": envProps.getProperty('REDIS_PORT'), 
+            "redis.password": envProps.getProperty('REDIS_PASSWORD'),
+            // Add a system property for the server temp directory
+            "server.tomcat.basedir": "./build/tmp/tomcat-dpis"
+        ]
+    }
+
+    // Additional JVM arguments if needed - these apply regardless of .env existence
     jvmArgs = [
         '-Dspring.profiles.active=dev',
         '-Dspring.output.ansi.enabled=always',
         '-Djava.io.tmpdir=./build/tmp'  // Set temporary directory to ./tmp
     ]
-    
-    // Explicit configuration of environment variables to ensure they are used
-    systemProperties = [
-        "spring.datasource.url": envProps.getProperty('SPRING_DATASOURCE_URL'),
-        "spring.datasource.username": envProps.getProperty('SPRING_DATASOURCE_USERNAME'),
-        "spring.datasource.password": envProps.getProperty('SPRING_DATASOURCE_PASSWORD'),
-        "redis.host": envProps.getProperty('REDIS_HOST'),
-        "redis.port": envProps.getProperty('REDIS_PORT'), 
-        "redis.password": envProps.getProperty('REDIS_PASSWORD'),
-        // Add a system property for the server temp directory
-        "server.tomcat.basedir": "./build/tmp/tomcat-dpis"
-    ]
-    
+
     // Ensure the temp directory exists before the run
     doFirst {
         mkdir "./build/tmp"
