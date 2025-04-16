@@ -3,6 +3,7 @@
     xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
+    <!-- Split the table creation and constraint into separate changesets -->
     <changeSet author="dpis" id="03-profile-municipality-table">
         <preConditions onFail="MARK_RAN">
             <not>
@@ -12,7 +13,7 @@
         <comment>Create profile municipality table</comment>
         <createTable tableName="profile_municipality">
             <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="profile_municipality_pkey"/>
+                <constraints nullable="false"/>
             </column>
             <column name="province" type="VARCHAR(100)">
                 <constraints nullable="false"/>
@@ -54,5 +55,19 @@
             <column name="updated_by" type="UUID"/>
             <column name="version" type="BIGINT" defaultValueNumeric="0"/>
         </createTable>
+    </changeSet>
+
+    <!-- Separate changeset for the primary key constraint -->
+    <changeSet author="dpis" id="03-profile-municipality-primary-key">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="profile_municipality"/>
+                <not>
+                    <primaryKeyExists tableName="profile_municipality" primaryKeyName="profile_municipality_pkey"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add primary key to profile municipality table</comment>
+        <addPrimaryKey tableName="profile_municipality" columnNames="id" constraintName="profile_municipality_pkey"/>
     </changeSet>
 </databaseChangeLog>
