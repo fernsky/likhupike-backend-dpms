@@ -1,11 +1,11 @@
 package np.sthaniya.dpis.profile.location.service
 
+import java.util.UUID
 import np.sthaniya.dpis.profile.location.dto.WardCreateRequest
 import np.sthaniya.dpis.profile.location.dto.WardResponse
 import np.sthaniya.dpis.profile.location.dto.WardUpdateRequest
-import java.util.UUID
 
-interface WardService {
+interface ProfileWardService {
     fun createWard(request: WardCreateRequest): WardResponse
     fun updateWard(wardId: UUID, request: WardUpdateRequest): WardResponse
     fun getWardById(wardId: UUID): WardResponse
