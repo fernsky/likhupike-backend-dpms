@@ -16,6 +16,6 @@ class ProfileWard(
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "profile_municipality_id", nullable = false)
         var municipality: ProfileMunicipality,
-        @OneToMany(mappedBy = "profile_ward", cascade = [CascadeType.ALL], orphanRemoval = true)
+        @OneToMany(mappedBy = "ward", cascade = [CascadeType.ALL], orphanRemoval = true)
         val majorSettlementAreas: MutableSet<MajorSettlementAreas> = mutableSetOf()
 ) : UuidBaseEntity()

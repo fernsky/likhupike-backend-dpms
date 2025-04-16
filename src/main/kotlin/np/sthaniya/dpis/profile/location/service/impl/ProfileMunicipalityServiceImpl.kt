@@ -8,14 +8,15 @@ import np.sthaniya.dpis.profile.location.dto.MunicipalityResponse
 import np.sthaniya.dpis.profile.location.dto.MunicipalityUpdateRequest
 import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
 import np.sthaniya.dpis.profile.location.model.ProfileMunicipality
-import np.sthaniya.dpis.profile.location.repository.MunicipalityRepository
+import np.sthaniya.dpis.profile.location.repository.ProfileMunicipalityRepository
 import np.sthaniya.dpis.profile.location.service.ProfileMunicipalityService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class ProfileMunicipalityServiceImpl(private val municipalityRepository: MunicipalityRepository) :
-        ProfileMunicipalityService {
+class ProfileMunicipalityServiceImpl(
+        private val municipalityRepository: ProfileMunicipalityRepository
+) : ProfileMunicipalityService {
 
     @Transactional
     override fun getOrCreateMunicipality(request: MunicipalityCreateRequest): MunicipalityResponse {

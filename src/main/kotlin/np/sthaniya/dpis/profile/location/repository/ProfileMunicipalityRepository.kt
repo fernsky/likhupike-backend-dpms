@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface MunicipalityRepository : JpaRepository<ProfileMunicipality, UUID> {
+interface ProfileMunicipalityRepository : JpaRepository<ProfileMunicipality, UUID> {
     fun findFirstByOrderByCreatedAtAsc(): ProfileMunicipality?
 }

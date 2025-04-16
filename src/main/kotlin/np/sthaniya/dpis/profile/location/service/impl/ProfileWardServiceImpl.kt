@@ -6,16 +6,16 @@ import np.sthaniya.dpis.profile.location.dto.WardResponse
 import np.sthaniya.dpis.profile.location.dto.WardUpdateRequest
 import np.sthaniya.dpis.profile.location.exception.ProfileLocationException
 import np.sthaniya.dpis.profile.location.model.ProfileWard
-import np.sthaniya.dpis.profile.location.repository.MunicipalityRepository
-import np.sthaniya.dpis.profile.location.repository.WardRepository
+import np.sthaniya.dpis.profile.location.repository.ProfileMunicipalityRepository
+import np.sthaniya.dpis.profile.location.repository.ProfileWardRepository
 import np.sthaniya.dpis.profile.location.service.ProfileWardService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ProfileWardServiceImpl(
-        private val wardRepository: WardRepository,
-        private val municipalityRepository: MunicipalityRepository
+        private val wardRepository: ProfileWardRepository,
+        private val municipalityRepository: ProfileMunicipalityRepository
 ) : ProfileWardService {
 
     @Transactional

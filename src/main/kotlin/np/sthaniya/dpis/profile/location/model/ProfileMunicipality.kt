@@ -18,7 +18,7 @@ class ProfileMunicipality(
         @Column(nullable = false) var areaInSquareKilometers: BigDecimal,
         @Column(nullable = false) var name: String,
         @OneToMany(
-                mappedBy = "profile_municipality",
+                mappedBy = "municipality", // Changed from "profile_municipality" to "municipality"
                 cascade = [CascadeType.ALL],
                 orphanRemoval = true
         )
