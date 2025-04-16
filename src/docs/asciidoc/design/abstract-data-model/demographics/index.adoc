@@ -2,7 +2,7 @@
 
 This section describes the demographic data model components organized by specific domains.
 
-include::general.adoc[]
+include::core.adoc[]
 
 include::age.adoc[]
 
