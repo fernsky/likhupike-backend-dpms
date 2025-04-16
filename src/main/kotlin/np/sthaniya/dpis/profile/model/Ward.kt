@@ -1,4 +1,4 @@
-package np.sthaniya.dpis.profile.model.location
+package np.sthaniya.dpis.profile.location.model
 
 import jakarta.persistence.*
 import np.sthaniya.dpis.common.entity.UuidBaseEntity
