@@ -22,7 +22,7 @@ import java.util.*
     description = "Endpoints for managing major settlement areas within wards"
 )
 @RestController
-@RequestMapping("/api/v1/settlements")
+@RequestMapping("/api/v1/profile/location/settlements")
 class MajorSettlementAreasController(
     private val settlementService: MajorSettlementAreasService,
     private val i18nMessageService: I18nMessageService

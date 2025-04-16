@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.*
     description = "Endpoints for managing municipality information"
 )
 @RestController
-@RequestMapping("/api/v1/municipality")
-class MunicipalityController(
+@RequestMapping("/api/v1/profile/location/municipality")
+class ProfileMunicipalityController(
     private val municipalityService: MunicipalityService,
     private val i18nMessageService: I18nMessageService
 ) {
