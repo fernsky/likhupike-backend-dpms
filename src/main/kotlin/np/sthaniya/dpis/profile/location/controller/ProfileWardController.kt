@@ -22,7 +22,7 @@ import java.util.*
     description = "Endpoints for managing wards within the municipality"
 )
 @RestController
-@RequestMapping("/api/v1/profile/wards")
+@RequestMapping("/api/v1/profile/location/wards")
 class ProfileWardController(
     private val wardService: WardService,
     private val i18nMessageService: I18nMessageService

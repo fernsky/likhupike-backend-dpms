@@ -1,8 +1,8 @@
 package np.sthaniya.dpis.config
 
 import np.sthaniya.dpis.auth.resolver.CurrentUserIdResolver
-import org.springframework.context.annotation.Configuration
 import np.sthaniya.dpis.citizen.resolver.CurrentCitizenIdResolver
+import org.springframework.context.annotation.Configuration
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
@@ -16,9 +16,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
  */
 @Configuration
 class WebMvcConfig(
-    private val currentUserIdResolver: CurrentUserIdResolver,
-    private val currentCitizenIdResolver: CurrentCitizenIdResolver
-) : WebMvcConfigurer {    
+        private val currentUserIdResolver: CurrentUserIdResolver,
+        private val currentCitizenIdResolver: CurrentCitizenIdResolver
+) : WebMvcConfigurer {
 
     /**
      * Adds custom argument resolvers to Spring MVC's parameter resolution chain.
