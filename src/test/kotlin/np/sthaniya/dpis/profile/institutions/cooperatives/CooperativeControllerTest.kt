@@ -1120,8 +1120,6 @@ class CooperativeControllerTest : BaseCooperativeTestSupport() {
             )
     }
 
-
-
     @Test
     fun `should return 403 when creating cooperative without proper permission`() {
         // Create a user with wrong permission
