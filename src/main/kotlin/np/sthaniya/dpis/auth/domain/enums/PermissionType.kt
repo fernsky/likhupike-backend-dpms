@@ -106,6 +106,32 @@ enum class PermissionType {
      */
     @Schema(description = "Permission to manage municipality profile information") MANAGE_PROFILE,
 
+    // == COOPERATIVE MANAGEMENT PERMISSIONS ==
+    
+    /**
+     * Master permission for all cooperative management operations. Grants all cooperative-related
+     * permissions.
+     */
+    @Schema(description = "Master permission for all cooperative management operations") MANAGE_COOPERATIVES,
+    
+    /** Permission to view cooperative information. Allows reading cooperative data. */
+    @Schema(description = "Permission to view cooperative information") VIEW_COOPERATIVE,
+    
+    /** Permission to create new cooperative records in the system. */
+    @Schema(description = "Permission to create new cooperative records") CREATE_COOPERATIVE,
+    
+    /** Permission to modify existing cooperative information. */
+    @Schema(description = "Permission to update existing cooperative information") UPDATE_COOPERATIVE,
+    
+    /** Permission to remove cooperatives from the system. */
+    @Schema(description = "Permission to delete cooperative records") DELETE_COOPERATIVE,
+    
+    /** Permission to approve cooperative registration or changes. */
+    @Schema(description = "Permission to approve cooperative records") APPROVE_COOPERATIVE,
+    
+    /** Permission to manage cooperative media assets. */
+    @Schema(description = "Permission to manage cooperative media content") MANAGE_COOPERATIVE_MEDIA,
+
     // == SYSTEM ADMINISTRATION PERMISSIONS ==
 
     /**
@@ -160,11 +186,32 @@ enum class PermissionType {
                                 APPROVE_CITIZEN
                         )
 
+                // Cooperative management hierarchy
+                MANAGE_COOPERATIVES ->
+                        setOf(
+                                MANAGE_COOPERATIVES,
+                                VIEW_COOPERATIVE,
+                                CREATE_COOPERATIVE,
+                                UPDATE_COOPERATIVE,
+                                DELETE_COOPERATIVE,
+                                APPROVE_COOPERATIVE,
+                                MANAGE_COOPERATIVE_MEDIA
+                        )
+
                 // Profile management permission
-                MANAGE_PROFILE -> setOf(MANAGE_PROFILE)
+                MANAGE_PROFILE -> setOf(
+                        MANAGE_PROFILE, 
+                        MANAGE_COOPERATIVES,
+                        VIEW_COOPERATIVE, 
+                        CREATE_COOPERATIVE, 
+                        UPDATE_COOPERATIVE,
+                        DELETE_COOPERATIVE, 
+                        APPROVE_COOPERATIVE,
+                        MANAGE_COOPERATIVE_MEDIA
+                )
 
                 // System admin hierarchy
-                SYSTEM_ADMIN -> setOf(SYSTEM_ADMIN, MANAGE_USERS, MANAGE_CITIZENS, MANAGE_PROFILE)
+                SYSTEM_ADMIN -> setOf(SYSTEM_ADMIN, MANAGE_USERS, MANAGE_CITIZENS, MANAGE_PROFILE, MANAGE_COOPERATIVES)
 
                 // Single permissions only include themselves
                 else -> setOf(permission)
@@ -196,6 +243,15 @@ enum class PermissionType {
                 EDIT_CITIZEN,
                 DELETE_CITIZEN,
                 APPROVE_CITIZEN -> "Citizen Management"
+                
+                // Cooperative permissions
+                MANAGE_COOPERATIVES,
+                VIEW_COOPERATIVE,
+                CREATE_COOPERATIVE,
+                UPDATE_COOPERATIVE,
+                DELETE_COOPERATIVE,
+                APPROVE_COOPERATIVE,
+                MANAGE_COOPERATIVE_MEDIA -> "Cooperative Management"
 
                 // Profile management permission
                 MANAGE_PROFILE -> "Profile Management"
