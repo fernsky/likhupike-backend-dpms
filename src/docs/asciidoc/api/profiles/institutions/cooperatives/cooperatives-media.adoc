@@ -1,0 +1,173 @@
+= Cooperative Media Management
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[cooperative-media]]
+== Cooperative Media Operations
+
+These endpoints allow for managing media files (images, documents) associated with cooperatives.
+
+[[cooperative-media-upload]]
+=== Upload Media
+
+This endpoint uploads a new media file for a cooperative.
+
+.HTTP Request
+include::{snippets}/cooperative-media-upload/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-upload/path-parameters.adoc[]
+
+.Request Parts
+include::{snippets}/cooperative-media-upload/request-parts.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-upload/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-upload/response-fields.adoc[]
+
+[[cooperative-media-update]]
+=== Update Media Metadata
+
+This endpoint updates the metadata for an existing media item.
+
+.HTTP Request
+include::{snippets}/cooperative-media-update/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-update/path-parameters.adoc[]
+
+.Request Fields
+include::{snippets}/cooperative-media-update/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-update/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-update/response-fields.adoc[]
+
+[[cooperative-media-get-by-id]]
+=== Get Media by ID
+
+This endpoint retrieves a specific media item by its ID.
+
+.HTTP Request
+include::{snippets}/cooperative-media-get-by-id/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-get-by-id/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-get-by-id/response-fields.adoc[]
+
+[[cooperative-media-get-all]]
+=== Get All Media for Cooperative
+
+This endpoint retrieves all media items for a cooperative with pagination.
+
+.HTTP Request
+include::{snippets}/cooperative-media-get-all/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-get-all/path-parameters.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-media-get-all/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-get-all/response-fields.adoc[]
+
+[[cooperative-media-get-by-type]]
+=== Get Media by Type
+
+This endpoint retrieves media items of a specific type for a cooperative.
+
+.HTTP Request
+include::{snippets}/cooperative-media-get-by-type/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-get-by-type/path-parameters.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-media-get-by-type/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-get-by-type/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-get-by-type/response-fields.adoc[]
+
+[[cooperative-media-delete]]
+=== Delete Media
+
+This endpoint deletes a media item.
+
+.HTTP Request
+include::{snippets}/cooperative-media-delete/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-delete/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-delete/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-delete/response-fields.adoc[]
+
+[[cooperative-media-set-primary]]
+=== Set Media as Primary
+
+This endpoint sets a media item as the primary one of its type for a cooperative.
+
+.HTTP Request
+include::{snippets}/cooperative-media-set-primary/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-set-primary/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-set-primary/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-set-primary/response-fields.adoc[]
+
+[[cooperative-media-update-visibility]]
+=== Update Media Visibility
+
+This endpoint updates the visibility status of a media item.
+
+.HTTP Request
+include::{snippets}/cooperative-media-update-visibility/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-media-update-visibility/path-parameters.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-media-update-visibility/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-media-update-visibility/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-media-update-visibility/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Supported media types: PHOTO, DOCUMENT, LOGO, BANNER
+* Only one media item can be primary for each type
+* Media visibility can be PUBLIC, MEMBERS_ONLY, or PRIVATE
+* File size limits apply based on media type
+* Accepted file formats: JPG, PNG, PDF (configurable)
+* Media items are associated with specific locales for content relevance
+* Each media item supports metadata like captions, alt text, and tags
