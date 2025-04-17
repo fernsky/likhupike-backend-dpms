@@ -43,6 +43,15 @@ Contains all localizable content for a cooperative.
 | `createdBy`         | User who created this translation
 | `updatedBy`         | User who last updated this translation
 | `version`           | Version tracking for content changes
+| `structuredData`    | JSON-LD structured data specific to this language version
+| `canonicalUrl`      | Canonical URL for this language version
+| `hreflangTags`      | Array of hreflang references to other language versions
+| `breadcrumbStructure` | JSON representation of breadcrumb structure for this page
+| `faqItems`          | Structured FAQ items for this cooperative (question/answer pairs)
+| `metaRobots`        | Instructions for search engine crawlers (e.g., index,follow)
+| `socialShareImage`  | Specific image optimized for social sharing (reference to CooperativeMedia)
+| `contentLastReviewed` | When this content was last reviewed for accuracy
+| `seasonalContent`   | Time-sensitive content with valid date ranges
 |===
 
 ==== `CooperativeType`
