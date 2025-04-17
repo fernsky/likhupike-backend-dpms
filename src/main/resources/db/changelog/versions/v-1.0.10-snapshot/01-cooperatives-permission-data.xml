@@ -1,0 +1,104 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Add the MANAGE_COOPERATIVES permission -->
+    <changeSet author="dpis" id="01-permission-manage-cooperatives">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_COOPERATIVES'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="MANAGE_COOPERATIVES"/>
+        </insert>
+        <comment>Add MANAGE_COOPERATIVES master permission</comment>
+    </changeSet>
+
+    <!-- Add the VIEW_COOPERATIVE permission -->
+    <changeSet author="dpis" id="02-permission-view-cooperative">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'VIEW_COOPERATIVE'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="VIEW_COOPERATIVE"/>
+        </insert>
+        <comment>Add VIEW_COOPERATIVE permission</comment>
+    </changeSet>
+
+    <!-- Add the CREATE_COOPERATIVE permission -->
+    <changeSet author="dpis" id="03-permission-create-cooperative">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'CREATE_COOPERATIVE'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="CREATE_COOPERATIVE"/>
+        </insert>
+        <comment>Add CREATE_COOPERATIVE permission</comment>
+    </changeSet>
+
+    <!-- Add the UPDATE_COOPERATIVE permission -->
+    <changeSet author="dpis" id="04-permission-update-cooperative">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'UPDATE_COOPERATIVE'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="UPDATE_COOPERATIVE"/>
+        </insert>
+        <comment>Add UPDATE_COOPERATIVE permission</comment>
+    </changeSet>
+
+    <!-- Add the DELETE_COOPERATIVE permission -->
+    <changeSet author="dpis" id="05-permission-delete-cooperative">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'DELETE_COOPERATIVE'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="DELETE_COOPERATIVE"/>
+        </insert>
+        <comment>Add DELETE_COOPERATIVE permission</comment>
+    </changeSet>
+
+    <!-- Add the APPROVE_COOPERATIVE permission -->
+    <changeSet author="dpis" id="06-permission-approve-cooperative">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'APPROVE_COOPERATIVE'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="APPROVE_COOPERATIVE"/>
+        </insert>
+        <comment>Add APPROVE_COOPERATIVE permission</comment>
+    </changeSet>
+
+    <!-- Add the MANAGE_COOPERATIVE_MEDIA permission -->
+    <changeSet author="dpis" id="07-permission-manage-cooperative-media">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_COOPERATIVE_MEDIA'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="MANAGE_COOPERATIVE_MEDIA"/>
+        </insert>
+        <comment>Add MANAGE_COOPERATIVE_MEDIA permission</comment>
+    </changeSet>
+
+</databaseChangeLog>

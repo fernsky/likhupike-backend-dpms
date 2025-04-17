@@ -1,0 +1,32 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext 
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
+                      http://www.liquibase.org/xml/ns/dbchangelog 
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Link the MANAGE_COOPERATIVES permission to the System Administrator role -->
+    <changeSet author="dpis" id="01-sys-admin-manage-cooperatives-permission">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="role_permissions"/>
+                <tableExists tableName="roles"/>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_COOPERATIVES'</sqlCheck>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM role_permissions 
+                    WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'MANAGE_COOPERATIVES'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="role_permissions">
+            <column name="id" value="b9c0d1e2-f3a4-5b6c-7d8e-9f0a1b2c3d4e"/>
+            <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
+            <column name="permission_type" value="MANAGE_COOPERATIVES"/>
+        </insert>
+        <comment>Add MANAGE_COOPERATIVES permission to System Administrator role</comment>
+    </changeSet>
+
+</databaseChangeLog>
