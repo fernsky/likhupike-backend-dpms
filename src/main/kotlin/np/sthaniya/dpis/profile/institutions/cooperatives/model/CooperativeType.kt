@@ -74,5 +74,8 @@ enum class CooperativeType {
     @Schema(description = "Transportation cooperative") TRANSPORTATION,
     
     /** Energy cooperative */
-    @Schema(description = "Energy cooperative") ENERGY;
+    @Schema(description = "Energy cooperative") ENERGY,
+
+    /** Other cooperative */    
+    @Schema(description = "Other cooperative") OTHER;
 }

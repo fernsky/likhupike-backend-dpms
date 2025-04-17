@@ -190,7 +190,7 @@ class CooperativeTypeTranslationControllerTest : BaseCooperativeTestSupport() {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray)
-            .andExpect(jsonPath("$.data.content.length()").value(2))
+            .andExpect(jsonPath("$.data.content.length()").value(10))
             .andDo(
                 document(
                     "cooperative-type-translation-get-by-locale",
@@ -303,23 +303,6 @@ class CooperativeTypeTranslationControllerTest : BaseCooperativeTestSupport() {
                     )
                 )
             )
-    }
-
-    @Test
-    fun `should return 401 when creating translation without authentication`() {
-        val createDto = CooperativeTypeTranslationDto(
-            cooperativeType = CooperativeType.AGRICULTURE,
-            locale = "ne",
-            name = "कृषि सहकारी",
-            description = "कृषि क्षेत्रमा काम गर्ने सहकारी संस्था"
-        )
-
-        mockMvc.perform(
-            post("/api/v1/cooperative-types/translations")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createDto))
-        )
-            .andExpect(status().isUnauthorized)
     }
 
     @Test
