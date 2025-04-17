@@ -70,4 +70,45 @@
         <comment>Add primary key to profile municipality table</comment>
         <addPrimaryKey tableName="profile_municipality" columnNames="id" constraintName="profile_municipality_pkey"/>
     </changeSet>
+    
+    <!-- Add PostGIS extension if not already available -->
+    <changeSet author="dpis" id="03-profile-municipality-enable-postgis">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM pg_extension WHERE extname = 'postgis'
+            </sqlCheck>
+        </preConditions>
+        <comment>Enable PostGIS extension</comment>
+        <sql>CREATE EXTENSION IF NOT EXISTS postgis</sql>
+    </changeSet>
+    
+    <!-- Add boundary column for storing polygon geometry data -->
+    <changeSet author="dpis" id="03-profile-municipality-add-boundary-column">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="profile_municipality"/>
+                <not>
+                    <columnExists tableName="profile_municipality" columnName="boundary"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add boundary geometry column to profile_municipality table</comment>
+        <sql>ALTER TABLE profile_municipality ADD COLUMN boundary geometry(Polygon, 4326)</sql>
+    </changeSet>
+
+    <!-- Add spatial index for better geometry query performance -->
+    <changeSet author="dpis" id="03-profile-municipality-spatial-index">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="profile_municipality"/>
+                <columnExists tableName="profile_municipality" columnName="boundary"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM pg_indexes 
+                    WHERE indexname = 'idx_profile_municipality_boundary'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Add spatial index for profile_municipality boundary</comment>
+        <sql>CREATE INDEX idx_profile_municipality_boundary ON profile_municipality USING GIST(boundary)</sql>
+    </changeSet>
 </databaseChangeLog>
