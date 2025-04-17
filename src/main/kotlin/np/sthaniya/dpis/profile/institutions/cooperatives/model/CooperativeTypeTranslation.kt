@@ -42,24 +42,5 @@ class CooperativeTypeTranslation : UuidBaseEntity() {
      */
     @Column(name = "description", columnDefinition = "TEXT")
     var description: String? = null
-
-    /**
-     * Creates a new cooperative type translation.
-     *
-     * @param type The cooperative type
-     * @param locale The locale code
-     * @param name The localized name
-     * @param description The localized description
-     */
-    constructor(type: CooperativeType, locale: String, name: String, description: String? = null) {
-        this.cooperativeType = type
-        this.locale = locale
-        this.name = name
-        this.description = description
-    }
-    
-    /**
-     * Default constructor.
-     */
-    constructor()
+   
 }

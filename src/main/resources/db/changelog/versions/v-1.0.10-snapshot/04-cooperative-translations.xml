@@ -1,0 +1,211 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Table creation for cooperative translations -->
+    <changeSet author="dpis" id="04-cooperative-translations-table">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <tableExists tableName="cooperative_translations"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Create cooperative translations table</comment>
+        <createTable tableName="cooperative_translations">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cooperative_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locale" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="location" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="services" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="achievements" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="operating_hours" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="seo_title" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="seo_description" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="seo_keywords" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="slug_url" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="structured_data" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="canonical_url" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="hreflang_tags" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="breadcrumb_structure" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="faq_items" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="meta_robots" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="social_share_image" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content_last_reviewed" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="seasonal_content" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Primary key constraint -->
+    <changeSet author="dpis" id="04-cooperative-translations-primary-key">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_translations"/>
+                <not>
+                    <primaryKeyExists tableName="cooperative_translations" primaryKeyName="cooperative_translations_pkey"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add primary key to cooperative_translations table</comment>
+        <addPrimaryKey tableName="cooperative_translations" columnNames="id" constraintName="cooperative_translations_pkey"/>
+    </changeSet>
+
+    <!-- Foreign key constraint -->
+    <changeSet author="dpis" id="04-cooperative-translations-foreign-key">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_translations"/>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="fk_cooperative_translation_cooperative"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add foreign key constraint to cooperative_translations table</comment>
+        <addForeignKeyConstraint baseTableName="cooperative_translations" baseColumnNames="cooperative_id" constraintName="fk_cooperative_translation_cooperative" referencedTableName="cooperatives" referencedColumnNames="id" onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Unique constraint for cooperative and locale -->
+    <changeSet author="dpis" id="04-cooperative-translations-unique-constraint">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_translations"/>
+                <not>
+                    <uniqueConstraintExists tableName="cooperative_translations" constraintName="uq_cooperative_translation_locale"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add unique constraint for cooperative_id and locale combination</comment>
+        <addUniqueConstraint tableName="cooperative_translations" columnNames="cooperative_id,locale" constraintName="uq_cooperative_translation_locale"/>
+    </changeSet>
+
+    <!-- Add index for cooperative_id -->
+    <changeSet author="dpis" id="04-cooperative-translations-index-cooperative">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_translations"/>
+                <not>
+                    <indexExists tableName="cooperative_translations" indexName="idx_coop_translation_cooperative_id"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add index for cooperative_id in translations</comment>
+        <createIndex tableName="cooperative_translations" indexName="idx_coop_translation_cooperative_id">
+            <column name="cooperative_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Add index for locale -->
+    <changeSet author="dpis" id="04-cooperative-translations-index-locale">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_translations"/>
+                <not>
+                    <indexExists tableName="cooperative_translations" indexName="idx_coop_translation_locale"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add index for locale in translations</comment>
+        <createIndex tableName="cooperative_translations" indexName="idx_coop_translation_locale">
+            <column name="locale"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Add index for status -->
+    <changeSet author="dpis" id="04-cooperative-translations-index-status">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_translations"/>
+                <not>
+                    <indexExists tableName="cooperative_translations" indexName="idx_coop_translation_status"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add index for status in translations</comment>
+        <createIndex tableName="cooperative_translations" indexName="idx_coop_translation_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Add index for slug_url -->
+    <changeSet author="dpis" id="04-cooperative-translations-index-slug">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_translations"/>
+                <not>
+                    <indexExists tableName="cooperative_translations" indexName="idx_coop_translation_slug_url"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add index for slug_url in translations</comment>
+        <createIndex tableName="cooperative_translations" indexName="idx_coop_translation_slug_url">
+            <column name="slug_url"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

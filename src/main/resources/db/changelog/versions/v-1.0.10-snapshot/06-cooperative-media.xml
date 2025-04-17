@@ -1,0 +1,167 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Table creation for cooperative media -->
+    <changeSet author="dpis" id="06-cooperative-media-table">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <tableExists tableName="cooperative_media"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Create cooperative media table</comment>
+        <createTable tableName="cooperative_media">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cooperative_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locale" type="VARCHAR(10)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="type" type="VARCHAR(50)" defaultValue="GALLERY_IMAGE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="alt_text" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="file_path" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_url" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="thumbnail_url" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="mime_type" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="file_size" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="dimensions" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="duration" type="INT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="metadata" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tags" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="license" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="attribution" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="sort_order" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_featured" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="visibility_status" type="VARCHAR(50)" defaultValue="PUBLIC">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uploaded_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="uploaded_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_accessed" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="view_count" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Primary key constraint -->
+    <changeSet author="dpis" id="06-cooperative-media-primary-key">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_media"/>
+                <not>
+                    <primaryKeyExists tableName="cooperative_media" primaryKeyName="cooperative_media_pkey"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add primary key to cooperative_media table</comment>
+        <addPrimaryKey tableName="cooperative_media" columnNames="id" constraintName="cooperative_media_pkey"/>
+    </changeSet>
+
+    <!-- Foreign key constraint -->
+    <changeSet author="dpis" id="06-cooperative-media-foreign-key">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_media"/>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="fk_cooperative_media_cooperative"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add foreign key constraint to cooperative_media table</comment>
+        <addForeignKeyConstraint baseTableName="cooperative_media" baseColumnNames="cooperative_id" constraintName="fk_cooperative_media_cooperative" referencedTableName="cooperatives" referencedColumnNames="id" onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Add indexes -->
+    <changeSet author="dpis" id="06-cooperative-media-indexes">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_media"/>
+                <not>
+                    <indexExists tableName="cooperative_media" indexName="idx_cooperative_media_coop"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add indexes to cooperative_media table</comment>
+        <createIndex tableName="cooperative_media" indexName="idx_cooperative_media_coop">
+            <column name="cooperative_id"/>
+        </createIndex>
+        <createIndex tableName="cooperative_media" indexName="idx_cooperative_media_type">
+            <column name="type"/>
+        </createIndex>
+        <createIndex tableName="cooperative_media" indexName="idx_cooperative_media_primary">
+            <column name="is_primary"/>
+        </createIndex>
+        <createIndex tableName="cooperative_media" indexName="idx_cooperative_media_featured">
+            <column name="is_featured"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

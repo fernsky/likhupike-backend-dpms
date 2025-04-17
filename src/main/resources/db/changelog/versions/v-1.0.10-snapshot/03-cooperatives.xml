@@ -1,0 +1,166 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Table creation for cooperative entity -->
+    <changeSet author="dpis" id="03-cooperatives-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cooperatives"/>
+            </not>
+        </preConditions>
+        <comment>Create cooperatives table</comment>
+        <createTable tableName="cooperatives">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="default_locale" type="VARCHAR(10)" defaultValue="ne">
+                <constraints nullable="false"/>
+            </column>
+            <column name="established_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ward" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="registration_number" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="contact_email" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="contact_phone" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="website_url" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Primary key constraint -->
+    <changeSet author="dpis" id="03-cooperatives-primary-key">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <primaryKeyExists tableName="cooperatives" primaryKeyName="cooperatives_pkey"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add primary key to cooperatives table</comment>
+        <addPrimaryKey tableName="cooperatives" columnNames="id" constraintName="cooperatives_pkey"/>
+    </changeSet>
+
+    <!-- Verify PostGIS extension -->
+    <changeSet author="dpis" id="03-cooperatives-verify-postgis">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM pg_extension WHERE extname = 'postgis'
+            </sqlCheck>
+        </preConditions>
+        <comment>Ensure PostGIS extension is available</comment>
+        <sql>CREATE EXTENSION IF NOT EXISTS postgis</sql>
+    </changeSet>
+
+    <!-- Add point geometry column -->
+    <changeSet author="dpis" id="03-cooperatives-add-point-column">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <columnExists tableName="cooperatives" columnName="point"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add point geometry column to cooperatives table</comment>
+        <sql>ALTER TABLE cooperatives ADD COLUMN point geometry(Point, 4326)</sql>
+    </changeSet>
+
+    <!-- Add polygon geometry column -->
+    <changeSet author="dpis" id="03-cooperatives-add-polygon-column">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <columnExists tableName="cooperatives" columnName="polygon"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add polygon geometry column to cooperatives table</comment>
+        <sql>ALTER TABLE cooperatives ADD COLUMN polygon geometry(Polygon, 4326)</sql>
+    </changeSet>
+
+    <!-- Add spatial index for point -->
+    <changeSet author="dpis" id="03-cooperatives-point-spatial-index">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <columnExists tableName="cooperatives" columnName="point"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM pg_indexes 
+                    WHERE indexname = 'idx_cooperatives_point'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Add spatial index for cooperatives point</comment>
+        <sql>CREATE INDEX idx_cooperatives_point ON cooperatives USING GIST(point)</sql>
+    </changeSet>
+
+    <!-- Add spatial index for polygon -->
+    <changeSet author="dpis" id="03-cooperatives-polygon-spatial-index">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <columnExists tableName="cooperatives" columnName="polygon"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM pg_indexes 
+                    WHERE indexname = 'idx_cooperatives_polygon'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Add spatial index for cooperatives polygon</comment>
+        <sql>CREATE INDEX idx_cooperatives_polygon ON cooperatives USING GIST(polygon)</sql>
+    </changeSet>
+    
+    <!-- Add other necessary indexes -->
+    <changeSet author="dpis" id="03-cooperatives-additional-indexes">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperatives"/>
+                <not>
+                    <indexExists tableName="cooperatives" indexName="idx_cooperative_ward"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add additional indexes for cooperatives table</comment>
+        <createIndex tableName="cooperatives" indexName="idx_cooperative_ward">
+            <column name="ward"/>
+        </createIndex>
+        <createIndex tableName="cooperatives" indexName="idx_cooperative_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="cooperatives" indexName="idx_cooperative_type">
+            <column name="type"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

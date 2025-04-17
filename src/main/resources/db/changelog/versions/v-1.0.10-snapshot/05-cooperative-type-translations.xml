@@ -1,0 +1,482 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Table creation for cooperative type translations -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cooperative_type_translations"/>
+            </not>
+        </preConditions>
+        <comment>Create cooperative type translations table</comment>
+        <createTable tableName="cooperative_type_translations">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cooperative_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locale" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Primary key constraint -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-primary-key">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_type_translations"/>
+                <not>
+                    <primaryKeyExists tableName="cooperative_type_translations" primaryKeyName="cooperative_type_translations_pkey"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add primary key to cooperative_type_translations table</comment>
+        <addPrimaryKey tableName="cooperative_type_translations" columnNames="id" constraintName="cooperative_type_translations_pkey"/>
+    </changeSet>
+
+    <!-- Unique constraint for type and locale -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-unique-constraint">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_type_translations"/>
+                <not>
+                    <uniqueConstraintExists tableName="cooperative_type_translations" constraintName="uq_cooperative_type_locale"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add unique constraint for cooperative_type and locale combination</comment>
+        <addUniqueConstraint tableName="cooperative_type_translations" columnNames="cooperative_type,locale" constraintName="uq_cooperative_type_locale"/>
+    </changeSet>
+
+    <!-- Add index for cooperative_type -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-index-type">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_type_translations"/>
+                <not>
+                    <indexExists tableName="cooperative_type_translations" indexName="idx_coop_type_translation_type"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add index for cooperative_type in translations</comment>
+        <createIndex tableName="cooperative_type_translations" indexName="idx_coop_type_translation_type">
+            <column name="cooperative_type"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Add index for locale -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-index-locale">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_type_translations"/>
+                <not>
+                    <indexExists tableName="cooperative_type_translations" indexName="idx_coop_type_translation_locale"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Add index for locale in type translations</comment>
+        <createIndex tableName="cooperative_type_translations" indexName="idx_coop_type_translation_locale">
+            <column name="locale"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Insert default type translations for English -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-defaults-en">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_type_translations"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM cooperative_type_translations WHERE locale = 'en'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Add default English cooperative type translations</comment>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174000"/>
+            <column name="cooperative_type" value="AGRICULTURE"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Agricultural Cooperative"/>
+            <column name="description" value="Cooperative focused on agricultural production and services"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174001"/>
+            <column name="cooperative_type" value="DAIRY"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Dairy Cooperative"/>
+            <column name="description" value="Cooperative focused on dairy production, collection, and processing"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174002"/>
+            <column name="cooperative_type" value="SAVINGS_AND_CREDIT"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Savings and Credit Cooperative"/>
+            <column name="description" value="Cooperative that provides financial services to its members"/>
+        </insert>
+    </changeSet>
+
+    <!-- Insert default type translations for Nepali -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-defaults-ne">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_type_translations"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM cooperative_type_translations WHERE locale = 'ne'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Add default Nepali cooperative type translations</comment>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174010"/>
+            <column name="cooperative_type" value="AGRICULTURE"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="कृषि सहकारी"/>
+            <column name="description" value="कृषि उत्पादन र सेवामा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174011"/>
+            <column name="cooperative_type" value="DAIRY"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="दुग्ध सहकारी"/>
+            <column name="description" value="दुग्ध उत्पादन, संकलन र प्रशोधनमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174012"/>
+            <column name="cooperative_type" value="SAVINGS_AND_CREDIT"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="बचत तथा ऋण सहकारी"/>
+            <column name="description" value="आफ्ना सदस्यहरूलाई वित्तीय सेवा प्रदान गर्ने सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174013"/>
+            <column name="cooperative_type" value="ANIMAL_HUSBANDRY"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="पशुपालन सहकारी"/>
+            <column name="description" value="पशुपालन तथा पशुजन्य उत्पादनमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174014"/>
+            <column name="cooperative_type" value="MULTIPURPOSE"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="बहुउद्देश्यीय सहकारी"/>
+            <column name="description" value="विभिन्न प्रकारका सेवा प्रदान गर्ने बहुउद्देश्यीय सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174015"/>
+            <column name="cooperative_type" value="CONSUMER"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="उपभोक्ता सहकारी"/>
+            <column name="description" value="उपभोक्ता वस्तु र सेवाहरू प्रदान गर्ने सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174016"/>
+            <column name="cooperative_type" value="COFFEE"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="कफी सहकारी"/>
+            <column name="description" value="कफी उत्पादन र प्रशोधनमा विशेषज्ञता भएको सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174017"/>
+            <column name="cooperative_type" value="TEA"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="चिया सहकारी"/>
+            <column name="description" value="चिया उत्पादन र प्रशोधनमा विशेषज्ञता भएको सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174018"/>
+            <column name="cooperative_type" value="HANDICRAFT"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="हस्तकला सहकारी"/>
+            <column name="description" value="हस्तकला तथा स्थानीय शिल्पकलामा आधारित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174019"/>
+            <column name="cooperative_type" value="FRUITS_AND_VEGETABLES"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="फलफूल तथा तरकारी सहकारी"/>
+            <column name="description" value="फलफूल र तरकारी उत्पादन तथा वितरणमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174020"/>
+            <column name="cooperative_type" value="BEE_KEEPING"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="मौरीपालन सहकारी"/>
+            <column name="description" value="मह उत्पादन र मौरीपालनमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174021"/>
+            <column name="cooperative_type" value="HEALTH"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="स्वास्थ्य सहकारी"/>
+            <column name="description" value="स्वास्थ्य सेवा प्रदान गर्ने सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174022"/>
+            <column name="cooperative_type" value="ELECTRICITY"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="विद्युत सहकारी"/>
+            <column name="description" value="विद्युत उत्पादन र वितरणमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174023"/>
+            <column name="cooperative_type" value="COMMUNICATION"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="सञ्चार सहकारी"/>
+            <column name="description" value="सञ्चार सेवाहरू प्रदान गर्ने सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174024"/>
+            <column name="cooperative_type" value="TOURISM"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="पर्यटन सहकारी"/>
+            <column name="description" value="पर्यटन सेवाहरू र प्रवर्द्धनमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174025"/>
+            <column name="cooperative_type" value="ENVIRONMENT_CONSERVATION"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="वातावरण संरक्षण सहकारी"/>
+            <column name="description" value="वातावरण संरक्षण र हरित विकासमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174026"/>
+            <column name="cooperative_type" value="HERBS_PROCESSING"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="जडीबुटी प्रशोधन सहकारी"/>
+            <column name="description" value="जडीबुटी संकलन र प्रशोधनमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174027"/>
+            <column name="cooperative_type" value="SUGARCANE"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="उखु सहकारी"/>
+            <column name="description" value="उखु उत्पादन र प्रशोधनमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174028"/>
+            <column name="cooperative_type" value="JUNAR_PROCESSING"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="जुनार प्रशोधन सहकारी"/>
+            <column name="description" value="जुनार उत्पादन र प्रशोधनमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174029"/>
+            <column name="cooperative_type" value="SMALL_FARMERS"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="साना किसान सहकारी"/>
+            <column name="description" value="साना तथा सीमान्तकृत किसानहरूका लागि सेवा प्रदान गर्ने सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174030"/>
+            <column name="cooperative_type" value="WOMEN"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="महिला सहकारी"/>
+            <column name="description" value="महिलाहरूद्वारा सञ्चालित र महिलाहरूकै लागि केन्द्रित सहकारी संस्था"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174031"/>
+            <column name="cooperative_type" value="TRANSPORTATION"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="यातायात सहकारी"/>
+            <column name="description" value="यातायात सेवा प्रदान गर्ने सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174032"/>
+            <column name="cooperative_type" value="ENERGY"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="ऊर्जा सहकारी"/>
+            <column name="description" value="ऊर्जा उत्पादन तथा वितरणमा केन्द्रित सहकारी"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174033"/>
+            <column name="cooperative_type" value="OTHER"/>
+            <column name="locale" value="ne"/>
+            <column name="name" value="अन्य सहकारी"/>
+            <column name="description" value="माथि उल्लेखित वर्गीकरणमा नपरेका अन्य प्रकारका सहकारीहरू"/>
+        </insert>
+    </changeSet>
+    
+    <!-- Add English translations for additional types -->
+    <changeSet author="dpis" id="05-cooperative-type-translations-additional-en">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="cooperative_type_translations"/>
+                <sqlCheck expectedResult="3">
+                    SELECT COUNT(*) FROM cooperative_type_translations WHERE locale = 'en'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Add additional English cooperative type translations</comment>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174003"/>
+            <column name="cooperative_type" value="ANIMAL_HUSBANDRY"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Animal Husbandry Cooperative"/>
+            <column name="description" value="Cooperative focused on livestock rearing and animal products"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174004"/>
+            <column name="cooperative_type" value="MULTIPURPOSE"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Multipurpose Cooperative"/>
+            <column name="description" value="Cooperative that offers a variety of services to its members"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174005"/>
+            <column name="cooperative_type" value="CONSUMER"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Consumer Cooperative"/>
+            <column name="description" value="Cooperative that provides consumer goods and services"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174006"/>
+            <column name="cooperative_type" value="COFFEE"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Coffee Cooperative"/>
+            <column name="description" value="Cooperative specialized in coffee production and processing"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174007"/>
+            <column name="cooperative_type" value="TEA"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Tea Cooperative"/>
+            <column name="description" value="Cooperative specialized in tea production and processing"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174008"/>
+            <column name="cooperative_type" value="HANDICRAFT"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Handicraft Cooperative"/>
+            <column name="description" value="Cooperative focused on traditional crafts and artisanal products"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174009"/>
+            <column name="cooperative_type" value="FRUITS_AND_VEGETABLES"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Fruits and Vegetables Cooperative"/>
+            <column name="description" value="Cooperative focused on production and distribution of fruits and vegetables"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174034"/>
+            <column name="cooperative_type" value="BEE_KEEPING"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Bee Keeping Cooperative"/>
+            <column name="description" value="Cooperative focused on honey production and beekeeping"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174035"/>
+            <column name="cooperative_type" value="HEALTH"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Health Cooperative"/>
+            <column name="description" value="Cooperative that provides healthcare services"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174036"/>
+            <column name="cooperative_type" value="ELECTRICITY"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Electricity Cooperative"/>
+            <column name="description" value="Cooperative focused on electricity generation and distribution"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174037"/>
+            <column name="cooperative_type" value="COMMUNICATION"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Communication Cooperative"/>
+            <column name="description" value="Cooperative that provides communication services"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174038"/>
+            <column name="cooperative_type" value="TOURISM"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Tourism Cooperative"/>
+            <column name="description" value="Cooperative focused on tourism services and promotion"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174039"/>
+            <column name="cooperative_type" value="ENVIRONMENT_CONSERVATION"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Environment Conservation Cooperative"/>
+            <column name="description" value="Cooperative focused on environmental protection and green initiatives"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174040"/>
+            <column name="cooperative_type" value="HERBS_PROCESSING"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Herbs Processing Cooperative"/>
+            <column name="description" value="Cooperative focused on medicinal herb collection and processing"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174041"/>
+            <column name="cooperative_type" value="SUGARCANE"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Sugarcane Cooperative"/>
+            <column name="description" value="Cooperative focused on sugarcane production and processing"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174042"/>
+            <column name="cooperative_type" value="JUNAR_PROCESSING"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Junar Processing Cooperative"/>
+            <column name="description" value="Cooperative focused on junar (sweet orange) production and processing"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174043"/>
+            <column name="cooperative_type" value="SMALL_FARMERS"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Small Farmers Cooperative"/>
+            <column name="description" value="Cooperative serving small and marginalized farmers"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174044"/>
+            <column name="cooperative_type" value="WOMEN"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Women's Cooperative"/>
+            <column name="description" value="Cooperative run by and focused on women"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174045"/>
+            <column name="cooperative_type" value="TRANSPORTATION"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Transportation Cooperative"/>
+            <column name="description" value="Cooperative that provides transportation services"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174046"/>
+            <column name="cooperative_type" value="ENERGY"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Energy Cooperative"/>
+            <column name="description" value="Cooperative focused on energy production and distribution"/>
+        </insert>
+        <insert tableName="cooperative_type_translations">
+            <column name="id" value="123e4567-e89b-12d3-a456-426614174047"/>
+            <column name="cooperative_type" value="OTHER"/>
+            <column name="locale" value="en"/>
+            <column name="name" value="Other Cooperative"/>
+            <column name="description" value="Other types of cooperatives not classified above"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
