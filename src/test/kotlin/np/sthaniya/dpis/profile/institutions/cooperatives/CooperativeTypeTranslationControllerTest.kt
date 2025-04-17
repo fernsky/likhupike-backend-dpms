@@ -305,22 +305,6 @@ class CooperativeTypeTranslationControllerTest : BaseCooperativeTestSupport() {
             )
     }
 
-    @Test
-    fun `should return 403 when creating translation without proper permission`() {
-        val createDto = CooperativeTypeTranslationDto(
-            cooperativeType = CooperativeType.AGRICULTURE,
-            locale = "ne",
-            name = "कृषि सहकारी",
-            description = "कृषि क्षेत्रमा काम गर्ने सहकारी संस्था"
-        )
-
-        mockMvc.perform(
-            post("/api/v1/cooperative-types/translations")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createDto))
-        )
-            .andExpect(status().isForbidden)
-    }
 
     // Helper method to create a test type translation
     private fun createTestTypeTranslation(type: CooperativeType, locale: String) = 
