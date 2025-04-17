@@ -1,0 +1,55 @@
+==== `Cooperatives`
+Represents cooperatives within the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field      | Description
+| `name`     | Name of the cooperative
+| `ward`     | Ward where the cooperative is located
+| `location` | Location description of the cooperative
+| `type`     | Type of cooperative (reference to CooperativeType)
+| `point`    | Geographic point location (longitude, latitude)
+| `polygon`  | Geographic boundary of the cooperative
+|===
+
+==== `CooperativeType`
+Enumeration of cooperative types.
+
+[cols="1,3", options="header"]
+|===
+| Value                    | Description
+| `AGRICULTURE`            | Agricultural cooperative
+| `ANIMAL_HUSBANDRY`       | Animal husbandry cooperative
+| `DAIRY`                  | Dairy cooperative
+| `SAVINGS_AND_CREDIT`     | Savings and credit cooperative
+| `MULTIPURPOSE`           | Multipurpose cooperative
+| `CONSUMER`               | Consumer cooperative
+| `COFFEE`                 | Coffee cooperative
+| `TEA`                    | Tea cooperative
+| `HANDICRAFT`             | Handicraft cooperative
+| `FRUITS_AND_VEGETABLES`  | Fruits and vegetables cooperative
+| `BEE_KEEPING`            | Bee keeping cooperative
+| `HEALTH`                 | Health cooperative
+| `ELECTRICITY`            | Electricity cooperative
+| `COMMUNICATION`          | Communication cooperative
+| `TOURISM`                | Tourism cooperative
+| `ENVIRONMENT_CONSERVATION` | Environment conservation cooperative
+| `HERBS_PROCESSING`       | Herbs processing cooperative
+| `SUGARCANE`              | Sugarcane cooperative
+| `JUNAR_PROCESSING`       | Junar processing cooperative
+| `SMALL_FARMERS`          | Small farmers cooperative
+| `WOMEN`                  | Women's cooperative
+| `TRANSPORTATION`         | Transportation cooperative
+| `ENERGY`                 | Energy cooperative
+|===
+
+==== `WardWiseTimeToNearestCooperative`
+Represents the time taken to reach the nearest cooperative from each ward.
+
+[cols="1,3", options="header"]
+|===
+| Field       | Description
+| `ward`      | Ward number
+| `time`      | Time taken to reach the nearest cooperative (reference to TimeType)
+| `households`| Number of households in the ward
+|===

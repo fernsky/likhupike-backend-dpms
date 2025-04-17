@@ -1,0 +1,46 @@
+==== `HealthInstitutions`
+Represents healthcare facilities in the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `name`              | Name of the health institution
+| `ward`              | Ward where the institution is located
+| `location`          | Location description of the institution
+| `point`             | Geographic point location (longitude, latitude)
+| `institutionType`   | Type of health institution (reference to HealthInstitutionType)
+| `ownership`         | Ownership type (government, private, community, NGO)
+| `establishedYear`   | Year when the institution was established
+| `bedCapacity`       | Number of inpatient beds available
+| `doctors`           | Number of doctors working at the institution
+| `nurses`            | Number of nurses working at the institution
+| `otherStaff`        | Number of other staff working at the institution
+| `specialties`       | Medical specialties available at the institution
+| `emergencyServices` | Whether emergency services are available
+| `ambulanceServices` | Whether ambulance services are available
+| `contactNumber`     | Contact phone number of the institution
+| `operatingHours`    | Operating hours of the institution
+|===
+
+==== `HealthInstitutionType`
+Enumeration of healthcare facility types.
+
+[cols="1,3", options="header"]
+|===
+| Value                      | Description
+| `HOSPITAL`                 | Full-service hospital facility
+| `PRIMARY_HEALTH_CENTER`    | Primary health center with basic services
+| `HEALTH_POST`              | Government health post with limited services
+| `URBAN_HEALTH_CENTER`      | Health center in urban areas
+| `COMMUNITY_HEALTH_UNIT`    | Community-managed health unit
+| `PRIVATE_CLINIC`           | Privately owned medical clinic
+| `DIAGNOSTIC_CENTER`        | Medical testing and diagnostic facility
+| `AYURVEDIC_CENTER`         | Traditional Ayurvedic medicine center
+| `DENTAL_CLINIC`            | Dental care facility
+| `MATERNITY_HOME`           | Facility specialized in maternal care
+| `REHABILITATION_CENTER`    | Physical or mental rehabilitation facility
+| `MEDICAL_COLLEGE`          | Teaching hospital with medical education
+| `PHARMACY`                 | Dispensary or medicine shop
+| `EYE_CARE_CENTER`          | Eye care specialty center
+| `OTHER`                    | Other types of health facilities
+|===

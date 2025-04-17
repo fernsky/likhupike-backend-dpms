@@ -1,0 +1,10 @@
+==== `LocalFestivals`
+Represents local festivals celebrated in the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `name`               | Name of the festival
+| `celebratingGroups`  | Community groups that celebrate this festival
+| `celebrationTime`    | Time of year when the festival is celebrated
+|===

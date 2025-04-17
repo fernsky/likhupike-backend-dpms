@@ -1,0 +1,13 @@
+==== `MajorMarketCenters`
+Represents major market centers within the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `name`         | Name of the market center
+| `ward`         | Ward where the market center is located
+| `location`     | Location description of the market center
+| `point`        | Geographic point location (longitude, latitude)
+| `polygon`      | Geographic boundary of the market center
+| `businessTypes`| Types of businesses present in the market center (reference to BusinessType)
+|===

@@ -1,0 +1,55 @@
+==== `PublicPlaces`
+Represents public spaces within the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field      | Description
+| `ward`     | Ward where the public place is located
+| `location` | Location description of the public place
+| `name`     | Name of the public place
+| `point`    | Geographic point location (longitude, latitude)
+| `polygon`  | Geographic boundary of the public place
+|===
+
+==== `PublicPlaceType`
+Enumeration of public place types.
+
+[cols="1,3", options="header"]
+|===
+| Value                           | Description
+| `PARK`                          | Public park
+| `PLAYGROUND`                    | Playground or sports field
+| `REST_SHELTER`                  | Public rest shelter
+| `WATER_RESTING_PLACE`           | Water-side resting area
+| `RESTING_PLATFORM`              | Public resting platform
+| `PASTURE`                       | Grazing land or pasture
+| `POND`                          | Public pond
+| `PUBLIC_SPACE`                  | General public space
+| `WATER_RESERVOIR`               | Water reservoir
+| `GARDEN`                        | Public garden
+| `RIVER_BANK`                    | River bank public area
+| `COMMUNITY_GROUND`              | Community gathering ground
+| `PUBLIC_FOREST`                 | Community-managed forest
+| `WATER_SPOUT`                   | Traditional water spout
+| `PUBLIC_GARDEN`                 | Public garden or park
+| `COURTYARD`                     | Public courtyard
+| `MEADOW`                        | Open meadow
+| `WATER_SOURCE`                  | Public water source
+| `PUBLIC_WASTE_DUMP`             | Public waste disposal site
+| `TEMPLE_PREMISES`               | Temple grounds
+| `PUBLIC_POOL`                   | Public swimming pool
+| `IMPORTANT_PLACE`               | Place of local importance
+| `VILLAGE_SQUARE`                | Village gathering square
+| `RIVER_SIDE_PATH`               | Path along river side
+| `SPIRITUAL_SHELTER`             | Spiritual or religious shelter
+| `PUBLIC_ANIMAL_HUSBANDRY_PLACE` | Public place for animal husbandry
+| `PUBLIC_BATHING_PLACE`          | Public bathing place
+| `COMMUNITY_BUILDING`            | Community building or hall
+| `READING_ROOM`                  | Public reading room
+| `PUBLIC_LAKE`                   | Public lake
+| `ANIMAL_HUSBANDRY_CENTER`       | Center for animal husbandry
+| `PUBLIC_MARKET`                 | Public market place
+| `PUBLIC_WATER_HOLE`             | Public water hole
+| `PUBLIC_VEHICLE_STAND`          | Public vehicle stand or parking
+| `PUBLIC_FAIR_GROUND`            | Public fair ground
+|===

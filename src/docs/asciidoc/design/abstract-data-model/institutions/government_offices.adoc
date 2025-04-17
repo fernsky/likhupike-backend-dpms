@@ -1,0 +1,43 @@
+==== `GovernmentOffices`
+Represents government offices in the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field           | Description
+| `name`          | Name of the government office
+| `ward`          | Ward where the office is located
+| `location`      | Location description of the office
+| `point`         | Geographic point location (longitude, latitude)
+| `polygon`       | Geographic boundary of the office
+| `officeType`    | Type of government office (reference to GovernmentOfficeType)
+| `department`    | Government department the office belongs to
+| `jurisdiction`  | Jurisdictional area of the office
+| `headPosition`  | Title of the head of office
+| `contactNumber` | Contact phone number of the office
+| `email`         | Email address of the office
+|===
+
+==== `GovernmentOfficeType`
+Enumeration of government office types.
+
+[cols="1,3", options="header"]
+|===
+| Value                       | Description
+| `WARD_OFFICE`               | Ward administrative office
+| `MUNICIPALITY_OFFICE`       | Municipal administrative office
+| `TAX_OFFICE`                | Tax collection office
+| `LAND_REGISTRY`             | Land registration and management office
+| `POLICE_STATION`            | Police station or post
+| `HEALTH_POST`               | Government health post
+| `POSTAL_OFFICE`             | Postal service office
+| `COURT`                     | Judicial court
+| `EDUCATION_OFFICE`          | Education administration office
+| `AGRICULTURE_EXTENSION`     | Agricultural extension office
+| `ELECTRICITY_AUTHORITY`     | Electricity distribution office
+| `WATER_SUPPLY_AUTHORITY`    | Water supply management office
+| `FOREST_OFFICE`             | Forest management office
+| `VETERINARY_OFFICE`         | Veterinary service office
+| `SURVEY_OFFICE`             | Land survey office
+| `DISTRICT_ADMINISTRATION`   | District administration office
+| `OTHER`                     | Other government offices
+|===

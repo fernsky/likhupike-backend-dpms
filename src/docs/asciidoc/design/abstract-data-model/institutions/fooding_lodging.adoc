@@ -1,0 +1,11 @@
+==== `FoodingAndLodging`
+Extends Business with lodging-specific information.
+
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `accommodationType` | Type of accommodation provided
+| `numberOfRooms`     | Total number of rooms available
+| `numberOfBeds`      | Total number of beds available
+| `typesOfRoom`       | Types of rooms available
+|===

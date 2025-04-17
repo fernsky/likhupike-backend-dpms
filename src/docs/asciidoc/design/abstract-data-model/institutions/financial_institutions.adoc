@@ -1,0 +1,82 @@
+==== `FinancialInstitutions`
+Represents banks and financial institutions in the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field           | Description
+| `name`          | Name of the financial institution
+| `ward`          | Ward where the institution is located
+| `location`      | Location description of the institution
+| `point`         | Geographic point location (longitude, latitude)
+| `institutionType` | Type of financial institution (reference to FinancialInstitutionType)
+| `branchType`    | Type of branch (head office, branch, extension counter)
+| `established`   | Year when the institution was established in this location
+| `services`      | Services offered by the institution
+| `contactNumber` | Contact phone number of the institution
+|===
+
+==== `FinancialInstitutionType`
+Enumeration of financial institution types.
+
+[cols="1,3", options="header"]
+|===
+| Value                        | Description
+| `COMMERCIAL_BANK`            | Commercial bank with full banking services
+| `DEVELOPMENT_BANK`           | Development bank with limited banking services
+| `FINANCE_COMPANY`            | Finance company offering consumer financing
+| `MICROFINANCE_INSTITUTION`   | Microfinance institution focused on small loans
+| `COOPERATIVE`                | Financial cooperative owned by members
+| `MONEY_TRANSFER`             | Money transfer service provider
+| `INSURANCE_COMPANY`          | Insurance service provider
+| `INVESTMENT_COMPANY`         | Investment service provider
+| `RURAL_DEVELOPMENT_BANK`     | Bank focused on rural development
+| `CREDIT_UNION`               | Credit union owned by members
+| `OTHER`                      | Other types of financial institutions
+|===
+
+==== `WardWiseTimeToNearestBank`
+Represents the time taken to reach the nearest bank from each ward.
+
+[cols="1,3", options="header"]
+|===
+| Field       | Description
+| `ward`      | Ward number
+| `time`      | Time taken to reach the nearest bank (reference to TimeType)
+| `households`| Number of households in the ward
+|===
+
+==== `TimeType`
+Enumeration of time taken to reach the nearest bank.
+
+[cols="1,3", options="header"]
+|===
+| Value                  | Description
+| `TIME_15_MINUTES_OR_LESS` | 15 minutes or less
+| `TIME_30_MINUTES_OR_LESS` | 30 minutes or less
+| `TIME_1_HOUR_OR_LESS`     | 1 hour or less
+| `TIME_1_HOUR_OR_MORE`     | More than 1 hour
+|===
+
+==== `WardWiseFinancialAccounts`
+Represents the financial accounts held by households in each ward.
+
+[cols="1,3", options="header"]
+|===
+| Field                  | Description
+| `ward`                 | Ward number
+| `financialOrganization`| Type of financial organization (reference to FinancialOrganizationType)
+| `households`           | Number of households with accounts in the financial organization
+|===
+
+==== `FinancialOrganizationType`
+Enumeration of financial organization types.
+
+[cols="1,3", options="header"]
+|===
+| Value         | Description
+| `BANK`        | Bank
+| `FINANCE`     | Finance company
+| `MICRO_FINANCE` | Microfinance institution
+| `COOPERATIVE` | Cooperative
+| `NONE`        | No financial organization
+|===

@@ -1,0 +1,67 @@
+==== `Businesses`
+Represents business establishments within the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field      | Description
+| `name`     | Name of the business
+| `ward`     | Ward where the business is located
+| `location` | Location description of the business
+| `point`    | Geographic point location (longitude, latitude)
+| `polygon`  | Geographic boundary of the business
+| `nature`   | Nature of the business
+| `type`     | Type of business
+|===
+
+
+==== `BusinessType`
+Enumeration of business types in market centers.
+
+[cols="1,3", options="header"]
+|===
+| Value                                 | Description
+| `GROCERY_AND_PROVISION_SHOP`          | Grocery and provision shop
+| `FISH_MEAT_SALES`                     | Fish and meat sales
+| `BAKERY_SALES`                        | Bakery sales
+| `DAIRY_PRODUCTS_SALES`                | Dairy products sales
+| `ALCOHOL_AND_BEVERAGES`               | Alcohol and beverages sales
+| `PHARMACY_AND_SURGICAL_SHOP`          | Pharmacy and surgical shop
+| `VEGETABLES_AND_FRUITS_SALES`         | Vegetables and fruits sales
+| `STATIONERY_AND_BOOK_SHOP`            | Stationery and book shop
+| `SPORTS_EQUIPMENT_SALES`              | Sports equipment sales
+| `CLOTHING_SHOP`                       | Clothing shop
+| `FANCY_STORE`                         | Fancy store
+| `SHOES_AND_SLIPPERS`                  | Shoes and slippers sales
+| `COSMETIC_AND_GIFT_SHOP`              | Cosmetic and gift shop
+| `VEHICLES_MOTORCYCLES`                | Vehicles and motorcycles sales
+| `BICYCLES_RICKSHAWS_AUTORICKSHAWS_BATTERY` | Bicycles, rickshaws, autorickshaws, and battery sales
+| `MOTOR_PARTS`                         | Motor parts sales
+| `HARDWARE_BUILDING_MATERIALS`         | Hardware and building materials sales
+| `GLASS_PLYWOOD_AND_FOAM`              | Glass, plywood, and foam sales
+| `GOLD_AND_SILVER_MANUFACTURING_AND_SALES` | Gold and silver manufacturing and sales
+| `OPTICAL_SHOP`                        | Optical shop
+| `TAILORING_AND_CUTTING_SHOPS`         | Tailoring and cutting shops
+| `FURNITURE`                           | Furniture sales
+| `FLOORING_AND_FURNISHING_ITEMS`       | Flooring and furnishing items sales
+| `PAINT`                               | Paint sales
+| `INDUSTRIAL_MATERIALS`                | Industrial materials sales
+| `PETROLEUM_PRODUCTS`                  | Petroleum products sales
+| `ELECTRIC_AND_ELECTRONIC_GOODS_SALES` | Electric and electronic goods sales
+| `COMPUTER_MOBILE_AND_ACCESSORIES_SALES_AND_MAINTENANCE` | Computer, mobile, and accessories sales and maintenance
+| `OTHER_TRADES`                        | Other trades
+| `HOTEL_LODGE_AND_RESTAURANT`          | Hotel, lodge, and restaurant
+| `HOSPITAL_AND_CLINIC`                 | Hospital and clinic
+| `TRAVEL_AGENCY`                       | Travel agency
+| `BANKING_FINANCIAL_AND_MONETARY_TRANSACTIONS` | Banking, financial, and monetary transactions
+| `LIFE_AND_NON_LIFE_INSURANCE_COMPANY` | Life and non-life insurance company
+| `RADIO_AND_TELEVISION_OPERATION`      | Radio and television operation
+| `CONSULTANCY_AUDITING`                | Consultancy and auditing
+| `CINEMA_HALL_AND_ENTERTAINMENT`       | Cinema hall and entertainment
+| `SECRETARIAL_SERVICES_PHOTOCOPY_LAMINATION` | Secretarial services, photocopy, and lamination
+| `PHOTOGRAPHY_AND_COLOR_LAB`           | Photography and color lab
+| `RICE_MAIZE_WHEAT_GRINDING_MILLING_MILL` | Rice, maize, and wheat grinding/milling mill
+| `GOLD_AND_SILVER_JEWELRY_MAKING`      | Gold and silver jewelry making
+| `BEAUTY_PARLOR`                       | Beauty parlor
+| `SALON_HAIRCUTTING`                   | Salon and haircutting
+| `OTHER_SERVICE_SALES`                 | Other service sales
+|===

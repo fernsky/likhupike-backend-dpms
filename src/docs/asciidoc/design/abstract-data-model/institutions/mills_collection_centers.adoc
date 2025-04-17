@@ -1,0 +1,25 @@
+==== `MillsCollectionCenter`
+Represents mills and collection centers within the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `name`         | Name of the mill or collection center
+| `ward`         | Ward where the establishment is located
+| `location`     | Location description of the establishment
+| `point`        | Geographic point location (longitude, latitude)
+| `polygon`      | Geographic boundary of the establishment
+| `type`         | Type of establishment (reference to MillsCollectionCenterType)
+|===
+
+==== `MillsCollectionCenterType`
+Enumeration of types of mills and collection centers.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `MILL`             | Mill
+| `COLLECTION_CENTER`| Collection center
+| `REFINERY`         | Refinery
+| `PROCESSING_CENTER`| Processing center
+|===

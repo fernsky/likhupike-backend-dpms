@@ -1,0 +1,62 @@
+==== `TouristAreas`
+Represents tourist attractions within the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field                   | Description
+| `name`                  | Name of the tourist area
+| `ward`                  | Ward where the tourist area is located
+| `location`              | Location description of the tourist area
+| `areaType`              | Type of tourist area (reference to AreaType)
+| `point`                 | Geographic point location (longitude, latitude)
+| `polygon`               | Geographic boundary of the tourist area
+| `distanceFromWardCenter`| Distance from the ward center
+| `distanceUnit`          | Unit of distance measurement (reference to DistanceUnit)
+| `accessRoadCondition`   | Condition of the access road (reference to AccessRoadCondition)
+|===
+
+==== `AreaType`
+Enumeration of tourist area types.
+
+[cols="1,3", options="header"]
+|===
+| Value        | Description
+| `RELIGIOUS`  | Religious site or place of worship
+| `CULTURAL`   | Cultural heritage site or attraction
+| `NATURAL`    | Natural attraction like park, viewpoint, etc.
+| `HISTORICAL` | Historical site or monument
+|===
+
+==== `DistanceUnit`
+Enumeration of distance measurement units.
+
+[cols="1,3", options="header"]
+|===
+| Value         | Description
+| `KILOMETERS`  | Distance measured in kilometers
+| `HOURS`       | Distance measured in hours of travel time
+| `MINUTES`     | Distance measured in minutes of travel time
+|===
+
+==== `AccessRoadCondition`
+Enumeration of road condition types.
+
+[cols="1,3", options="header"]
+|===
+| Value          | Description
+| `GRAVELED`     | Graveled road surface
+| `BLACK_TOPPED` | Paved/black-topped road surface
+| `DIRT`         | Unpaved dirt road
+| `GORETO`       | Footpath/trail
+| `OTHER`        | Other road condition types
+|===
+
+==== `ReligiousTouristAreas`
+Extends TouristArea with religious-specific information.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `festivals`  | Religious festivals celebrated at this site
+| `religions`  | Religions associated with this site
+|===

@@ -1,0 +1,43 @@
+==== `NonGovernmentalOrganizations`
+Represents NGOs operating in the municipality.
+
+[cols="1,3", options="header"]
+|===
+| Field             | Description
+| `name`            | Name of the NGO
+| `ward`            | Ward where the NGO office is located
+| `location`        | Location description of the NGO office
+| `point`           | Geographic point location (longitude, latitude)
+| `scope`           | Scope of operation (local, regional, national, international)
+| `sector`          | Sector the NGO works in (reference to NGOSectorType)
+| `established`     | Year when the NGO started working in this municipality
+| `contactPerson`   | Name of the primary contact person
+| `contactNumber`   | Contact phone number
+| `email`           | Email address of the NGO
+| `projects`        | Current projects being implemented by the NGO
+| `annualBudget`    | Annual budget of the NGO for this municipality
+| `fundingSources`  | Sources of funding for the NGO
+|===
+
+==== `NGOSectorType`
+Enumeration of NGO activity sectors.
+
+[cols="1,3", options="header"]
+|===
+| Value                 | Description
+| `EDUCATION`           | Educational development activities
+| `HEALTH`              | Healthcare and medical services
+| `AGRICULTURE`         | Agricultural development and support
+| `ECONOMIC_DEVELOPMENT`| Economic development activities
+| `ENVIRONMENT`         | Environmental conservation activities
+| `WOMEN_EMPOWERMENT`   | Women's rights and empowerment activities
+| `CHILDREN_WELFARE`    | Child welfare and rights activities
+| `DISASTER_MANAGEMENT` | Disaster preparedness and management
+| `WATER_SANITATION`    | Water and sanitation improvement activities
+| `HUMAN_RIGHTS`        | Human rights advocacy activities
+| `INFRASTRUCTURE`      | Infrastructure development activities
+| `POVERTY_ALLEVIATION` | Poverty reduction activities
+| `CAPACITY_BUILDING`   | Capacity building and training activities
+| `MULTI_SECTOR`        | Activities spanning multiple sectors
+| `OTHER`               | Other specialized sectors
+|===

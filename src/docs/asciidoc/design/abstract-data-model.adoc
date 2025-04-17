@@ -3,7 +3,6 @@
 This section defines the abstract data model for the Digital Profile Information System (DPIS).
 The model is organized by domains with detailed entity definitions.
 
-include::abstract-data-model/core.adoc[]
 
 include::abstract-data-model/location.adoc[]
 
