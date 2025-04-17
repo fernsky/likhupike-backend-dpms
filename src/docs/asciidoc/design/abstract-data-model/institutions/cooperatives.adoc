@@ -89,7 +89,7 @@ Contains translations for cooperative types.
 |===
 
 ==== `CooperativeMedia`
-Represents media assets for cooperatives with localization support.
+Represents media assets for cooperatives with localization support. These assets include images, documents, videos, and other media that showcase the cooperative's activities, facilities, members, products, and services.
 
 [cols="1,3", options="header"]
 |===
@@ -97,18 +97,50 @@ Represents media assets for cooperatives with localization support.
 | `id`              | Unique identifier for the media
 | `cooperative`     | Reference to the Cooperative entity
 | `locale`          | Reference to Locale (null if not language-specific)
-| `type`            | Type of media (logo, photo, document, video)
-| `title`           | Title/caption of the media
-| `description`     | Description of the media
-| `altText`         | Alternative text for accessibility and SEO
-| `filePath`        | Path to the stored file
-| `fileUrl`         | URL to access the media
+| `type`            | Type of media (LOGO, HERO_IMAGE, GALLERY_IMAGE, PRODUCT_PHOTO, TEAM_PHOTO, DOCUMENT, VIDEO, BROCHURE, ANNUAL_REPORT)
+| `title`           | Title/caption of the media - should be descriptive and keyword-rich for SEO
+| `description`     | Detailed description of the media content - opportunity for keyword integration
+| `altText`         | Alternative text for accessibility and SEO - should describe image content concisely
+| `filePath`        | Path to the stored file in the system
+| `fileUrl`         | Public URL to access the media
 | `thumbnailUrl`    | URL to thumbnail version (for images/videos)
+| `mimeType`        | MIME type of the media file (e.g., image/jpeg, application/pdf)
+| `fileSize`        | Size of the file in bytes
+| `dimensions`      | Dimensions for image/video files (width x height)
+| `duration`        | Duration for audio/video files (in seconds)
+| `metadata`        | Additional metadata in JSON format (camera info, location, etc.)
+| `tags`            | Searchable tags associated with this media
+| `license`         | License information for the media
+| `attribution`     | Attribution information if required
 | `sortOrder`       | Display order for multiple media items
 | `isPrimary`       | Whether this is the primary media item
+| `isFeatured`      | Whether this media should be featured prominently
+| `visibilityStatus`| Public, private, or restricted visibility
 | `uploadedBy`      | User who uploaded this media
 | `uploadedAt`      | When this media was uploaded
+| `lastAccessed`    | When this media was last accessed/viewed
+| `viewCount`       | Number of times this media has been viewed
+| `createdAt`       | When this record was created
+| `updatedAt`       | When this record was last updated
 |===
+
+==== `CooperativeMediaGuidelines`
+Technical specifications for cooperative media assets:
+
+* *Logo Images*: PNG or SVG format with transparent background, minimum 300x300px, maximum 1MB
+* *Hero Images*: JPEG/WebP format, 16:9 aspect ratio, recommended 1920x1080px, optimized for web
+* *Gallery Images*: JPEG/WebP format, various aspects, minimum 800px width, maximum 2MB each
+* *Product Photos*: JPEG format, square or 4:3 aspect ratio, minimum 800x800px with white background
+* *Team Photos*: JPEG format, consistent style and sizing, recommended 400x400px for headshots
+* *Documents*: PDF format preferred, maximum 10MB, searchable text when possible
+* *Videos*: MP4 format (H.264), maximum 1080p resolution, maximum 100MB or externally hosted
+* *Audio*: MP3 format, 128-192kbps, maximum 10MB
+
+SEO Best Practices:
+* All images should include descriptive filenames (e.g., "organic-coffee-production-janakpur-cooperative.jpg")
+* Alt text should be descriptive and include relevant keywords naturally
+* Media titles and descriptions should incorporate important search terms without keyword stuffing
+* Captions should provide additional context that complements the visual content
 
 ==== `WardWiseTimeToNearestCooperative`
 Represents the time taken to reach the nearest cooperative from each ward.
