@@ -87,7 +87,7 @@
         <comment>Add unique constraint for ward number within a municipality</comment>
         <addUniqueConstraint tableName="profile_ward" columnNames="number,profile_municipality_id" constraintName="uk_profile_ward_number_municipality"/>
     </changeSet>
-    
+
     <!-- Add boundary column for storing polygon geometry data -->
     <changeSet author="dpis" id="04-profile-ward-add-boundary-column">
         <preConditions onFail="MARK_RAN">
@@ -101,20 +101,20 @@
         <comment>Add boundary geometry column to profile_ward table</comment>
         <sql>ALTER TABLE profile_ward ADD COLUMN boundary geometry(Polygon, 4326)</sql>
     </changeSet>
-    
+
     <!-- Add spatial index for better geometry query performance -->
     <changeSet author="dpis" id="04-profile-ward-spatial-index">
         <preConditions onFail="MARK_RAN">
             <and>
                 <tableExists tableName="profile_ward"/>
-                <columnExists tableName="profile_ward" columnName="boundary"/>
-                <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM pg_indexes 
-                    WHERE indexname = 'idx_profile_ward_boundary'
-                </sqlCheck>
+                <not>
+                    <indexExists tableName="profile_ward" indexName="idx_profile_ward_boundary"/>
+                </not>
             </and>
         </preConditions>
         <comment>Add spatial index for profile_ward boundary</comment>
-        <sql>CREATE INDEX idx_profile_ward_boundary ON profile_ward USING GIST(boundary)</sql>
+        <createIndex tableName="profile_ward" indexName="idx_profile_ward_boundary">
+            <column name="boundary"/>
+        </createIndex>
     </changeSet>
 </databaseChangeLog>

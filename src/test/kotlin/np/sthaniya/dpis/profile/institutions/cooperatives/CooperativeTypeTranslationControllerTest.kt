@@ -1,9 +1,10 @@
 package np.sthaniya.dpis.profile.institutions.cooperatives
 
-import np.sthaniya.dpis.auth.controller.base.BaseRestDocsTest
+import np.sthaniya.dpis.profile.institutions.cooperatives.base.BaseCooperativeTestSupport
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.CooperativeTypeTranslationDto
 import np.sthaniya.dpis.profile.institutions.cooperatives.model.CooperativeType
 import np.sthaniya.dpis.profile.institutions.cooperatives.service.CooperativeTypeTranslationService
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -12,17 +13,21 @@ import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
 import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.restdocs.request.RequestDocumentation.*
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
+class CooperativeTypeTranslationControllerTest : BaseCooperativeTestSupport() {
 
     @Autowired
     private lateinit var cooperativeTypeTranslationService: CooperativeTypeTranslationService
 
+    @BeforeEach
+    fun setup() {
+        // Create a user with appropriate permissions
+        setupTestUserWithAllCooperativePermissions()
+    }
+
     @Test
-    @WithMockUser(authorities = ["PERMISSION_UPDATE_COOPERATIVE"])
     fun `should create or update type translation successfully`() {
         val createDto = CooperativeTypeTranslationDto(
             cooperativeType = CooperativeType.AGRICULTURE,
@@ -67,7 +72,6 @@ class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get type translation by id`() {
         // First create a translation to retrieve
         val translationId = createTestTypeTranslation(CooperativeType.DAIRY, "ne").id
@@ -101,7 +105,6 @@ class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get type translation by type and locale`() {
         // First create a translation
         createTestTypeTranslation(CooperativeType.DAIRY, "ne")
@@ -137,7 +140,6 @@ class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get all translations for type`() {
         // Create two translations for the same type
         createTestTypeTranslation(CooperativeType.DAIRY, "ne")
@@ -174,7 +176,6 @@ class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get translations by locale`() {
         // Create translations for different types with the same locale
         createTestTypeTranslation(CooperativeType.DAIRY, "en")
@@ -238,7 +239,6 @@ class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_UPDATE_COOPERATIVE"])
     fun `should delete type translation`() {
         // First create a translation to delete
         createTestTypeTranslation(CooperativeType.SAVINGS_AND_CREDIT, "ne")
@@ -266,7 +266,6 @@ class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get all translations for locale`() {
         // Create translations for different types with the same locale
         createTestTypeTranslation(CooperativeType.DAIRY, "ne")
@@ -324,7 +323,6 @@ class CooperativeTypeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["WRONG_PERMISSION"])
     fun `should return 403 when creating translation without proper permission`() {
         val createDto = CooperativeTypeTranslationDto(
             cooperativeType = CooperativeType.AGRICULTURE,

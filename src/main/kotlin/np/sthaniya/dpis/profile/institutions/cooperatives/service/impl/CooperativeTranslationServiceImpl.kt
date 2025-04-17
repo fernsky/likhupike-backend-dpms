@@ -80,7 +80,7 @@ class CooperativeTranslationServiceImpl(
             status = createDto.status
             structuredData = createDto.structuredData
             metaRobots = createDto.metaRobots
-            createdBy = securityService.getCurrentUserId()
+            createdBy = securityService.getCurrentUser().id
             updatedBy = createdBy
         }
         
@@ -138,7 +138,7 @@ class CooperativeTranslationServiceImpl(
         updateDto.metaRobots?.let { translation.metaRobots = it }
         updateDto.socialShareImage?.let { translation.socialShareImage = it }
         
-        translation.updatedBy = securityService.getCurrentUserId()
+        translation.updatedBy = securityService.getCurrentUser().id
         translation.updatedAt = Instant.now()
         
         val savedTranslation = translationRepository.save(translation)
@@ -217,7 +217,7 @@ class CooperativeTranslationServiceImpl(
         validateStatusTransition(translation.status, status)
         
         translation.status = status
-        translation.updatedBy = securityService.getCurrentUserId()
+        translation.updatedBy = securityService.getCurrentUser().id
         translation.updatedAt = Instant.now()
         
         val savedTranslation = translationRepository.save(translation)
@@ -261,7 +261,7 @@ class CooperativeTranslationServiceImpl(
         
         val translation = getTranslationEntity(translationId)
         translation.contentLastReviewed = Instant.now()
-        translation.updatedBy = securityService.getCurrentUserId()
+        translation.updatedBy = securityService.getCurrentUser().id
         translation.updatedAt = Instant.now()
         
         val savedTranslation = translationRepository.save(translation)

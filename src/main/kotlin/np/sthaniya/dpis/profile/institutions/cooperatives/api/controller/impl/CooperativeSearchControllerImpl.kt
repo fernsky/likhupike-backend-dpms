@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.profile.institutions.cooperatives.api.controller.impl
 
 import np.sthaniya.dpis.common.dto.ApiResponse
+import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.profile.institutions.cooperatives.api.controller.CooperativeSearchController
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.response.CooperativeResponse
 import np.sthaniya.dpis.profile.institutions.cooperatives.model.CooperativeStatus
@@ -18,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 class CooperativeSearchControllerImpl(
-    private val cooperativeService: CooperativeService
+    private val cooperativeService: CooperativeService,
+    private val i18nMessageService: I18nMessageService
 ) : CooperativeSearchController {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -31,7 +33,10 @@ class CooperativeSearchControllerImpl(
         
         val cooperatives = cooperativeService.searchCooperativesByName(nameQuery, pageable)
         
-        return ResponseEntity.ok(ApiResponse.success(cooperatives))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperatives,
+            message = i18nMessageService.getMessage("cooperative.search.name.success", arrayOf(nameQuery))
+        ))
     }
 
     override fun getCooperativesByType(
@@ -42,7 +47,10 @@ class CooperativeSearchControllerImpl(
         
         val cooperatives = cooperativeService.getCooperativesByType(type, pageable)
         
-        return ResponseEntity.ok(ApiResponse.success(cooperatives))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperatives,
+            message = i18nMessageService.getMessage("cooperative.search.type.success", arrayOf(type))
+        ))
     }
 
     override fun getCooperativesByStatus(
@@ -53,7 +61,10 @@ class CooperativeSearchControllerImpl(
         
         val cooperatives = cooperativeService.getCooperativesByStatus(status, pageable)
         
-        return ResponseEntity.ok(ApiResponse.success(cooperatives))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperatives,
+            message = i18nMessageService.getMessage("cooperative.search.status.success", arrayOf(status))
+        ))
     }
 
     override fun getCooperativesByWard(
@@ -64,7 +75,10 @@ class CooperativeSearchControllerImpl(
         
         val cooperatives = cooperativeService.getCooperativesByWard(ward, pageable)
         
-        return ResponseEntity.ok(ApiResponse.success(cooperatives))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperatives,
+            message = i18nMessageService.getMessage("cooperative.search.ward.success", arrayOf(ward))
+        ))
     }
 
     override fun findCooperativesNear(
@@ -82,7 +96,10 @@ class CooperativeSearchControllerImpl(
             pageable
         )
         
-        return ResponseEntity.ok(ApiResponse.success(cooperatives))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperatives,
+            message = i18nMessageService.getMessage("cooperative.search.near.success", arrayOf(distanceInMeters))
+        ))
     }
 
     override fun getCooperativeStatisticsByType(): ResponseEntity<ApiResponse<Map<CooperativeType, Long>>> {
@@ -90,7 +107,10 @@ class CooperativeSearchControllerImpl(
         
         val statistics = cooperativeService.getCooperativeStatisticsByType()
         
-        return ResponseEntity.ok(ApiResponse.success(statistics))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = statistics,
+            message = i18nMessageService.getMessage("cooperative.statistics.type.success")
+        ))
     }
 
     override fun getCooperativeStatisticsByWard(): ResponseEntity<ApiResponse<Map<Int, Long>>> {
@@ -98,6 +118,9 @@ class CooperativeSearchControllerImpl(
         
         val statistics = cooperativeService.getCooperativeStatisticsByWard()
         
-        return ResponseEntity.ok(ApiResponse.success(statistics))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = statistics,
+            message = i18nMessageService.getMessage("cooperative.statistics.ward.success")
+        ))
     }
 }

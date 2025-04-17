@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.profile.institutions.cooperatives.api.controller.impl
 
 import np.sthaniya.dpis.common.dto.ApiResponse
+import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.profile.institutions.cooperatives.api.controller.CooperativeTranslationController
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.CreateCooperativeTranslationDto
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.UpdateCooperativeTranslationDto
@@ -19,7 +20,8 @@ import java.util.UUID
  */
 @RestController
 class CooperativeTranslationControllerImpl(
-    private val cooperativeTranslationService: CooperativeTranslationService
+    private val cooperativeTranslationService: CooperativeTranslationService,
+    private val i18nMessageService: I18nMessageService
 ) : CooperativeTranslationController {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -34,7 +36,10 @@ class CooperativeTranslationControllerImpl(
         
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(ApiResponse.success(translation, "Translation created successfully"))
+            .body(ApiResponse.success(
+                data = translation, 
+                message = i18nMessageService.getMessage("cooperative.translation.create.success")
+            ))
     }
 
     override fun updateTranslation(
@@ -44,13 +49,15 @@ class CooperativeTranslationControllerImpl(
     ): ResponseEntity<ApiResponse<CooperativeTranslationResponse>> {
         logger.info("Updating translation $translationId for cooperative $cooperativeId")
         
-        // Fixed method call to match service interface
         val translation = cooperativeTranslationService.updateTranslation(
             translationId, 
             updateDto
         )
         
-        return ResponseEntity.ok(ApiResponse.success(translation, "Translation updated successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = translation, 
+            message = i18nMessageService.getMessage("cooperative.translation.update.success")
+        ))
     }
 
     override fun getTranslationById(
@@ -61,7 +68,10 @@ class CooperativeTranslationControllerImpl(
         
         val translation = cooperativeTranslationService.getTranslationById(translationId)
         
-        return ResponseEntity.ok(ApiResponse.success(translation))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = translation,
+            message = i18nMessageService.getMessage("cooperative.translation.get.success")
+        ))
     }
 
     override fun getTranslationByLocale(
@@ -70,10 +80,12 @@ class CooperativeTranslationControllerImpl(
     ): ResponseEntity<ApiResponse<CooperativeTranslationResponse>> {
         logger.debug("Fetching translation in locale $locale for cooperative $cooperativeId")
         
-        // Using getTranslationByCooperativeAndLocale directly to avoid any confusion
         val translation = cooperativeTranslationService.getTranslationByCooperativeAndLocale(cooperativeId, locale)
         
-        return ResponseEntity.ok(ApiResponse.success(translation))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = translation,
+            message = i18nMessageService.getMessage("cooperative.translation.get.locale.success", arrayOf(locale))
+        ))
     }
 
     override fun getAllTranslations(
@@ -83,7 +95,10 @@ class CooperativeTranslationControllerImpl(
         
         val translations = cooperativeTranslationService.getAllTranslationsForCooperative(cooperativeId)
         
-        return ResponseEntity.ok(ApiResponse.success(translations))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = translations,
+            message = i18nMessageService.getMessage("cooperative.translation.list.success")
+        ))
     }
 
     override fun deleteTranslation(
@@ -92,10 +107,12 @@ class CooperativeTranslationControllerImpl(
     ): ResponseEntity<ApiResponse<Void>> {
         logger.info("Deleting translation $translationId from cooperative $cooperativeId")
         
-        // Fixed method call to match service interface
         cooperativeTranslationService.deleteTranslation(translationId)
         
-        return ResponseEntity.ok(ApiResponse.success(null, "Translation deleted successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = null,
+            message = i18nMessageService.getMessage("cooperative.translation.delete.success")
+        ))
     }
 
     override fun updateTranslationStatus(
@@ -105,12 +122,17 @@ class CooperativeTranslationControllerImpl(
     ): ResponseEntity<ApiResponse<CooperativeTranslationResponse>> {
         logger.info("Updating status of translation $translationId to $status")
         
-        // Fixed method call to use correct service method
         val translation = cooperativeTranslationService.changeTranslationStatus(
             translationId, 
             status
         )
         
-        return ResponseEntity.ok(ApiResponse.success(translation, "Translation status updated successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = translation, 
+            message = i18nMessageService.getMessage(
+                "cooperative.translation.status.update.success", 
+                arrayOf(status)
+            )
+        ))
     }
 }

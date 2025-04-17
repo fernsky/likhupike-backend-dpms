@@ -78,7 +78,7 @@ class CooperativeServiceImpl(
                 }
             }
             
-            createdBy = securityService.getCurrentUserId()
+            createdBy = securityService.getCurrentUser().id
             updatedBy = createdBy
         }
 
@@ -121,7 +121,7 @@ class CooperativeServiceImpl(
             status = translationDto.status
             structuredData = translationDto.structuredData
             metaRobots = translationDto.metaRobots
-            createdBy = securityService.getCurrentUserId()
+            createdBy = securityService.getCurrentUser().id
             updatedBy = createdBy
         }
         
@@ -170,7 +170,7 @@ class CooperativeServiceImpl(
             }
         }
         
-        cooperative.updatedBy = securityService.getCurrentUserId()
+        cooperative.updatedBy = securityService.getCurrentUser().id
         cooperative.updatedAt = Instant.now()
         
         // Save the updated cooperative
@@ -324,7 +324,7 @@ class CooperativeServiceImpl(
         
         val cooperative = getCooperativeEntity(id)
         cooperative.status = status
-        cooperative.updatedBy = securityService.getCurrentUserId()
+        cooperative.updatedBy = securityService.getCurrentUser().id
         cooperative.updatedAt = Instant.now()
         
         val savedCooperative = cooperativeRepository.save(cooperative)

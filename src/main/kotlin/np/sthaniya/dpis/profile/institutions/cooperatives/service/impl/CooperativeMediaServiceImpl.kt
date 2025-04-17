@@ -134,7 +134,7 @@ class CooperativeMediaServiceImpl(
                 isPrimary = createDto.isPrimary
                 isFeatured = createDto.isFeatured
                 visibilityStatus = createDto.visibilityStatus
-                uploadedBy = securityService.getCurrentUserId()
+                uploadedBy = securityService.getCurrentUser().id
                 uploadedAt = Instant.now()
             }
             
