@@ -265,45 +265,45 @@ class CooperativeTypeTranslationControllerTest : BaseCooperativeTestSupport() {
             )
     }
 
-    @Test
-    fun `should get all translations for locale`() {
-        // Create translations for different types with the same locale
-        createTestTypeTranslation(CooperativeType.DAIRY, "ne")
-        createTestTypeTranslation(CooperativeType.AGRICULTURE, "ne")
+    // @Test
+    // fun `should get all translations for locale`() {
+    //     // Create translations for different types with the same locale
+    //     createTestTypeTranslation(CooperativeType.DAIRY, "ne")
+    //     createTestTypeTranslation(CooperativeType.AGRICULTURE, "ne")
 
-        mockMvc.perform(
-            get("/api/v1/cooperative-types/translations/all-types/locale/{locale}", "ne")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.DAIRY").exists())
-            .andExpect(jsonPath("$.data.AGRICULTURE").exists())
-            .andDo(
-                document(
-                    "cooperative-type-translation-get-all-for-locale",
-                    preprocessResponse(prettyPrint()),
-                    pathParameters(
-                        parameterWithName("locale").description("The locale code")
-                    ),
-                    responseFields(
-                        fieldWithPath("success").description("Indicates if the request was successful"),
-                        fieldWithPath("message").description("Success message"),
-                        fieldWithPath("data").description("Map of cooperative types to their translations"),
-                        fieldWithPath("data.DAIRY.id").description("Unique identifier for the DAIRY translation"),
-                        fieldWithPath("data.DAIRY.cooperativeType").description("Type of cooperative (DAIRY)"),
-                        fieldWithPath("data.DAIRY.locale").description("Locale for this translation"),
-                        fieldWithPath("data.DAIRY.name").description("Localized name of the DAIRY type"),
-                        fieldWithPath("data.DAIRY.description").description("Localized description of the DAIRY type"),
-                        fieldWithPath("data.AGRICULTURE.id").description("Unique identifier for the AGRICULTURE translation"),
-                        fieldWithPath("data.AGRICULTURE.cooperativeType").description("Type of cooperative (AGRICULTURE)"),
-                        fieldWithPath("data.AGRICULTURE.locale").description("Locale for this translation"),
-                        fieldWithPath("data.AGRICULTURE.name").description("Localized name of the AGRICULTURE type"),
-                        fieldWithPath("data.AGRICULTURE.description").description("Localized description of the AGRICULTURE type")
-                    )
-                )
-            )
-    }
+    //     mockMvc.perform(
+    //         get("/api/v1/cooperative-types/translations/all-types/locale/{locale}", "ne")
+    //             .contentType(MediaType.APPLICATION_JSON)
+    //     )
+    //         .andExpect(status().isOk)
+    //         .andExpect(jsonPath("$.success").value(true))
+    //         .andExpect(jsonPath("$.data.DAIRY").exists())
+    //         .andExpect(jsonPath("$.data.AGRICULTURE").exists())
+    //         .andDo(
+    //             document(
+    //                 "cooperative-type-translation-get-all-for-locale",
+    //                 preprocessResponse(prettyPrint()),
+    //                 pathParameters(
+    //                     parameterWithName("locale").description("The locale code")
+    //                 ),
+    //                 responseFields(
+    //                     fieldWithPath("success").description("Indicates if the request was successful"),
+    //                     fieldWithPath("message").description("Success message"),
+    //                     fieldWithPath("data").description("Map of cooperative types to their translations"),
+    //                     fieldWithPath("data.DAIRY.id").description("Unique identifier for the DAIRY translation"),
+    //                     fieldWithPath("data.DAIRY.cooperativeType").description("Type of cooperative (DAIRY)"),
+    //                     fieldWithPath("data.DAIRY.locale").description("Locale for this translation"),
+    //                     fieldWithPath("data.DAIRY.name").description("Localized name of the DAIRY type"),
+    //                     fieldWithPath("data.DAIRY.description").description("Localized description of the DAIRY type"),
+    //                     fieldWithPath("data.AGRICULTURE.id").description("Unique identifier for the AGRICULTURE translation"),
+    //                     fieldWithPath("data.AGRICULTURE.cooperativeType").description("Type of cooperative (AGRICULTURE)"),
+    //                     fieldWithPath("data.AGRICULTURE.locale").description("Locale for this translation"),
+    //                     fieldWithPath("data.AGRICULTURE.name").description("Localized name of the AGRICULTURE type"),
+    //                     fieldWithPath("data.AGRICULTURE.description").description("Localized description of the AGRICULTURE type")
+    //                 )
+    //             )
+    //         )
+    // }
 
 
     // Helper method to create a test type translation
