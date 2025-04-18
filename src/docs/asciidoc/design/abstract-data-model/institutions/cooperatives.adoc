@@ -83,6 +83,7 @@ Enumeration of cooperative types.
 | `WOMEN`                  | Women's cooperative
 | `TRANSPORTATION`         | Transportation cooperative
 | `ENERGY`                 | Energy cooperative
+| `OTHER`                  | Other type of cooperative
 |===
 
 ==== `CooperativeTypeTranslation`
