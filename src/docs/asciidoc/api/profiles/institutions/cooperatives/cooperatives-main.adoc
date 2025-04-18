@@ -1,0 +1,147 @@
+= Cooperatives Core Operations
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[cooperatives-main]]
+== Core Cooperative Operations
+
+These endpoints allow for the creation and management of cooperatives.
+
+[[cooperative-create]]
+=== Create Cooperative
+
+This endpoint creates a new cooperative with its initial translation.
+
+.HTTP Request
+include::{snippets}/cooperative-create/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/cooperative-create/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-create/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-create/response-fields.adoc[]
+
+[[cooperative-update]]
+=== Update Cooperative
+
+This endpoint updates an existing cooperative's basic information.
+
+.HTTP Request
+include::{snippets}/cooperative-update/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-update/path-parameters.adoc[]
+
+.Request Fields
+include::{snippets}/cooperative-update/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-update/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-update/response-fields.adoc[]
+
+[[cooperative-get-by-id]]
+=== Get Cooperative by ID
+
+This endpoint retrieves a specific cooperative by its unique ID.
+
+.HTTP Request
+include::{snippets}/cooperative-get-by-id/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-get-by-id/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-get-by-id/response-fields.adoc[]
+
+[[cooperative-get-by-code]]
+=== Get Cooperative by Code
+
+This endpoint retrieves a specific cooperative by its unique code.
+
+.HTTP Request
+include::{snippets}/cooperative-get-by-code/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-get-by-code/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-get-by-code/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-get-by-code/response-fields.adoc[]
+
+[[cooperative-get-all]]
+=== Get All Cooperatives
+
+This endpoint retrieves all cooperatives with pagination.
+
+.HTTP Request
+include::{snippets}/cooperative-get-all/http-request.adoc[]
+
+.Request Parameters
+include::{snippets}/cooperative-get-all/request-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-get-all/response-fields.adoc[]
+
+[[cooperative-delete]]
+=== Delete Cooperative
+
+This endpoint deletes a cooperative.
+
+.HTTP Request
+include::{snippets}/cooperative-delete/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-delete/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-delete/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-delete/response-fields.adoc[]
+
+[[cooperative-change-status]]
+=== Change Cooperative Status
+
+This endpoint updates a cooperative's status.
+
+.HTTP Request
+include::{snippets}/cooperative-change-status/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-change-status/path-parameters.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-change-status/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-change-status/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-change-status/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Cooperatives are uniquely identified by both ID and code
+* Initial creation requires at least one translation in the default locale
+* The code field must be unique and URL-friendly
+* Geographical position uses longitude and latitude coordinates
+* All cooperatives must be assigned to a specific ward
+* Cooperative types are predefined enum values
+* Status can be ACTIVE, INACTIVE, PENDING, or CLOSED

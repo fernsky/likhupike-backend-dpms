@@ -1,0 +1,143 @@
+= Cooperative Search Operations
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[cooperative-search]]
+== Cooperative Search Operations
+
+These endpoints allow for searching and filtering cooperatives based on various criteria.
+
+[[cooperative-search-by-name]]
+=== Search Cooperatives by Name
+
+This endpoint searches for cooperatives by name across all translations.
+
+.HTTP Request
+include::{snippets}/cooperative-search-by-name/http-request.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-search-by-name/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-search-by-name/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-search-by-name/response-fields.adoc[]
+
+[[cooperative-search-by-type]]
+=== Get Cooperatives by Type
+
+This endpoint retrieves cooperatives of a specific type.
+
+.HTTP Request
+include::{snippets}/cooperative-get-by-type/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-get-by-type/path-parameters.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-get-by-type/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-get-by-type/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-get-by-type/response-fields.adoc[]
+
+[[cooperative-search-by-status]]
+=== Get Cooperatives by Status
+
+This endpoint retrieves cooperatives with a specific status.
+
+.HTTP Request
+include::{snippets}/cooperative-get-by-status/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-get-by-status/path-parameters.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-get-by-status/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-get-by-status/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-get-by-status/response-fields.adoc[]
+
+[[cooperative-search-by-ward]]
+=== Get Cooperatives by Ward
+
+This endpoint retrieves cooperatives in a specific ward.
+
+.HTTP Request
+include::{snippets}/cooperative-get-by-ward/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-get-by-ward/path-parameters.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-get-by-ward/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-get-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-get-by-ward/response-fields.adoc[]
+
+[[cooperative-search-near]]
+=== Find Cooperatives Near Location
+
+This endpoint finds cooperatives near a specified geographic location.
+
+.HTTP Request
+include::{snippets}/cooperative-search-near/http-request.adoc[]
+
+.Query Parameters
+include::{snippets}/cooperative-search-near/query-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-search-near/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-search-near/response-fields.adoc[]
+
+[[cooperative-statistics-by-type]]
+=== Get Cooperative Statistics by Type
+
+This endpoint returns the count of cooperatives grouped by type.
+
+.HTTP Request
+include::{snippets}/cooperative-statistics-by-type/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-statistics-by-type/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-statistics-by-type/response-fields.adoc[]
+
+[[cooperative-statistics-by-ward]]
+=== Get Cooperative Statistics by Ward
+
+This endpoint returns the count of cooperatives grouped by ward.
+
+.HTTP Request
+include::{snippets}/cooperative-statistics-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-statistics-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-statistics-by-ward/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Name search supports partial matching and is case-insensitive
+* Geographic search uses the distance in meters from the provided coordinates
+* Statistics endpoints return counts grouped by category
+* All search endpoints support pagination
+* Name search operates across all available translations
+* Results are sorted by relevance by default

@@ -71,17 +71,6 @@
         <addPrimaryKey tableName="cooperatives" columnNames="id" constraintName="cooperatives_pkey"/>
     </changeSet>
 
-    <!-- Verify PostGIS extension -->
-    <changeSet author="dpis" id="03-cooperatives-verify-postgis">
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0">
-                SELECT COUNT(*) FROM pg_extension WHERE extname = 'postgis'
-            </sqlCheck>
-        </preConditions>
-        <comment>Ensure PostGIS extension is available</comment>
-        <sql>CREATE EXTENSION IF NOT EXISTS postgis</sql>
-    </changeSet>
-
     <!-- Add point geometry column -->
     <changeSet author="dpis" id="03-cooperatives-add-point-column">
         <preConditions onFail="MARK_RAN">
@@ -115,15 +104,15 @@
         <preConditions onFail="MARK_RAN">
             <and>
                 <tableExists tableName="cooperatives"/>
-                <columnExists tableName="cooperatives" columnName="point"/>
-                <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM pg_indexes 
-                    WHERE indexname = 'idx_cooperatives_point'
-                </sqlCheck>
+                <not>
+                    <indexExists tableName="cooperatives" indexName="idx_cooperatives_point"/>
+                </not>
             </and>
         </preConditions>
         <comment>Add spatial index for cooperatives point</comment>
-        <sql>CREATE INDEX idx_cooperatives_point ON cooperatives USING GIST(point)</sql>
+        <createIndex tableName="cooperatives" indexName="idx_cooperatives_point">
+            <column name="point"/>
+        </createIndex>
     </changeSet>
 
     <!-- Add spatial index for polygon -->
@@ -131,17 +120,17 @@
         <preConditions onFail="MARK_RAN">
             <and>
                 <tableExists tableName="cooperatives"/>
-                <columnExists tableName="cooperatives" columnName="polygon"/>
-                <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM pg_indexes 
-                    WHERE indexname = 'idx_cooperatives_polygon'
-                </sqlCheck>
+                <not>
+                    <indexExists tableName="cooperatives" indexName="idx_cooperatives_polygon"/>
+                </not>
             </and>
         </preConditions>
         <comment>Add spatial index for cooperatives polygon</comment>
-        <sql>CREATE INDEX idx_cooperatives_polygon ON cooperatives USING GIST(polygon)</sql>
+        <createIndex tableName="cooperatives" indexName="idx_cooperatives_polygon">
+            <column name="polygon"/>
+        </createIndex>
     </changeSet>
-    
+
     <!-- Add other necessary indexes -->
     <changeSet author="dpis" id="03-cooperatives-additional-indexes">
         <preConditions onFail="MARK_RAN">

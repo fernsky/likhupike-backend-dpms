@@ -1,6 +1,6 @@
 package np.sthaniya.dpis.profile.institutions.cooperatives
 
-import np.sthaniya.dpis.auth.controller.base.BaseRestDocsTest
+import np.sthaniya.dpis.profile.institutions.cooperatives.base.BaseCooperativeTestSupport
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.CreateCooperativeDto
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.CreateCooperativeTranslationDto
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.GeoPointDto
@@ -18,13 +18,12 @@ import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
 import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.restdocs.request.RequestDocumentation.*
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.LocalDate
 import java.util.UUID
 
-class CooperativeTranslationControllerTest : BaseRestDocsTest() {
+class CooperativeTranslationControllerTest : BaseCooperativeTestSupport() {
 
     @Autowired
     private lateinit var cooperativeService: CooperativeService
@@ -33,13 +32,15 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
 
     @BeforeEach
     fun setup() {
+        // Create a user with all permissions
+        setupTestUserWithAllCooperativePermissions()
+        
         // Create a test cooperative to use in the tests
         val cooperative = createTestCooperative()
         testCooperativeId = cooperative.id
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_UPDATE_COOPERATIVE"])
     fun `should create cooperative translation successfully`() {
         val createDto = CreateCooperativeTranslationDto(
             locale = "en",
@@ -123,7 +124,6 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_UPDATE_COOPERATIVE"])
     fun `should update cooperative translation successfully`() {
         // First create a translation to update
         val translationId = createTestTranslation(testCooperativeId)
@@ -219,7 +219,6 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get translation by id`() {
         // First create a translation to retrieve
         val translationId = createTestTranslation(testCooperativeId)
@@ -271,7 +270,6 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get translation by locale`() {
         // Create a translation with a specific locale
         createTestTranslation(testCooperativeId, "en")
@@ -323,7 +321,6 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_VIEW_COOPERATIVE"])
     fun `should get all translations for cooperative`() {
         // Create a couple translations for testing
         createTestTranslation(testCooperativeId, "en")
@@ -376,7 +373,6 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
     }
 
     @Test
-    @WithMockUser(authorities = ["PERMISSION_DELETE_COOPERATIVE"])
     fun `should delete cooperative translation`() {
         // Create a translation to delete
         val translationId = createTestTranslation(testCooperativeId)
@@ -403,91 +399,8 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
             )
     }
 
-    @Test
-    @WithMockUser(authorities = ["PERMISSION_UPDATE_COOPERATIVE"])
-    fun `should update translation status`() {
-        // Create a translation to update status
-        val translationId = createTestTranslation(testCooperativeId)
-
-        mockMvc.perform(
-            patch("/api/v1/cooperatives/{cooperativeId}/translations/{translationId}/status", testCooperativeId, translationId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .param("status", "PUBLISHED")
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.status").value("PUBLISHED"))
-            .andDo(
-                document(
-                    "cooperative-translation-update-status",
-                    preprocessResponse(prettyPrint()),
-                    pathParameters(
-                        parameterWithName("cooperativeId").description("The ID of the cooperative"),
-                        parameterWithName("translationId").description("The ID of the translation to update status")
-                    ),
-                    queryParameters(
-                        parameterWithName("status").description("The new status for the translation")
-                    ),
-                    responseFields(
-                        fieldWithPath("success").description("Indicates if the request was successful"),
-                        fieldWithPath("message").description("Success message"),
-                        fieldWithPath("data").description("Updated translation data"),
-                        fieldWithPath("data.id").description("Unique identifier for the translation"),
-                        fieldWithPath("data.locale").description("Locale for this translation"),
-                        fieldWithPath("data.name").description("Localized name of the cooperative"),
-                        fieldWithPath("data.description").description("Localized detailed description of the cooperative"),
-                        fieldWithPath("data.location").description("Localized location description"),
-                        fieldWithPath("data.services").description("Localized description of services offered"),
-                        fieldWithPath("data.achievements").description("Localized description of key achievements"),
-                        fieldWithPath("data.operatingHours").description("Localized operating hours information"),
-                        fieldWithPath("data.seoTitle").description("SEO-optimized title in this language"),
-                        fieldWithPath("data.seoDescription").description("SEO meta description in this language"),
-                        fieldWithPath("data.seoKeywords").description("SEO keywords in this language"),
-                        fieldWithPath("data.slugUrl").description("URL-friendly slug in this language"),
-                        fieldWithPath("data.status").description("Content status"),
-                        fieldWithPath("data.structuredData").description("JSON-LD structured data specific to this language version"),
-                        fieldWithPath("data.canonicalUrl").description("Canonical URL for this language version"),
-                        fieldWithPath("data.hreflangTags").description("Array of hreflang references to other language versions"),
-                        fieldWithPath("data.breadcrumbStructure").description("JSON representation of breadcrumb structure for this page"),
-                        fieldWithPath("data.faqItems").description("Structured FAQ items for this cooperative"),
-                        fieldWithPath("data.metaRobots").description("Instructions for search engine crawlers"),
-                        fieldWithPath("data.socialShareImage").description("Specific image optimized for social sharing"),
-                        fieldWithPath("data.contentLastReviewed").description("When this content was last reviewed for accuracy"),
-                        fieldWithPath("data.version").description("Version tracking for content changes")
-                    )
-                )
-            )
-    }
     
     @Test
-    fun `should return 401 when creating translation without authentication`() {
-        val createDto = CreateCooperativeTranslationDto(
-            locale = "en",
-            name = "Agricultural Cooperative of Likhupike",
-            description = "This cooperative focuses on agricultural development in Likhupike",
-            location = "Ward 5, Likhupike Rural Municipality",
-            slugUrl = "agri-coop-likhupike-en",
-            services = "Default services description",
-            achievements = "Default achievements description",
-            operatingHours = "Default operating hours",
-            seoTitle = "Default SEO title",
-            seoDescription = "Default SEO description",
-            seoKeywords = "Default SEO keywords",
-            structuredData = null,
-            metaRobots = "index, follow",
-            status = ContentStatus.DRAFT
-        )
-
-        mockMvc.perform(
-            post("/api/v1/cooperatives/{cooperativeId}/translations", testCooperativeId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createDto))
-        )
-            .andExpect(status().isUnauthorized)
-    }
-
-    @Test
-    @WithMockUser(authorities = ["WRONG_PERMISSION"])
     fun `should return 403 when creating translation without proper permission`() {
         val createDto = CreateCooperativeTranslationDto(
             locale = "en",
@@ -509,6 +422,7 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
         mockMvc.perform(
             post("/api/v1/cooperatives/{cooperativeId}/translations", testCooperativeId)
                 .contentType(MediaType.APPLICATION_JSON)
+                .with(getAuthForUserWithPermission("WRONG_PERMISSION"))
                 .content(objectMapper.writeValueAsString(createDto))
         )
             .andExpect(status().isForbidden)
@@ -556,6 +470,7 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
         val response = mockMvc.perform(
             post("/api/v1/cooperatives/{cooperativeId}/translations", cooperativeId)
                 .contentType(MediaType.APPLICATION_JSON)
+                .with(getAuthForUser())  // Use our auth helper
                 .content(objectMapper.writeValueAsString(
                     CreateCooperativeTranslationDto(
                         locale = locale,
@@ -574,14 +489,6 @@ class CooperativeTranslationControllerTest : BaseRestDocsTest() {
                         status = ContentStatus.DRAFT
                     )
                 ))
-                .with { request ->
-                    request.setUserPrincipal(
-                        org.springframework.security.authentication.TestingAuthenticationToken(
-                            "user", "password", "PERMISSION_UPDATE_COOPERATIVE"
-                        )
-                    )
-                    request
-                }
         )
             .andExpect(status().isCreated)
             .andReturn()

@@ -1,0 +1,129 @@
+= Cooperative Translations
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[cooperative-translations]]
+== Cooperative Translation Operations
+
+These endpoints allow for managing multilingual translations for cooperatives.
+
+[[cooperative-translation-create]]
+=== Create Translation
+
+This endpoint adds a new translation for an existing cooperative.
+
+.HTTP Request
+include::{snippets}/cooperative-translation-create/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-translation-create/path-parameters.adoc[]
+
+.Request Fields
+include::{snippets}/cooperative-translation-create/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-translation-create/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-translation-create/response-fields.adoc[]
+
+[[cooperative-translation-update]]
+=== Update Translation
+
+This endpoint updates an existing translation for a cooperative.
+
+.HTTP Request
+include::{snippets}/cooperative-translation-update/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-translation-update/path-parameters.adoc[]
+
+.Request Fields
+include::{snippets}/cooperative-translation-update/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-translation-update/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-translation-update/response-fields.adoc[]
+
+[[cooperative-translation-get-by-id]]
+=== Get Translation by ID
+
+This endpoint retrieves a specific translation by its ID.
+
+.HTTP Request
+include::{snippets}/cooperative-translation-get-by-id/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-translation-get-by-id/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-translation-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-translation-get-by-id/response-fields.adoc[]
+
+[[cooperative-translation-get-by-locale]]
+=== Get Translation by Locale
+
+This endpoint retrieves a cooperative's translation by locale.
+
+.HTTP Request
+include::{snippets}/cooperative-translation-get-by-locale/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-translation-get-by-locale/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-translation-get-by-locale/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-translation-get-by-locale/response-fields.adoc[]
+
+[[cooperative-translation-get-all]]
+=== Get All Translations
+
+This endpoint retrieves all translations for a cooperative.
+
+.HTTP Request
+include::{snippets}/cooperative-translation-get-all/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-translation-get-all/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-translation-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-translation-get-all/response-fields.adoc[]
+
+[[cooperative-translation-delete]]
+=== Delete Translation
+
+This endpoint deletes a translation.
+
+.HTTP Request
+include::{snippets}/cooperative-translation-delete/http-request.adoc[]
+
+.Path Parameters
+include::{snippets}/cooperative-translation-delete/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-translation-delete/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-translation-delete/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Each cooperative can have multiple translations, but only one per locale
+* The default locale translation must always exist and cannot be deleted
+* Translations support full SEO metadata (title, description, keywords)
+* Content status (DRAFT, PUBLISHED, ARCHIVED) tracks the publishing workflow
+* Translations include structured data for SEO and social sharing
+* Each translation can have its own slug URL for language-specific paths

@@ -1,0 +1,50 @@
+= Cooperatives Management
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[cooperatives-overview]]
+== Overview
+
+The Cooperatives API provides endpoints for managing cooperative institutions within the municipality.
+Cooperatives are community-based organizations that serve various purposes such as agriculture, dairy,
+savings and credit, and other economic activities.
+
+[[cooperatives-flow]]
+== Cooperatives Management Flow
+
+The standard cooperatives management flow is as follows:
+
+1. Create cooperative with basic information and a default translation
+2. Add additional translations for other supported languages
+3. Upload and manage cooperative media (images, documents)
+4. Update cooperative status as needed
+5. Search and retrieve cooperatives based on various criteria
+
+include::cooperatives-main.adoc[leveloffset=+1]
+include::cooperatives-translations.adoc[leveloffset=+1]
+include::cooperatives-media.adoc[leveloffset=+1]
+include::cooperatives-search.adoc[leveloffset=+1]
+include::cooperatives-type-translations.adoc[leveloffset=+1]
+
+[[cooperatives-error-codes]]
+== Error Codes
+
+[cols="1,1,3"]
+|===
+|Code |HTTP Status |Description
+
+|COOP_001 |404 |Cooperative not found
+|COOP_002 |404 |Cooperative translation not found
+|COOP_003 |404 |Cooperative media not found
+|COOP_004 |409 |Cooperative with same code already exists
+|COOP_005 |400 |Invalid cooperative data
+|COOP_006 |400 |Invalid media file format
+|COOP_007 |400 |Duplicate translation locale
+|COOP_008 |403 |Insufficient permissions
+|COOP_009 |413 |Media file too large
+|COOP_010 |400 |Invalid geo-coordinates
+|===

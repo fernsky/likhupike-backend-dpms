@@ -7,6 +7,7 @@ import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.UpdateCoop
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.response.CooperativeResponse
 import np.sthaniya.dpis.profile.institutions.cooperatives.model.CooperativeStatus
 import np.sthaniya.dpis.profile.institutions.cooperatives.service.CooperativeService
+import np.sthaniya.dpis.common.service.I18nMessageService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -21,7 +22,8 @@ import java.util.UUID
  */
 @RestController
 class CooperativeControllerImpl(
-    private val cooperativeService: CooperativeService
+    private val cooperativeService: CooperativeService,
+    private val i18nMessageService: I18nMessageService
 ) : CooperativeController {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -35,7 +37,10 @@ class CooperativeControllerImpl(
         
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(ApiResponse.success(createdCooperative, "Cooperative created successfully"))
+            .body(ApiResponse.success(
+                data = createdCooperative, 
+                message = i18nMessageService.getMessage("cooperative.create.success")
+            ))
     }
 
     override fun updateCooperative(
@@ -46,7 +51,10 @@ class CooperativeControllerImpl(
         
         val updatedCooperative = cooperativeService.updateCooperative(id, updateDto)
         
-        return ResponseEntity.ok(ApiResponse.success(updatedCooperative, "Cooperative updated successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = updatedCooperative, 
+            message = i18nMessageService.getMessage("cooperative.update.success")
+        ))
     }
 
     override fun getCooperativeById(id: UUID): ResponseEntity<ApiResponse<CooperativeResponse>> {
@@ -54,7 +62,10 @@ class CooperativeControllerImpl(
         
         val cooperative = cooperativeService.getCooperativeById(id)
         
-        return ResponseEntity.ok(ApiResponse.success(cooperative))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperative,
+            message = i18nMessageService.getMessage("cooperative.get.success")
+        ))
     }
 
     override fun getCooperativeByCode(code: String): ResponseEntity<ApiResponse<CooperativeResponse>> {
@@ -62,7 +73,10 @@ class CooperativeControllerImpl(
         
         val cooperative = cooperativeService.getCooperativeByCode(code)
         
-        return ResponseEntity.ok(ApiResponse.success(cooperative))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperative,
+            message = i18nMessageService.getMessage("cooperative.get.success")
+        ))
     }
 
     override fun deleteCooperative(id: UUID): ResponseEntity<ApiResponse<Void>> {
@@ -70,7 +84,10 @@ class CooperativeControllerImpl(
         
         cooperativeService.deleteCooperative(id)
         
-        return ResponseEntity.ok(ApiResponse.success(null, "Cooperative deleted successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = null, 
+            message = i18nMessageService.getMessage("cooperative.delete.success")
+        ))
     }
 
     override fun getAllCooperatives(pageable: Pageable): ResponseEntity<ApiResponse<Page<CooperativeResponse>>> {
@@ -78,7 +95,10 @@ class CooperativeControllerImpl(
         
         val cooperatives = cooperativeService.getAllCooperatives(pageable)
         
-        return ResponseEntity.ok(ApiResponse.success(cooperatives))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = cooperatives,
+            message = i18nMessageService.getMessage("cooperative.list.success")
+        ))
     }
 
     override fun changeCooperativeStatus(
@@ -90,8 +110,8 @@ class CooperativeControllerImpl(
         val updatedCooperative = cooperativeService.changeCooperativeStatus(id, status)
         
         return ResponseEntity.ok(ApiResponse.success(
-            updatedCooperative, 
-            "Cooperative status updated to $status"
+            data = updatedCooperative, 
+            message = i18nMessageService.getMessage("cooperative.status.update.success", arrayOf(status))
         ))
     }
 }

@@ -1,6 +1,7 @@
 package np.sthaniya.dpis.profile.institutions.cooperatives.api.controller.impl
 
 import np.sthaniya.dpis.common.dto.ApiResponse
+import np.sthaniya.dpis.common.service.I18nMessageService
 import np.sthaniya.dpis.profile.institutions.cooperatives.api.controller.CooperativeMediaController
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.CreateCooperativeMediaDto
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.request.UpdateCooperativeMediaDto
@@ -23,7 +24,8 @@ import java.util.UUID
  */
 @RestController
 class CooperativeMediaControllerImpl(
-    private val cooperativeMediaService: CooperativeMediaService
+    private val cooperativeMediaService: CooperativeMediaService,
+    private val i18nMessageService: I18nMessageService
 ) : CooperativeMediaController {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -39,12 +41,15 @@ class CooperativeMediaControllerImpl(
         val mediaDto = createDto.copy()
         
         val response = cooperativeMediaService.uploadMedia(
-            cooperativeId = cooperativeId,  // Add the missing cooperativeId parameter
+            cooperativeId = cooperativeId,
             file = file,
             createDto = mediaDto
         )
         
-        return ResponseEntity.ok(ApiResponse.success(response, "Media uploaded successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = response, 
+            message = i18nMessageService.getMessage("cooperative.media.upload.success")
+        ))
     }
 
     override fun updateMediaMetadata(
@@ -56,7 +61,10 @@ class CooperativeMediaControllerImpl(
         
         val updatedMedia = cooperativeMediaService.updateMediaMetadata(mediaId, updateDto)
         
-        return ResponseEntity.ok(ApiResponse.success(updatedMedia, "Media metadata updated successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = updatedMedia,
+            message = i18nMessageService.getMessage("cooperative.media.update.success")
+        ))
     }
 
     override fun getMediaById(
@@ -67,7 +75,10 @@ class CooperativeMediaControllerImpl(
         
         val media = cooperativeMediaService.getMediaById(mediaId)
         
-        return ResponseEntity.ok(ApiResponse.success(media))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = media,
+            message = i18nMessageService.getMessage("cooperative.media.get.success")
+        ))
     }
 
     override fun getAllMediaForCooperative(
@@ -78,7 +89,10 @@ class CooperativeMediaControllerImpl(
         
         val mediaPage = cooperativeMediaService.getAllMediaForCooperative(cooperativeId, pageable)
         
-        return ResponseEntity.ok(ApiResponse.success(mediaPage))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = mediaPage,
+            message = i18nMessageService.getMessage("cooperative.media.list.success")
+        ))
     }
 
     override fun getMediaByType(
@@ -90,7 +104,10 @@ class CooperativeMediaControllerImpl(
         
         val mediaPage = cooperativeMediaService.getMediaByType(cooperativeId, type, pageable)
         
-        return ResponseEntity.ok(ApiResponse.success(mediaPage))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = mediaPage,
+            message = i18nMessageService.getMessage("cooperative.media.list.by.type.success", arrayOf(type))
+        ))
     }
 
     override fun deleteMedia(
@@ -101,7 +118,10 @@ class CooperativeMediaControllerImpl(
         
         cooperativeMediaService.deleteMedia(mediaId)
         
-        return ResponseEntity.ok(ApiResponse.success(null, "Media deleted successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = null,
+            message = i18nMessageService.getMessage("cooperative.media.delete.success")
+        ))
     }
 
     override fun setMediaAsPrimary(
@@ -112,7 +132,10 @@ class CooperativeMediaControllerImpl(
         
         val media = cooperativeMediaService.setMediaAsPrimary(mediaId)
         
-        return ResponseEntity.ok(ApiResponse.success(media, "Media set as primary successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = media,
+            message = i18nMessageService.getMessage("cooperative.media.set.primary.success")
+        ))
     }
 
     override fun updateMediaVisibility(
@@ -124,6 +147,9 @@ class CooperativeMediaControllerImpl(
         
         val media = cooperativeMediaService.updateMediaVisibility(mediaId, status)
         
-        return ResponseEntity.ok(ApiResponse.success(media, "Media visibility updated successfully"))
+        return ResponseEntity.ok(ApiResponse.success(
+            data = media,
+            message = i18nMessageService.getMessage("cooperative.media.visibility.update.success", arrayOf(status))
+        ))
     }
 }
