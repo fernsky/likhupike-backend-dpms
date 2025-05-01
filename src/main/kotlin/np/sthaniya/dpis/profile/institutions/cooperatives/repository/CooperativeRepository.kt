@@ -1,22 +1,24 @@
 package np.sthaniya.dpis.profile.institutions.cooperatives.repository
 
+import java.util.Optional
+import java.util.UUID
 import np.sthaniya.dpis.profile.institutions.cooperatives.model.Cooperative
 import np.sthaniya.dpis.profile.institutions.cooperatives.model.CooperativeStatus
 import np.sthaniya.dpis.profile.institutions.cooperatives.model.CooperativeType
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import java.util.Optional
-import java.util.UUID
 
-/**
- * Repository interface for managing [Cooperative] entities.
- */
+/** Repository interface for managing [Cooperative] entities. */
 @Repository
-interface CooperativeRepository : JpaRepository<Cooperative, UUID> {
+interface CooperativeRepository :
+        JpaRepository<Cooperative, UUID>,
+        JpaSpecificationExecutor<Cooperative>,
+        CooperativeRepositoryCustom {
 
     /**
      * Find a cooperative by its unique code.
@@ -60,11 +62,13 @@ interface CooperativeRepository : JpaRepository<Cooperative, UUID> {
      * @param pageable Pagination information
      * @return A page of cooperatives matching the name query
      */
-    @Query("""
-        SELECT DISTINCT c FROM Cooperative c 
-        JOIN c.translations t 
+    @Query(
+            """
+        SELECT DISTINCT c FROM Cooperative c
+        JOIN c.translations t
         WHERE LOWER(t.name) LIKE LOWER(CONCAT('%', :nameQuery, '%'))
-    """)
+    """
+    )
     fun searchByName(@Param("nameQuery") nameQuery: String, pageable: Pageable): Page<Cooperative>
 
     /**
@@ -75,17 +79,19 @@ interface CooperativeRepository : JpaRepository<Cooperative, UUID> {
      * @param pageable Pagination information
      * @return A page of cooperatives matching the type and name query
      */
-    @Query("""
-        SELECT DISTINCT c FROM Cooperative c 
-        JOIN c.translations t 
+    @Query(
+            """
+        SELECT DISTINCT c FROM Cooperative c
+        JOIN c.translations t
         WHERE c.type = :type AND LOWER(t.name) LIKE LOWER(CONCAT('%', :nameQuery, '%'))
-    """)
+    """
+    )
     fun searchByTypeAndName(
-        @Param("type") type: CooperativeType,
-        @Param("nameQuery") nameQuery: String,
-        pageable: Pageable
+            @Param("type") type: CooperativeType,
+            @Param("nameQuery") nameQuery: String,
+            pageable: Pageable
     ): Page<Cooperative>
-    
+
     /**
      * Check if a cooperative with the given code already exists.
      *
@@ -93,7 +99,7 @@ interface CooperativeRepository : JpaRepository<Cooperative, UUID> {
      * @return true if a cooperative with this code exists
      */
     fun existsByCode(code: String): Boolean
-    
+
     /**
      * Find cooperatives within a specified distance of a geographic point.
      *
@@ -103,58 +109,62 @@ interface CooperativeRepository : JpaRepository<Cooperative, UUID> {
      * @param pageable Pagination information
      * @return A page of cooperatives within the specified distance
      */
-    @Query(value = """
+    @Query(
+            value =
+                    """
         SELECT c.* FROM cooperatives c
         WHERE ST_DWithin(
             c.point,
             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
             :distanceInMeters
         )
-    """, nativeQuery = true)
-    fun findWithinDistance(
-        @Param("longitude") longitude: Double, 
-        @Param("latitude") latitude: Double,
-        @Param("distanceInMeters") distanceInMeters: Double,
-        pageable: Pageable
+    """,
+            nativeQuery = true
+    )
+    override fun findWithinDistance(
+            @Param("longitude") longitude: Double,
+            @Param("latitude") latitude: Double,
+            @Param("distanceInMeters") distanceInMeters: Double,
+            pageable: Pageable
     ): Page<Cooperative>
-    
+
     /**
      * Get the count of cooperatives by type.
      *
      * @return A list of counts by cooperative type
      */
-    @Query("""
-        SELECT c.type as type, COUNT(c) as count 
-        FROM Cooperative c 
+    @Query(
+            """
+        SELECT c.type as type, COUNT(c) as count
+        FROM Cooperative c
         GROUP BY c.type
-    """)
+    """
+    )
     fun countByType(): List<CooperativeTypeCount>
-    
+
     /**
      * Get the count of cooperatives by ward.
      *
      * @return A list of counts by ward
      */
-    @Query("""
-        SELECT c.ward as ward, COUNT(c) as count 
-        FROM Cooperative c 
+    @Query(
+            """
+        SELECT c.ward as ward, COUNT(c) as count
+        FROM Cooperative c
         GROUP BY c.ward
         ORDER BY c.ward
-    """)
+    """
+    )
     fun countByWard(): List<CooperativeWardCount>
 }
 
-/**
- * Interface for cooperative count by type results.
- */
+/** Interface for cooperative count by type results. */
 interface CooperativeTypeCount {
     val type: CooperativeType
     val count: Long
 }
 
-/**
- * Interface for cooperative count by ward results.
- */
+/** Interface for cooperative count by ward results. */
 interface CooperativeWardCount {
     val ward: Int
     val count: Long
