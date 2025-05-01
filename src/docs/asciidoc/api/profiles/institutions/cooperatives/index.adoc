@@ -28,6 +28,7 @@ include::cooperatives-main.adoc[leveloffset=+1]
 include::cooperatives-translations.adoc[leveloffset=+1]
 include::cooperatives-media.adoc[leveloffset=+1]
 include::cooperatives-search.adoc[leveloffset=+1]
+include::cooperatives-statistics.adoc[leveloffset=+1]
 include::cooperatives-type-translations.adoc[leveloffset=+1]
 
 [[cooperatives-error-codes]]
