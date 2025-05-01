@@ -1,13 +1,10 @@
-
 package np.sthaniya.dpis.profile.institutions.cooperatives.service
 
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.response.CooperativeProjection
 import np.sthaniya.dpis.profile.institutions.cooperatives.dto.search.CooperativeSearchCriteria
 import org.springframework.data.domain.Page
 
-/**
- * Service for searching cooperatives with advanced filtering.
- */
+/** Service for searching cooperatives with advanced filtering. */
 interface CooperativeSearchService {
 
     /**

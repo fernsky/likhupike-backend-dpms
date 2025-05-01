@@ -16,6 +16,7 @@ import org.springframework.http.MediaType
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
+import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.*
@@ -51,921 +52,132 @@ class CooperativeSearchControllerTest : BaseCooperativeTestSupport() {
     }
 
     @Test
-    fun `should search cooperatives by name`() {
+    fun `should search cooperatives with advanced criteria using GET`() {
         mockMvc.perform(
-                        get("/api/v1/cooperatives/search/by-name")
-                                .param("nameQuery", "Dairy")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .param("page", "0")
+                        get("/api/v1/cooperatives/search")
+                                .param("type", "DAIRY")
+                                .param("status", "ACTIVE")
+                                .param("ward", "5")
+                                .param("page", "1")
                                 .param("size", "10")
+                                .param("sortBy", "createdAt")
+                                .param("sortDirection", "DESC")
+                                .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content.length()").value(2))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].type").value("DAIRY"))
+                .andExpect(jsonPath("$.data[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data[0].ward").value(5))
+                .andExpect(jsonPath("$.message").exists())
                 .andDo(
                         document(
-                                "cooperative-search-by-name",
+                                "cooperative-advanced-search-get",
                                 preprocessResponse(prettyPrint()),
                                 queryParameters(
-                                        parameterWithName("nameQuery")
-                                                .description("Search query for cooperative name"),
-                                        parameterWithName("page")
-                                                .description("Page number (zero-based)"),
-                                        parameterWithName("size").description("Page size")
-                                ),
-                                responseFields(
-                                        fieldWithPath("success")
-                                                .description(
-                                                        "Indicates if the request was successful"
-                                                ),
-                                        fieldWithPath("message").description("Success message"),
-                                        fieldWithPath("data.content")
-                                                .description(
-                                                        "List of cooperatives matching the search"
-                                                ),
-                                        fieldWithPath("data.content[].id")
-                                                .description(
-                                                        "Unique identifier for the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].code")
-                                                .description("Code/slug for the cooperative"),
-                                        fieldWithPath("data.content[].defaultLocale")
-                                                .description(
-                                                        "Default locale for this cooperative's content"
-                                                ),
-                                        fieldWithPath("data.content[].establishedDate")
-                                                .description(
-                                                        "Date when the cooperative was established"
-                                                ),
-                                        fieldWithPath("data.content[].ward")
-                                                .description(
-                                                        "Ward where the cooperative is located"
-                                                ),
-                                        fieldWithPath("data.content[].type")
-                                                .description("Type of cooperative"),
-                                        fieldWithPath("data.content[].status")
-                                                .description("Status of the cooperative"),
-                                        fieldWithPath("data.content[].registrationNumber")
-                                                .description(
-                                                        "Registration number of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].point")
-                                                .description("Geographic point location"),
-                                        fieldWithPath("data.content[].point.longitude")
-                                                .description("Longitude coordinate"),
-                                        fieldWithPath("data.content[].point.latitude")
-                                                .description("Latitude coordinate"),
-                                        fieldWithPath("data.content[].contactEmail")
-                                                .description("Contact email for the cooperative"),
-                                        fieldWithPath("data.content[].contactPhone")
-                                                .description("Contact phone number"),
-                                        fieldWithPath("data.content[].websiteUrl")
-                                                .description("Website URL of the cooperative"),
-                                        fieldWithPath("data.content[].createdAt")
-                                                .description("When this record was created"),
-                                        fieldWithPath("data.content[].updatedAt")
-                                                .description("When this record was last updated"),
-                                        fieldWithPath("data.content[].translations")
-                                                .description("Translations for this cooperative"),
-                                        fieldWithPath("data.content[].translations[].id")
-                                                .description(
-                                                        "Unique identifier for the translation"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].locale")
-                                                .description("Locale for this translation"),
-                                        fieldWithPath("data.content[].translations[].name")
-                                                .description("Localized name of the cooperative"),
-                                        fieldWithPath("data.content[].translations[].description")
-                                                .description(
-                                                        "Localized detailed description of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].location")
-                                                .description("Localized location description"),
-                                        fieldWithPath("data.content[].translations[].services")
-                                                .description(
-                                                        "Localized description of services offered"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].achievements")
-                                                .description(
-                                                        "Localized description of key achievements"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].operatingHours"
-                                                )
-                                                .description(
-                                                        "Localized operating hours information"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoTitle")
-                                                .description(
-                                                        "SEO-optimized title in this language"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].seoDescription"
-                                                )
-                                                .description(
-                                                        "SEO meta description in this language"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoKeywords")
-                                                .description("SEO keywords in this language"),
-                                        fieldWithPath("data.content[].translations[].slugUrl")
-                                                .description("URL-friendly slug in this language"),
-                                        fieldWithPath("data.content[].translations[].status")
-                                                .description("Content status"),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].structuredData"
-                                                )
-                                                .description(
-                                                        "JSON-LD structured data specific to this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].canonicalUrl")
-                                                .description(
-                                                        "Canonical URL for this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].hreflangTags")
-                                                .description(
-                                                        "Array of hreflang references to other language versions"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].breadcrumbStructure"
-                                                )
-                                                .description(
-                                                        "JSON representation of breadcrumb structure for this page"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].faqItems")
-                                                .description(
-                                                        "Structured FAQ items for this cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].metaRobots")
-                                                .description(
-                                                        "Instructions for search engine crawlers"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].socialShareImage"
-                                                )
-                                                .description(
-                                                        "Specific image optimized for social sharing"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].contentLastReviewed"
-                                                )
-                                                .description(
-                                                        "When this content was last reviewed for accuracy"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].version")
-                                                .description(
-                                                        "Version tracking for content changes"
-                                                ),
-                                        fieldWithPath("data.content[].primaryMedia")
-                                                .description(
-                                                        "Primary media items for this cooperative (one per type)"
-                                                ),
-                                        fieldWithPath("data.pageable")
-                                                .description("Pagination information"),
-                                        fieldWithPath("data.pageable.sort")
-                                                .description("Sort information"),
-                                        fieldWithPath("data.pageable.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.pageable.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.pageable.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.pageable.offset")
-                                                .description("Offset of the current page"),
-                                        fieldWithPath("data.pageable.pageNumber")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.pageable.pageSize")
-                                                .description("Size of page"),
-                                        fieldWithPath("data.pageable.paged")
-                                                .description("Whether pagination is enabled"),
-                                        fieldWithPath("data.pageable.unpaged")
-                                                .description("Whether pagination is disabled"),
-                                        fieldWithPath("data.last")
-                                                .description("Whether this is the last page"),
-                                        fieldWithPath("data.totalElements")
-                                                .description("Total number of elements"),
-                                        fieldWithPath("data.totalPages")
-                                                .description("Total number of pages"),
-                                        fieldWithPath("data.size").description("Size of page"),
-                                        fieldWithPath("data.number")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.sort").description("Sort information"),
-                                        fieldWithPath("data.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.first")
-                                                .description("Whether this is the first page"),
-                                        fieldWithPath("data.numberOfElements")
-                                                .description(
-                                                        "Number of elements in the current page"
-                                                ),
-                                        fieldWithPath("data.empty")
-                                                .description("Whether the page is empty")
-                                )
-                        )
-                )
-    }
-
-    @Test
-    fun `should get cooperatives by type`() {
-        mockMvc.perform(
-                        get("/api/v1/cooperatives/search/by-type/{type}", "DAIRY")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .param("page", "0")
-                                .param("size", "10")
-                )
-                .andExpect(status().isOk)
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content.length()").value(2))
-                .andDo(
-                        document(
-                                "cooperative-get-by-type",
-                                preprocessResponse(prettyPrint()),
-                                pathParameters(
                                         parameterWithName("type")
-                                                .description("Type of cooperative to filter by")
-                                ),
-                                queryParameters(
-                                        parameterWithName("page")
-                                                .description("Page number (zero-based)"),
-                                        parameterWithName("size").description("Page size")
-                                ),
-                                responseFields(
-                                        fieldWithPath("success")
-                                                .description(
-                                                        "Indicates if the request was successful"
-                                                ),
-                                        fieldWithPath("message").description("Success message"),
-                                        fieldWithPath("data.content")
-                                                .description(
-                                                        "List of cooperatives of the specified type"
-                                                ),
-                                        fieldWithPath("data.content[].id")
-                                                .description(
-                                                        "Unique identifier for the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].code")
-                                                .description("Code/slug for the cooperative"),
-                                        fieldWithPath("data.content[].defaultLocale")
-                                                .description(
-                                                        "Default locale for this cooperative's content"
-                                                ),
-                                        fieldWithPath("data.content[].establishedDate")
-                                                .description(
-                                                        "Date when the cooperative was established"
-                                                ),
-                                        fieldWithPath("data.content[].ward")
-                                                .description(
-                                                        "Ward where the cooperative is located"
-                                                ),
-                                        fieldWithPath("data.content[].type")
-                                                .description("Type of cooperative"),
-                                        fieldWithPath("data.content[].status")
-                                                .description("Status of the cooperative"),
-                                        fieldWithPath("data.content[].registrationNumber")
-                                                .description(
-                                                        "Registration number of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].point")
-                                                .description("Geographic point location"),
-                                        fieldWithPath("data.content[].point.longitude")
-                                                .description("Longitude coordinate"),
-                                        fieldWithPath("data.content[].point.latitude")
-                                                .description("Latitude coordinate"),
-                                        fieldWithPath("data.content[].contactEmail")
-                                                .description("Contact email for the cooperative"),
-                                        fieldWithPath("data.content[].contactPhone")
-                                                .description("Contact phone number"),
-                                        fieldWithPath("data.content[].websiteUrl")
-                                                .description("Website URL of the cooperative"),
-                                        fieldWithPath("data.content[].createdAt")
-                                                .description("When this record was created"),
-                                        fieldWithPath("data.content[].updatedAt")
-                                                .description("When this record was last updated"),
-                                        fieldWithPath("data.content[].translations")
-                                                .description("Translations for this cooperative"),
-                                        fieldWithPath("data.content[].translations[].id")
-                                                .description(
-                                                        "Unique identifier for the translation"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].locale")
-                                                .description("Locale for this translation"),
-                                        fieldWithPath("data.content[].translations[].name")
-                                                .description("Localized name of the cooperative"),
-                                        fieldWithPath("data.content[].translations[].description")
-                                                .description(
-                                                        "Localized detailed description of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].location")
-                                                .description("Localized location description"),
-                                        fieldWithPath("data.content[].translations[].services")
-                                                .description(
-                                                        "Localized description of services offered"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].achievements")
-                                                .description(
-                                                        "Localized description of key achievements"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].operatingHours"
-                                                )
-                                                .description(
-                                                        "Localized operating hours information"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoTitle")
-                                                .description(
-                                                        "SEO-optimized title in this language"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].seoDescription"
-                                                )
-                                                .description(
-                                                        "SEO meta description in this language"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoKeywords")
-                                                .description("SEO keywords in this language"),
-                                        fieldWithPath("data.content[].translations[].slugUrl")
-                                                .description("URL-friendly slug in this language"),
-                                        fieldWithPath("data.content[].translations[].status")
-                                                .description("Content status"),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].structuredData"
-                                                )
-                                                .description(
-                                                        "JSON-LD structured data specific to this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].canonicalUrl")
-                                                .description(
-                                                        "Canonical URL for this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].hreflangTags")
-                                                .description(
-                                                        "Array of hreflang references to other language versions"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].breadcrumbStructure"
-                                                )
-                                                .description(
-                                                        "JSON representation of breadcrumb structure for this page"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].faqItems")
-                                                .description(
-                                                        "Structured FAQ items for this cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].metaRobots")
-                                                .description(
-                                                        "Instructions for search engine crawlers"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].socialShareImage"
-                                                )
-                                                .description(
-                                                        "Specific image optimized for social sharing"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].contentLastReviewed"
-                                                )
-                                                .description(
-                                                        "When this content was last reviewed for accuracy"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].version")
-                                                .description(
-                                                        "Version tracking for content changes"
-                                                ),
-                                        fieldWithPath("data.content[].primaryMedia")
-                                                .description(
-                                                        "Primary media items for this cooperative (one per type)"
-                                                ),
-                                        fieldWithPath("data.pageable")
-                                                .description("Pagination information"),
-                                        fieldWithPath("data.pageable.sort")
-                                                .description("Sort information"),
-                                        fieldWithPath("data.pageable.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.pageable.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.pageable.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.pageable.offset")
-                                                .description("Offset of the current page"),
-                                        fieldWithPath("data.pageable.pageNumber")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.pageable.pageSize")
-                                                .description("Size of page"),
-                                        fieldWithPath("data.pageable.paged")
-                                                .description("Whether pagination is enabled"),
-                                        fieldWithPath("data.pageable.unpaged")
-                                                .description("Whether pagination is disabled"),
-                                        fieldWithPath("data.last")
-                                                .description("Whether this is the last page"),
-                                        fieldWithPath("data.totalElements")
-                                                .description("Total number of elements"),
-                                        fieldWithPath("data.totalPages")
-                                                .description("Total number of pages"),
-                                        fieldWithPath("data.size").description("Size of page"),
-                                        fieldWithPath("data.number")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.sort").description("Sort information"),
-                                        fieldWithPath("data.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.first")
-                                                .description("Whether this is the first page"),
-                                        fieldWithPath("data.numberOfElements")
-                                                .description(
-                                                        "Number of elements in the current page"
-                                                ),
-                                        fieldWithPath("data.empty")
-                                                .description("Whether the page is empty")
-                                )
-                        )
-                )
-    }
-
-    @Test
-    fun `should get cooperatives by status`() {
-        mockMvc.perform(
-                        get("/api/v1/cooperatives/search/by-status/{status}", "INACTIVE")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .param("page", "0")
-                                .param("size", "10")
-                )
-                .andExpect(status().isOk)
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content.length()").value(1))
-                .andDo(
-                        document(
-                                "cooperative-get-by-status",
-                                preprocessResponse(prettyPrint()),
-                                pathParameters(
-                                        parameterWithName("status")
-                                                .description("Status of cooperatives to filter by")
-                                ),
-                                queryParameters(
-                                        parameterWithName("page")
-                                                .description("Page number (zero-based)"),
-                                        parameterWithName("size").description("Page size")
-                                ),
-                                responseFields(
-                                        fieldWithPath("success")
-                                                .description(
-                                                        "Indicates if the request was successful"
-                                                ),
-                                        fieldWithPath("message").description("Success message"),
-                                        fieldWithPath("data.content")
-                                                .description(
-                                                        "List of cooperatives with the specified status"
-                                                ),
-                                        fieldWithPath("data.content[].id")
-                                                .description(
-                                                        "Unique identifier for the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].code")
-                                                .description("Code/slug for the cooperative"),
-                                        fieldWithPath("data.content[].defaultLocale")
-                                                .description(
-                                                        "Default locale for this cooperative's content"
-                                                ),
-                                        fieldWithPath("data.content[].establishedDate")
-                                                .description(
-                                                        "Date when the cooperative was established"
-                                                ),
-                                        fieldWithPath("data.content[].ward")
-                                                .description(
-                                                        "Ward where the cooperative is located"
-                                                ),
-                                        fieldWithPath("data.content[].type")
-                                                .description("Type of cooperative"),
-                                        fieldWithPath("data.content[].status")
-                                                .description("Status of the cooperative"),
-                                        fieldWithPath("data.content[].registrationNumber")
-                                                .description(
-                                                        "Registration number of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].point")
-                                                .description("Geographic point location"),
-                                        fieldWithPath("data.content[].point.longitude")
-                                                .description("Longitude coordinate"),
-                                        fieldWithPath("data.content[].point.latitude")
-                                                .description("Latitude coordinate"),
-                                        fieldWithPath("data.content[].contactEmail")
-                                                .description("Contact email for the cooperative"),
-                                        fieldWithPath("data.content[].contactPhone")
-                                                .description("Contact phone number"),
-                                        fieldWithPath("data.content[].websiteUrl")
-                                                .description("Website URL of the cooperative"),
-                                        fieldWithPath("data.content[].createdAt")
-                                                .description("When this record was created"),
-                                        fieldWithPath("data.content[].updatedAt")
-                                                .description("When this record was last updated"),
-                                        fieldWithPath("data.content[].translations")
-                                                .description("Translations for this cooperative"),
-                                        fieldWithPath("data.content[].translations[].id")
-                                                .description(
-                                                        "Unique identifier for the translation"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].locale")
-                                                .description("Locale for this translation"),
-                                        fieldWithPath("data.content[].translations[].name")
-                                                .description("Localized name of the cooperative"),
-                                        fieldWithPath("data.content[].translations[].description")
-                                                .description(
-                                                        "Localized detailed description of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].location")
-                                                .description("Localized location description"),
-                                        fieldWithPath("data.content[].translations[].services")
-                                                .description(
-                                                        "Localized description of services offered"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].achievements")
-                                                .description(
-                                                        "Localized description of key achievements"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].operatingHours"
-                                                )
-                                                .description(
-                                                        "Localized operating hours information"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoTitle")
-                                                .description(
-                                                        "SEO-optimized title in this language"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].seoDescription"
-                                                )
-                                                .description(
-                                                        "SEO meta description in this language"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoKeywords")
-                                                .description("SEO keywords in this language"),
-                                        fieldWithPath("data.content[].translations[].slugUrl")
-                                                .description("URL-friendly slug in this language"),
-                                        fieldWithPath("data.content[].translations[].status")
-                                                .description("Content status"),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].structuredData"
-                                                )
-                                                .description(
-                                                        "JSON-LD structured data specific to this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].canonicalUrl")
-                                                .description(
-                                                        "Canonical URL for this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].hreflangTags")
-                                                .description(
-                                                        "Array of hreflang references to other language versions"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].breadcrumbStructure"
-                                                )
-                                                .description(
-                                                        "JSON representation of breadcrumb structure for this page"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].faqItems")
-                                                .description(
-                                                        "Structured FAQ items for this cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].metaRobots")
-                                                .description(
-                                                        "Instructions for search engine crawlers"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].socialShareImage"
-                                                )
-                                                .description(
-                                                        "Specific image optimized for social sharing"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].contentLastReviewed"
-                                                )
-                                                .description(
-                                                        "When this content was last reviewed for accuracy"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].version")
-                                                .description(
-                                                        "Version tracking for content changes"
-                                                ),
-                                        fieldWithPath("data.content[].primaryMedia")
-                                                .description(
-                                                        "Primary media items for this cooperative (one per type)"
-                                                ),
-                                        fieldWithPath("data.pageable")
-                                                .description("Pagination information"),
-                                        fieldWithPath("data.pageable.sort")
-                                                .description("Sort information"),
-                                        fieldWithPath("data.pageable.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.pageable.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.pageable.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.pageable.offset")
-                                                .description("Offset of the current page"),
-                                        fieldWithPath("data.pageable.pageNumber")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.pageable.pageSize")
-                                                .description("Size of page"),
-                                        fieldWithPath("data.pageable.paged")
-                                                .description("Whether pagination is enabled"),
-                                        fieldWithPath("data.pageable.unpaged")
-                                                .description("Whether pagination is disabled"),
-                                        fieldWithPath("data.last")
-                                                .description("Whether this is the last page"),
-                                        fieldWithPath("data.totalElements")
-                                                .description("Total number of elements"),
-                                        fieldWithPath("data.totalPages")
-                                                .description("Total number of pages"),
-                                        fieldWithPath("data.size").description("Size of page"),
-                                        fieldWithPath("data.number")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.sort").description("Sort information"),
-                                        fieldWithPath("data.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.first")
-                                                .description("Whether this is the first page"),
-                                        fieldWithPath("data.numberOfElements")
-                                                .description(
-                                                        "Number of elements in the current page"
-                                                ),
-                                        fieldWithPath("data.empty")
-                                                .description("Whether the page is empty")
-                                )
-                        )
-                )
-    }
-
-    @Test
-    fun `should get cooperatives by ward`() {
-        mockMvc.perform(
-                        get("/api/v1/cooperatives/search/by-ward/{ward}", 5)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .param("page", "0")
-                                .param("size", "10")
-                )
-                .andExpect(status().isOk)
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content.length()").value(2))
-                .andDo(
-                        document(
-                                "cooperative-get-by-ward",
-                                preprocessResponse(prettyPrint()),
-                                pathParameters(
-                                        parameterWithName("ward")
-                                                .description("Ward number to filter by")
-                                ),
-                                queryParameters(
-                                        parameterWithName("page")
-                                                .description("Page number (zero-based)"),
-                                        parameterWithName("size").description("Page size")
-                                ),
-                                responseFields(
-                                        fieldWithPath("success")
-                                                .description(
-                                                        "Indicates if the request was successful"
-                                                ),
-                                        fieldWithPath("message").description("Success message"),
-                                        fieldWithPath("data.content")
-                                                .description(
-                                                        "List of cooperatives with the specified status"
-                                                ),
-                                        fieldWithPath("data.content[].id")
-                                                .description(
-                                                        "Unique identifier for the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].code")
-                                                .description("Code/slug for the cooperative"),
-                                        fieldWithPath("data.content[].defaultLocale")
-                                                .description(
-                                                        "Default locale for this cooperative's content"
-                                                ),
-                                        fieldWithPath("data.content[].establishedDate")
-                                                .description(
-                                                        "Date when the cooperative was established"
-                                                ),
-                                        fieldWithPath("data.content[].ward")
-                                                .description(
-                                                        "Ward where the cooperative is located"
-                                                ),
-                                        fieldWithPath("data.content[].type")
-                                                .description("Type of cooperative"),
-                                        fieldWithPath("data.content[].status")
-                                                .description("Status of the cooperative"),
-                                        fieldWithPath("data.content[].registrationNumber")
-                                                .description(
-                                                        "Registration number of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].point")
-                                                .description("Geographic point location"),
-                                        fieldWithPath("data.content[].point.longitude")
-                                                .description("Longitude coordinate"),
-                                        fieldWithPath("data.content[].point.latitude")
-                                                .description("Latitude coordinate"),
-                                        fieldWithPath("data.content[].contactEmail")
-                                                .description("Contact email for the cooperative"),
-                                        fieldWithPath("data.content[].contactPhone")
-                                                .description("Contact phone number"),
-                                        fieldWithPath("data.content[].websiteUrl")
-                                                .description("Website URL of the cooperative"),
-                                        fieldWithPath("data.content[].createdAt")
-                                                .description("When this record was created"),
-                                        fieldWithPath("data.content[].updatedAt")
-                                                .description("When this record was last updated"),
-                                        fieldWithPath("data.content[].translations")
-                                                .description("Translations for this cooperative"),
-                                        fieldWithPath("data.content[].translations[].id")
-                                                .description(
-                                                        "Unique identifier for the translation"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].locale")
-                                                .description("Locale for this translation"),
-                                        fieldWithPath("data.content[].translations[].name")
-                                                .description("Localized name of the cooperative"),
-                                        fieldWithPath("data.content[].translations[].description")
-                                                .description(
-                                                        "Localized detailed description of the cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].location")
-                                                .description("Localized location description"),
-                                        fieldWithPath("data.content[].translations[].services")
-                                                .description(
-                                                        "Localized description of services offered"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].achievements")
-                                                .description(
-                                                        "Localized description of key achievements"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].operatingHours"
-                                                )
-                                                .description(
-                                                        "Localized operating hours information"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoTitle")
-                                                .description(
-                                                        "SEO-optimized title in this language"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].seoDescription"
-                                                )
-                                                .description(
-                                                        "SEO meta description in this language"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].seoKeywords")
-                                                .description("SEO keywords in this language"),
-                                        fieldWithPath("data.content[].translations[].slugUrl")
-                                                .description("URL-friendly slug in this language"),
-                                        fieldWithPath("data.content[].translations[].status")
-                                                .description("Content status"),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].structuredData"
-                                                )
-                                                .description(
-                                                        "JSON-LD structured data specific to this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].canonicalUrl")
-                                                .description(
-                                                        "Canonical URL for this language version"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].hreflangTags")
-                                                .description(
-                                                        "Array of hreflang references to other language versions"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].breadcrumbStructure"
-                                                )
-                                                .description(
-                                                        "JSON representation of breadcrumb structure for this page"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].faqItems")
-                                                .description(
-                                                        "Structured FAQ items for this cooperative"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].metaRobots")
-                                                .description(
-                                                        "Instructions for search engine crawlers"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].socialShareImage"
-                                                )
-                                                .description(
-                                                        "Specific image optimized for social sharing"
-                                                ),
-                                        fieldWithPath(
-                                                        "data.content[].translations[].contentLastReviewed"
-                                                )
-                                                .description(
-                                                        "When this content was last reviewed for accuracy"
-                                                ),
-                                        fieldWithPath("data.content[].translations[].version")
-                                                .description(
-                                                        "Version tracking for content changes"
-                                                ),
-                                        fieldWithPath("data.content[].primaryMedia")
-                                                .description(
-                                                        "Primary media items for this cooperative (one per type)"
-                                                ),
-                                        fieldWithPath("data.pageable")
-                                                .description("Pagination information"),
-                                        fieldWithPath("data.pageable.sort")
-                                                .description("Sort information"),
-                                        fieldWithPath("data.pageable.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.pageable.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.pageable.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.pageable.offset")
-                                                .description("Offset of the current page"),
-                                        fieldWithPath("data.pageable.pageNumber")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.pageable.pageSize")
-                                                .description("Size of page"),
-                                        fieldWithPath("data.pageable.paged")
-                                                .description("Whether pagination is enabled"),
-                                        fieldWithPath("data.pageable.unpaged")
-                                                .description("Whether pagination is disabled"),
-                                        fieldWithPath("data.last")
-                                                .description("Whether this is the last page"),
-                                        fieldWithPath("data.totalElements")
-                                                .description("Total number of elements"),
-                                        fieldWithPath("data.totalPages")
-                                                .description("Total number of pages"),
-                                        fieldWithPath("data.size").description("Size of page"),
-                                        fieldWithPath("data.number")
-                                                .description("Current page number"),
-                                        fieldWithPath("data.sort").description("Sort information"),
-                                        fieldWithPath("data.sort.empty")
-                                                .description("Whether sort is empty"),
-                                        fieldWithPath("data.sort.sorted")
-                                                .description("Whether sort is sorted"),
-                                        fieldWithPath("data.sort.unsorted")
-                                                .description("Whether sort is unsorted"),
-                                        fieldWithPath("data.first")
-                                                .description("Whether this is the first page"),
-                                        fieldWithPath("data.numberOfElements")
-                                                .description(
-                                                        "Number of elements in the current page"
-                                                ),
-                                        fieldWithPath("data.empty")
-                                                .description("Whether the page is empty")
-                                )
-                        )
-                )
-    }
-
-
-
-    @Test
-    fun `should get cooperative statistics by ward`() {
-        mockMvc.perform(
-                        get("/api/v1/cooperatives/search/statistics/by-ward")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk)
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.5").exists())
-                .andExpect(jsonPath("$.data.6").exists())
-                .andDo(
-                        document(
-                                "cooperative-statistics-by-ward",
-                                preprocessResponse(prettyPrint()),
-                                responseFields(
-                                        fieldWithPath("success")
-                                                .description(
-                                                        "Indicates if the request was successful"
-                                                ),
-                                        fieldWithPath("message").description("Success message"),
-                                        fieldWithPath("data")
-                                                .description("Map of ward numbers to counts"),
-                                        fieldWithPath("data.5")
-                                                .description("Count of cooperatives in ward 5")
+                                                .description("Filter by cooperative type")
                                                 .optional(),
-                                        fieldWithPath("data.6")
-                                                .description("Count of cooperatives in ward 6")
+                                        parameterWithName("status")
+                                                .description("Filter by cooperative status")
+                                                .optional(),
+                                        parameterWithName("ward")
+                                                .description("Filter by ward number")
+                                                .optional(),
+                                        parameterWithName("page")
+                                                .description("Page number (1-based)")
+                                                .optional(),
+                                        parameterWithName("size")
+                                                .description("Page size")
+                                                .optional(),
+                                        parameterWithName("sortBy")
+                                                .description("Field to sort by")
+                                                .optional(),
+                                        parameterWithName("sortDirection")
+                                                .description("Sort direction (ASC or DESC)")
                                                 .optional()
-                                        // Note: Only the wards present in the test data will be in
-                                        // the response
-                                        )
+                                ),
+                                responseFields(
+                                        fieldWithPath("success")
+                                                .description("Indicates if the request was successful"),
+                                        fieldWithPath("message")
+                                                .description("Success message"),
+                                        fieldWithPath("data")
+                                                .description("List of cooperatives matching the search criteria"),
+                                        fieldWithPath("data[].id")
+                                                .description("Unique identifier for the cooperative"),
+                                        fieldWithPath("data[].code")
+                                                .description("Code/slug for the cooperative"),
+                                        fieldWithPath("data[].type")
+                                                .description("Type of cooperative"),
+                                        fieldWithPath("data[].status")
+                                                .description("Status of the cooperative"),
+                                        fieldWithPath("data[].ward")
+                                                .description("Ward where the cooperative is located"),
+                                        fieldWithPath("data[].defaultLocale")
+                                                .description("Default locale for this cooperative's content"),
+                                        fieldWithPath("data[].establishedDate")
+                                                .description("Date when the cooperative was established")
+                                                .type(JsonFieldType.STRING),
+                                        fieldWithPath("data[].registrationNumber")
+                                                .description("Registration number of the cooperative"),
+                                        fieldWithPath("data[].contactEmail")
+                                                .description("Contact email for the cooperative"),
+                                        fieldWithPath("data[].contactPhone")
+                                                .description("Contact phone number"),
+                                        fieldWithPath("data[].websiteUrl")
+                                                .description("Website URL of the cooperative"),
+                                        fieldWithPath("data[].point")
+                                                .description("Geographic point location")
+                                                .type(JsonFieldType.OBJECT),
+                                        fieldWithPath("data[].point.longitude")
+                                                .description("Longitude coordinate")
+                                                .type(JsonFieldType.NUMBER),
+                                        fieldWithPath("data[].point.latitude")
+                                                .description("Latitude coordinate")
+                                                .type(JsonFieldType.NUMBER),
+                                        fieldWithPath("data[].createdAt")
+                                                .description("When this record was created")
+                                                .type(JsonFieldType.STRING),
+                                        fieldWithPath("data[].updatedAt")
+                                                .description("When this record was last updated")
+                                                .type(JsonFieldType.STRING),
+
+                                        // Explicitly ignore fields that might not be present
+                                        // by removing them from the documentation or marking them optional
+
+                                        // Document meta object and its fields
+                                        fieldWithPath("meta")
+                                                .description("Pagination metadata"),
+                                        fieldWithPath("meta.page")
+                                                .description("Current page number (1-based)"),
+                                        fieldWithPath("meta.size")
+                                                .description("Number of items per page"),
+                                        fieldWithPath("meta.totalElements")
+                                                .description("Total number of elements"),
+                                        fieldWithPath("meta.totalPages")
+                                                .description("Total number of pages"),
+                                        fieldWithPath("meta.isFirst")
+                                                .description("Whether this is the first page"),
+                                        fieldWithPath("meta.isLast")
+                                                .description("Whether this is the last page")
+                                ).andWithPrefix("data[].",
+                                        // These fields might not exist in the response
+                                        // Mark them as optional with explicit types
+                                        fieldWithPath("translations")
+                                                .description("Translations for this cooperative")
+                                                .type(JsonFieldType.ARRAY)
+                                                .optional(),
+                                        fieldWithPath("primaryMedia")
+                                                .description("Primary media items for this cooperative")
+                                                .type(JsonFieldType.OBJECT)
+                                                .optional()
+                                )
                         )
                 )
     }
-   
 
     // Helper methods
 

@@ -145,35 +145,38 @@ class CooperativeRepositoryCustomImpl : CooperativeRepositoryCustom {
             includeTranslations: Boolean,
             includePrimaryMedia: Boolean
     ): CooperativeProjection {
-        val data = mutableMapOf<String, Any?>()
+        val projection = CooperativeProjection()
 
-        // Add selected fields
+        // Add selected fields directly to the projection instead of nesting them in a "data" map
         columns.forEach { column ->
             when (column) {
-                "id" -> data["id"] = cooperative.id
-                "code" -> data["code"] = cooperative.code
-                "defaultLocale" -> data["defaultLocale"] = cooperative.defaultLocale
-                "establishedDate" -> data["establishedDate"] = cooperative.establishedDate
-                "ward" -> data["ward"] = cooperative.ward
-                "type" -> data["type"] = cooperative.type
-                "status" -> data["status"] = cooperative.status
-                "registrationNumber" -> data["registrationNumber"] = cooperative.registrationNumber
+                "id" -> projection.properties["id"] = cooperative.id
+                "code" -> projection.properties["code"] = cooperative.code
+                "defaultLocale" ->
+                        projection.properties["defaultLocale"] = cooperative.defaultLocale
+                "establishedDate" ->
+                        projection.properties["establishedDate"] = cooperative.establishedDate
+                "ward" -> projection.properties["ward"] = cooperative.ward
+                "type" -> projection.properties["type"] = cooperative.type
+                "status" -> projection.properties["status"] = cooperative.status
+                "registrationNumber" ->
+                        projection.properties["registrationNumber"] = cooperative.registrationNumber
                 "point" ->
-                        data["point"] =
+                        projection.properties["point"] =
                                 cooperative.point?.let {
                                     mapOf("longitude" to it.x, "latitude" to it.y)
                                 }
-                "contactEmail" -> data["contactEmail"] = cooperative.contactEmail
-                "contactPhone" -> data["contactPhone"] = cooperative.contactPhone
-                "websiteUrl" -> data["websiteUrl"] = cooperative.websiteUrl
-                "createdAt" -> data["createdAt"] = cooperative.createdAt
-                "updatedAt" -> data["updatedAt"] = cooperative.updatedAt
+                "contactEmail" -> projection.properties["contactEmail"] = cooperative.contactEmail
+                "contactPhone" -> projection.properties["contactPhone"] = cooperative.contactPhone
+                "websiteUrl" -> projection.properties["websiteUrl"] = cooperative.websiteUrl
+                "createdAt" -> projection.properties["createdAt"] = cooperative.createdAt
+                "updatedAt" -> projection.properties["updatedAt"] = cooperative.updatedAt
             }
         }
 
         // Add translations if requested
         if (includeTranslations && "translations" in columns) {
-            data["translations"] =
+            projection.properties["translations"] =
                     cooperative.translations.map { translation ->
                         mapOf(
                                 "id" to translation.id,
@@ -202,9 +205,9 @@ class CooperativeRepositoryCustomImpl : CooperativeRepositoryCustom {
                         )
             }
 
-            data["primaryMedia"] = primaryMediaMap
+            projection.properties["primaryMedia"] = primaryMediaMap
         }
 
-        return CooperativeProjection(data)
+        return projection
     }
 }
