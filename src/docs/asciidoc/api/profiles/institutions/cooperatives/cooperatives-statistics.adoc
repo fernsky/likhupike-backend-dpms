@@ -1,0 +1,47 @@
+= Cooperative Statistics Operations
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[cooperative-statistics]]
+== Cooperative Statistics Operations
+
+These endpoints provide statistical information about cooperatives categorized by different criteria.
+
+[[cooperative-statistics-by-type]]
+=== Cooperative Statistics By Type
+
+This endpoint retrieves the count of cooperatives grouped by their type.
+
+.HTTP Request
+include::{snippets}/cooperative-statistics-by-type/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-statistics-by-type/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-statistics-by-type/response-fields.adoc[]
+
+[[cooperative-statistics-by-ward]]
+=== Cooperative Statistics By Ward
+
+This endpoint retrieves the count of cooperatives grouped by their ward number.
+
+.HTTP Request
+include::{snippets}/cooperative-statistics-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/cooperative-statistics-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/cooperative-statistics-by-ward/response-fields.adoc[]
+
+=== Implementation Notes
+
+* Statistics are calculated based on active cooperatives by default
+* Ward statistics represent the total number of cooperatives per ward
+* Type statistics show counts for each cooperative type
+* Statistics data is refreshed periodically for performance reasons
