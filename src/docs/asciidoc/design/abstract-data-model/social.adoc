@@ -1,0 +1,41 @@
+===Social Domain
+
+=== `WardWiseOverFiveYearsLiteracyRate`
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the population is recorded
+| `literacyType`   | Type of literacy
+| `population` | Number of people in this category
+|===
+
+==== `LiteracyType`
+Enumeration of age groups used for economic activity classification.
+
+[cols="1,3", options="header"]
+|===
+| Value         | Description
+| `BOTH_READING_AND_WRITING` | पढ्न लेख्न जानेको
+| `READING_ONLY` | पढ्न मात्र जानेको
+| `NONE` | पढ्न लेख्न नजानेका
+|===
+
+=== `WardWiseFormalInformalEducationState`
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the population is recorded
+| `formalInformalState`   | Type of Formal and Informal Education 
+| `population` | Number of people in this category
+|===
+
+=== `FormalInformalEducationType`
+[cols="1,3", options="header"]
+|===
+| Value         | Description
+| `SCHOOL_COLLEGE_FORMAL` | स्कुल/कलेज(औपचारिक)
+| `INFORMAL_EDUCATION` | अनौपचारिक शिक्षा
+| `SELF_STUDY` | स्वअध्ययन
+|===
