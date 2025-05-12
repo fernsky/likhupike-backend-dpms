@@ -72,17 +72,17 @@ Enumeration of age groups used for economic activity classification.
 [cols="1,3", options="header"]
 |===
 | Field        | Description
-| `nameOfSchool`    | Unique identifier for the record
-| `cdcMaleStudents`   | Type of educational institution
-| `cdcFemaleStudents`        | Number of students in this institution type
-| `class1to5MaleStudents`| Number of students in this institution type
-| `class1to5FemaleStudents`| Number of students in this institution type
-| `class6to8MaleStudents`| Number of students in this institution type
-| `class6to8FemaleStudents`| Number of students in this institution type
-| `class9to10MaleStudents`| Number of students in this institution type
-| `class9to10FemaleStudents`| Number of students in this institution type
-| `class11to12MaleStudents`| Number of students in this institution type
-| `class11to12FemaleStudents`| Number of students in this institution type
-| `totalMale`| Number of students in this institution type
-| `totalFemale`| Number of students in this institution type
+| `nameOfSchool`    | Name of the school
+| `cdcMaleStudents`   | Number of male students in the Child Development Center
+| `cdcFemaleStudents`        | Number of female students in the Child Development Center
+| `class1to5MaleStudents`| Number of male students in classes 1 to 5
+| `class1to5FemaleStudents`| Number of female students in classes 1 to 5
+| `class6to8MaleStudents`| Number of male students in classes 6 to 8
+| `class6to8FemaleStudents`| Number of female students in classes 6 to 8
+| `class9to10MaleStudents`| Number of male students in classes 9 to 10
+| `class9to10FemaleStudents`| Number of female students in classes 9 to 10
+| `class11to12MaleStudents`| Number of male students in classes 11 to 12
+| `class11to12FemaleStudents`| Number of female students in classes 11 to 12
+| `totalMale`| Total number of male students across all levels
+| `totalFemale`| Total number of female students across all levels
 |===
