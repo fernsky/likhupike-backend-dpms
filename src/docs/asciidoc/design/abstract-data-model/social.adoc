@@ -39,3 +39,50 @@ Enumeration of age groups used for economic activity classification.
 | `INFORMAL_EDUCATION` | अनौपचारिक शिक्षा
 | `SELF_STUDY` | स्वअध्ययन
 |===
+
+=== `LevelWiseEducationalInstitutionStudents`
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `sequenceNumber`    | Unique identifier for the record
+| `institutionType`   | Type of educational institution
+| `population`        | Number of students in this institution type
+|===
+
+=== `EducationalInstitutionType`
+[cols="1,3", options="header"]
+|===
+| Value         | Description
+| `COMMUNITY_SCHOOL` | सामुदायिक विद्यालय
+| `INSTITUTIONAL_SCHOOL` | संस्थागत विद्यालय (मन्टेसरी समेत)
+| `UNIVERSITY` | विश्वविद्यालय
+| `GOVERNMENT_CAMPUS` | सरकारी क्याम्पस
+| `PRIVATE_CAMPUS` | निजी क्याम्पस
+| `RELIGIOUS_SCHOOL` | धार्मिक विद्यालय
+| `TECHNICAL_SCHOOL` | प्राविधिक शिक्षालय
+| `OPEN_SCHOOL` | खुल्ला विद्यालय
+| `COMMUNITY_LEARNING_CENTER` | सामुदायिक सिकाई केन्द्र
+| `TECHNICAL_STREAM_SCHOOL` | प्राविधिक धार (९–१२) संञ्चालन भएका विद्यालय
+| `CTEVT_TECHNICAL_SCHOOL` | सि.टि.इ.भि.टि. साझेदारीमा संचालीत प्राविधिक विद्यालय
+|===
+
+=== `CommunitySchoolsAndStudents`
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `nameOfSchool`    | Unique identifier for the record
+| `cdcMaleStudents`   | Type of educational institution
+| `cdcFemaleStudents`        | Number of students in this institution type
+| `class1to5MaleStudents`| Number of students in this institution type
+| `class1to5FemaleStudents`| Number of students in this institution type
+| `class6to8MaleStudents`| Number of students in this institution type
+| `class6to8FemaleStudents`| Number of students in this institution type
+| `class9to10MaleStudents`| Number of students in this institution type
+| `class9to10FemaleStudents`| Number of students in this institution type
+| `class11to12MaleStudents`| Number of students in this institution type
+| `class11to12FemaleStudents`| Number of students in this institution type
+| `totalMale`| Number of students in this institution type
+| `totalFemale`| Number of students in this institution type
+|===
