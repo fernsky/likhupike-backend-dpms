@@ -27,7 +27,7 @@ Enumeration of age groups used for economic activity classification.
 |===
 | Field        | Description
 | `ward`       | The ward where the population is recorded
-| `formalInformalState`   | Type of Formal and Informal Education 
+| `formalInformalState`   | Type of Formal and Informal Education
 | `population` | Number of people in this category
 |===
 
@@ -45,7 +45,6 @@ Enumeration of age groups used for economic activity classification.
 [cols="1,3", options="header"]
 |===
 | Field        | Description
-| `sequenceNumber`    | Unique identifier for the record
 | `institutionType`   | Type of educational institution
 | `population`        | Number of students in this institution type
 |===
@@ -86,3 +85,235 @@ Enumeration of age groups used for economic activity classification.
 | `totalMale`| Total number of male students across all levels
 | `totalFemale`| Total number of female students across all levels
 |===
+
+
+=== WardWiseEducationalLevel
+
+- ward
+- educationalLevel
+- population
+
+=== EducationalLevelType
+
+
+ educational_level: {
+    child_development_center: 'बालविकास केन्द्र / मंटेस्वोरी',
+    nursery: 'नर्सरी/केजी ',
+    '1': 'कक्षा १ ',
+    '2': 'कक्षा २ ',
+    '3': 'कक्षा ३ ',
+    '4': 'कक्षा ४ ',
+    '5': 'कक्षा ५ ',
+    '6': 'कक्षा ६ ',
+    '7': 'कक्षा ७ ',
+    '8': 'कक्षा ८ ',
+    '9': 'कक्षा ९ ',
+    '10': 'कक्षा १० ',
+    slc_level: 'एसईई/एसएलसी/सो सरह ',
+    class_12_level: 'कक्षा १२ वा PCL वा सो सरह ',
+    bachelor_level: 'स्नातक वा सो सरह ',
+    masters_level: 'स्नातकोत्तर वा सो सरह ',
+    phd_level: 'पीएचडी वा सो सरह ',
+    other: 'अन्य ',
+    informal_education: 'अनौपचारिक शिक्षा ',
+    educated: 'साक्षर ',
+    unknown: 'थाहा नभएको ',
+  },
+
+
+=== WardWiseSchoolAttendees
+
+- ward
+- age5to25schoolAttendees
+- age5to25schoolDropouts
+
+
+=== WardWiseTimeToHealthOrganization
+
+- ward
+- timeToHealthOrganization
+- population
+
+=== TimeToHealthOrganizationType
+
+  time: {
+    under_15_min: '१५ मिनेटभित्र',
+    under_30_min: '३० मिनेटभित्र',
+    under_1_hour: '१ घण्टाभित्र',
+    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
+  },
+
+=== WardWiseHealthInsuredHouseholds
+
+- ward
+- insuredHouseholds
+
+
+=== WardWiseDeliveryPlace
+
+- ward
+- deliveryPlace
+- population
+
+=== DeliveryPlaceType
+
+  delivery_locations: {
+    house: 'घरमा ',
+    governmental_health_institution: 'सरकारी स्वास्थ्य संस्थामा',
+    private_health_institution: 'नीजी स्वास्थ्य संस्थामा',
+    other: 'अन्य',
+  },
+
+=== `WardWiseChildBearers`
+
+- ward
+- age15to49ChildBearers
+
+=== WardAgeWiseFirstChildBirthAge
+
+- ward
+- firstChildBirthAgeGroup
+- population
+
+
+=== FirstChildBirthAgeGroup
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `AGE_15_19`        | Ages 15 to 19 years
+| `AGE_20_24`        | Ages 20 to 24 years
+| `AGE_25_29`        | Ages 25 to 29 years
+| `AGE_30_34`        | Ages 30 to 34 years
+| `AGE_35_39`        | Ages 35 to 39 years
+| `AGE_40_44`        | Ages 40 to 44 years
+| `AGE_45_49`        | Ages 45 to 49 years
+|===
+
+
+=== WardWiseDrinkingWaterSource
+
+- ward
+- drinkingWaterSource
+- households
+
+=== `DrinkingWaterSourceType`
+
+  drinking_water_source: {
+    tap_inside_house: '  धारा/पाइप (घरपरिसर भित्र)',
+    tap_outside_house: '  धारा/पाइप (घरपरिसर) बाहिर)',
+    tubewell: '  ट्युबवेल/हाते पम्प',
+    covered_well: '  ढाकिएको इनार/कुवा',
+    open_well: '  खुला इनार/कुवा',
+    aquifier_mool: '  मूल धारा',
+    river: '  नदी/खोला',
+    jar: '  जार/बोतल',
+    other: '  अन्य (खुलाउने)',
+  },
+
+
+=== WardWiseWaterPurification
+
+- ward
+- waterPurification
+- households
+
+=== `WaterPurificationType`
+
+  water_purification: {
+    boiling: 'उमाल्ने',
+    filtering: 'फिल्टर गर्ने',
+    chemical_piyush: 'औषधी (पियुष आदि) राख्ने',
+    no_any_filtering: 'केही नगर्ने/सिधै खाने',
+    other: 'अन्य विधि अपनाउने (जस्तै सोडिस)',
+  },
+
+=== WardWiseToiletType
+
+- ward
+- toiletType
+- households
+
+=== `ToiletType`
+
+  toilet_type: {
+    flush_with_septic_tank: 'फ्लस भएको (सेप्टिक ट्याङ्क)',
+    normal: 'साधारण',
+    public_eilani: 'सार्वजनिक',
+    no_toilet: 'चर्पी नभएको',
+    other: 'अन्य (खुलाउने)',
+  },
+
+
+=== WardWiseSolidWasteManagement
+
+- ward
+- solidWasteMangement
+- households
+
+
+=== SolidWasteManagementType
+
+  solid_waste: {
+    home_collection: 'घरमा नै लिन आउँछ',
+    waste_collecting_place: 'फोहर थुपार्ने ठाउँमा/क्यानमा',
+    burning: 'आफ्नै घर कम्पाउण्ड भित्र (बाल्ने)',
+    digging: 'आफ्नै घर कम्पाउण्ड भित्र (गाड्ने/थुपार्ने)',
+    river: 'नदी वा खोल्सामा',
+    road_or_public_place: 'सडक/सार्वजनिक स्थलमा',
+    compost_manure: 'कम्पोष्ट मल बनाउने',
+    other: 'अन्य (खुलाउने)',
+  },
+
+
+=== WardAgeGenderWiseFirstMarriageAge
+
+- ward
+- firstMarriageAgeGroup
+- gender
+- population
+
+==== `GenderType`
+Enumeration of gender categories used for demographic classification.
+
+[cols="1,3", options="header"]
+|===
+| Value     | Description
+| `MALE`    | Male gender identity
+| `FEMALE`  | Female gender identity
+| `OTHER`   | Other gender identities
+|===
+
+===== FirstMarriageAgeGroup
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `AGE_0_14`         | Ages 0 to 14 years
+| `AGE_15_19`        | Ages 15 to 19 years
+| `AGE_20_24`        | Ages 20 to 24 years
+| `AGE_25_29`        | Ages 25 to 29 years
+| `AGE_30_34`        | Ages 30 to 34 years
+| `AGE_35_39`        | Ages 35 to 39 years
+| `AGE_40_44`        | Ages 40 to 44 years
+| `AGE_45_49`        | Ages 45 to 49 years
+| `AGE_50_54`        | Ages 50 to 54 years
+| `AGE_55_59`        | Ages 55 to 59 years
+| `AGE_60_AND_ABOVE` | Ages 60 years and above
+|===
+
+
+=== WardWiseDisablePopulation
+
+- ward
+- disablePopulation
+
+=== WardWiseOldAgePopulationAndSingleWomen
+
+- ward
+- maleOldAgePopulation
+- femaleOldAgePopulation
+- singleWomenPopulation
+
+
+==== WardWise

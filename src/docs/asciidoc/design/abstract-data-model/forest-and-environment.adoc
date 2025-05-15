@@ -1,0 +1,22 @@
+=== WardWiseNaturalDisasters
+
+- ward
+- naturalDisaster
+- householdsAffected
+
+=== NaturalDisasterType
+
+  natural_disasters: {
+    flood: 'बाढी',
+    landslide: 'पहिरो',
+    inundation: 'डुबान',
+    cutting: 'कटान',
+    fire: 'डढेलो',
+    storm: 'हुरिबतास',
+    hailstone: 'असिना',
+    wildlife_risk: 'बन्यजन्तुको जोखिम',
+    lightning: 'चट्याङ',
+    fog: 'शितलहर',
+    no_any_risk: 'कुनै पनि जोखिममा नभएको',
+    other: 'अन्य (खुलाउने) ',
+  },

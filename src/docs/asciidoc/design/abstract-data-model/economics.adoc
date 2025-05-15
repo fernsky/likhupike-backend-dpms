@@ -284,3 +284,37 @@ Entity that tracks land ownership by households per ward.
 | `ward`       | The ward where the data is recorded
 | `households` | Number of households possessing land
 |===
+
+
+==== `WardWiseFinancialInstitutionAccount`
+
+- ward
+- financialInstitution
+- households
+
+==== WardWiseFinancialInstitutionType
+
+  financial_organization: {
+    bank: 'बैंक (बाणिज्य/विकास)',
+    finance: 'फाइनान्स',
+    micro_finance: 'लघु वित्त',
+    cooperative: 'सहकारी',
+    none: 'कुनैमा पनी छैन ',
+  }
+
+==== WardWiseFirstHealthOrganization
+
+- ward
+- healthOrganization
+- households
+
+==== HealthOrganizationType
+
+  health_organization: {
+    governmental_health_institution: 'सरकारी स्वास्थ्य संस्था ',
+    private_community_hospital_or_clinic: 'निजी/सामुदायिक अस्पताल/क्लिनिक',
+    ayurvedic: 'आयुर्वेद औषधालय',
+    pharmacy: 'औषधि पसल (फार्मेसी) ',
+    dhami_jhankri: 'धामी/झाँक्री',
+    other: 'अन्य (खुलाउने)',
+  },

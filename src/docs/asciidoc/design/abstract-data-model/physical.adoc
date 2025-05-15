@@ -1,0 +1,220 @@
+=== WardWiseTimeToPublicTransport
+
+- ward
+- timeToPublicTransport
+- household
+
+=== TimeToPublicTransportType
+
+  time: {
+    under_15_min: '१५ मिनेटभित्र',
+    under_30_min: '३० मिनेटभित्र',
+    under_1_hour: '१ घण्टाभित्र',
+    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
+  },
+
+
+=== WardWiseTimeToMarketCenter
+
+- ward
+- timeToMarketCenter
+- household
+
+=== TimeToMarketCenterType
+
+  time: {
+    under_15_min: '१५ मिनेटभित्र',
+    under_30_min: '३० मिनेटभित्र',
+    under_1_hour: '१ घण्टाभित्र',
+    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
+  },
+
+=== WardWiseCookingFuel
+
+- ward
+- cookingFuel
+- households
+
+=== CookingFuelType
+
+  cooking_fuel: {
+    wood: 'काठ/दाउरा/कोइला',
+    lp_gas: 'एल.पी. ग्याँस',
+    kerosene: 'मट्टितेल',
+    electricity: 'विद्युत',
+    biogas: 'गोबर ग्याँस/बायोग्याँस',
+    dungcake: 'गोबर/गुँइठा',
+    other: 'अन्य',
+  },
+
+
+=== WardWiseElectricitySource
+
+- ward
+- electricitySource
+- households
+
+=== ElectricitySourceType
+
+  energy_source: {
+    electricity: 'विद्युत',
+    solar: 'सोलार',
+    kerosene: 'मट्टितेल',
+    biogas: 'बायोग्याँस',
+    other: 'अन्य (खुलाउने).',
+  },
+
+
+=== WardWiseFacilities
+
+- ward
+- facility
+- households
+
+==== FacilityType
+
+  facilities: {
+    radio: 'रेडियो सुविधा',
+    television: 'टेलिभिजन',
+    computer: 'कम्प्युटर/ल्यापटप',
+    internet: 'इन्टरनेट सुविधा',
+    mobile_phone: 'मोबाईल फोन',
+    car_jeep: 'कार/जीप/भ्यान',
+    motorcycle: 'मोटरसाईकल/स्कुटर',
+    bicycle: 'साईकल',
+    refrigerator: 'रेफ्रिजेरेटर (फ्रिज)',
+    washing_machine: 'वासिङ मेसिन',
+    air_conditioner: 'एयर कन्डिसनर',
+    electrical_fan: 'विद्युतीय पंखा',
+    microwave_oven: 'माइक्रोवेभ ओभन',
+    daily_national_newspaper_access: 'राष्ट्रिय दैनिक पत्रिकाको पहुँच',
+    none: 'माथिका कुनै पनि नभएको ',
+  },
+
+
+=== WardWiseHouseholdRoof
+
+- ward
+- roofType
+- households
+
+=== RoofType
+
+  house_roof: {
+    cement: 'सिमेन्ट ढलान',
+    tin: 'जस्ता/टिन',
+    tile: 'टायल/खपडा/झिँगटी',
+    straw: 'खर/पराल/छ्वाली',
+    wood: 'काठ/फल्याक',
+    stone: 'ढुङ्गा/स्लेट',
+    other: 'अन्य (खुलाउने)',
+  },
+
+
+=== WardWiseHouseholdBase
+
+- ward
+- baseType
+- households
+
+
+=== WardWiseHouseholdOuterWall
+
+- ward
+- wallType
+- households
+
+
+=== WardWiseHouseholdFloor
+
+- ward
+- floorType
+- households
+
+=== WardWiseHouseMapPassed
+
+- ward
+- mapPassedStatus
+- households
+
+=== WardWiseTimeToActiveRoad
+
+- ward
+- timeToActiveRoad
+- households
+
+=== TimeToActiveRoadType
+
+  time: {
+    under_15_min: '१५ मिनेटभित्र',
+    under_30_min: '३० मिनेटभित्र',
+    under_1_hour: '१ घण्टाभित्र',
+    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
+  },
+
+
+=== WardWiseTimeToHealthOrganization
+
+- ward
+- timeToHealthOrganization
+- households
+
+=== TimeToHealthOrganizationType
+
+  time: {
+    under_15_min: '१५ मिनेटभित्र',
+    under_30_min: '३० मिनेटभित्र',
+    under_1_hour: '१ घण्टाभित्र',
+    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
+  },
+
+
+=== WardWiseTimeToFinancialOrganization
+
+- ward
+- timeToFinancialOrganization
+- households
+
+=== TimeToFinancialOrganizationType
+
+  time: {
+    under_15_min: '१५ मिनेटभित्र',
+    under_30_min: '३० मिनेटभित्र',
+    under_1_hour: '१ घण्टाभित्र',
+    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
+  },
+
+
+==== WardWiseRoadStatus
+
+- ward
+- roadStatus
+- households
+
+=== RoadStatusType
+
+  road_status: {
+    black_topped: 'कालोपत्रे/पक्की ढलान सडक',
+    graveled: 'ग्राभेल सडक',
+    dirt: 'धुले (कच्ची) सडक',
+    goreto: 'गोरेटो बाटो',
+    other: 'अन्य ',
+  },
+
+
+=== WardWiseHouseOwnership
+
+- ward
+- ownershipType
+- households
+
+==== OwnershipType
+
+  house_ownership: {
+    private: 'निजी',
+    rent: 'भाडामा',
+    inisitutional: 'संस्थागत',
+    other: 'अन्य (खुलाउने)',
+  },
+
+
