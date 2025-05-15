@@ -27,7 +27,7 @@ Enumeration of age groups used for economic activity classification.
 |===
 | Field        | Description
 | `ward`       | The ward where the population is recorded
-| `formalInformalState`   | Type of Formal and Informal Education 
+| `formalInformalState`   | Type of Formal and Informal Education
 | `population` | Number of people in this category
 |===
 
@@ -83,6 +83,5 @@ Enumeration of age groups used for economic activity classification.
 | `class9to10FemaleStudents`| Number of female students in classes 9 to 10
 | `class11to12MaleStudents`| Number of male students in classes 11 to 12
 | `class11to12FemaleStudents`| Number of female students in classes 11 to 12
-| `totalMale`| Total number of male students across all levels
-| `totalFemale`| Total number of female students across all levels
 |===
+
