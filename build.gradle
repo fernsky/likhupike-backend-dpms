@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'np.sthaniya'
-version = '1.0.10-SNAPSHOT'
+version = '1.0.11-SNAPSHOT'
 
 java {
 	toolchain {
@@ -57,17 +57,17 @@ dependencies {
 	implementation 'ch.qos.logback:logback-classic:1.4.14'
 	implementation 'ch.qos.logback:logback-core:1.4.14'
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
-	
+
 	// Redis dependencies for caching
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
 	implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
-	
+
 	// Additional cache integration dependencies
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 	implementation 'org.springframework.data:spring-data-redis'
 	implementation 'com.fasterxml.jackson.module:jackson-module-jaxb-annotations'
-	
+
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
@@ -75,27 +75,27 @@ dependencies {
 	testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testRuntimeOnly 'com.h2database:h2:2.3.232'
-	
+
 	// OpenAPI Documentation
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 	implementation 'org.springdoc:springdoc-openapi-starter-common:2.3.0'
 	implementation 'org.springdoc:springdoc-openapi-kotlin:1.7.0'
 
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	
+
 	// Dokka dependencies
 	dokkaHtmlPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:1.9.20")
-	
+
 	// Bucket4j rate limiting
 	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
 	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-jcache:7.6.0'
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
-	
+
 	// Spring REST Docs
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
-	
+
 	// Asciidoctor PDF theme dependencies
 	asciidoctorExt 'org.asciidoctor:asciidoctorj-pdf:2.3.9'
 
@@ -110,20 +110,20 @@ dependencies {
 	  // GeoJSON-Jackson
     implementation "de.grundid.opendatalab:geojson-jackson:1.14"
     implementation "org.locationtech.jts.io:jts-io-common:1.19.0"
-	
+
 	// Thymeleaf dependencies
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-java8time:3.0.4.RELEASE'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
-    
+
     // Webjars for frontend libraries
     implementation 'org.webjars:webjars-locator-core'
     implementation 'org.webjars:bootstrap:5.3.2'
     implementation 'org.webjars:font-awesome:6.7.2'
     implementation 'org.webjars.npm:htmx.org:1.9.5'
     implementation 'org.webjars.npm:alpinejs:3.13.0'
-	
+
 	// Add dotenv dependency for .env file processing
     implementation 'io.github.cdimascio:dotenv-kotlin:6.4.1'
 }
@@ -144,8 +144,8 @@ test {
 
 asciidoctorj {
     modules {
-       diagram.use() 
-       diagram.version '2.3.1' 
+       diagram.use()
+       diagram.version '2.3.1'
     }
 }
 
@@ -155,7 +155,7 @@ asciidoctor {
 
 	// Add explicit dependency on test
 	dependsOn test
-	
+
 	sources {
 		include '*.adoc'
 	}
@@ -175,7 +175,7 @@ asciidoctorPdf {
 	inputs.dir snippetsDir
 
 	dependsOn test
-	
+
 	sources {
 		include '*.adoc'
 	}
@@ -195,7 +195,7 @@ asciidoctorPdf {
 bootJar {
 	// Remove dependencies on asciidoctor tasks
 	// dependsOn asciidoctor, asciidoctorPdf
-	
+
 	// Only copy documentation if it exists
 	doLast {
 		if (file("${asciidoctor.outputDir}/html5").exists()) {
@@ -237,21 +237,21 @@ tasks.named('test') {
 
 tasks.dokkaHtml.configure {
 	outputDirectory.set(file("${buildDir}/dokka"))
-	
+
 	// Dokka configuration
 	moduleName.set(project.name)
 	moduleVersion.set(project.version.toString())
-	
+
 	// Source sets configuration
 	dokkaSourceSets {
 		named("main") {
 			displayName.set("Backend API")
 			sourceRoots.from(file("src/main/kotlin"))
-			
+
 			jdkVersion.set(21)
 			noStdlibLink.set(false)
 			noJdkLink.set(false)
-			
+
 			// Optional: Configure source links
 			sourceLink {
 				localDirectory.set(file("src/main/kotlin"))
@@ -279,14 +279,14 @@ bootRun {
     // Configure environment variables for bootRun task only if .env exists
     if (envFile.exists()) {
         environment = envProps
-        
+
         // Explicit configuration of environment variables to ensure they are used
         systemProperties = [
             "spring.datasource.url": envProps.getProperty('SPRING_DATASOURCE_URL'),
             "spring.datasource.username": envProps.getProperty('SPRING_DATASOURCE_USERNAME'),
             "spring.datasource.password": envProps.getProperty('SPRING_DATASOURCE_PASSWORD'),
             "redis.host": envProps.getProperty('REDIS_HOST'),
-            "redis.port": envProps.getProperty('REDIS_PORT'), 
+            "redis.port": envProps.getProperty('REDIS_PORT'),
             "redis.password": envProps.getProperty('REDIS_PASSWORD'),
             // Add a system property for the server temp directory
             "server.tomcat.basedir": "./build/tmp/tomcat-dpis"
