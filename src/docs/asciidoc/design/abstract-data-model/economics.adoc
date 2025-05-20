@@ -285,36 +285,51 @@ Entity that tracks land ownership by households per ward.
 | `households` | Number of households possessing land
 |===
 
-
 ==== `WardWiseFinancialInstitutionAccount`
+Entity that tracks household financial institution accounts by ward.
 
-- ward
-- financialInstitution
-- households
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `ward`                | The ward where the data is recorded
+| `financialInstitution`| Type of financial institution (reference to FinancialInstitutionType)
+| `households`          | Number of households with accounts in this institution type
+|===
 
-==== WardWiseFinancialInstitutionType
+==== `FinancialInstitutionType`
+Enumeration of financial institution types.
 
-  financial_organization: {
-    bank: 'बैंक (बाणिज्य/विकास)',
-    finance: 'फाइनान्स',
-    micro_finance: 'लघु वित्त',
-    cooperative: 'सहकारी',
-    none: 'कुनैमा पनी छैन ',
-  }
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `BANK`          | Commercial/Development Bank (बैंक बाणिज्य/विकास)
+| `FINANCE`       | Finance Company (फाइनान्स)
+| `MICRO_FINANCE` | Micro Finance (लघु वित्त)
+| `COOPERATIVE`   | Cooperative (सहकारी)
+| `NONE`          | No Account (कुनैमा पनी छैन)
+|===
 
-==== WardWiseFirstHealthOrganization
+==== `WardWiseFirstHealthOrganization`
+Entity that tracks primary healthcare providers by ward.
 
-- ward
-- healthOrganization
-- households
+[cols="1,3", options="header"]
+|===
+| Field               | Description
+| `ward`              | The ward where the data is recorded
+| `healthOrganization`| Type of health organization (reference to HealthOrganizationType)
+| `households`        | Number of households using this healthcare provider
+|===
 
-==== HealthOrganizationType
+==== `HealthOrganizationType`
+Enumeration of healthcare organization types.
 
-  health_organization: {
-    governmental_health_institution: 'सरकारी स्वास्थ्य संस्था ',
-    private_community_hospital_or_clinic: 'निजी/सामुदायिक अस्पताल/क्लिनिक',
-    ayurvedic: 'आयुर्वेद औषधालय',
-    pharmacy: 'औषधि पसल (फार्मेसी) ',
-    dhami_jhankri: 'धामी/झाँक्री',
-    other: 'अन्य (खुलाउने)',
-  },
+[cols="1,3", options="header"]
+|===
+| Value                              | Description
+| `GOVERNMENTAL_HEALTH_INSTITUTION`   | Government Health Institution (सरकारी स्वास्थ्य संस्था)
+| `PRIVATE_COMMUNITY_HOSPITAL_CLINIC` | Private/Community Hospital/Clinic (निजी/सामुदायिक अस्पताल/क्लिनिक)
+| `AYURVEDIC`                        | Ayurvedic Clinic (आयुर्वेद औषधालय)
+| `PHARMACY`                         | Pharmacy (औषधि पसल फार्मेसी)
+| `DHAMI_JHANKRI`                    | Traditional Healer (धामी/झाँक्री)
+| `OTHER`                            | Other (अन्य)
+|===
