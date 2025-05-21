@@ -50,6 +50,7 @@ Entity that tracks student population by educational institution type.
 [cols="1,3", options="header"]
 |===
 | Field             | Description
+| `ward`               | The ward where the population is recorded
 | `institutionType` | Type of educational institution (reference to EducationalInstitutionType)
 | `population`      | Number of students in this institution type
 |===
@@ -142,6 +143,7 @@ Entity that tracks school attendance and dropout rates by ward.
 | `age5to25schoolAttendees`| Number of people aged 5-25 attending school
 | `age5to25schoolDropouts` | Number of people aged 5-25 who have dropped out of school
 |===
+
 
 ==== `WardWiseTimeToHealthOrganization`
 Entity that tracks time taken to reach health facilities by ward.
