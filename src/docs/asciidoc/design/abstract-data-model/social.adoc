@@ -403,3 +403,4 @@ Entity that tracks elderly population and single women by ward.
 | `femaleOldAgePopulation`| Number of elderly females
 | `singleWomenPopulation`| Number of single women
 |===
+
