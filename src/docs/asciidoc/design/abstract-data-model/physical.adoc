@@ -167,6 +167,21 @@ Entity that tracks types of house foundations by ward.
 | `households` | Number of households with this foundation type
 |===
 
+=== BaseType
+
+Enumeration of house foundation types.
+
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `CONCRETE_PILLAR`  | Concrete pillar construction (ढलान पिल्लरसहितको)
+| `CEMENT_JOINED`    | Cement-bonded brick/stone (सिमेन्टको जोडाइ भएको इँटा/ढुङ्गा)
+| `MUD_JOINED`       | Mud-bonded brick/stone (माटोको जोडाइ भएको इँटा/ढुङ्गा)
+| `WOOD_POLE`        | Wooden pole foundation (काठको खम्बा गाडेको)
+| `OTHER`            | Other materials (अन्य)
+|===
+
+
 ==== `WardWiseHouseholdOuterWall`
 Entity that tracks types of outer walls used in houses by ward.
 
@@ -177,6 +192,23 @@ Entity that tracks types of outer walls used in houses by ward.
 | `wallType`   | Type of outer wall
 | `households` | Number of households with this wall type
 |===
+
+=== OuterWallType
+Enumeration of outer wall types used in houses.
+
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `CEMENT_JOINED` | Cement-bonded brick/stone (सिमेन्टको जोडाइ भएको इँटा/ढुङ्गा)
+| `UNBAKED_BRICK` | Unbaked brick (काँचो इँटा)
+| `MUD_JOINED`    | Mud-bonded brick/stone (माटोको जोडाइ भएको इँटा/ढुङ्गा)
+| `TIN`           | Tin/Metal sheet (जस्ता/टिन/च्यादर)
+| `BAMBOO`        | Bamboo materials (बाँसजन्य सामग्री)
+| `WOOD`          | Wood/Plank (काठ/फल्याक)
+| `PREFAB`        | Prefabricated (प्रि फ्याब)
+| `OTHER`         | Other materials (अन्य)
+|===
+
 
 ==== `WardWiseHouseholdFloor`
 Entity that tracks types of floors used in houses by ward.
@@ -189,6 +221,21 @@ Entity that tracks types of floors used in houses by ward.
 | `households` | Number of households with this floor type
 |===
 
+
+==== `FloorType`
+Enumeration of floor types used in houses.
+
+[cols="1,3", options="header"]
+|===
+| Value        | Description
+| `CONCRETE`   | Cement concrete (सिमेन्ट ढलान)
+| `MUD`        | Mud (माटो)
+| `WOOD`       | Wood plank/Bamboo (काठको फल्याक/बाँस)
+| `BRICK`      | Brick/Stone (इँटा/ढुङ्गा)
+| `TILE`       | Ceramic tile (सेरामिक टायल)
+| `OTHER`      | Other materials (अन्य)
+|===
+
 ==== `WardWiseHouseMapPassed`
 Entity that tracks building approval status by ward.
 
@@ -198,6 +245,18 @@ Entity that tracks building approval status by ward.
 | `ward`             | The ward where the data is recorded
 | `mapPassedStatus`  | Status of building approval
 | `households`       | Number of households with this approval status
+|===
+
+
+
+=== MapPassedStatusType
+Enumeration of building approval statuses.
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `PASSED`             | Map passed (नक्सा पास भएको)
+| `ARCHIVED`         | Map archived (नक्सा संग्रहित भएको)
+| `NEITHER_PASSED_NOR_ARCHIVED`     | Not applicable (लागु नहुने)
 |===
 
 ==== `WardWiseTimeToActiveRoad`
