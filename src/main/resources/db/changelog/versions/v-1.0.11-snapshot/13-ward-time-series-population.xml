@@ -19,7 +19,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="ward_name" type="TEXT"/>
-            <column name="year" type="INT">
+            <column name="census_year" type="INT">
                 <constraints nullable="false"/>
             </column>
             <column name="total_population" type="INT"/>
@@ -62,7 +62,7 @@
         <addUniqueConstraint
             constraintName="uq_ward_year"
             tableName="ward_time_series_population"
-            columnNames="ward_number, year"/>
+            columnNames="ward_number, census_year"/>
     </changeSet>
 
     <!-- Add indexes for performance -->
@@ -78,7 +78,7 @@
             <column name="ward_number"/>
         </createIndex>
         <createIndex indexName="idx_ward_time_series_population_year" tableName="ward_time_series_population">
-            <column name="year"/>
+            <column name="census_year"/>
         </createIndex>
     </changeSet>
 

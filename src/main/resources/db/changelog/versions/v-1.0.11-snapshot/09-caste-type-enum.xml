@@ -4,7 +4,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <!-- Create caste_type enum type -->
-    <changeSet author="dpis" id="01-create-caste-type-enum">
+    <changeSet author="dpis" id="01-create-caste-type-enum" dbms="postgresql">
         <preConditions onFail="MARK_RAN">
             <not>
                 <sqlCheck expectedResult="1">

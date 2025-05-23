@@ -18,7 +18,7 @@ import java.math.BigDecimal
                 [
                         UniqueConstraint(
                                 name = "uq_ward_year",
-                                columnNames = ["ward_number", "year"]
+                                columnNames = ["ward_number", "census_year"]
                         )],
         indexes =
                 [
@@ -28,7 +28,7 @@ import java.math.BigDecimal
                         ),
                         Index(
                                 name = "idx_ward_time_series_population_year",
-                                columnList = "year"
+                                columnList = "census_year"
                         )]
 )
 @DynamicUpdate
@@ -47,8 +47,9 @@ class WardTimeSeriesPopulation : UuidBaseEntity() {
 
     /**
      * Census year for which the data is collected (e.g., 2068, 2078).
+     * Using "census_year" as column name to avoid conflicts with SQL reserved keyword "year".
      */
-    @Column(name = "year", nullable = false) var year: Int? = null
+    @Column(name = "census_year", nullable = false) var year: Int? = null
 
     /**
      * Total population in the ward for the specific year.

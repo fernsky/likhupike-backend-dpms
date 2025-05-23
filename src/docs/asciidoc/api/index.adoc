@@ -44,5 +44,6 @@ Error responses include detailed information:
 
 include::authentication/index.adoc[leveloffset=+1]
 include::profiles/index.adoc[leveloffset=+1]
+include::profiles/demographics/index.adoc[leveloffset=+1]
 // include::user-management/index.adoc[leveloffset=+1]
 

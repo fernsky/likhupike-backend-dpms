@@ -1,0 +1,110 @@
+= Ward-Age-Wise Marital Status
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[ward-age-wise-marital-status]]
+== Ward-Age-Wise Marital Status Operations
+
+These endpoints allow for retrieving and managing ward-age-wise marital status demographic data for the municipality.
+
+[[ward-age-wise-marital-status-get-by-id]]
+=== Get Ward-Age-Wise Marital Status By ID
+
+This endpoint retrieves a specific ward-age-wise marital status data entry by its ID.
+
+.HTTP Request
+include::{snippets}/ward-age-wise-marital-status-get-by-id/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-wise-marital-status-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-wise-marital-status-get-by-id/response-fields.adoc[]
+
+[[ward-age-wise-marital-status-get-all]]
+=== Get All Ward-Age-Wise Marital Status Data
+
+This endpoint retrieves all ward-age-wise marital status data entries.
+
+.HTTP Request
+include::{snippets}/ward-age-wise-marital-status-get-all/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-wise-marital-status-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-wise-marital-status-get-all/response-fields.adoc[]
+
+[[ward-age-wise-marital-status-get-by-ward]]
+=== Get Ward-Age-Wise Marital Status By Ward
+
+This endpoint retrieves ward-age-wise marital status data for a specific ward.
+
+.HTTP Request
+include::{snippets}/ward-age-wise-marital-status-get-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-wise-marital-status-get-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-wise-marital-status-get-by-ward/response-fields.adoc[]
+
+[[ward-age-wise-marital-status-get-by-age-group]]
+=== Get Ward-Age-Wise Marital Status By Age Group
+
+This endpoint retrieves ward-age-wise marital status data for a specific age group.
+
+.HTTP Request
+include::{snippets}/ward-age-wise-marital-status-get-by-age-group/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-wise-marital-status-get-by-age-group/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-wise-marital-status-get-by-age-group/response-fields.adoc[]
+
+[[ward-age-wise-marital-status-get-by-marital-status]]
+=== Get Ward-Age-Wise Marital Status By Marital Status
+
+This endpoint retrieves ward-age-wise marital status data for a specific marital status.
+
+.HTTP Request
+include::{snippets}/ward-age-wise-marital-status-get-by-marital-status/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-wise-marital-status-get-by-marital-status/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-wise-marital-status-get-by-marital-status/response-fields.adoc[]
+
+[[ward-age-wise-marital-status-summary-by-marital-status]]
+=== Get Marital Status Population Summary
+
+This endpoint provides a summary of population data grouped by marital status.
+
+.HTTP Request
+include::{snippets}/ward-age-wise-marital-status-summary-by-marital-status/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-wise-marital-status-summary-by-marital-status/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-wise-marital-status-summary-by-marital-status/response-fields.adoc[]
+
+[[ward-age-wise-marital-status-summary-by-age-group]]
+=== Get Age Group Population Summary
+
+This endpoint provides a summary of population data grouped by age group.
+
+.HTTP Request
+include::{snippets}/ward-age-wise-marital-status-summary-by-age-group/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-wise-marital-status-summary-by-age-group/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-wise-marital-status-summary-by-age-group/response-fields.adoc[]

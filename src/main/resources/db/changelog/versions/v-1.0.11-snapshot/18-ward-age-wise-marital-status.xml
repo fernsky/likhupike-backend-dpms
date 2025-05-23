@@ -18,10 +18,10 @@
             <column name="ward_number" type="INT">
                 <constraints nullable="false"/>
             </column>
-            <column name="age_group" type="marital_age_group">
+            <column name="age_group" type="VARCHAR(20)">
                 <constraints nullable="false"/>
             </column>
-            <column name="marital_status" type="marital_status">
+            <column name="marital_status" type="VARCHAR(20)">
                 <constraints nullable="false"/>
             </column>
             <column name="population" type="INT">

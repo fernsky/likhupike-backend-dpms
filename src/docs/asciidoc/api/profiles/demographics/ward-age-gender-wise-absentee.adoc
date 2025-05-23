@@ -1,0 +1,110 @@
+= Ward-Age-Gender-Wise Absentee
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[ward-age-gender-wise-absentee]]
+== Ward-Age-Gender-Wise Absentee Operations
+
+These endpoints allow for retrieving and managing ward-age-gender-wise absentee demographic data for the municipality.
+
+[[ward-age-gender-wise-absentee-get-by-id]]
+=== Get Ward-Age-Gender-Wise Absentee By ID
+
+This endpoint retrieves a specific ward-age-gender-wise absentee data entry by its ID.
+
+.HTTP Request
+include::{snippets}/ward-age-gender-wise-absentee-get-by-id/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-gender-wise-absentee-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-gender-wise-absentee-get-by-id/response-fields.adoc[]
+
+[[ward-age-gender-wise-absentee-get-all]]
+=== Get All Ward-Age-Gender-Wise Absentee Data
+
+This endpoint retrieves all ward-age-gender-wise absentee data entries.
+
+.HTTP Request
+include::{snippets}/ward-age-gender-wise-absentee-get-all/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-gender-wise-absentee-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-gender-wise-absentee-get-all/response-fields.adoc[]
+
+[[ward-age-gender-wise-absentee-get-by-ward]]
+=== Get Ward-Age-Gender-Wise Absentee By Ward
+
+This endpoint retrieves ward-age-gender-wise absentee data for a specific ward.
+
+.HTTP Request
+include::{snippets}/ward-age-gender-wise-absentee-get-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-gender-wise-absentee-get-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-gender-wise-absentee-get-by-ward/response-fields.adoc[]
+
+[[ward-age-gender-wise-absentee-get-by-age-group]]
+=== Get Ward-Age-Gender-Wise Absentee By Age Group
+
+This endpoint retrieves ward-age-gender-wise absentee data for a specific age group.
+
+.HTTP Request
+include::{snippets}/ward-age-gender-wise-absentee-get-by-age-group/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-gender-wise-absentee-get-by-age-group/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-gender-wise-absentee-get-by-age-group/response-fields.adoc[]
+
+[[ward-age-gender-wise-absentee-get-by-gender]]
+=== Get Ward-Age-Gender-Wise Absentee By Gender
+
+This endpoint retrieves ward-age-gender-wise absentee data for a specific gender.
+
+.HTTP Request
+include::{snippets}/ward-age-gender-wise-absentee-get-by-gender/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-gender-wise-absentee-get-by-gender/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-gender-wise-absentee-get-by-gender/response-fields.adoc[]
+
+[[ward-age-gender-wise-absentee-summary-by-age-gender]]
+=== Get Age Group Gender Population Summary
+
+This endpoint provides a summary of absentee population data grouped by age group and gender.
+
+.HTTP Request
+include::{snippets}/ward-age-gender-wise-absentee-summary-by-age-gender/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-gender-wise-absentee-summary-by-age-gender/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-gender-wise-absentee-summary-by-age-gender/response-fields.adoc[]
+
+[[ward-age-gender-wise-absentee-summary-by-ward]]
+=== Get Ward Absentee Population Summary
+
+This endpoint provides a summary of absentee population data grouped by ward.
+
+.HTTP Request
+include::{snippets}/ward-age-gender-wise-absentee-summary-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-age-gender-wise-absentee-summary-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-age-gender-wise-absentee-summary-by-ward/response-fields.adoc[]

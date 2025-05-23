@@ -1,0 +1,96 @@
+= Ward Time Series Population
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[ward-time-series-population]]
+== Ward Time Series Population Operations
+
+These endpoints allow for retrieving and managing ward time series population data for the municipality across different census years.
+
+[[ward-time-series-population-get-by-id]]
+=== Get Ward Time Series Population By ID
+
+This endpoint retrieves a specific ward time series population data entry by its ID.
+
+.HTTP Request
+include::{snippets}/ward-time-series-population-get-by-id/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-time-series-population-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-time-series-population-get-by-id/response-fields.adoc[]
+
+[[ward-time-series-population-get-all]]
+=== Get All Ward Time Series Population Data
+
+This endpoint retrieves all ward time series population data entries.
+
+.HTTP Request
+include::{snippets}/ward-time-series-population-get-all/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-time-series-population-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-time-series-population-get-all/response-fields.adoc[]
+
+[[ward-time-series-population-get-by-ward]]
+=== Get Ward Time Series Population By Ward
+
+This endpoint retrieves ward time series population data for a specific ward.
+
+.HTTP Request
+include::{snippets}/ward-time-series-population-get-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-time-series-population-get-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-time-series-population-get-by-ward/response-fields.adoc[]
+
+[[ward-time-series-population-get-by-year]]
+=== Get Ward Time Series Population By Year
+
+This endpoint retrieves ward time series population data for a specific census year.
+
+.HTTP Request
+include::{snippets}/ward-time-series-population-get-by-year/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-time-series-population-get-by-year/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-time-series-population-get-by-year/response-fields.adoc[]
+
+[[ward-time-series-population-summary-latest-by-ward]]
+=== Get Latest Ward Population Summary
+
+This endpoint provides a summary of the latest population data for each ward.
+
+.HTTP Request
+include::{snippets}/ward-time-series-population-summary-latest-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-time-series-population-summary-latest-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-time-series-population-summary-latest-by-ward/response-fields.adoc[]
+
+[[ward-time-series-population-summary-by-year]]
+=== Get Year Population Summary
+
+This endpoint provides a summary of population data grouped by census year.
+
+.HTTP Request
+include::{snippets}/ward-time-series-population-summary-by-year/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-time-series-population-summary-by-year/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-time-series-population-summary-by-year/response-fields.adoc[]

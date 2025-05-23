@@ -14,8 +14,4 @@
     <include file="05-cooperative-type-translations.xml" relativeToChangelogFile="true"/>
     <include file="06-cooperative-media.xml" relativeToChangelogFile="true"/>
 
-    <!-- Demographics database tables and permissions -->
-    <include file="07-ward-wise-religion-population.xml" relativeToChangelogFile="true"/>
-    <include file="08-demographics-permission-data.xml" relativeToChangelogFile="true"/>
-
 </databaseChangeLog>

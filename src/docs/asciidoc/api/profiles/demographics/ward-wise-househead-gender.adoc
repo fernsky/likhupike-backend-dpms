@@ -1,0 +1,96 @@
+= Ward-Wise Househead Gender
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[ward-wise-househead-gender]]
+== Ward-Wise Househead Gender Operations
+
+These endpoints allow for retrieving and managing ward-wise household head gender demographic data for the municipality.
+
+[[ward-wise-househead-gender-get-by-id]]
+=== Get Ward-Wise Househead Gender By ID
+
+This endpoint retrieves a specific ward-wise househead gender data entry by its ID.
+
+.HTTP Request
+include::{snippets}/ward-wise-househead-gender-get-by-id/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-wise-househead-gender-get-by-id/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-wise-househead-gender-get-by-id/response-fields.adoc[]
+
+[[ward-wise-househead-gender-get-all]]
+=== Get All Ward-Wise Househead Gender Data
+
+This endpoint retrieves all ward-wise househead gender data entries.
+
+.HTTP Request
+include::{snippets}/ward-wise-househead-gender-get-all/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-wise-househead-gender-get-all/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-wise-househead-gender-get-all/response-fields.adoc[]
+
+[[ward-wise-househead-gender-get-by-ward]]
+=== Get Ward-Wise Househead Gender By Ward
+
+This endpoint retrieves ward-wise househead gender data for a specific ward.
+
+.HTTP Request
+include::{snippets}/ward-wise-househead-gender-get-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-wise-househead-gender-get-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-wise-househead-gender-get-by-ward/response-fields.adoc[]
+
+[[ward-wise-househead-gender-get-by-gender]]
+=== Get Ward-Wise Househead Gender By Gender
+
+This endpoint retrieves ward-wise househead gender data for a specific gender.
+
+.HTTP Request
+include::{snippets}/ward-wise-househead-gender-get-by-gender/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-wise-househead-gender-get-by-gender/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-wise-househead-gender-get-by-gender/response-fields.adoc[]
+
+[[ward-wise-househead-gender-summary-by-gender]]
+=== Get Gender Population Summary
+
+This endpoint provides a summary of household head population data grouped by gender.
+
+.HTTP Request
+include::{snippets}/ward-wise-househead-gender-summary-by-gender/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-wise-househead-gender-summary-by-gender/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-wise-househead-gender-summary-by-gender/response-fields.adoc[]
+
+[[ward-wise-househead-gender-summary-by-ward]]
+=== Get Ward Population Summary
+
+This endpoint provides a summary of household head population data grouped by ward.
+
+.HTTP Request
+include::{snippets}/ward-wise-househead-gender-summary-by-ward/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/ward-wise-househead-gender-summary-by-ward/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/ward-wise-househead-gender-summary-by-ward/response-fields.adoc[]

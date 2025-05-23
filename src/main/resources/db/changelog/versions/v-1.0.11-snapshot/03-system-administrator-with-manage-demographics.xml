@@ -1,9 +1,9 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
     xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext 
-                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
-                      http://www.liquibase.org/xml/ns/dbchangelog 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                      http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <!-- Link the MANAGE_DEMOGRAPHICS permission to the System Administrator role -->
@@ -16,13 +16,13 @@
                 <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
                 <sqlCheck expectedResult="1">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_DEMOGRAPHICS'</sqlCheck>
                 <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM role_permissions 
+                    SELECT COUNT(*) FROM role_permissions
                     WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'MANAGE_DEMOGRAPHICS'
                 </sqlCheck>
             </and>
         </preConditions>
         <insert tableName="role_permissions">
-            <column name="id" value="a8b7c6d5-e4f3-2g1h-0i9j-8k7l6m5n4o3p"/>
+            <column name="id" value="ed05ab3e-b4c1-4db8-9c34-40f8dea423cd"/>
             <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
             <column name="permission_type" value="MANAGE_DEMOGRAPHICS"/>
         </insert>
@@ -39,13 +39,13 @@
                 <sqlCheck expectedResult="1">SELECT COUNT(*) FROM roles WHERE type = 'SYSTEM_ADMINISTRATOR'</sqlCheck>
                 <sqlCheck expectedResult="1">SELECT COUNT(*) FROM permissions WHERE type = 'VIEW_DEMOGRAPHIC_DATA'</sqlCheck>
                 <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM role_permissions 
+                    SELECT COUNT(*) FROM role_permissions
                     WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'VIEW_DEMOGRAPHIC_DATA'
                 </sqlCheck>
             </and>
         </preConditions>
         <insert tableName="role_permissions">
-            <column name="id" value="p3o4n5m6-l7k8-j9i0-h1g2-f3e4d5c6b7a8"/>
+            <column name="id" value="5bea3d7c-247c-454c-945a-672d184e95d6"/>
             <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
             <column name="permission_type" value="VIEW_DEMOGRAPHIC_DATA"/>
         </insert>
@@ -58,13 +58,13 @@
                 <tableExists tableName="role_permissions"/>
                 <sqlCheck expectedResult="1">SELECT COUNT(*) FROM permissions WHERE type = 'CREATE_DEMOGRAPHIC_DATA'</sqlCheck>
                 <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM role_permissions 
+                    SELECT COUNT(*) FROM role_permissions
                     WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'CREATE_DEMOGRAPHIC_DATA'
                 </sqlCheck>
             </and>
         </preConditions>
         <insert tableName="role_permissions">
-            <column name="id" value="q1w2e3r4-t5y6-u7i8-o9p0-a1s2d3f4g5h6"/>
+            <column name="id" value="87ef0f90-3a2c-42d6-86f4-6581b9cca31f"/>
             <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
             <column name="permission_type" value="CREATE_DEMOGRAPHIC_DATA"/>
         </insert>
@@ -77,13 +77,13 @@
                 <tableExists tableName="role_permissions"/>
                 <sqlCheck expectedResult="1">SELECT COUNT(*) FROM permissions WHERE type = 'UPDATE_DEMOGRAPHIC_DATA'</sqlCheck>
                 <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM role_permissions 
+                    SELECT COUNT(*) FROM role_permissions
                     WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'UPDATE_DEMOGRAPHIC_DATA'
                 </sqlCheck>
             </and>
         </preConditions>
         <insert tableName="role_permissions">
-            <column name="id" value="j7k8l9m0-n1b2-v3c4-x5z6-a7s8d9f0g1h2"/>
+            <column name="id" value="e526c5de-859e-422d-ab09-598bf924b83b"/>
             <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
             <column name="permission_type" value="UPDATE_DEMOGRAPHIC_DATA"/>
         </insert>
@@ -96,13 +96,13 @@
                 <tableExists tableName="role_permissions"/>
                 <sqlCheck expectedResult="1">SELECT COUNT(*) FROM permissions WHERE type = 'DELETE_DEMOGRAPHIC_DATA'</sqlCheck>
                 <sqlCheck expectedResult="0">
-                    SELECT COUNT(*) FROM role_permissions 
+                    SELECT COUNT(*) FROM role_permissions
                     WHERE role_type = 'SYSTEM_ADMINISTRATOR' AND permission_type = 'DELETE_DEMOGRAPHIC_DATA'
                 </sqlCheck>
             </and>
         </preConditions>
         <insert tableName="role_permissions">
-            <column name="id" value="r3t4y5u6-i7o8-p9a0-s1d2-f3g4h5j6k7l8"/>
+            <column name="id" value="85d5a2e7-8e31-4cbd-8148-f2741cc4ae0c"/>
             <column name="role_type" value="SYSTEM_ADMINISTRATOR"/>
             <column name="permission_type" value="DELETE_DEMOGRAPHIC_DATA"/>
         </insert>

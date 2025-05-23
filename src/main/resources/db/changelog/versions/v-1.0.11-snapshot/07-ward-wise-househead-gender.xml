@@ -19,7 +19,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="ward_name" type="VARCHAR(100)"/>
-            <column name="gender" type="gender">
+            <column name="gender" type="VARCHAR(20)">
                 <constraints nullable="false"/>
             </column>
             <column name="population" type="INT">

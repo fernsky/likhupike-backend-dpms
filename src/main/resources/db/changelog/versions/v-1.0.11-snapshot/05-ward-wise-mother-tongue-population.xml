@@ -18,7 +18,7 @@
             <column name="ward_number" type="INT">
                 <constraints nullable="false"/>
             </column>
-            <column name="language_type" type="language_type">
+            <column name="language_type" type="VARCHAR(20)">
                 <constraints nullable="false"/>
             </column>
             <column name="population" type="INT">

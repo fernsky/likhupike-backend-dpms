@@ -1,0 +1,44 @@
+= Demographics Management
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[demographics-overview]]
+== Overview
+
+The Demographics API provides endpoints for managing demographic information for the municipality,
+including population statistics, household data, literacy rates, and more.
+
+[[demographics-flow]]
+== Demographics Management Flow
+
+The standard demographics management flow is as follows:
+
+1. View demographic summary data
+2. Update demographic summary data (administrators only)
+3. Update individual demographic fields as needed (administrators only)
+
+include::demographics-summary.adoc[leveloffset=+1]
+include::ward-wise-demographic-summary.adoc[leveloffset=+1]
+include::ward-age-gender-wise-absentee.adoc[leveloffset=+1]
+include::ward-age-wise-marital-status.adoc[leveloffset=+1]
+include::ward-age-wise-population.adoc[leveloffset=+1]
+include::ward-time-series-population.adoc[leveloffset=+1]
+include::ward-wise-absentee-educational-level.adoc[leveloffset=+1]
+include::ward-wise-caste-population.adoc[leveloffset=+1]
+include::ward-wise-househead-gender.adoc[leveloffset=+1]
+
+[[demographics-error-codes]]
+== Error Codes
+
+[cols="1,1,3"]
+|===
+|Code |HTTP Status |Description
+
+|DEMO_001 |404 |Demographic summary not found
+|DEMO_002 |400 |Invalid demographic data
+|DEMO_003 |403 |Insufficient permissions
+|===
