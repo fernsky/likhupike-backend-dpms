@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create absentee_age_group enum type -->
+    <changeSet author="dpis" id="01-create-absentee-age-group-enum">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM pg_type WHERE typname = 'absentee_age_group'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <comment>Create absentee_age_group enum type</comment>
+        <sql>
+            CREATE TYPE absentee_age_group AS ENUM (
+                'AGE_0_4',
+                'AGE_5_9',
+                'AGE_10_14',
+                'AGE_15_19',
+                'AGE_20_24',
+                'AGE_25_29',
+                'AGE_30_34',
+                'AGE_35_39',
+                'AGE_40_44',
+                'AGE_45_49',
+                'AGE_50_AND_ABOVE'
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

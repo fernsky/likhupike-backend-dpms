@@ -1,0 +1,69 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create ward_wise_househead_gender table -->
+    <changeSet author="dpis" id="01-create-ward-wise-househead-gender-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ward_wise_househead_gender"/>
+            </not>
+        </preConditions>
+        <comment>Create ward_wise_househead_gender table</comment>
+        <createTable tableName="ward_wise_househead_gender">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ward_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ward_name" type="VARCHAR(100)"/>
+            <column name="gender" type="gender">
+                <constraints nullable="false"/>
+            </column>
+            <column name="population" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Add unique constraint to prevent duplicate entries for ward and gender -->
+    <changeSet author="dpis" id="02-add-unique-constraint-ward-gender">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ward_wise_househead_gender"/>
+            <not>
+                <indexExists indexName="uq_ward_gender"/>
+            </not>
+        </preConditions>
+        <comment>Add unique constraint to prevent duplicate entries for ward and gender</comment>
+        <addUniqueConstraint
+            constraintName="uq_ward_gender"
+            tableName="ward_wise_househead_gender"
+            columnNames="ward_number, gender"/>
+    </changeSet>
+
+    <!-- Add indexes for performance -->
+    <changeSet author="dpis" id="03-add-ward-wise-househead-gender-indexes">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ward_wise_househead_gender"/>
+            <not>
+                <indexExists indexName="idx_ward_wise_househead_gender_ward"/>
+            </not>
+        </preConditions>
+        <comment>Add indexes for performance</comment>
+        <createIndex indexName="idx_ward_wise_househead_gender_ward" tableName="ward_wise_househead_gender">
+            <column name="ward_number"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

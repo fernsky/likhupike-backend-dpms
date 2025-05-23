@@ -1,0 +1,29 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create married_age_group enum type -->
+    <changeSet author="dpis" id="01-create-married-age-group-enum">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM pg_type WHERE typname = 'married_age_group'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <comment>Create married_age_group enum type</comment>
+        <sql>
+            CREATE TYPE married_age_group AS ENUM (
+                'AGE_BELOW_15',
+                'AGE_15_19',
+                'AGE_20_24',
+                'AGE_25_29',
+                'AGE_30_34',
+                'AGE_35_39',
+                'AGE_40_AND_ABOVE'
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

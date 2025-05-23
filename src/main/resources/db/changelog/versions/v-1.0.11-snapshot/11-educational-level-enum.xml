@@ -1,0 +1,43 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create educational_level enum type -->
+    <changeSet author="dpis" id="01-create-educational-level-enum">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM pg_type WHERE typname = 'educational_level'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <comment>Create educational_level enum type</comment>
+        <sql>
+            CREATE TYPE educational_level AS ENUM (
+                'CHILD_DEVELOPMENT_CENTER',
+                'NURSERY',
+                'CLASS_1',
+                'CLASS_2',
+                'CLASS_3',
+                'CLASS_4',
+                'CLASS_5',
+                'CLASS_6',
+                'CLASS_7',
+                'CLASS_8',
+                'CLASS_9',
+                'CLASS_10',
+                'SLC_LEVEL',
+                'CLASS_12_LEVEL',
+                'BACHELOR_LEVEL',
+                'MASTERS_LEVEL',
+                'PHD_LEVEL',
+                'OTHER',
+                'INFORMAL_EDUCATION',
+                'EDUCATED',
+                'UNKNOWN'
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

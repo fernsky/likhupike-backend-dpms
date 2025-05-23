@@ -1,0 +1,25 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create gender enum type -->
+    <changeSet author="dpis" id="01-create-gender-enum">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM pg_type WHERE typname = 'gender'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <comment>Create gender enum type</comment>
+        <sql>
+            CREATE TYPE gender AS ENUM (
+                'MALE',
+                'FEMALE',
+                'OTHER'
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

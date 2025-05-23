@@ -1,0 +1,58 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create demographic_summary table -->
+    <changeSet author="dpis" id="01-create-demographic-summary-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="demographic_summary"/>
+            </not>
+        </preConditions>
+        <comment>Create demographic_summary table</comment>
+        <createTable tableName="demographic_summary">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="total_population" type="INT"/>
+            <column name="population_male" type="INT"/>
+            <column name="population_female" type="INT"/>
+            <column name="population_other" type="INT"/>
+            <column name="population_absentee_total" type="INT"/>
+            <column name="population_male_absentee" type="INT"/>
+            <column name="population_female_absentee" type="INT"/>
+            <column name="population_other_absentee" type="INT"/>
+            <column name="sex_ratio" type="DECIMAL(10,2)"/>
+            <column name="total_households" type="INT"/>
+            <column name="average_household_size" type="DECIMAL(10,2)"/>
+            <column name="population_density" type="DECIMAL(10,2)"/>
+            <column name="population_0_to_14" type="INT"/>
+            <column name="population_15_to_59" type="INT"/>
+            <column name="population_60_and_above" type="INT"/>
+            <column name="growth_rate" type="DECIMAL(10,2)"/>
+            <column name="literacy_rate_above_15" type="DECIMAL(10,2)"/>
+            <column name="literacy_rate_15_to_24" type="DECIMAL(10,2)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Add comment explaining singleton nature of demographic_summary -->
+    <changeSet author="dpis" id="02-add-comment-demographic-summary">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="demographic_summary"/>
+        </preConditions>
+        <sql>
+            COMMENT ON TABLE demographic_summary IS 'This table is designed as a singleton table that contains one row with aggregated demographic data for the entire municipality.';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

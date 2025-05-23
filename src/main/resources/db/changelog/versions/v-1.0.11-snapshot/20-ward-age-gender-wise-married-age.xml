@@ -1,0 +1,77 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create ward_age_gender_wise_married_age table -->
+    <changeSet author="dpis" id="01-create-ward-age-gender-wise-married-age-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ward_age_gender_wise_married_age"/>
+            </not>
+        </preConditions>
+        <comment>Create ward_age_gender_wise_married_age table</comment>
+        <createTable tableName="ward_age_gender_wise_married_age">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ward_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="age_group" type="married_age_group">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gender" type="gender">
+                <constraints nullable="false"/>
+            </column>
+            <column name="population" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Add unique constraint to prevent duplicate entries for ward, age group, and gender -->
+    <changeSet author="dpis" id="02-add-unique-constraint-ward-married-age-gender">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ward_age_gender_wise_married_age"/>
+            <not>
+                <indexExists indexName="uq_ward_married_age_gender"/>
+            </not>
+        </preConditions>
+        <comment>Add unique constraint to prevent duplicate entries for ward, age group, and gender</comment>
+        <addUniqueConstraint
+            constraintName="uq_ward_married_age_gender"
+            tableName="ward_age_gender_wise_married_age"
+            columnNames="ward_number, age_group, gender"/>
+    </changeSet>
+
+    <!-- Add indexes for performance -->
+    <changeSet author="dpis" id="03-add-ward-age-gender-married-age-indexes">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ward_age_gender_wise_married_age"/>
+            <not>
+                <indexExists indexName="idx_ward_age_gender_married_age_ward"/>
+            </not>
+        </preConditions>
+        <comment>Add indexes for performance</comment>
+        <createIndex indexName="idx_ward_age_gender_married_age_ward" tableName="ward_age_gender_wise_married_age">
+            <column name="ward_number"/>
+        </createIndex>
+        <createIndex indexName="idx_ward_age_gender_married_age_age" tableName="ward_age_gender_wise_married_age">
+            <column name="age_group"/>
+        </createIndex>
+        <createIndex indexName="idx_ward_age_gender_married_age_gender" tableName="ward_age_gender_wise_married_age">
+            <column name="gender"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

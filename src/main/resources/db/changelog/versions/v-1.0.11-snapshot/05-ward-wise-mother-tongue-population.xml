@@ -1,0 +1,71 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create ward_wise_mother_tongue_population table -->
+    <changeSet author="dpis" id="01-create-ward-wise-mother-tongue-population-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ward_wise_mother_tongue_population"/>
+            </not>
+        </preConditions>
+        <comment>Create ward_wise_mother_tongue_population table</comment>
+        <createTable tableName="ward_wise_mother_tongue_population">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ward_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="language_type" type="language_type">
+                <constraints nullable="false"/>
+            </column>
+            <column name="population" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Add unique constraint to prevent duplicate entries for ward and language -->
+    <changeSet author="dpis" id="02-add-unique-constraint-ward-language">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ward_wise_mother_tongue_population"/>
+            <not>
+                <indexExists indexName="uq_ward_language"/>
+            </not>
+        </preConditions>
+        <comment>Add unique constraint to prevent duplicate entries for ward and language</comment>
+        <addUniqueConstraint
+            constraintName="uq_ward_language"
+            tableName="ward_wise_mother_tongue_population"
+            columnNames="ward_number, language_type"/>
+    </changeSet>
+
+    <!-- Add indexes for performance -->
+    <changeSet author="dpis" id="03-add-ward-wise-mother-tongue-population-indexes">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ward_wise_mother_tongue_population"/>
+            <not>
+                <indexExists indexName="idx_ward_wise_mother_tongue_population_ward"/>
+            </not>
+        </preConditions>
+        <comment>Add indexes for performance</comment>
+        <createIndex indexName="idx_ward_wise_mother_tongue_population_ward" tableName="ward_wise_mother_tongue_population">
+            <column name="ward_number"/>
+        </createIndex>
+        <createIndex indexName="idx_ward_wise_mother_tongue_population_language" tableName="ward_wise_mother_tongue_population">
+            <column name="language_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
