@@ -23,13 +23,16 @@ The standard demographics management flow is as follows:
 
 include::demographics-summary.adoc[leveloffset=+1]
 include::ward-wise-demographic-summary.adoc[leveloffset=+1]
+include::ward-wise-religion-population.adoc[leveloffset=+1]
 include::ward-age-gender-wise-absentee.adoc[leveloffset=+1]
+include::ward-age-gender-wise-married-age.adoc[leveloffset=+1]
 include::ward-age-wise-marital-status.adoc[leveloffset=+1]
 include::ward-age-wise-population.adoc[leveloffset=+1]
 include::ward-time-series-population.adoc[leveloffset=+1]
 include::ward-wise-absentee-educational-level.adoc[leveloffset=+1]
 include::ward-wise-caste-population.adoc[leveloffset=+1]
 include::ward-wise-househead-gender.adoc[leveloffset=+1]
+include::ward-wise-mother-tongue-population.adoc[leveloffset=+1]
 
 [[demographics-error-codes]]
 == Error Codes
