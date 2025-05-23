@@ -1,0 +1,36 @@
+=== Health Domain
+
+==== `WardWiseChronicDisease`
+Entity that tracks chronic disease prevalence by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `ward`           | The ward where the data is recorded
+| `chronicDisease` | Type of chronic disease (reference to ChronicDiseaseType)
+| `population`     | Number of people with this disease
+|===
+
+==== `ChronicDiseaseType`
+Enumeration of chronic disease types.
+
+[cols="1,3", options="header"]
+|===
+| Value                         | Description
+| `HEART_RELATED_DISEASE`       | Heart-related disease (मुटुसम्बन्धी रोग)
+| `RESPIRATION_RELATED`         | Respiratory disease (स्वास प्रस्वाससम्बन्धी)
+| `ASTHMA`                      | Asthma (दम)
+| `EPILEPSY`                    | Epilepsy (छारे रोग)
+| `TUMOR_CANCER`                | Tumor/Cancer (अर्बुद (क्यान्सर))
+| `DIABETES`                    | Diabetes (मदुमेह)
+| `KIDNEY_RELATED`              | Kidney-related disease (मृगौलासम्बन्धी)
+| `LIVER_RELATED`               | Liver-related disease (कलेजोसम्बन्धी)
+| `ARTHRITIS_JOINT_PAIN`        | Arthritis/Joint pain (बाथ/जोर्नी दुखाई)
+| `GYNECOLOGICAL_DISEASE`       | Gynecological disease (स्त्री रोग)
+| `OCCUPATIONAL_DISEASE`        | Occupational disease (पेशागत रोग)
+| `BLOOD_PRESSURE_HIGH_LOW`     | Blood pressure (high/low) (रक्तचाप (उच्च / न्यून))
+| `GASTRIC_ULCER_INTESTINE_DISEASE` | Gastric/Ulcer/Intestinal disease (ग्यास्ट्रिक/अल्सर/आन्द्राको रोग)
+| `PARKINSON_ALZHEIMER`         | Parkinson's/Alzheimer's disease (पार्किन्सन/अल्जाइमर)
+| `MIGRAINE`                    | Migraine (माइग्रेन)
+| `OTHER`                       | Other diseases (अन्य)
+|===

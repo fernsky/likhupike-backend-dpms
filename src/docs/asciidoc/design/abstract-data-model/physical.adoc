@@ -1,220 +1,378 @@
-=== WardWiseTimeToPublicTransport
+=== Physical Infrastructure Domain
 
-- ward
-- timeToPublicTransport
-- household
+==== `WardWiseTimeToPublicTransport`
+Entity that tracks time taken to reach public transport by ward.
 
-=== TimeToPublicTransportType
+[cols="1,3", options="header"]
+|===
+| Field                 | Description
+| `ward`                | The ward where the data is recorded
+| `timeToPublicTransport` | Time category to reach public transport (reference to TimeToPublicTransportType)
+| `household`          | Number of households in this time category
+|===
 
-  time: {
-    under_15_min: '१५ मिनेटभित्र',
-    under_30_min: '३० मिनेटभित्र',
-    under_1_hour: '१ घण्टाभित्र',
-    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
-  },
+==== `TimeToPublicTransportType`
+Enumeration of time categories for reaching public transport.
 
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `UNDER_15_MIN`       | Under 15 minutes (१५ मिनेटभित्र)
+| `UNDER_30_MIN`       | Under 30 minutes (३० मिनेटभित्र)
+| `UNDER_1_HOUR`       | Under 1 hour (१ घण्टाभित्र)
+| `1_HOUR_OR_MORE`     | 1 hour or more (१ घण्टाभन्दा बढी)
+|===
 
-=== WardWiseTimeToMarketCenter
+==== `WardWiseTimeToMarketCenter`
+Entity that tracks time taken to reach market centers by ward.
 
-- ward
-- timeToMarketCenter
-- household
+[cols="1,3", options="header"]
+|===
+| Field                | Description
+| `ward`              | The ward where the data is recorded
+| `timeToMarketCenter` | Time category to reach market center (reference to TimeToMarketCenterType)
+| `household`        | Number of households in this time category
+|===
 
-=== TimeToMarketCenterType
+==== `TimeToMarketCenterType`
+Enumeration of time categories for reaching market centers.
 
-  time: {
-    under_15_min: '१५ मिनेटभित्र',
-    under_30_min: '३० मिनेटभित्र',
-    under_1_hour: '१ घण्टाभित्र',
-    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
-  },
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `UNDER_15_MIN`       | Under 15 minutes (१५ मिनेटभित्र)
+| `UNDER_30_MIN`       | Under 30 minutes (३० मिनेटभित्र)
+| `UNDER_1_HOUR`       | Under 1 hour (१ घण्टाभित्र)
+| `1_HOUR_OR_MORE`     | 1 hour or more (१ घण्टाभन्दा बढी)
+|===
 
-=== WardWiseCookingFuel
+==== `WardWiseCookingFuel`
+Entity that tracks types of cooking fuel used by households in each ward.
 
-- ward
-- cookingFuel
-- households
+[cols="1,3", options="header"]
+|===
+| Field          | Description
+| `ward`         | The ward where the data is recorded
+| `cookingFuel`  | Type of cooking fuel (reference to CookingFuelType)
+| `households`   | Number of households using this fuel type
+|===
 
-=== CookingFuelType
+==== `CookingFuelType`
+Enumeration of cooking fuel types used by households.
 
-  cooking_fuel: {
-    wood: 'काठ/दाउरा/कोइला',
-    lp_gas: 'एल.पी. ग्याँस',
-    kerosene: 'मट्टितेल',
-    electricity: 'विद्युत',
-    biogas: 'गोबर ग्याँस/बायोग्याँस',
-    dungcake: 'गोबर/गुँइठा',
-    other: 'अन्य',
-  },
+[cols="1,3", options="header"]
+|===
+| Value          | Description
+| `WOOD`         | Wood/Firewood/Coal (काठ/दाउरा/कोइला)
+| `LP_GAS`       | LPG (एल.पी. ग्याँस)
+| `KEROSENE`     | Kerosene (मट्टितेल)
+| `ELECTRICITY`  | Electricity (विद्युत)
+| `BIOGAS`       | Biogas (गोबर ग्याँस/बायोग्याँस)
+| `DUNGCAKE`     | Dung cake (गोबर/गुँइठा)
+| `OTHER`        | Other (अन्य)
+|===
 
+==== `WardWiseElectricitySource`
+Entity that tracks sources of electricity used by households in each ward.
 
-=== WardWiseElectricitySource
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `ward`             | The ward where the data is recorded
+| `electricitySource`| Type of electricity source (reference to ElectricitySourceType)
+| `households`       | Number of households using this energy source
+|===
 
-- ward
-- electricitySource
-- households
+==== `ElectricitySourceType`
+Enumeration of electricity source types.
 
-=== ElectricitySourceType
+[cols="1,3", options="header"]
+|===
+| Value          | Description
+| `ELECTRICITY`  | Electricity grid (विद्युत)
+| `SOLAR`        | Solar power (सोलार)
+| `KEROSENE`     | Kerosene (मट्टितेल)
+| `BIOGAS`       | Biogas (बायोग्याँस)
+| `OTHER`        | Other sources (अन्य)
+|===
 
-  energy_source: {
-    electricity: 'विद्युत',
-    solar: 'सोलार',
-    kerosene: 'मट्टितेल',
-    biogas: 'बायोग्याँस',
-    other: 'अन्य (खुलाउने).',
-  },
+==== `WardWiseFacilities`
+Entity that tracks household amenities and facilities by ward.
 
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `facility`   | Type of household facility (reference to FacilityType)
+| `households` | Number of households with this facility
+|===
 
-=== WardWiseFacilities
+==== `FacilityType`
+Enumeration of household facilities and amenities.
 
-- ward
-- facility
-- households
+[cols="1,3", options="header"]
+|===
+| Value                          | Description
+| `RADIO`                        | Radio (रेडियो सुविधा)
+| `TELEVISION`                   | Television (टेलिभिजन)
+| `COMPUTER`                     | Computer/Laptop (कम्प्युटर/ल्यापटप)
+| `INTERNET`                     | Internet service (इन्टरनेट सुविधा)
+| `MOBILE_PHONE`                 | Mobile phone (मोबाईल फोन)
+| `CAR_JEEP`                     | Car/Jeep/Van (कार/जीप/भ्यान)
+| `MOTORCYCLE`                   | Motorcycle/Scooter (मोटरसाईकल/स्कुटर)
+| `BICYCLE`                      | Bicycle (साईकल)
+| `REFRIGERATOR`                 | Refrigerator (रेफ्रिजेरेटर/फ्रिज)
+| `WASHING_MACHINE`              | Washing machine (वासिङ मेसिन)
+| `AIR_CONDITIONER`              | Air conditioner (एयर कन्डिसनर)
+| `ELECTRICAL_FAN`               | Electrical fan (विद्युतीय पंखा)
+| `MICROWAVE_OVEN`               | Microwave oven (माइक्रोवेभ ओभन)
+| `DAILY_NATIONAL_NEWSPAPER_ACCESS` | Access to daily national newspaper (राष्ट्रिय दैनिक पत्रिकाको पहुँच)
+| `NONE`                         | None of the above (माथिका कुनै पनि नभएको)
+|===
 
-==== FacilityType
+==== `WardWiseHouseholdRoof`
+Entity that tracks types of roofs used in households by ward.
 
-  facilities: {
-    radio: 'रेडियो सुविधा',
-    television: 'टेलिभिजन',
-    computer: 'कम्प्युटर/ल्यापटप',
-    internet: 'इन्टरनेट सुविधा',
-    mobile_phone: 'मोबाईल फोन',
-    car_jeep: 'कार/जीप/भ्यान',
-    motorcycle: 'मोटरसाईकल/स्कुटर',
-    bicycle: 'साईकल',
-    refrigerator: 'रेफ्रिजेरेटर (फ्रिज)',
-    washing_machine: 'वासिङ मेसिन',
-    air_conditioner: 'एयर कन्डिसनर',
-    electrical_fan: 'विद्युतीय पंखा',
-    microwave_oven: 'माइक्रोवेभ ओभन',
-    daily_national_newspaper_access: 'राष्ट्रिय दैनिक पत्रिकाको पहुँच',
-    none: 'माथिका कुनै पनि नभएको ',
-  },
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `roofType`   | Type of roof (reference to RoofType)
+| `households` | Number of households with this roof type
+|===
 
+==== `RoofType`
+Enumeration of roof types used in houses.
 
-=== WardWiseHouseholdRoof
+[cols="1,3", options="header"]
+|===
+| Value        | Description
+| `CEMENT`     | Cement concrete (सिमेन्ट ढलान)
+| `TIN`        | Tin/Metal sheet (जस्ता/टिन)
+| `TILE`       | Tile/Clay tile (टायल/खपडा/झिँगटी)
+| `STRAW`      | Thatch/Straw (खर/पराल/छ्वाली)
+| `WOOD`       | Wood/Plank (काठ/फल्याक)
+| `STONE`      | Stone/Slate (ढुङ्गा/स्लेट)
+| `OTHER`      | Other materials (अन्य)
+|===
 
-- ward
-- roofType
-- households
+==== `WardWiseHouseholdBase`
+Entity that tracks types of house foundations by ward.
 
-=== RoofType
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `baseType`   | Type of house foundation
+| `households` | Number of households with this foundation type
+|===
 
-  house_roof: {
-    cement: 'सिमेन्ट ढलान',
-    tin: 'जस्ता/टिन',
-    tile: 'टायल/खपडा/झिँगटी',
-    straw: 'खर/पराल/छ्वाली',
-    wood: 'काठ/फल्याक',
-    stone: 'ढुङ्गा/स्लेट',
-    other: 'अन्य (खुलाउने)',
-  },
+=== BaseType
 
+Enumeration of house foundation types.
 
-=== WardWiseHouseholdBase
-
-- ward
-- baseType
-- households
-
-
-=== WardWiseHouseholdOuterWall
-
-- ward
-- wallType
-- households
-
-
-=== WardWiseHouseholdFloor
-
-- ward
-- floorType
-- households
-
-=== WardWiseHouseMapPassed
-
-- ward
-- mapPassedStatus
-- households
-
-=== WardWiseTimeToActiveRoad
-
-- ward
-- timeToActiveRoad
-- households
-
-=== TimeToActiveRoadType
-
-  time: {
-    under_15_min: '१५ मिनेटभित्र',
-    under_30_min: '३० मिनेटभित्र',
-    under_1_hour: '१ घण्टाभित्र',
-    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
-  },
-
-
-=== WardWiseTimeToHealthOrganization
-
-- ward
-- timeToHealthOrganization
-- households
-
-=== TimeToHealthOrganizationType
-
-  time: {
-    under_15_min: '१५ मिनेटभित्र',
-    under_30_min: '३० मिनेटभित्र',
-    under_1_hour: '१ घण्टाभित्र',
-    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
-  },
-
-
-=== WardWiseTimeToFinancialOrganization
-
-- ward
-- timeToFinancialOrganization
-- households
-
-=== TimeToFinancialOrganizationType
-
-  time: {
-    under_15_min: '१५ मिनेटभित्र',
-    under_30_min: '३० मिनेटभित्र',
-    under_1_hour: '१ घण्टाभित्र',
-    '1_hour_or_more': '१ घण्टाभन्दा बढी ',
-  },
+[cols="1,3", options="header"]
+|===
+| Value              | Description
+| `CONCRETE_PILLAR`  | Concrete pillar construction (ढलान पिल्लरसहितको)
+| `CEMENT_JOINED`    | Cement-bonded brick/stone (सिमेन्टको जोडाइ भएको इँटा/ढुङ्गा)
+| `MUD_JOINED`       | Mud-bonded brick/stone (माटोको जोडाइ भएको इँटा/ढुङ्गा)
+| `WOOD_POLE`        | Wooden pole foundation (काठको खम्बा गाडेको)
+| `OTHER`            | Other materials (अन्य)
+|===
 
 
-==== WardWiseRoadStatus
+==== `WardWiseHouseholdOuterWall`
+Entity that tracks types of outer walls used in houses by ward.
 
-- ward
-- roadStatus
-- households
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `wallType`   | Type of outer wall
+| `households` | Number of households with this wall type
+|===
 
-=== RoadStatusType
+=== OuterWallType
+Enumeration of outer wall types used in houses.
 
-  road_status: {
-    black_topped: 'कालोपत्रे/पक्की ढलान सडक',
-    graveled: 'ग्राभेल सडक',
-    dirt: 'धुले (कच्ची) सडक',
-    goreto: 'गोरेटो बाटो',
-    other: 'अन्य ',
-  },
+[cols="1,3", options="header"]
+|===
+| Value           | Description
+| `CEMENT_JOINED` | Cement-bonded brick/stone (सिमेन्टको जोडाइ भएको इँटा/ढुङ्गा)
+| `UNBAKED_BRICK` | Unbaked brick (काँचो इँटा)
+| `MUD_JOINED`    | Mud-bonded brick/stone (माटोको जोडाइ भएको इँटा/ढुङ्गा)
+| `TIN`           | Tin/Metal sheet (जस्ता/टिन/च्यादर)
+| `BAMBOO`        | Bamboo materials (बाँसजन्य सामग्री)
+| `WOOD`          | Wood/Plank (काठ/फल्याक)
+| `PREFAB`        | Prefabricated (प्रि फ्याब)
+| `OTHER`         | Other materials (अन्य)
+|===
 
 
-=== WardWiseHouseOwnership
+==== `WardWiseHouseholdFloor`
+Entity that tracks types of floors used in houses by ward.
 
-- ward
-- ownershipType
-- households
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `floorType`  | Type of floor
+| `households` | Number of households with this floor type
+|===
 
-==== OwnershipType
 
-  house_ownership: {
-    private: 'निजी',
-    rent: 'भाडामा',
-    inisitutional: 'संस्थागत',
-    other: 'अन्य (खुलाउने)',
-  },
+==== `FloorType`
+Enumeration of floor types used in houses.
+
+[cols="1,3", options="header"]
+|===
+| Value        | Description
+| `CONCRETE`   | Cement concrete (सिमेन्ट ढलान)
+| `MUD`        | Mud (माटो)
+| `WOOD`       | Wood plank/Bamboo (काठको फल्याक/बाँस)
+| `BRICK`      | Brick/Stone (इँटा/ढुङ्गा)
+| `TILE`       | Ceramic tile (सेरामिक टायल)
+| `OTHER`      | Other materials (अन्य)
+|===
+
+==== `WardWiseHouseMapPassed`
+Entity that tracks building approval status by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `ward`             | The ward where the data is recorded
+| `mapPassedStatus`  | Status of building approval
+| `households`       | Number of households with this approval status
+|===
+
+
+
+=== MapPassedStatusType
+Enumeration of building approval statuses.
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `PASSED`             | Map passed (नक्सा पास भएको)
+| `ARCHIVED`         | Map archived (नक्सा संग्रहित भएको)
+| `NEITHER_PASSED_NOR_ARCHIVED`     | Not applicable (लागु नहुने)
+|===
+
+==== `WardWiseTimeToActiveRoad`
+Entity that tracks time taken to reach active roads by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field              | Description
+| `ward`             | The ward where the data is recorded
+| `timeToActiveRoad` | Time category to reach active road (reference to TimeToActiveRoadType)
+| `households`       | Number of households in this time category
+|===
+
+==== `TimeToActiveRoadType`
+Enumeration of time categories for reaching active roads.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `UNDER_15_MIN`       | Under 15 minutes (१५ मिनेटभित्र)
+| `UNDER_30_MIN`       | Under 30 minutes (३० मिनेटभित्र)
+| `UNDER_1_HOUR`       | Under 1 hour (१ घण्टाभित्र)
+| `1_HOUR_OR_MORE`     | 1 hour or more (१ घण्टाभन्दा बढी)
+|===
+
+==== `WardWiseTimeToHealthOrganization`
+Entity that tracks time taken to reach health facilities by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field                     | Description
+| `ward`                    | The ward where the data is recorded
+| `timeToHealthOrganization`| Time category to reach health facility (reference to TimeToHealthOrganizationType)
+| `households`              | Number of households in this time category
+|===
+
+==== `TimeToHealthOrganizationType`
+Enumeration of time categories for reaching health facilities.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `UNDER_15_MIN`       | Under 15 minutes (१५ मिनेटभित्र)
+| `UNDER_30_MIN`       | Under 30 minutes (३० मिनेटभित्र)
+| `UNDER_1_HOUR`       | Under 1 hour (१ घण्टाभित्र)
+| `1_HOUR_OR_MORE`     | 1 hour or more (१ घण्टाभन्दा बढी)
+|===
+
+==== `WardWiseTimeToFinancialOrganization`
+Entity that tracks time taken to reach financial institutions by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field                         | Description
+| `ward`                        | The ward where the data is recorded
+| `timeToFinancialOrganization` | Time category to reach financial institution (reference to TimeToFinancialOrganizationType)
+| `households`                  | Number of households in this time category
+|===
+
+==== `TimeToFinancialOrganizationType`
+Enumeration of time categories for reaching financial institutions.
+
+[cols="1,3", options="header"]
+|===
+| Value                | Description
+| `UNDER_15_MIN`       | Under 15 minutes (१५ मिनेटभित्र)
+| `UNDER_30_MIN`       | Under 30 minutes (३० मिनेटभित्र)
+| `UNDER_1_HOUR`       | Under 1 hour (१ घण्टाभित्र)
+| `1_HOUR_OR_MORE`     | 1 hour or more (१ घण्टाभन्दा बढी)
+|===
+
+==== `WardWiseRoadStatus`
+Entity that tracks road types by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field        | Description
+| `ward`       | The ward where the data is recorded
+| `roadStatus` | Type of road (reference to RoadStatusType)
+| `households` | Number of households with access to this road type
+|===
+
+==== `RoadStatusType`
+Enumeration of road types available to households.
+
+[cols="1,3", options="header"]
+|===
+| Value             | Description
+| `BLACK_TOPPED`    | Black-topped/Paved road (कालोपत्रे/पक्की ढलान सडक)
+| `GRAVELED`        | Graveled road (ग्राभेल सडक)
+| `DIRT`            | Dirt road (धुले कच्ची सडक)
+| `GORETO`          | Footpath (गोरेटो बाटो)
+| `OTHER`           | Other types (अन्य)
+|===
+
+==== `WardWiseHouseOwnership`
+Entity that tracks house ownership types by ward.
+
+[cols="1,3", options="header"]
+|===
+| Field            | Description
+| `ward`           | The ward where the data is recorded
+| `ownershipType`  | Type of house ownership (reference to OwnershipType)
+| `households`     | Number of households with this ownership type
+|===
+
+==== `OwnershipType`
+Enumeration of house ownership types.
+
+[cols="1,3", options="header"]
+|===
+| Value            | Description
+| `PRIVATE`        | Private ownership (निजी)
+| `RENT`           | Rented (भाडामा)
+| `INSTITUTIONAL`  | Institutional ownership (संस्थागत)
+| `OTHER`          | Other ownership types (अन्य)
+|===
 
 

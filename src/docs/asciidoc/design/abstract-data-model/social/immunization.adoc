@@ -1,101 +1,108 @@
+=== Immunization Domain
 
-=== ImmunizationIndicators
-
-- indicator
-- year
-- value
-
-=== ImmunizationIndicatorType
+==== `ImmunizationIndicators`
+Entity that tracks immunization indicators over time.
 
 [cols="1,3", options="header"]
 |===
-| Value         | Description
-| `ROTA2_ONE_YEAR` | % of 1 year children immunized with rota 2
-| `DPT_HEP_B_HIB3_UNDER_ONE` | % of children <1 Yr immunized with DPT-HepB-Hib3
-| `DPT_HEP_B_HIB1_UNDER_ONE` | % of children <1Yr immunized with DPT-HePB-Hib1
-| `JE_12_23_MONTHS` | % of children aged 12-23 months immunized with JE
-| `MR2_12_23_MONTHS` | % of children aged 12-23 months immunized with MR2
-| `FULLY_IMMUNIZED_NIP` | % of children fully immunized as per NIP schedule
-| `TCV` | % of children immunized with TCV
-| `MR1` | % of children months immunized against mr 1
-| `FIPV1_UNDER_ONE` | % of children under one year immunized FIPV 1
-| `BCG_UNDER_ONE` | % of children under one year immunized with BCG
-| `FIPV2_UNDER_ONE` | % of children under one year immunized with FIPV 2
-| `OPV1_UNDER_ONE` | % of children under one year immunized with OPV 1
-| `OPV3_UNDER_ONE` | % of children under one year immunized with OPV 3
-| `PCV1_UNDER_ONE` | % of children under one year immunized with PCV 1
-| `PCV3_UNDER_ONE` | % of children under one year immunized with PCV 3
-| `HYGIENE_PROMOTION` | % of hygiene promotion session conducted
-| `PLANNED_IMMUNIZATION_SESSIONS` | % of planned immunization sessions conducted
-| `TD_COMPLETE_PREGNANT` | % of preg. women who received completed dose of TD
-| `TD2_PREGNANT` | % of pregnant women who received TD2
-| `TD2_PLUS_PREGNANT` | % of pregnant women who received TD2+
-| `SERIOUS_AEFI` | % of serious AEFI among reported AEFI cases
-| `ROTA1_UNDER_ONE` | % of under 1 year children immunized with rota 1
-| `PLANNED_CLINICS` | % of planned immunization clinics conducted
-| `BCG_WASTAGE` | Vaccine wastage rate (BCG)
-| `DPT_HEP_B_HIB_WASTAGE` | Vaccine wastage rate (DPT/HepB/Hib)
-| `FIPV_WASTAGE` | Vaccine wastage rate (FIPV)
-| `JE_WASTAGE` | Vaccine wastage rate (JE)
-| `MR_WASTAGE` | Vaccine wastage rate (MR)
-| `OPV_WASTAGE` | Vaccine wastage rate (OPV)
-| `ROTA_WASTAGE` | Vaccine wastage rate (Rota)
-| `TCV_WASTAGE` | Vaccine wastage rate (TCV)
-| `TD_WASTAGE` | Vaccine wastage rate (TD)
-| `AES_RATE` | Acute encephalitis syndrome (AES) rate per 100,000
-| `DPT_HEP_B_HIB_DROPOUT_1_3` | DPT-HepB-Hib Dropuout rate (1 vs 3)
-| `DPT_HEP_B_HIB1_MR2_DROPOUT` | DPT-HepB-Hib1 vs MR2 dropout rate
-| `MEASLES_RATE` | Measles incidence rate per 100,000 population
-| `MEASLES_RUBELLA_DROPOUT` | Measles/Rubella droupout rate
+| Field       | Description
+| `indicator` | Type of immunization indicator (reference to ImmunizationIndicatorType)
+| `year`      | Year when the indicator was measured
+| `value`     | Percentage or numerical value of the indicator
+|===
+
+==== `ImmunizationIndicatorType`
+Enumeration of immunization and health indicators.
+
+[cols="1,3", options="header"]
+|===
+| Value                          | Description
+| `ROTA2_ONE_YEAR`               | % of 1 year children immunized with rota 2
+| `DPT_HEP_B_HIB3_UNDER_ONE`     | % of children <1 Yr immunized with DPT-HepB-Hib3
+| `DPT_HEP_B_HIB1_UNDER_ONE`     | % of children <1Yr immunized with DPT-HePB-Hib1
+| `JE_12_23_MONTHS`              | % of children aged 12-23 months immunized with JE
+| `MR2_12_23_MONTHS`             | % of children aged 12-23 months immunized with MR2
+| `FULLY_IMMUNIZED_NIP`          | % of children fully immunized as per NIP schedule
+| `TCV`                          | % of children immunized with TCV
+| `MR1`                          | % of children months immunized against mr 1
+| `FIPV1_UNDER_ONE`              | % of children under one year immunized FIPV 1
+| `BCG_UNDER_ONE`                | % of children under one year immunized with BCG
+| `FIPV2_UNDER_ONE`              | % of children under one year immunized with FIPV 2
+| `OPV1_UNDER_ONE`               | % of children under one year immunized with OPV 1
+| `OPV3_UNDER_ONE`               | % of children under one year immunized with OPV 3
+| `PCV1_UNDER_ONE`               | % of children under one year immunized with PCV 1
+| `PCV3_UNDER_ONE`               | % of children under one year immunized with PCV 3
+| `HYGIENE_PROMOTION`            | % of hygiene promotion session conducted
+| `PLANNED_IMMUNIZATION_SESSIONS`| % of planned immunization sessions conducted
+| `TD_COMPLETE_PREGNANT`         | % of preg. women who received completed dose of TD
+| `TD2_PREGNANT`                 | % of pregnant women who received TD2
+| `TD2_PLUS_PREGNANT`            | % of pregnant women who received TD2+
+| `SERIOUS_AEFI`                 | % of serious AEFI among reported AEFI cases
+| `ROTA1_UNDER_ONE`              | % of under 1 year children immunized with rota 1
+| `PLANNED_CLINICS`              | % of planned immunization clinics conducted
+| `BCG_WASTAGE`                  | Vaccine wastage rate (BCG)
+| `DPT_HEP_B_HIB_WASTAGE`        | Vaccine wastage rate (DPT/HepB/Hib)
+| `FIPV_WASTAGE`                 | Vaccine wastage rate (FIPV)
+| `JE_WASTAGE`                   | Vaccine wastage rate (JE)
+| `MR_WASTAGE`                   | Vaccine wastage rate (MR)
+| `OPV_WASTAGE`                  | Vaccine wastage rate (OPV)
+| `ROTA_WASTAGE`                 | Vaccine wastage rate (Rota)
+| `TCV_WASTAGE`                  | Vaccine wastage rate (TCV)
+| `TD_WASTAGE`                   | Vaccine wastage rate (TD)
+| `AES_RATE`                     | Acute encephalitis syndrome (AES) rate per 100,000
+| `DPT_HEP_B_HIB_DROPOUT_1_3`    | DPT-HepB-Hib Dropuout rate (1 vs 3)
+| `DPT_HEP_B_HIB1_MR2_DROPOUT`   | DPT-HepB-Hib1 vs MR2 dropout rate
+| `MEASLES_RATE`                 | Measles incidence rate per 100,000 population
+| `MEASLES_RUBELLA_DROPOUT`      | Measles/Rubella droupout rate
 | `MOTHERS_HYGIENE_PARTICIPANTS` | No of mothers/guardians participated in hygiene
-| `PCV_DROPOUT_1_3` | PCV dropout rate (PCV1 vs PCV3)
-| `ASSISTED_DELIVERIES` | % of assisted (vaccum or forceps) deliveries
-| `BIRTHS_BY_SBA` | % of births attended by SBA
-| `BIRTHS_BY_SKILLED_PERSONNEL` | % of births attended by a skilled health personnel
-| `BIRTHS_OTHER` | % of births attended by other than SBA and SHP
-| `HOME_MISOPROSTAL_DELIVERIES` | % of deliveries at home who used misoprostal
-| `DELIVERIES_UNDER_20` | % of deliveries below 20 years of age
-| `CAESAREAN_DELIVERIES` | % of delivery by caesarean section
-| `INSTITUTIONAL_DELIVERIES` | % of institutional deliveries
-| `MOTHERS_TWO_PNC_VISITS` | % of mother receiving two PNC home visits
-| `NEONATAL_MORTALITY_FACILITY` | % of neonatal mortality (health facility)
-| `NEONATES_FOUR_CHECKUPS` | % of neonates who received four checkups
-| `NEONATES_BIRTH_ASPHYXIA` | % of neonates with birth asphyxia
-| `NEONATES_CONGENITAL_ANOMALIES` | % of neonates with congenital anomalies
-| `NEWBORNS_CHX_APPLIED` | % of newborns CHX applied immediately after birth
-| `NEWBORNS_24HR_CHECKUP` | % of newborns who received a check-up at 24 hours
-| `NEWBORNS_LOW_BIRTH_WEIGHT` | % of newborns with low birth weight (<2.5KG)
-| `NORMAL_VAGINAL_DELIVERIES` | % of normal vaginal deliveries
-| `POSTPARTUM_45DAYS_IFA` | % of postpartum mother who received 45 days IFA
-| `POSTPARTUM_VITAMIN_A` | % of postpartum mother who received vitamin A
-| `POSTPARTUM_CS_INFECTION` | % of postpartum mothers with C/S wound infection
-| `INDUCED_PREGNANCIES` | % of pregnancies terminated by induced procedure
-| `PREGNANT_EIGHT_ANC_VISITS` | % of pregnant women who had eight ANC visits
-| `FOUR_ANC_VISITS` | % of pregnant women who had four ANC checkups
-| `PREGNANT_ANTHELMINTHICS` | % of pregnant women who received anthelminthics
-| `FIRST_ANC_CHECKUP` | % of pregnant women with First ANC check up
-| `AT_LEAST_ONE_ANC` | % of pregnant women with at least one ANC check up
-| `PRETERM_BIRTHS` | % of preterm births
-| `STILL_BIRTHS` | % of still births
+| `PCV_DROPOUT_1_3`              | PCV dropout rate (PCV1 vs PCV3)
+| `ASSISTED_DELIVERIES`          | % of assisted (vaccum or forceps) deliveries
+| `BIRTHS_BY_SBA`                | % of births attended by SBA
+| `BIRTHS_BY_SKILLED_PERSONNEL`  | % of births attended by a skilled health personnel
+| `BIRTHS_OTHER`                 | % of births attended by other than SBA and SHP
+| `HOME_MISOPROSTAL_DELIVERIES`  | % of deliveries at home who used misoprostal
+| `DELIVERIES_UNDER_20`          | % of deliveries below 20 years of age
+| `CAESAREAN_DELIVERIES`         | % of delivery by caesarean section
+| `INSTITUTIONAL_DELIVERIES`     | % of institutional deliveries
+| `MOTHERS_TWO_PNC_VISITS`       | % of mother receiving two PNC home visits
+| `NEONATAL_MORTALITY_FACILITY`  | % of neonatal mortality (health facility)
+| `NEONATES_FOUR_CHECKUPS`       | % of neonates who received four checkups
+| `NEONATES_BIRTH_ASPHYXIA`      | % of neonates with birth asphyxia
+| `NEONATES_CONGENITAL_ANOMALIES`| % of neonates with congenital anomalies
+| `NEWBORNS_CHX_APPLIED`         | % of newborns CHX applied immediately after birth
+| `NEWBORNS_24HR_CHECKUP`        | % of newborns who received a check-up at 24 hours
+| `NEWBORNS_LOW_BIRTH_WEIGHT`    | % of newborns with low birth weight (<2.5KG)
+| `NORMAL_VAGINAL_DELIVERIES`    | % of normal vaginal deliveries
+| `POSTPARTUM_45DAYS_IFA`        | % of postpartum mother who received 45 days IFA
+| `POSTPARTUM_VITAMIN_A`         | % of postpartum mother who received vitamin A
+| `POSTPARTUM_CS_INFECTION`      | % of postpartum mothers with C/S wound infection
+| `INDUCED_PREGNANCIES`          | % of pregnancies terminated by induced procedure
+| `PREGNANT_EIGHT_ANC_VISITS`    | % of pregnant women who had eight ANC visits
+| `FOUR_ANC_VISITS`              | % of pregnant women who had four ANC checkups
+| `PREGNANT_ANTHELMINTHICS`      | % of pregnant women who received anthelminthics
+| `FIRST_ANC_CHECKUP`            | % of pregnant women with First ANC check up
+| `AT_LEAST_ONE_ANC`             | % of pregnant women with at least one ANC check up
+| `PRETERM_BIRTHS`               | % of preterm births
+| `STILL_BIRTHS`                 | % of still births
 | `OBSTETRIC_COMPLICATION_REFERRALS` | % of women referred out due to obstetric complications
-| `FIRST_ANC` | % of women who had 1st ANC
-| `FOUR_PNC_PROTOCOL` | % of women who had 4 PNC as per protocol
-| `PNC_24_HOURS` | % of women who had PNC within 24 hours
-| `CALCIUM_180_TABLETS` | % of women who received 180 calcium tablets
+| `FIRST_ANC`                    | % of women who had 1st ANC
+| `FOUR_PNC_PROTOCOL`            | % of women who had 4 PNC as per protocol
+| `PNC_24_HOURS`                 | % of women who had PNC within 24 hours
+| `CALCIUM_180_TABLETS`          | % of women who received 180 calcium tablets
 | `CONTRACEPTION_AFTER_ABORTION` | % of women who received contraception after abortion
-| `BLOOD_COMPLICATIONS` | % of women with complication who received blood
-| `ABORTION_COMPLICATIONS` | % of women with complications from abortion
-| `EMERGENCY_OBSTETRIC_NEED` | Met need for emergency obstetric care
-| `MATERNAL_DEATHS` | Number of reported maternal deaths
-| `ABORTION_COMPLICATIONS_TREATED` | Number of women treated for Abortion complications
-| `PPH_TREATED` | Number of women treated for PPH
-| `HEMORRHAGE_TREATED` | Number of women treated for hemorrhage
-| `APH_TREATED` | Number of women treated for hemorrhage (APH)
-| `ECLAMPSIA_TREATED` | Women treated for Eclampsia
-| `ECTOPIC_PREGNANCY_TREATED` | Women treated for Ectopic Pregnancy
-| `PREECLAMPSIA_TREATED` | Women treated for Pre-eclampsia
-| `PUERPERAL_SEPSIS_TREATED` | Women treated for Puerperal Sepsis
-| `OBSTRUCTED_LABOR_TREATED` | Women treated for prolonged/obstructed labor
-| `RETAINED_PLACENTA_TREATED` | Women treated for retained Placenta
-| `RUPTURED_UTERUS_TREATED` | Women treated for ruptured uterus
+| `BLOOD_COMPLICATIONS`          | % of women with complication who received blood
+| `ABORTION_COMPLICATIONS`       | % of women with complications from abortion
+| `EMERGENCY_OBSTETRIC_NEED`     | Met need for emergency obstetric care
+| `MATERNAL_DEATHS`              | Number of reported maternal deaths
+| `ABORTION_COMPLICATIONS_TREATED`| Number of women treated for Abortion complications
+| `PPH_TREATED`                  | Number of women treated for PPH
+| `HEMORRHAGE_TREATED`           | Number of women treated for hemorrhage
+| `APH_TREATED`                  | Number of women treated for hemorrhage (APH)
+| `ECLAMPSIA_TREATED`            | Women treated for Eclampsia
+| `ECTOPIC_PREGNANCY_TREATED`    | Women treated for Ectopic Pregnancy
+| `PREECLAMPSIA_TREATED`         | Women treated for Pre-eclampsia
+| `PUERPERAL_SEPSIS_TREATED`     | Women treated for Puerperal Sepsis
+| `OBSTRUCTED_LABOR_TREATED`     | Women treated for prolonged/obstructed labor
+| `RETAINED_PLACENTA_TREATED`    | Women treated for retained Placenta
+| `RUPTURED_UTERUS_TREATED`      | Women treated for ruptured uterus
 |===

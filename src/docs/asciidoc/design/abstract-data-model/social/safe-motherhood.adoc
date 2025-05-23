@@ -1,64 +1,70 @@
+=== Safe Motherhood Domain
 
-=== SafeMotherhoodIndicators
-
-- indicator
-- year
-- value
-
-
-=== SafeMotherhoodIndicatorType
+==== `SafeMotherhoodIndicators`
+Entity that tracks safe motherhood and newborn health indicators over time.
 
 [cols="1,3", options="header"]
 |===
-| Value         | Description
-| `KMC_HYPOTHERMIA` | Newborn care - Managed with KMC - Hypothermia
-| `KMC_PRETERM` | Newborn care - Managed with KMC - Preterm
-| `PACKAGE_ABC` | Newborn care - Managed - Package A+B+C
-| `LAMA_ABSCONDED` | Newborn care - Outcome - LAMA/Absconded
-| `CONGENITAL_ANOMALIES` | Newborn care - Sick admitted - Congenital anomalies
-| `ASPHYXIA` | Newborn care - Sick babies admitted - Asphyxia
-| `HYPERBILIRUBINEMIA` | Newborn care - Sick babies admitted - Hyperbilirubinemia
-| `HYPOTHERMIA` | Newborn care - Sick babies admitted - Hypothermia
-| `LOW_BIRTH_WEIGHT` | Newborn care - Sick babies admitted - LBW
-| `OTHER_CONDITIONS` | Newborn care - Sick babies admitted - Others
-| `PRETERM` | Newborn care - Sick babies admitted - Preterm
-| `SEIZURE` | Newborn care - Sick babies admitted - Seizure
-| `SEPSIS` | Newborn care - Sick babies admitted - Sepsis
-| `TOTAL_SICK_ADMITTED` | Newborn care - Sick babies admitted - Total
-| `ADMITTED_PLH` | Newborn care - admitted - Preterm/LBW/Hypothermia
-| `KMC_PLH` | Newborn care - with KMC - Preterm/LBW/Hypothermia
-| `OUTREACH_KMC_LBW` | Outreach Clinic - Newborn care - Managed with KMC - LBW
-| `OUTREACH_PACKAGE_A` | Outreach Clinic - Newborn care - Managed - Package A
-| `OUTREACH_PACKAGE_AB` | Outreach Clinic - Newborn care - Managed - Package A+B
-| `OUTREACH_PACKAGE_B` | Outreach Clinic - Newborn care - Managed - Package B
-| `OUTREACH_DEATH` | Outreach Clinic - Newborn care - Outcome - Death
-| `OUTREACH_IMPROVED` | Outreach Clinic - Newborn care - Outcome - Improved
-| `OUTREACH_REFERRED` | Outreach Clinic - Newborn care - Outcome - Referred
-| `OUTREACH_DAYS_STAY` | Outreach Clinic - Newborn care - Total days of stay
-| `NUTRITION_OEDEMA_1PLUS` | Nutrition Rehab - Admission (referred in) - Oedema Present 1+
-| `NUTRITION_OEDEMA_3PLUS` | Nutrition Rehab - Admission (referred in) - Oedema Present 3+
-| `NUTRITION_NO_OEDEMA` | Nutrition Rehab - Admission (referred in) - Oedema not Present
+| Field       | Description
+| `indicator` | Type of safe motherhood indicator (reference to SafeMotherhoodIndicatorType)
+| `year`      | Year when the indicator was measured
+| `value`     | Percentage or numerical value of the indicator
+|===
+
+==== `SafeMotherhoodIndicatorType`
+Enumeration of safe motherhood and newborn health indicators.
+
+[cols="1,3", options="header"]
+|===
+| Value                          | Description
+| `KMC_HYPOTHERMIA`             | Newborn care - Managed with KMC - Hypothermia
+| `KMC_PRETERM`                 | Newborn care - Managed with KMC - Preterm
+| `PACKAGE_ABC`                 | Newborn care - Managed - Package A+B+C
+| `LAMA_ABSCONDED`              | Newborn care - Outcome - LAMA/Absconded
+| `CONGENITAL_ANOMALIES`        | Newborn care - Sick admitted - Congenital anomalies
+| `ASPHYXIA`                    | Newborn care - Sick babies admitted - Asphyxia
+| `HYPERBILIRUBINEMIA`          | Newborn care - Sick babies admitted - Hyperbilirubinemia
+| `HYPOTHERMIA`                 | Newborn care - Sick babies admitted - Hypothermia
+| `LOW_BIRTH_WEIGHT`            | Newborn care - Sick babies admitted - LBW
+| `OTHER_CONDITIONS`            | Newborn care - Sick babies admitted - Others
+| `PRETERM`                     | Newborn care - Sick babies admitted - Preterm
+| `SEIZURE`                     | Newborn care - Sick babies admitted - Seizure
+| `SEPSIS`                      | Newborn care - Sick babies admitted - Sepsis
+| `TOTAL_SICK_ADMITTED`         | Newborn care - Sick babies admitted - Total
+| `ADMITTED_PLH`                | Newborn care - admitted - Preterm/LBW/Hypothermia
+| `KMC_PLH`                     | Newborn care - with KMC - Preterm/LBW/Hypothermia
+| `OUTREACH_KMC_LBW`            | Outreach Clinic - Newborn care - Managed with KMC - LBW
+| `OUTREACH_PACKAGE_A`          | Outreach Clinic - Newborn care - Managed - Package A
+| `OUTREACH_PACKAGE_AB`         | Outreach Clinic - Newborn care - Managed - Package A+B
+| `OUTREACH_PACKAGE_B`          | Outreach Clinic - Newborn care - Managed - Package B
+| `OUTREACH_DEATH`              | Outreach Clinic - Newborn care - Outcome - Death
+| `OUTREACH_IMPROVED`           | Outreach Clinic - Newborn care - Outcome - Improved
+| `OUTREACH_REFERRED`           | Outreach Clinic - Newborn care - Outcome - Referred
+| `OUTREACH_DAYS_STAY`          | Outreach Clinic - Newborn care - Total days of stay
+| `NUTRITION_OEDEMA_1PLUS`      | Nutrition Rehab - Admission (referred in) - Oedema Present 1+
+| `NUTRITION_OEDEMA_3PLUS`      | Nutrition Rehab - Admission (referred in) - Oedema Present 3+
+| `NUTRITION_NO_OEDEMA`         | Nutrition Rehab - Admission (referred in) - Oedema not Present
 | `NUTRITION_WEIGHT_HEIGHT_2SD` | Nutrition Rehab - Admission (referred in) - Weight/Height < -2SD
 | `NUTRITION_WEIGHT_HEIGHT_3SD` | Nutrition Rehab - Admission (referred in) - Weight/Height < -3SD
 | `NUTRITION_WEIGHT_HEIGHT_4SD` | Nutrition Rehab - Admission (referred in) - Weight/Height < -4SD
-| `NUTRITION_NEW_24_59_MONTHS` | Nutrition Rehab - New Admission - 24-59 Months
-| `NUTRITION_NEW_6_23_MONTHS` | Nutrition Rehab - New Admission - 6-23 Months
-| `NUTRITION_NEW_UNDER_6_MONTHS` | Nutrition Rehab - New Admission - Under 6 months
-| `NUTRITION_NEW_OVER_59_MONTHS` | Nutrition Rehab - New Admission - 59+ Months
-| `NUTRITION_ADMIT_OEDEMA_1PLUS` | Nutrition Rehab - Admission - Oedema Present 1+
-| `NUTRITION_ADMIT_OEDEMA_3PLUS` | Nutrition Rehab - Admission - Oedema Present 3+
-| `NUTRITION_ADMIT_NO_OEDEMA` | Nutrition Rehab - Admission - No Oedema Present
+| `NUTRITION_NEW_24_59_MONTHS`  | Nutrition Rehab - New Admission - 24-59 Months
+| `NUTRITION_NEW_6_23_MONTHS`   | Nutrition Rehab - New Admission - 6-23 Months
+| `NUTRITION_NEW_UNDER_6_MONTHS`| Nutrition Rehab - New Admission - Under 6 months
+| `NUTRITION_NEW_OVER_59_MONTHS`| Nutrition Rehab - New Admission - 59+ Months
+| `NUTRITION_ADMIT_OEDEMA_1PLUS`| Nutrition Rehab - Admission - Oedema Present 1+
+| `NUTRITION_ADMIT_OEDEMA_3PLUS`| Nutrition Rehab - Admission - Oedema Present 3+
+| `NUTRITION_ADMIT_NO_OEDEMA`   | Nutrition Rehab - Admission - No Oedema Present
 | `NUTRITION_REFERRED_24_59_MONTHS` | Nutrition Rehab - Referred In - 24-59 Months
 | `NUTRITION_REFERRED_6_23_MONTHS` | Nutrition Rehab - Referred In - 6-23 Months
 | `NUTRITION_REFERRED_UNDER_6_MONTHS` | Nutrition Rehab - Referred In - Under 6 months
 | `NUTRITION_REFERRED_OVER_59_MONTHS` | Nutrition Rehab - Referred In - 59+ Months
-| `NUTRITION_ADMIT_WEIGHT_2SD` | Nutrition Rehab - Admission - Weight for Height < -2SD
-| `NUTRITION_ADMIT_WEIGHT_3SD` | Nutrition Rehab - Admission - Weight for Height < -3SD
-| `NUTRITION_ADMIT_WEIGHT_4SD` | Nutrition Rehab - Admission - Weight for Height < -4SD
-| `NUTRITION_AVG_IPD_DAYS` | Nutrition Rehab - Average Length of Stay - IPD days
+| `NUTRITION_ADMIT_WEIGHT_2SD`  | Nutrition Rehab - Admission - Weight for Height < -2SD
+| `NUTRITION_ADMIT_WEIGHT_3SD`  | Nutrition Rehab - Admission - Weight for Height < -3SD
+| `NUTRITION_ADMIT_WEIGHT_4SD`  | Nutrition Rehab - Admission - Weight for Height < -4SD
+| `NUTRITION_AVG_IPD_DAYS`      | Nutrition Rehab - Average Length of Stay - IPD days
 | `NUTRITION_AVG_TOTAL_ADMISSIONS` | Nutrition Rehab - Average Length of Stay - Total Admissions
-| `NUTRITION_BED_DAYS_AVAILABLE` | Nutrition Rehab - Bed Occupancy - Available Bed Days
-| `NUTRITION_BED_DAYS_CARE` | Nutrition Rehab - Bed Occupancy - IPD Days of Care
+| `NUTRITION_BED_DAYS_AVAILABLE`| Nutrition Rehab - Bed Occupancy - Available Bed Days
+| `NUTRITION_BED_DAYS_CARE`     | Nutrition Rehab - Bed Occupancy - IPD Days of Care
 | `NUTRITION_DISCHARGE_NO_OEDEMA` | Nutrition Rehab - Discharge (Referred Out) - No Oedema
 | `NUTRITION_DISCHARGE_WEIGHT_2SD` | Nutrition Rehab - Discharge (Referred Out) - Weight/Height < -2SD
 | `NUTRITION_DISCHARGE_WEIGHT_3SD` | Nutrition Rehab - Discharge (Referred Out) - Weight/Height < -3SD
@@ -69,8 +75,8 @@
 | `NUTRITION_DISCHARGED_UNDER_6_MONTHS` | Nutrition Rehab - Discharge - Under 6 months
 | `NUTRITION_DISCHARGED_OVER_59_MONTHS` | Nutrition Rehab - Discharge - 59+ Months
 | `NUTRITION_LAMA_24_59_MONTHS` | Nutrition Rehab - LAMA - 24-59 Months
-| `NUTRITION_LAMA_6_23_MONTHS` | Nutrition Rehab - LAMA - 6-23 Months
-| `NUTRITION_DISCHARGE_OEDEMA` | Nutrition Rehab - Discharge - Oedema Present None
+| `NUTRITION_LAMA_6_23_MONTHS`  | Nutrition Rehab - LAMA - 6-23 Months
+| `NUTRITION_DISCHARGE_OEDEMA`  | Nutrition Rehab - Discharge - Oedema Present None
 | `NUTRITION_DISCHARGE_LAMA_WEIGHT_2SD` | Nutrition Rehab - Discharge - LAMA - Weight/Height < -2SD
 | `NUTRITION_DISCHARGE_LAMA_WEIGHT_3SD` | Nutrition Rehab - Discharge - LAMA - Weight/Height < -3SD
 | `NUTRITION_DISCHARGE_OEDEMA_2PLUS` | Nutrition Rehab - Discharge - Oedema Present 2+
@@ -81,135 +87,135 @@
 | `NUTRITION_DISCHARGE_WEIGHT_HEIGHT_2SD` | Nutrition Rehab - Discharge - Weight for Height < -2SD
 | `NUTRITION_DISCHARGE_WEIGHT_HEIGHT_3SD` | Nutrition Rehab - Discharge - Weight for Height < -3SD
 | `NUTRITION_DISCHARGE_WEIGHT_HEIGHT_4SD` | Nutrition Rehab - Discharge - Weight for Height < -4SD
-| `OCMC_VIOLENCE_CHHAUPADI` | OCMC - Cause of violence - Chhaupadi
-| `OCMC_VIOLENCE_CHILD_LABOR` | OCMC - Cause of violence - Child labor
-| `OCMC_VIOLENCE_CHILD_MARRIAGE` | OCMC - Cause of violence - Child marriage
-| `OCMC_VIOLENCE_DOWRY` | OCMC - Cause of violence - Dowry
-| `OCMC_VIOLENCE_TRAFFICKING` | OCMC - Cause of violence - Human Trafficking
-| `OCMC_VIOLENCE_OTHER` | OCMC - Cause of violence - Other
-| `OCMC_VIOLENCE_POLYGAMY` | OCMC - Cause of violence - Polygamy
-| `OCMC_VIOLENCE_DISCRIMINATION` | OCMC - Cause of violence - Social discrimination
-| `OCMC_DISABILITY_AUTISM` | OCMC - Disability - Autism
-| `OCMC_DISABILITY_INTELLECTUAL` | OCMC - Disability - Intellectual
-| `OCMC_DISABILITY_MENTAL` | OCMC - Disability - Mental & psychological
-| `OCMC_DISABILITY_MULTIPLE` | OCMC - Disability - Multiple
-| `OCMC_DISABILITY_PHYSICAL` | OCMC - Disability - Physical
-| `OCMC_DISABILITY_SPEECH` | OCMC - Disability - Speech/language
-| `OCMC_NEW_CASES_ETHNICITY` | OCMC - New Cases by Ethnicity
-| `OCMC_PERPETRATOR` | OCMC - Perpetrator
+| `OCMC_VIOLENCE_CHHAUPADI`     | OCMC - Cause of violence - Chhaupadi
+| `OCMC_VIOLENCE_CHILD_LABOR`   | OCMC - Cause of violence - Child labor
+| `OCMC_VIOLENCE_CHILD_MARRIAGE`| OCMC - Cause of violence - Child marriage
+| `OCMC_VIOLENCE_DOWRY`         | OCMC - Cause of violence - Dowry
+| `OCMC_VIOLENCE_TRAFFICKING`   | OCMC - Cause of violence - Human Trafficking
+| `OCMC_VIOLENCE_OTHER`         | OCMC - Cause of violence - Other
+| `OCMC_VIOLENCE_POLYGAMY`      | OCMC - Cause of violence - Polygamy
+| `OCMC_VIOLENCE_DISCRIMINATION`| OCMC - Cause of violence - Social discrimination
+| `OCMC_DISABILITY_AUTISM`      | OCMC - Disability - Autism
+| `OCMC_DISABILITY_INTELLECTUAL`| OCMC - Disability - Intellectual
+| `OCMC_DISABILITY_MENTAL`      | OCMC - Disability - Mental & psychological
+| `OCMC_DISABILITY_MULTIPLE`    | OCMC - Disability - Multiple
+| `OCMC_DISABILITY_PHYSICAL`    | OCMC - Disability - Physical
+| `OCMC_DISABILITY_SPEECH`      | OCMC - Disability - Speech/language
+| `OCMC_NEW_CASES_ETHNICITY`    | OCMC - New Cases by Ethnicity
+| `OCMC_PERPETRATOR`            | OCMC - Perpetrator
 | `OCMC_PERPETRATOR_NON_RELATIVE` | OCMC - Relation of perpetrator - Other than relatives
-| `OCMC_PERPETRATOR_RELATIVE` | OCMC - Relation of perpetrator - Within relatives
-| `OCMC_SERVICE_CONTRACEPTIVE` | OCMC - Service - Emergency Contraceptive
-| `OCMC_SERVICE_HTC` | OCMC - Service - HTC
-| `OCMC_SERVICE_INJURY` | OCMC - Service - Injury
-| `OCMC_SERVICE_MEDICO_LEGAL` | OCMC - Service - Medico-legal
-| `OCMC_SERVICE_PHYSICAL_EXAM` | OCMC - Service - Physical examination
-| `OCMC_SERVICE_COUNSELING` | OCMC - Service - Psychological counseling
-| `OCMC_SERVICE_ABORTION` | OCMC - Service - Safe abortion
+| `OCMC_PERPETRATOR_RELATIVE`   | OCMC - Relation of perpetrator - Within relatives
+| `OCMC_SERVICE_CONTRACEPTIVE`  | OCMC - Service - Emergency Contraceptive
+| `OCMC_SERVICE_HTC`            | OCMC - Service - HTC
+| `OCMC_SERVICE_INJURY`         | OCMC - Service - Injury
+| `OCMC_SERVICE_MEDICO_LEGAL`   | OCMC - Service - Medico-legal
+| `OCMC_SERVICE_PHYSICAL_EXAM`  | OCMC - Service - Physical examination
+| `OCMC_SERVICE_COUNSELING`     | OCMC - Service - Psychological counseling
+| `OCMC_SERVICE_ABORTION`       | OCMC - Service - Safe abortion
 | `OCMC_VIOLENCE_RESOURCE_DENIAL` | OCMC - Type of violence - Denial of resources
-| `OCMC_VIOLENCE_EMOTIONAL` | OCMC - Type of violence - Emotional
-| `OCMC_VIOLENCE_PHYSICAL` | OCMC - Type of violence - Physical
-| `OCMC_VIOLENCE_RAPE` | OCMC - Type of violence - Rape
-| `OCMC_VIOLENCE_SEXUAL_ASSAULT` | OCMC - Type of violence - Sexual assault
-| `OCMC_VISIT_FOLLOWUP` | OCMC - Visit type - Follow up
-| `OCMC_VISIT_NEW` | OCMC - Visit type - New
-| `SSU_AMOUNT_EXEMPTED` | SSU - Amount exempted
-| `SSU_AMOUNT_EXPENSES` | SSU - Amount of expenses
-| `SSU_VISIT_FOLLOWUP` | SSU - Visit type - Follow up
-| `SSU_VISIT_NEW` | SSU - Visit type - New
-| `SSU_VISIT_EMERGENCY` | SSU - Visit by department - Emergency
-| `SSU_VISIT_INDOOR` | SSU - Visit by department - Indoor
-| `SSU_VISIT_OUTDOOR` | SSU - Visit by department - Outdoor
-| `SSU_VISIT_ETHNICITY` | SSU - Visit by ethnicity
-| `SSU_VISIT_HI_ENROLLED` | SSU - Visit by health insurance enrolled
-| `SSU_VISIT_HI_NOT_ENROLLED` | SSU - Visit by health insurance not enrolled
+| `OCMC_VIOLENCE_EMOTIONAL`     | OCMC - Type of violence - Emotional
+| `OCMC_VIOLENCE_PHYSICAL`      | OCMC - Type of violence - Physical
+| `OCMC_VIOLENCE_RAPE`          | OCMC - Type of violence - Rape
+| `OCMC_VIOLENCE_SEXUAL_ASSAULT`| OCMC - Type of violence - Sexual assault
+| `OCMC_VISIT_FOLLOWUP`         | OCMC - Visit type - Follow up
+| `OCMC_VISIT_NEW`              | OCMC - Visit type - New
+| `SSU_AMOUNT_EXEMPTED`         | SSU - Amount exempted
+| `SSU_AMOUNT_EXPENSES`         | SSU - Amount of expenses
+| `SSU_VISIT_FOLLOWUP`          | SSU - Visit type - Follow up
+| `SSU_VISIT_NEW`               | SSU - Visit type - New
+| `SSU_VISIT_EMERGENCY`         | SSU - Visit by department - Emergency
+| `SSU_VISIT_INDOOR`            | SSU - Visit by department - Indoor
+| `SSU_VISIT_OUTDOOR`           | SSU - Visit by department - Outdoor
+| `SSU_VISIT_ETHNICITY`         | SSU - Visit by ethnicity
+| `SSU_VISIT_HI_ENROLLED`       | SSU - Visit by health insurance enrolled
+| `SSU_VISIT_HI_NOT_ENROLLED`   | SSU - Visit by health insurance not enrolled
 | `LOW_WEIGHT_FEEDING_29_59_DAYS` | <2M-Low Weight/Feeding Problem 29-59 days Facility
 | `LOW_WEIGHT_FEEDING_UNDER_28_DAYS` | <2M-Low Weight/Feeding Problem <= 28 days Facility
-| `CBIMCI_GENTAMYCIN_COMPLETE` | CBIMCI <2M-Treatment-Gentamycin Complete dose
-| `CBIMCI_UNDER_2M_JAUNDICE` | CBIMCI <2Months-Classification-Jaundice Cases
-| `CBIMCI_UNDER_2M_LBI` | CBIMCI <2Months-Classification-LBI Cases
-| `CBIMCI_UNDER_2M_PSBI` | CBIMCI <2Months-Classification-PSBI Cases
-| `CBIMCI_UNDER_2M_FOLLOWUP` | CBIMCI <2Months-Follow-Up
-| `CBIMCI_UNDER_2M_REFERRAL` | CBIMCI <2Months-Refer Cases
-| `CBIMCI_UNDER_2M_TOTAL` | CBIMCI <2Months-Total Cases
+| `CBIMCI_GENTAMYCIN_COMPLETE`  | CBIMCI <2M-Treatment-Gentamycin Complete dose
+| `CBIMCI_UNDER_2M_JAUNDICE`    | CBIMCI <2Months-Classification-Jaundice Cases
+| `CBIMCI_UNDER_2M_LBI`         | CBIMCI <2Months-Classification-LBI Cases
+| `CBIMCI_UNDER_2M_PSBI`        | CBIMCI <2Months-Classification-PSBI Cases
+| `CBIMCI_UNDER_2M_FOLLOWUP`    | CBIMCI <2Months-Follow-Up
+| `CBIMCI_UNDER_2M_REFERRAL`    | CBIMCI <2Months-Refer Cases
+| `CBIMCI_UNDER_2M_TOTAL`       | CBIMCI <2Months-Total Cases
 | `CBIMCI_UNDER_2M_AMOXICILLIN` | CBIMCI <2Months-Treatment-Amoxicillin Paediatrics
-| `CBIMCI_UNDER_2M_AMPICILLIN` | CBIMCI <2Months-Treatment-Ampicillin Paediatrics
+| `CBIMCI_UNDER_2M_AMPICILLIN`  | CBIMCI <2Months-Treatment-Ampicillin Paediatrics
 | `CBIMCI_UNDER_2M_GENTAMYCIN_FIRST` | CBIMCI <2Months-Treatment-Gentamycin 1st Dose
-| `CBIMCI_2_59M_NO_PNEUMONIA` | CBIMCI-(2-59Months)-Classification-ARI-No Pneumonia
-| `CBIMCI_2_59M_PNEUMONIA` | CBIMCI-(2-59Months)-Classification-ARI-Pneumonia
+| `CBIMCI_2_59M_NO_PNEUMONIA`   | CBIMCI-(2-59Months)-Classification-ARI-No Pneumonia
+| `CBIMCI_2_59M_PNEUMONIA`      | CBIMCI-(2-59Months)-Classification-ARI-Pneumonia
 | `CBIMCI_2_59M_SEVERE_PNEUMONIA` | CBIMCI-(2-59Months)-Classification-ARI-Severe Pneumonia/Very Severe Disease
-| `CBIMCI_2_59M_ANEMIA` | CBIMCI-(2-59Months)-Classification-Anaemia
-| `CBIMCI_2_59M_DYSENTERY` | CBIMCI-(2-59Months)-Classification-Diarrhoea-Dysentery
-| `CBIMCI_2_59M_DEHYDRATION` | CBIMCI-(2-59Months)-Classification-Diarrhoea-Some Dehydration
-| `CBIMCI_2_59M_EAR_INFECTION` | CBIMCI-(2-59Months)-Classification-Ear Infection
-| `CBIMCI_2_59M_MEASLES` | CBIMCI-(2-59Months)-Classification-Measles
-| `CBIMCI_2_59M_OTHER_FEVER` | CBIMCI-(2-59Months)-Classification-Other Fever
+| `CBIMCI_2_59M_ANEMIA`         | CBIMCI-(2-59Months)-Classification-Anaemia
+| `CBIMCI_2_59M_DYSENTERY`      | CBIMCI-(2-59Months)-Classification-Diarrhoea-Dysentery
+| `CBIMCI_2_59M_DEHYDRATION`    | CBIMCI-(2-59Months)-Classification-Diarrhoea-Some Dehydration
+| `CBIMCI_2_59M_EAR_INFECTION`  | CBIMCI-(2-59Months)-Classification-Ear Infection
+| `CBIMCI_2_59M_MEASLES`        | CBIMCI-(2-59Months)-Classification-Measles
+| `CBIMCI_2_59M_OTHER_FEVER`    | CBIMCI-(2-59Months)-Classification-Other Fever
 | `CBIMCI_2_59M_SEVERE_MALNUTRITION` | CBIMCI-(2-59Months)-Classification-Severe Malnutrition
 | `CBIMCI_2_59M_NO_DEHYDRATION` | CBIMCI-(2-59Months)-Classification-Diarrhea-No Dehydration
-| `CBIMCI_2_59M_FOLLOWUP` | CBIMCI-(2-59Months)-Follow-Up Cases
-| `CBIMCI_2_59M_OTHER` | CBIMCI-(2-59Months)-Other Cases
-| `CBIMCI_2_59M_REFER_ARI` | CBIMCI-(2-59Months)-Referred ARI Cases
+| `CBIMCI_2_59M_FOLLOWUP`       | CBIMCI-(2-59Months)-Follow-Up Cases
+| `CBIMCI_2_59M_OTHER`          | CBIMCI-(2-59Months)-Other Cases
+| `CBIMCI_2_59M_REFER_ARI`      | CBIMCI-(2-59Months)-Referred ARI Cases
 | `CBIMCI_2_59M_REFER_DIARRHEA` | CBIMCI-(2-59Months)-Referred Diarrhea Cases
-| `CBIMCI_2_59M_REFER_OTHER` | CBIMCI-(2-59Months)-Referred Other Cases
-| `CBIMCI_2_59M_TOTAL_SICK` | CBIMCI-(2-59Months)-Total Sick Children
-| `CBIMCI_2_59M_AMOXICILLIN` | CBIMCI-(2-59Months)-Treatment with Amoxicillin
-| `CBIMCI_2_59M_ANTHELMINTICS` | CBIMCI-(2-59Months)-Treatment with Anthelmintics
-| `CBIMCI_2_59M_IV_FLUIDS` | CBIMCI-(2-59Months)-Treatment with IV Fluids
-| `CBIMCI_2_59M_ORS_ZINC` | CBIMCI-(2-59Months)-Treatment with ORS and Zinc
-| `CBIMCI_2_59M_VITAMIN_A` | CBIMCI-(2-59Months)-Treatment with Vitamin A
-| `CBIMCI_2_59M_SERIOUS_FEVER` | CBIMCI-(2-59Months)-Very Serious Febrile Disease
+| `CBIMCI_2_59M_REFER_OTHER`    | CBIMCI-(2-59Months)-Referred Other Cases
+| `CBIMCI_2_59M_TOTAL_SICK`     | CBIMCI-(2-59Months)-Total Sick Children
+| `CBIMCI_2_59M_AMOXICILLIN`    | CBIMCI-(2-59Months)-Treatment with Amoxicillin
+| `CBIMCI_2_59M_ANTHELMINTICS`  | CBIMCI-(2-59Months)-Treatment with Anthelmintics
+| `CBIMCI_2_59M_IV_FLUIDS`      | CBIMCI-(2-59Months)-Treatment with IV Fluids
+| `CBIMCI_2_59M_ORS_ZINC`       | CBIMCI-(2-59Months)-Treatment with ORS and Zinc
+| `CBIMCI_2_59M_VITAMIN_A`      | CBIMCI-(2-59Months)-Treatment with Vitamin A
+| `CBIMCI_2_59M_SERIOUS_FEVER`  | CBIMCI-(2-59Months)-Very Serious Febrile Disease
 | `CBIMCI_2_59M_PROLONGED_DIARRHEA` | CBIMCI-(2-59Months)-Classification-Diarrhea-Prolonged
 | `CBIMCI_2_59M_OTHER_ANTIBIOTICS` | CBIMCI-(2-59Months)-Treatment with Other Antibiotics
 | `CBIMCI_UNDER_2M_OTHER_ANTIBIOTICS` | CBIMCI-Under 2 Months-Treatment with Other Antibiotics
 | `CBIMCI_UNDER_2M_ORC_GENTAMYCIN` | CBIMCI-Under 2 Months-ORC-Treatment-Gentamycin Complete Dose
-| `IMCI_TOTAL_FEMALE` | IMCI-Total Sick Children 2-59 Months Female
-| `IMCI_TOTAL_MALE` | IMCI-Total Sick Children 2-59 Months Male
-| `IMNCI_2_59M_DEATH_12_59` | IMNCI-2-59 Months Death (12-59 months)
-| `IMNCI_2_59M_DEATH_2_11` | IMNCI-2-59 Months Death (2-11 months)
+| `IMCI_TOTAL_FEMALE`           | IMCI-Total Sick Children 2-59 Months Female
+| `IMCI_TOTAL_MALE`             | IMCI-Total Sick Children 2-59 Months Male
+| `IMNCI_2_59M_DEATH_12_59`     | IMNCI-2-59 Months Death (12-59 months)
+| `IMNCI_2_59M_DEATH_2_11`      | IMNCI-2-59 Months Death (2-11 months)
 | `IMNCI_2_59M_MILD_MALNUTRITION` | IMNCI-2-59 Months Mild Malnutrition
-| `IMNCI_UNDER_2M_BF_29_59` | IMNCI-Under 2 Month Breast Feed Problems 29-59 days
-| `IMNCI_UNDER_2M_BF_28` | IMNCI-Under 2 Month Breast Feed Problems <=28 days
-| `IMNCI_UNDER_2M_DEATH_0_7` | IMNCI-Under 2 Month Death 0-7 days
-| `IMNCI_UNDER_2M_DEATH_8_28` | IMNCI-Under 2 Month Death 8-28 days
+| `IMNCI_UNDER_2M_BF_29_59`     | IMNCI-Under 2 Month Breast Feed Problems 29-59 days
+| `IMNCI_UNDER_2M_BF_28`        | IMNCI-Under 2 Month Breast Feed Problems <=28 days
+| `IMNCI_UNDER_2M_DEATH_0_7`    | IMNCI-Under 2 Month Death 0-7 days
+| `IMNCI_UNDER_2M_DEATH_8_28`   | IMNCI-Under 2 Month Death 8-28 days
 | `IMNCI_UNDER_2M_PNEUMONIA_29_59` | IMNCI-Under 2 Month Pneumonia 29-59 days
 | `IMNCI_UNDER_2M_PNEUMONIA_8_28` | IMNCI-Under 2 Month Pneumonia 8-28 days
-| `HEALTH_EDUCATION_SESSIONS` | Health Education Sessions Conducted
-| `IMAM_UNDER_6M_END_MONTH` | IMAM-Age Under 6 Months Children at End of Month
+| `HEALTH_EDUCATION_SESSIONS`   | Health Education Sessions Conducted
+| `IMAM_UNDER_6M_END_MONTH`     | IMAM-Age Under 6 Months Children at End of Month
 | `IYCF_FORTIFIED_FLOUR_PREGNANT` | IYCF-Fortified Flour Distribution to Pregnant Women
-| `IYCF_COMPLEMENTARY_FEEDING` | IYCF-Complementary Feeding
-| `IYCF_EXCLUSIVE_BREASTFEEDING` | IYCF-Exclusive Breast Feeding
+| `IYCF_COMPLEMENTARY_FEEDING`  | IYCF-Complementary Feeding
+| `IYCF_EXCLUSIVE_BREASTFEEDING`| IYCF-Exclusive Breast Feeding
 | `IYCF_FORTIFIED_FLOUR_CHILDREN` | IYCF-Fortified Flour Distribution to Children
-| `NP_UNDER_5_DEWORMING` | Under 5 Year Children Receiving Deworming Tablets
-| `NP_UNDER_5_VITA_12_59` | Under 5 Year Children Receiving Vitamin A 12-59 Months
-| `NP_UNDER_5_VITA_6_11` | Under 5 Year Children Receiving Vitamin A 6-11 Months
-| `NP_GM_NEW_0_11M_MODERATE` | Growth Monitoring New Visit Children 0-11 Months Moderate
-| `NP_GM_NEW_0_11M_NORMAL` | Growth Monitoring New Visit Children 0-11 Months Normal
-| `NP_GM_NEW_0_11M_SEVERE` | Growth Monitoring New Visit Children 0-11 Months Severe
-| `NP_GM_NEW_12_23M_MODERATE` | Growth Monitoring New Visit Children 12-23 Months Moderate
-| `NP_GM_NEW_12_23M_NORMAL` | Growth Monitoring New Visit Children 12-23 Months Normal
-| `NP_GM_NEW_12_23M_SEVERE` | Growth Monitoring New Visit Children 12-23 Months Severe
-| `NP_GM_REVISIT_0_11M_MODERATE` | Growth Monitoring Revisit Children 0-11 Months Moderate
-| `NP_GM_REVISIT_0_11M_NORMAL` | Growth Monitoring Revisit Children 0-11 Months Normal
-| `NP_GM_REVISIT_0_11M_SEVERE` | Growth Monitoring Revisit Children 0-11 Months Severe
+| `NP_UNDER_5_DEWORMING`        | Under 5 Year Children Receiving Deworming Tablets
+| `NP_UNDER_5_VITA_12_59`       | Under 5 Year Children Receiving Vitamin A 12-59 Months
+| `NP_UNDER_5_VITA_6_11`        | Under 5 Year Children Receiving Vitamin A 6-11 Months
+| `NP_GM_NEW_0_11M_MODERATE`    | Growth Monitoring New Visit Children 0-11 Months Moderate
+| `NP_GM_NEW_0_11M_NORMAL`      | Growth Monitoring New Visit Children 0-11 Months Normal
+| `NP_GM_NEW_0_11M_SEVERE`      | Growth Monitoring New Visit Children 0-11 Months Severe
+| `NP_GM_NEW_12_23M_MODERATE`   | Growth Monitoring New Visit Children 12-23 Months Moderate
+| `NP_GM_NEW_12_23M_NORMAL`     | Growth Monitoring New Visit Children 12-23 Months Normal
+| `NP_GM_NEW_12_23M_SEVERE`     | Growth Monitoring New Visit Children 12-23 Months Severe
+| `NP_GM_REVISIT_0_11M_MODERATE`| Growth Monitoring Revisit Children 0-11 Months Moderate
+| `NP_GM_REVISIT_0_11M_NORMAL`  | Growth Monitoring Revisit Children 0-11 Months Normal
+| `NP_GM_REVISIT_0_11M_SEVERE`  | Growth Monitoring Revisit Children 0-11 Months Severe
 | `NP_GM_REVISIT_12_23M_MODERATE` | Growth Monitoring Revisit Children 12-23 Months Moderate
 | `NP_GM_REVISIT_12_23M_NORMAL` | Growth Monitoring Revisit Children 12-23 Months Normal
 | `NP_GM_REVISIT_12_23M_SEVERE` | Growth Monitoring Revisit Children 12-23 Months Severe
-| `NP_POSTPARTUM_45_IRON` | Postpartum Mother Receiving 45 Iron Tablets
-| `NP_POSTPARTUM_VITAMIN_A` | Postpartum Mother Receiving Vitamin A
-| `NP_PREGNANT_180_IRON` | Pregnant Women Receiving 180 Iron Tablets
-| `NP_PREGNANT_DEWORMING` | Pregnant Women Receiving Deworming Tablets
-| `NP_PREGNANT_FIRST_IRON` | Pregnant Women Receiving Iron Tablets First Time
-| `NP_STUDENTS_DEWORMING_BOYS` | Students Receiving Deworming Tablets - Boys
+| `NP_POSTPARTUM_45_IRON`       | Postpartum Mother Receiving 45 Iron Tablets
+| `NP_POSTPARTUM_VITAMIN_A`     | Postpartum Mother Receiving Vitamin A
+| `NP_PREGNANT_180_IRON`        | Pregnant Women Receiving 180 Iron Tablets
+| `NP_PREGNANT_DEWORMING`       | Pregnant Women Receiving Deworming Tablets
+| `NP_PREGNANT_FIRST_IRON`      | Pregnant Women Receiving Iron Tablets First Time
+| `NP_STUDENTS_DEWORMING_BOYS`  | Students Receiving Deworming Tablets - Boys
 | `NP_STUDENTS_DEWORMING_GIRLS` | Students Receiving Deworming Tablets - Girls
-| `NP_CALCIUM_TABLETS` | Nutrition Registered - Calcium Tablets Received
-| `NP_GM_23_MONTHS` | Nutrition Registered - Growth Monitoring 23 Months Completed
-| `NP_GM_WEIGHTED` | Nutrition Registered - Growth Monitoring Weighted
-| `OP_MORBIDITY_ANEMIA` | Outpatient Morbidity - Anemia/Polyneuropathy
+| `NP_CALCIUM_TABLETS`          | Nutrition Registered - Calcium Tablets Received
+| `NP_GM_23_MONTHS`             | Nutrition Registered - Growth Monitoring 23 Months Completed
+| `NP_GM_WEIGHTED`              | Nutrition Registered - Growth Monitoring Weighted
+| `OP_MORBIDITY_ANEMIA`         | Outpatient Morbidity - Anemia/Polyneuropathy
 | `OP_MORBIDITY_VITAMIN_DEFICIENCY` | Outpatient Morbidity - Avitaminoses & Other Nutrient Deficiency
-| `OP_MORBIDITY_DIABETES` | Outpatient Morbidity - Diabetes Mellitus
-| `OP_MORBIDITY_GOITRE` | Outpatient Morbidity - Goitre, Cretinism
-| `OP_MORBIDITY_MALNUTRITION` | Outpatient Morbidity - Malnutrition
-| `OP_MORBIDITY_OBESITY` | Outpatient Morbidity - Obesity
-| `OP_MORBIDITY_POLYNEURITIS` | Outpatient Morbidity - Polyneuritis
+| `OP_MORBIDITY_DIABETES`       | Outpatient Morbidity - Diabetes Mellitus
+| `OP_MORBIDITY_GOITRE`         | Outpatient Morbidity - Goitre, Cretinism
+| `OP_MORBIDITY_MALNUTRITION`   | Outpatient Morbidity - Malnutrition
+| `OP_MORBIDITY_OBESITY`        | Outpatient Morbidity - Obesity
+| `OP_MORBIDITY_POLYNEURITIS`   | Outpatient Morbidity - Polyneuritis
 |===
 
