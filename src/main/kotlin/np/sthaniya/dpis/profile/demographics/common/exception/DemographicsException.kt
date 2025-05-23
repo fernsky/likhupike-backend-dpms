@@ -42,6 +42,11 @@ sealed class DemographicsException(
             override val code = "DEMO_004"
             override val defaultMessage = "Invalid filter criteria"
             override val i18nKey = "demographics.error.DEMO_004"
+        },
+        INVALID_DEMOGRAPHIC_FIELD {
+            override val code = "DEMO_005"
+            override val defaultMessage = "Invalid demographic field"
+            override val i18nKey = "demographics.error.DEMO_005"
         }
     }
 
@@ -75,6 +80,17 @@ sealed class DemographicsException(
             DemographicsException(
                     DemographicsErrorCode.INVALID_FILTER_CRITERIA,
                     message = message,
+                    status = HttpStatus.BAD_REQUEST
+            )
+
+    /**
+     * Exception thrown when an invalid field name is provided for demographic data.
+     */
+    class InvalidDemographicDataFieldException(message: String, details: Map<String, Any> = emptyMap()) :
+            DemographicsException(
+                    DemographicsErrorCode.INVALID_DEMOGRAPHIC_FIELD,
+                    message = message,
+                    metadata = details,
                     status = HttpStatus.BAD_REQUEST
             )
 }
