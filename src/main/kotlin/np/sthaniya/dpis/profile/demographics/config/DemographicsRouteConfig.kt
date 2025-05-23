@@ -19,20 +19,20 @@ class DemographicsRouteConfig(
 ) {
     init {
         // Ward-wise religion population endpoints
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population", HttpMethod.GET, true)
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population", HttpMethod.POST)
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population/[^/]+", HttpMethod.GET, true)
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population/[^/]+", HttpMethod.PUT)
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population/[^/]+", HttpMethod.DELETE)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population", HttpMethod.GET, true)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population", HttpMethod.POST)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population/[^/]+", HttpMethod.GET, true)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population/[^/]+", HttpMethod.PUT)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population/[^/]+", HttpMethod.DELETE)
 
         // Ward filter endpoint
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population/ward/[^/]+", HttpMethod.GET, true)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population/ward/[^/]+", HttpMethod.GET, true)
 
         // Religion filter endpoint
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population/religion/[^/]+", HttpMethod.GET, true)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population/religion/[^/]+", HttpMethod.GET, true)
 
         // Summary endpoints
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population/summary/by-religion", HttpMethod.GET, true)
-        routeRegistry.register("/api/v1/demographics/ward-wise-religion-population/summary/by-ward", HttpMethod.GET, true)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population/summary/by-religion", HttpMethod.GET, true)
+        routeRegistry.register("/api/v1/profile/demographics/ward-wise-religion-population/summary/by-ward", HttpMethod.GET, true)
     }
 }

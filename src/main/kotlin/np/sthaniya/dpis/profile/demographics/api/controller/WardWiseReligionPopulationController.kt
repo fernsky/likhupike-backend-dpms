@@ -27,7 +27,7 @@ import java.util.UUID
  * Controller interface for managing ward-wise religion population data.
  */
 @Tag(name = "Ward-wise Religion Population", description = "APIs for managing ward-wise religion population data")
-@RequestMapping("/api/v1/demographics/ward-wise-religion-population")
+@RequestMapping("/api/v1/profile/demographics/ward-wise-religion-population")
 interface WardWiseReligionPopulationController {
 
     /**
