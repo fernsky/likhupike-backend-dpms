@@ -26,7 +26,7 @@ import java.time.Duration
  */
 @Configuration
 class MessageSourceConfig : WebMvcConfigurer {
-    
+
     /**
      * Creates and configures the application's [MessageSource].
      *
@@ -47,7 +47,10 @@ class MessageSourceConfig : WebMvcConfigurer {
             "i18n/error/messages",
             "i18n/document/messages",
             "i18n/citizen/messages",
-            "i18n/ui/messages" // Add UI-specific messages
+            "i18n/ui/messages", // Add UI-specific messages
+
+            // Profile
+            "i18n/profile/demographics/messages"
         )
         messageSource.setDefaultEncoding("UTF-8")
         messageSource.setUseCodeAsDefaultMessage(true)
@@ -79,7 +82,7 @@ class MessageSourceConfig : WebMvcConfigurer {
         resolver.setCookiePath("/")
         return resolver
     }
-    
+
     /**
      * Creates and configures a [LocaleChangeInterceptor] for changing locales via request parameter.
      *

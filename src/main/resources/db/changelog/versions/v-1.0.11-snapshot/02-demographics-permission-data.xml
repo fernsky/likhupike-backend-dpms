@@ -1,0 +1,76 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Add the MANAGE_DEMOGRAPHICS permission -->
+    <changeSet author="dpis" id="01-permission-manage-demographics">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'MANAGE_DEMOGRAPHICS'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="MANAGE_DEMOGRAPHICS"/>
+        </insert>
+        <comment>Add MANAGE_DEMOGRAPHICS master permission</comment>
+    </changeSet>
+
+    <!-- Add the VIEW_DEMOGRAPHIC_DATA permission -->
+    <changeSet author="dpis" id="02-permission-view-demographic-data">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'VIEW_DEMOGRAPHIC_DATA'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="VIEW_DEMOGRAPHIC_DATA"/>
+        </insert>
+        <comment>Add VIEW_DEMOGRAPHIC_DATA permission</comment>
+    </changeSet>
+
+    <!-- Add the CREATE_DEMOGRAPHIC_DATA permission -->
+    <changeSet author="dpis" id="03-permission-create-demographic-data">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'CREATE_DEMOGRAPHIC_DATA'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="CREATE_DEMOGRAPHIC_DATA"/>
+        </insert>
+        <comment>Add CREATE_DEMOGRAPHIC_DATA permission</comment>
+    </changeSet>
+
+    <!-- Add the UPDATE_DEMOGRAPHIC_DATA permission -->
+    <changeSet author="dpis" id="04-permission-update-demographic-data">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'UPDATE_DEMOGRAPHIC_DATA'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="UPDATE_DEMOGRAPHIC_DATA"/>
+        </insert>
+        <comment>Add UPDATE_DEMOGRAPHIC_DATA permission</comment>
+    </changeSet>
+
+    <!-- Add the DELETE_DEMOGRAPHIC_DATA permission -->
+    <changeSet author="dpis" id="05-permission-delete-demographic-data">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="permissions"/>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM permissions WHERE type = 'DELETE_DEMOGRAPHIC_DATA'</sqlCheck>
+            </and>
+        </preConditions>
+        <insert tableName="permissions">
+            <column name="type" value="DELETE_DEMOGRAPHIC_DATA"/>
+        </insert>
+        <comment>Add DELETE_DEMOGRAPHIC_DATA permission</comment>
+    </changeSet>
+
+</databaseChangeLog>
