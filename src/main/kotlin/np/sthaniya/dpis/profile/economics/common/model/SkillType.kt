@@ -1,0 +1,37 @@
+package np.sthaniya.dpis.profile.economics.common.model
+
+/**
+ * Enum representing different skill types for economic data collection.
+ *
+ * These values directly correspond to the skill_type values used in the database schema.
+ */
+enum class SkillType {
+    TEACHING_RELATED,
+    PHOTOGRAPHY_RELATED,
+    HANDICRAFT_RELATED,
+    MUSIC_DRAMA_RELATED,
+    STONEWORK_WOODWORK,
+    CARPENTERY_RELATED,
+    PLUMBING,
+    HUMAN_HEALTH_RELATED,
+    ANIMAL_HEALTH_RELATED,
+    ELECTRICITY_INSTALLMENT_RELATED,
+    HOTEL_RESTAURANT_RELATED,
+    AGRICULTURE_RELATED,
+    PRINTING_RELATED,
+    DRIVING_RELATED,
+    MECHANICS_RELATED,
+    FURNITURE_RELATED,
+    SHOEMAKING_RELATED,
+    SEWING_RELATED,
+    JWELLERY_MAKING_RELATED,
+    BEUATICIAN_RELATED,
+    SELF_PROTECTION_RELATED,
+    LAND_SURVEY_RELATED,
+    COMPUTER_SCIENCE_RELATED,
+    ENGINEERING_DESIGN_RELATED,
+    RADIO_TELEVISION_ELECTRICAL_REPAIR,
+    LITERARY_CREATION_RELATED,
+    OTHER,
+    NONE
+}
