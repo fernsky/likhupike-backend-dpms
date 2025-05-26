@@ -2,6 +2,7 @@ package np.sthaniya.dpis.profile.economics.wardWiseMajorOccupation.model
 
 import jakarta.persistence.*
 import np.sthaniya.dpis.common.entity.UuidBaseEntity
+import np.sthaniya.dpis.profile.economics.common.model.OccupationType
 import org.hibernate.annotations.DynamicUpdate
 
 /**
@@ -24,6 +25,10 @@ import org.hibernate.annotations.DynamicUpdate
         Index(
             name = "idx_ward_wise_major_occupation_ward",
             columnList = "ward_number"
+        ),
+        Index(
+            name = "idx_ward_wise_major_occupation_occupation",
+            columnList = "occupation"
         )
     ]
 )
@@ -37,9 +42,11 @@ class WardWiseMajorOccupation : UuidBaseEntity() {
     @Column(name = "ward_number", nullable = false) var wardNumber: Int? = null
 
     /**
-     * Name of the occupation.
+     * Type of occupation. Defined as an enum to ensure data consistency.
      */
-    @Column(name = "occupation", nullable = false) var occupation: String? = null
+    @Enumerated(EnumType.STRING)
+    @Column(name = "occupation", nullable = false, length = 100)
+    var occupation: OccupationType? = null
 
     /**
      * The number of people with the specified occupation in the specified ward.
